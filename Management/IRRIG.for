@@ -386,7 +386,7 @@ C
              JWTBRD(NTBL) = IDLAPL(I)  
 !            JULWTB can be modified for sequenced or multi-year runs  
              JULWTB(NTBL) = IDLAPL(I)
-             WTABL(NTBL)   = AMT(I)         !cm
+             WTABL(NTBL)   = AMT(I)/10.0         !cm
 !            PWAT(NTBL)    = AMT(I)/10.0
 
           !------------------------------

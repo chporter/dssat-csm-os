@@ -151,8 +151,9 @@ C=======================================================================
       IF (DYNAMIC .EQ. RUNINIT) THEN
 !-----------------------------------------------------------------------
 !     Call IPWBAL to read in values from input file
-      CALL IPWBAL (CONTROL, DLAYR, LL, NLAYR, SAT,        !Input
-     &    SW, WTDEP)                                      !Output
+      CALL IPWBAL (CONTROL, 
+     &    DLAYR, DS, DUL, LL, NLAYR, SAT,             !Input
+     &    SW, WTDEP)                                  !Output
 
 !     Read tile drainage variables from FILEIO
       CALL TILEDRAIN(CONTROL, 
@@ -180,8 +181,9 @@ C=======================================================================
       IF (ISWWAT .EQ. 'Y') THEN
         IF (CONTROL%MULTI .GT. 1) THEN
         !Re-read initial conditions if multi-season run
-          CALL IPWBAL (CONTROL, DLAYR, LL, NLAYR, SAT,    !Input
-     &    SW, WTDEP)                                      !Output
+          CALL IPWBAL (CONTROL, 
+     &    DLAYR, DS, DUL, LL, NLAYR, SAT,             !Input
+     &    SW, WTDEP)                                  !Output
         ENDIF
       ENDIF
 

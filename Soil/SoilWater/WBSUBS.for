@@ -92,8 +92,9 @@ C  08/12/2003 CHP Added I/O error checking
 !  Called by: WATBAL
 !  Calls    : ERROR, FIND
 !=======================================================================
-      SUBROUTINE IPWBAL (CONTROL, DLAYR, LL, NLAYR, SAT,  !Input
-     &    SW, WTDEP)                                      !Output
+      SUBROUTINE IPWBAL (CONTROL, 
+     &    DLAYR, DS, DUL, LL, NLAYR, SAT,             !Input
+     &    SW, WTDEP)                                  !Output
 
 !-----------------------------------------------------------------------
       USE ModuleDefs     !Definitions of constructed variable types, 
@@ -101,7 +102,7 @@ C  08/12/2003 CHP Added I/O error checking
                          ! parameters, hourly weather data.
       IMPLICIT NONE
 
-      REAL, DIMENSION(NL), INTENT(IN) :: DLAYR, LL, SAT
+      REAL, DIMENSION(NL), INTENT(IN) :: DLAYR, DS, DUL, LL, SAT
       INTEGER, INTENT(IN) :: NLAYR
       REAL, DIMENSION(NL), INTENT(OUT) :: SW
       REAL, INTENT(OUT) :: WTDEP
@@ -117,7 +118,7 @@ C  08/12/2003 CHP Added I/O error checking
 
       INTEGER ERRNUM, FOUND, L, LINC, LNUM, RUN
 
-      REAL ICWD, SWEF
+      REAL ICWD, SWEF, FracSat
 
 !     The variable "CONTROL" is of constructed type "ControlType" as 
 !     defined in ModuleDefs.for, and contains the following variables.
@@ -151,6 +152,21 @@ C     Find and Read Initial Conditions Section
           READ(LUNIO,'(40X,F6.0)',IOSTAT=ERRNUM) ICWD ; LNUM = LNUM + 1
           IF (ERRNUM .NE. 0) CALL ERROR(ERRKEY,ERRNUM,FILEIO,LNUM)
           WTDEP = ICWD
+
+!         Saturate the soil below a water table
+          IF (WTDEP > -1.E6 .AND. WTDEP < DS(NLAYR)) THEN
+            DO L = NLAYR, 2, -1
+              IF (DS(L-1) .GT. WTDEP) THEN
+!               this layer saturated
+                SW(L) = SAT(L)
+              ELSEIF (DS(L) .GT. WTDEP) THEN
+!               this layer partially saturated 
+                FracSat = (DS(L) - WTDEP) / DLAYR(L)
+                SW(L) = FracSat * SAT(L) + (1.0 - FracSat) * DUL(L)
+                EXIT
+              ENDIF
+            ENDDO
+          ENDIF
 
           DO L = 1, NLAYR
             READ(LUNIO,'(9X,F5.3)',IOSTAT=ERRNUM) SW(L)
