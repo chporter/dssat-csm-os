@@ -3951,7 +3951,9 @@
           IF (PTFS(ISTAGE+1).GT.0)
      &     PTFSS = PTFS(ISTAGE) + (PTFS(ISTAGE+1)-PTFS(ISTAGE))*SSTAGE
           IF (PTFA(ISTAGE).GT.0) THEN
-           PTF = AMIN1(PTFX,PTFSS + PTFA(ISTAGE)*AMIN1(WFP,NFG,LIF1))
+!          PTF = AMIN1(PTFX,PTFSS + PTFA(ISTAGE)*AMIN1(WFP,NFG,LIF1))
+           PTF = AMIN1(PTFX, 
+     &             PTFSS - PTFA(ISTAGE) * (1.0 - AMIN1(WFP,NFG,LIF1)))
           ELSE
            PTF = AMIN1(PTFX,PTFSS)
           ENDIF
