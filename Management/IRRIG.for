@@ -100,10 +100,16 @@ C=======================================================================
       REAL GSWatUsed      ! Water used to date in current growth stage
       REAL, PARAMETER :: VeryLargeNumber = 99999999.
 
+!     LOGICAL AUTO   !indicator that automatic irrigation will be used
+      LOGICAL UpdateWT  !Water table is updated today based on irrigation records
+
 !     ET-based auto-irrig
       REAL ET_THRESH, ACCUM_ET
 !      REAL ET     !, EP, ES, E0
       REAL EOP, EVAP, RUNOFF
+
+!  Added for water table management
+      REAL MgmtWTD, ICWD
 
 !-----------------------------------------------------------------------
       TYPE (ControlType)  CONTROL
@@ -159,7 +165,9 @@ C-----------------------------------------------------------------------
       TIL_IRR = 0.0
       GSWatUsed = 0.0
       DaysSinceIrrig = 999
-      ACCUM_ET = 0.0
+
+!     Water table depth (-99 indicates no water table present)
+      MgmtWTD = -99.  
 
       IF (ISWWAT .EQ. 'Y') THEN
 
@@ -206,6 +214,23 @@ C-----------------------------------------------------------------------
 
             LNUM = LNUM + 2
             IF (ERRNUM .NE. 0) CALL ERROR(ERRKEY,ERRNUM,FILEIO,LNUM)
+          ENDIF
+
+C-----------------------------------------------------------------------
+C         Find and Read Initial Conditions Section
+C-----------------------------------------------------------------------
+          IF (INDEX('FQ',RNMODE) .LE. 0 .OR. RUN == 1) THEN
+            REWIND(LUNIO)
+            SECTION = '*INITI'
+            CALL FIND(LUNIO, SECTION, LINC, FOUND) ; LNUM = LINC
+            IF (FOUND .EQ. 0) THEN
+              CALL ERROR(SECTION, 42, FILEIO, LNUM)
+            ELSE
+              READ(LUNIO,'(40X,F6.0)',IOSTAT=ERRNUM) ICWD ; LNUM =LNUM+1
+              IF (ERRNUM .NE. 0) CALL ERROR(ERRKEY,ERRNUM,FILEIO,LNUM)
+              MgmtWTD = ICWD
+              CALL PUT('MGMT','WATTAB',MgmtWTD)
+            ENDIF
           ENDIF
 
 C-----------------------------------------------------------------------
@@ -285,6 +310,12 @@ C-----------------------------------------------------------------------
           IF (DSOILX .GT. 0)  DSOIL = DSOILX
           IF (AIRAMX .GT. 0) AIRAMT = AIRAMX
         ENDIF
+        
+        IF (EFFIRR < 1.E-3) EFFIRR = 1.0
+
+!        IF (INDEX('AF',IIRRI) > 0) THEN
+!          AUTO = .TRUE.
+!        ENDIF
 
 !     AMTMIN was not being used -- should it be used in place
 !             of AIRAMT?  CHP
@@ -318,7 +349,7 @@ C
       COND  = 0.0
       IPERC = 0.0
       PWAT  = 0.0
-      WTABL = 0.0
+      WTABL = -99.
 
       PUDDLED = .FALSE.
       PLOWPAN = 0.0
@@ -386,7 +417,7 @@ C
              JWTBRD(NTBL) = IDLAPL(I)  
 !            JULWTB can be modified for sequenced or multi-year runs  
              JULWTB(NTBL) = IDLAPL(I)
-             WTABL(NTBL)   = AMT(I)/10.0         !cm
+             WTABL(NTBL)   = AMT(I)         !cm
 !            PWAT(NTBL)    = AMT(I)/10.0
 
           !------------------------------
@@ -566,10 +597,22 @@ C-----------------------------------------------------------------------
       TOTIR = 0.0
       NAP = 0
 
+!     Check for water table depths compatible with irrigation code
+      IF (NTBL > 0) THEN
+        SELECT CASE (IIRRI)
+        CASE ('R','D'); CONTINUE
+        CASE DEFAULT
+          MSG(1)=
+     &      "Water table depths require irrigation switch 'D' or 'R'."
+          MSG(2)="Water table input records will be ignored."
+          CALL WARNING(2,ERRKEY,MSG)
+        END SELECT
+      ENDIF
+
 !      IF (NBUND .GT. 0) THEN
         CALL FLOOD_IRRIG (SEASINIT, 
      &    BUND, COND, CONDAT, IBDAT, IIRRCV, IIRRI,       !Input
-     &    IPDAT, IPERC, JULWTB, NBUND, NCOND, NPERC, NTBL,!Input
+     &    IPDAT, IPERC, NBUND, NCOND, NPERC, NTBL,        !Input
      &    PUDDLED, PWAT, RAIN, SOILPROP, SW, YRDOY, YRPLT,!Input
      &    FLOODWAT,                                       !I/O
      &    DEPIR)                                          !Output
@@ -610,7 +653,7 @@ C-----------------------------------------------------------------------
       IF (NBUND .GT. 0) THEN
         CALL FLOOD_IRRIG (RATE, 
      &    BUND, COND, CONDAT, IBDAT, IIRRCV, IIRRI,       !Input
-     &    IPDAT, IPERC, JULWTB, NBUND, NCOND, NPERC, NTBL,!Input
+     &    IPDAT, IPERC, NBUND, NCOND, NPERC, NTBL,        !Input
      &    PUDDLED, PWAT, RAIN, SOILPROP, SW, YRDOY, YRPLT,!Input
      &    FLOODWAT,                                       !I/O
      &    DEPIR)                                          !Output
@@ -821,7 +864,7 @@ C-----------------------------------------------------------------------
               EXIT LOOP3
             ENDIF
           END DO LOOP3
-		ENDIF
+        ENDIF
 
 C-----------------------------------------------------------------------
 C       If Today's date is after the last record in the IRRIG section
@@ -862,8 +905,31 @@ C               Apply fixed irrigation amount
             ENDIF
           ENDIF
         ENDIF
-
       END SELECT
+      ENDIF
+
+!-----------------------------------------------------------------------
+!     Water table management
+      IF (NTBL .GT. 0) THEN
+        DAP = MAX(0,TIMDIF(YRPLT,YRDOY))
+        DO I = 1, NTBL
+          UpdateWT = .FALSE. !Assume no water table update today
+          SELECT CASE(IIRRI)
+          CASE ('D')
+            IF (DAP .EQ. JULWTB(I)) THEN
+              UpdateWT = .TRUE.
+            ENDIF
+          CASE DEFAULT
+            IF (YRDOY .EQ. JULWTB(I)) THEN
+              UpdateWT = .TRUE.
+            ENDIF
+          END SELECT
+          IF (UpdateWT) THEN
+            MgmtWTD =  WTABL(I) 
+            CALL PUT('MGMT','WATTAB',MgmtWTD)
+            EXIT
+          ENDIF
+        ENDDO
       ENDIF
 C-----------------------------------------------------------------------
 C    *********    IRRIGATE     **********
@@ -873,7 +939,7 @@ C-----------------------------------------------------------------------
       ELSE
         IRRAMT = DEPIR
       ENDIF
-
+      
       CALL PUT('MGMT','IRRAMT',IRRAMT)  !Effective irrig amt today (mm)
       
 !***********************************************************************

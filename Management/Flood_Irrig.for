@@ -13,7 +13,7 @@ C=======================================================================
 
       SUBROUTINE FLOOD_IRRIG (DYNAMIC, 
      &    BUND, COND, CONDAT, IBDAT, IIRRCV, IIRRI,       !Input
-     &    IPDAT, IPERC, JULWTB, NBUND, NCOND, NPERC, NTBL,!Input
+     &    IPDAT, IPERC, NBUND, NCOND, NPERC, NTBL,        !Input
      &    PUDDLED, PWAT, RAIN, SOILPROP, SW, YRDOY, YRPLT,!Input
      &    FLOODWAT,                                       !I/O
      &    DEPIR)                                          !Output
@@ -30,7 +30,6 @@ C=======================================================================
       INTEGER INCDAT, NBUND, NCOND, NLAYR, NPERC, NTBL
       INTEGER IBDAT(NAPPL), BUNDDAT(NAPPL), IIRRCV(NAPPL)
       INTEGER CONDAT(NAPPL), IRRDAT(NAPPL)
-      INTEGER JULWTB(NAPPL), WTDAT(NAPPL)
       INTEGER IPDAT(NAPPL), PERCDAT(NAPPL)
       REAL ABUND, APWAT, CUMDEP, EF
       REAL FLOOD, INFILT, PERC, PERMW, PUDPERC
@@ -100,14 +99,14 @@ C-----------------------------------------------------------------------
             ENDIF
           ENDDO
 
-          !Convert water table dates
-          DO K = 1, NTBL
-            IF (IIRRI .EQ. 'D') THEN
-              WTDAT(J) = INCDAT(YRPLT, JULWTB(K))
-            ELSE
-              WTDAT(J) = JULWTB(K)
-            ENDIF
-          ENDDO
+!          !Convert water table dates
+!          DO K = 1, NTBL
+!            IF (IIRRI .EQ. 'D') THEN
+!              WTDAT(J) = INCDAT(YRPLT, JULWTB(K))
+!            ELSE
+!              WTDAT(J) = JULWTB(K)
+!            ENDIF
+!          ENDDO
 
           CONVERTED = .TRUE.
         ENDIF
@@ -206,25 +205,26 @@ C-----------------------------------------------------------------------
         DEPIR = DEPIR + EF
       END IF
 
-      IF (NTBL .GT. 0) THEN
-        DO K = 1, NTBL
-          IF (YRDOY .EQ. WTDAT(J)) THEN
-            APWAT = PWAT(K)
-          ENDIF
-        END DO
-
-!       Don't change SW here - calculate an irrigation depth to add.
-        IF (APWAT .GT. 0.0) THEN
-          CUMDEP = 0.0
-          DO L = 1, NLAYR
-            IF (CUMDEP .GE. APWAT) THEN
-              DEPIR = DEPIR + SAT(L) - SW(L)  !CHP - CHECK!
-!              SW(L) = SAT(L)
-            ENDIF
-            CUMDEP = CUMDEP + DLAYR(L)
-          END DO
-        ENDIF
-      ENDIF
+!     1/23/2010 CHP move water table entries to IRRIG
+!      IF (NTBL .GT. 0) THEN
+!        DO K = 1, NTBL
+!          IF (YRDOY .EQ. WTDAT(J)) THEN
+!            APWAT = PWAT(K)
+!          ENDIF
+!        END DO
+!
+!!       Don't change SW here - calculate an irrigation depth to add.
+!        IF (APWAT .GT. 0.0) THEN
+!          CUMDEP = 0.0
+!          DO L = 1, NLAYR
+!            IF (CUMDEP .GE. APWAT) THEN
+!              DEPIR = DEPIR + SAT(L) - SW(L)  !CHP - CHECK!
+!!              SW(L) = SAT(L)
+!            ENDIF
+!            CUMDEP = CUMDEP + DLAYR(L)
+!          END DO
+!        ENDIF
+!      ENDIF
 
       DEPIR = MAX(0.0, DEPIR)
 
