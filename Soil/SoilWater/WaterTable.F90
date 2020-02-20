@@ -20,7 +20,6 @@
 !       does some of this. Also UPFLOW routine for Ritchie evap also moves
 !       water up. How do differentiate this from upflow from a water table?
 
-
 !-----------------------------------------------------------------------
     USE ModuleDefs     
     USE ModuleData

@@ -171,10 +171,10 @@
                 ! second argument of SUBSL2 is cm.
 !             SUBSL2(PF value soil layer,Distance to ground table in cm,Ith layer,SAT, Capillary rise)
 
-!          If flow negative (percolation), then reset at zero	
-           IF (FLOW < 1.E-10) FLOW = 0.	
-           FLOWUP(I) = FLOW
-          ENDIF
+!             If flow negative (percolation), then reset at zero	
+              IF (FLOW < 1.E-10) FLOW = 0.	
+              FLOWUP(I) = FLOW
+           ENDIF
         ENDDO
 
         CAPRI(1) = 0.0
