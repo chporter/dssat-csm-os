@@ -13,12 +13,12 @@ C=======================================================================
       SUBROUTINE OXLAYER (CONTROL,
      &    BD1, ES, FERTDATA, FLOODWAT, LFD10,             !Input
      &    NSWITCH, SNH4, SNO3, SOILPROP, SRAD, ST,        !Input
-     &    SW, TMAX, TMIN, UREA, XHLAI,                    !Input
+     &    SW, TMAX, TMIN, UHreduce, UREA, XHLAI,          !Input
      &    DLTSNH4, DLTSNO3, DLTUREA, OXLAYR,              !I/O
      &    ALI, TOTAML)                                    !Output
 
-      USE ModuleDefs
       USE FloodModule
+      USE FertType_mod
       IMPLICIT NONE
       SAVE
 
@@ -70,6 +70,7 @@ C=======================================================================
       REAL DLTOXU, DLTOXH4, DLTOXN3
       REAL TMPUREA, TMPNH4,  TMPNO3
       REAL TMPOXU, TMPOXH4, TMPOXN3
+      REAL UHreduce
 
 !-----------------------------------------------------------------------
       DYNAMIC = CONTROL % DYNAMIC
@@ -235,6 +236,10 @@ C=======================================================================
       AK = 0.25+0.075*OC(1)
       AK = AMAX1 (AK,0.25)
       AK = AMIN1 (AK,1.00)
+
+!     2020-04-13 US & CHP
+!     If urease inhibitor is active, reduce hydrolysis rate
+      AK = AK * UHreduce
 
       DO I = IST, IHR
          K      = 7 - I

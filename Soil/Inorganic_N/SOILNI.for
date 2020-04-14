@@ -151,6 +151,7 @@ C=======================================================================
       REAL NNOM_a, NNOM_b
 
       REAL CumSumFert
+      REAL UHreduce
 
 !-----------------------------------------------------------------------
 !     Constructed variables are defined in ModuleDefs.
@@ -273,7 +274,7 @@ C=======================================================================
         CALL OXLAYER(CONTROL,
      &    BD1, ES, FERTDATA, FLOODWAT, LFD10,             !Input
      &    NSWITCH, SNH4, SNO3, SOILPROP, SRAD, ST,        !Input
-     &    SW, TMAX, TMIN, UREA, XHLAI,                    !Input
+     &    SW, TMAX, TMIN, UHreduce, UREA, XHLAI,           !Input
      &    DLTSNH4, DLTSNO3, DLTUREA, OXLAYR,              !I/O
      &    ALI, TOTAML)                                    !Output
 
@@ -382,15 +383,17 @@ C=======================================================================
      &    ALGFIX, BD1, CUMFNRO, TOTAML, TOTFLOODN)        !Output
       ENDIF
       
-!     This needs to be called from NTRANS for upland cases, too.
-      IF (FLOOD .LE. 0.0) THEN
-        CALL OXLAYER(CONTROL,
-     &    BD1, ES, FERTDATA, FLOODWAT, LFD10,             !Input
-     &    NSWITCH, SNH4, SNO3, SOILPROP, SRAD, ST,        !Input
-     &    SW, TMAX, TMIN, UREA, XHLAI,                    !Input
-     &    DLTSNH4, DLTSNO3, DLTUREA, OXLAYR,              !I/O
-     &    ALI, TOTAML)                                    !Output
-      ENDIF
+! 2020-04-13 US & CHP
+! Move this down to urea hydrolysis section
+!!     This needs to be called from NTRANS for upland cases, too.
+!      IF (FLOOD .LE. 0.0) THEN
+!        CALL OXLAYER(CONTROL,
+!     &    BD1, ES, FERTDATA, FLOODWAT, LFD10,             !Input
+!     &    NSWITCH, SNH4, SNO3, SOILPROP, SRAD, ST,        !Input
+!     &    SW, TMAX, TMIN, UREA, XHLAI,                    !Input
+!     &    DLTSNH4, DLTSNO3, DLTUREA, OXLAYR,              !I/O
+!     &    ALI, TOTAML)                                    !Output
+!      ENDIF
 
 !     ----------------------------------------------------------------
 !     If DOY=IUOF (has been set in Fert_Place), then all the urea has
@@ -488,33 +491,52 @@ C=======================================================================
 !       UREA hydrolysis
 !-----------------------------------------------------------------------
         IF (IUON) THEN
-!         Calculate the maximum hydrolysis rate of urea.
-!         AK = -1.12 + 1.31 * OC(L) + 0.203 * PH(L) - 0.155 * OC(L) * PH(L)
-          AK = -1.12 + 1.31 * SSOMC(L) * 1.E-4 * KG2PPM(L) + 0.203*PH(L)
-     &              - 0.155 * SSOMC(L) * 1.E-4 * KG2PPM(L) * PH(L)
-          AK = AMAX1 (AK, 0.25)
-
 !         If urease inhibitor is active, reduce hydrolysis rate
+          UHreduce = 1.0
           IF ((YRDOY .LT. UIData % UIEND) .AND. 
      &        (L .LE. UIData % UILYR)) THEN
-            AK = AK * (1.0 - UIData % UIEFF/100.)
+            UHreduce = 1.0 - UIData % UIEFF/100.
           ENDIF
+            
+! 2020-04-13 US & CHP
+! Move oxidation layer call here. Urea hydrolysis was being done twice
+!       for top layer when fertilizer is unincorporated.
+          IF (L == 1 .AND. FERTDATA % UNINCO) THEN
+            IF (FLOOD .LE. 0.0) THEN
+              CALL OXLAYER(CONTROL,
+     &          BD1, ES, FERTDATA, FLOODWAT, LFD10,             !Input
+     &          NSWITCH, SNH4, SNO3, SOILPROP, SRAD, ST,        !Input
+     &          SW, TMAX, TMIN, UHreduce, UREA, XHLAI,          !Input
+     &          DLTSNH4, DLTSNO3, DLTUREA, OXLAYR,              !I/O
+     &          ALI, TOTAML)                                    !Output
+            ENDIF
 
-!         Calculate the soil water factor for the urea hydrolysis, and
-!         limit it between 0 and 1.
-          IF (FLOOD .GT. 0.0) THEN
-             WFUREA = 1.0
-          ELSE
-            WFUREA = WFSOM + 0.20
-            WFUREA = AMAX1 (AMIN1 (WFUREA, 1.), 0.)
+         ELSE
+!           Calculate the maximum hydrolysis rate of urea.
+!           AK = -1.12 + 1.31 * OC(L) + 0.203 * PH(L) - 0.155 * OC(L) * PH(L)
+            AK = -1.12 + 1.31 * SSOMC(L) * 1.E-4 * KG2PPM(L)+0.203*PH(L)
+     &                - 0.155 * SSOMC(L) * 1.E-4 * KG2PPM(L) * PH(L)
+            AK = AMAX1 (AK, 0.25)
+
+!           Reduce AK for urease inhibitor
+            AK = AK * UHreduce
+            
+!           Calculate the soil water factor for the urea hydrolysis, and
+!           limit it between 0 and 1.
+            IF (FLOOD .GT. 0.0) THEN
+               WFUREA = 1.0
+            ELSE
+              WFUREA = WFSOM + 0.20
+              WFUREA = AMAX1 (AMIN1 (WFUREA, 1.), 0.)
+            ENDIF
+            
+!           Calculate the amount of urea that hydrolyses.
+            UHYDR = AK * AMIN1 (WFUREA, TFUREA) * (UREA(L) + DLTUREA(L))
+            UHYDR = AMIN1 (UHYDR, UREA(L)+DLTUREA(L))
+            
+            DLTUREA(L) = DLTUREA(L) - UHYDR 
+            DLTSNH4(L) = DLTSNH4(L) + UHYDR 
           ENDIF
-
-!         Calculate the amount of urea that hydrolyses.
-          UHYDR = AK * AMIN1 (WFUREA, TFUREA) * (UREA(L) + DLTUREA(L))
-          UHYDR = AMIN1 (UHYDR, UREA(L)+DLTUREA(L))
-
-          DLTUREA(L) = DLTUREA(L) - UHYDR 
-          DLTSNH4(L) = DLTSNH4(L) + UHYDR 
         ENDIF   !End of IF block on IUON.
 
 !-----------------------------------------------------------------------
@@ -864,7 +886,7 @@ C=======================================================================
         CALL OXLAYER(CONTROL,
      &    BD1, ES, FERTDATA, FLOODWAT, LFD10,              !Input
      &    NSWITCH, SNH4, SNO3, SOILPROP, SRAD, ST,        !Input
-     &    SW, TMAX, TMIN, UREA, XHLAI,                    !Input
+     &    SW, TMAX, TMIN, UHreduce, UREA, XHLAI,          !Input
      &    DLTSNH4, DLTSNO3, DLTUREA, OXLAYR,              !I/O
      &    ALI, TOTAML)                                    !Output
       ENDIF
