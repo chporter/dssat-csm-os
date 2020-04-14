@@ -478,6 +478,7 @@ NT9D   InorgN layer 9  Total inorganic N, soil layer 9 (ug [N]/g [soil])        
 NUAC   N Uptake kg/ha  N uptake, cumulative (kg [N]/ha)                         .
 NUAD   N Uptake kg/ha  N uptake (kg [N]/ha)                                     .
 NUPC   N Uptake kg/ha  N uptake (kg [N]/ha)                                     .
+NURTD  N urea k/ha     Total urea N in soil profile (kg/ha                      .
 OXRN   Oxnitr kgN/ha/d Ox Layer Nitrif Rt (kg [N]/ha/d)                         .
 QNAD   Stolon N kg/ha  Stolon N (kg/ha)                                         .
 QN%D   Stolon N %        Stolon N concentration (%)       
