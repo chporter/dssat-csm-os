@@ -355,6 +355,14 @@ C=======================================================================
 
         OXLAYR % DailyCalc = .FALSE.
         LFD10 = INCYD(YRDOY, 10)  !Use YRDOY format, increment 10 days
+
+        IF (IUON) THEN
+!         If urease inhibitor is active, reduce hydrolysis rate
+          UHreduce = 1.0 !assume no reduction
+          IF (YRDOY .LT. UIData % UIEND) THEN
+            UHreduce = 1.0 - UIData % UIEFF/100.
+          ENDIF
+        ENDIF
       ENDIF
 
 !     ------------------------------------------------------------------
@@ -383,17 +391,15 @@ C=======================================================================
      &    ALGFIX, BD1, CUMFNRO, TOTAML, TOTFLOODN)        !Output
       ENDIF
       
-! 2020-04-13 US & CHP
-! Move this down to urea hydrolysis section
-!!     This needs to be called from NTRANS for upland cases, too.
-!      IF (FLOOD .LE. 0.0) THEN
-!        CALL OXLAYER(CONTROL,
-!     &    BD1, ES, FERTDATA, FLOODWAT, LFD10,             !Input
-!     &    NSWITCH, SNH4, SNO3, SOILPROP, SRAD, ST,        !Input
-!     &    SW, TMAX, TMIN, UREA, XHLAI,                    !Input
-!     &    DLTSNH4, DLTSNO3, DLTUREA, OXLAYR,              !I/O
-!     &    ALI, TOTAML)                                    !Output
-!      ENDIF
+!     Ammonia volatilization in oxidation layer
+      IF (FLOOD .LE. 0.0) THEN
+        CALL OXLAYER(CONTROL,
+     &    BD1, ES, FERTDATA, FLOODWAT, LFD10,             !Input
+     &    NSWITCH, SNH4, SNO3, SOILPROP, SRAD, ST,        !Input
+     &    SW, TMAX, TMIN, UHreduce, UREA, XHLAI,          !Input
+     &    DLTSNH4, DLTSNO3, DLTUREA, OXLAYR,              !I/O
+     &    ALI, TOTAML)                                    !Output
+      ENDIF
 
 !     ----------------------------------------------------------------
 !     If DOY=IUOF (has been set in Fert_Place), then all the urea has
@@ -491,26 +497,12 @@ C=======================================================================
 !       UREA hydrolysis
 !-----------------------------------------------------------------------
         IF (IUON) THEN
-!         If urease inhibitor is active, reduce hydrolysis rate
-          UHreduce = 1.0
-          IF ((YRDOY .LT. UIData % UIEND) .AND. 
-     &        (L .LE. UIData % UILYR)) THEN
-            UHreduce = 1.0 - UIData % UIEFF/100.
-          ENDIF
             
 ! 2020-04-13 US & CHP
 ! Move oxidation layer call here. Urea hydrolysis was being done twice
 !       for top layer when fertilizer is unincorporated.
-          IF (L == 1 .AND. FERTDATA % UNINCO) THEN
-            IF (FLOOD .LE. 0.0) THEN
-              CALL OXLAYER(CONTROL,
-     &          BD1, ES, FERTDATA, FLOODWAT, LFD10,             !Input
-     &          NSWITCH, SNH4, SNO3, SOILPROP, SRAD, ST,        !Input
-     &          SW, TMAX, TMIN, UHreduce, UREA, XHLAI,          !Input
-     &          DLTSNH4, DLTSNO3, DLTUREA, OXLAYR,              !I/O
-     &          ALI, TOTAML)                                    !Output
-            ENDIF
-
+          IF (L == 1 .AND. FLOOD .LE. 0.0) THEN
+!           Do nothing because OXLAYR already computed NH3 volatilization
          ELSE
 !           Calculate the maximum hydrolysis rate of urea.
 !           AK = -1.12 + 1.31 * OC(L) + 0.203 * PH(L) - 0.155 * OC(L) * PH(L)
@@ -524,7 +516,7 @@ C=======================================================================
 !           Calculate the soil water factor for the urea hydrolysis, and
 !           limit it between 0 and 1.
             IF (FLOOD .GT. 0.0) THEN
-               WFUREA = 1.0
+              WFUREA = 1.0
             ELSE
               WFUREA = WFSOM + 0.20
               WFUREA = AMAX1 (AMIN1 (WFUREA, 1.), 0.)
