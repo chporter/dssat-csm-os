@@ -279,12 +279,12 @@ C  06/15/2014 CHP Written
 
 !       Set the sigma k value based on curve type
         IF (FertFile(Fertype) % NRFNC .EQ. "LIN") THEN
-          FertFile(Fertype) % NSIGK = 0.2
+          FertFile(Fertype) % NSIGK = 0.1
         ELSEIF (FertFile(Fertype) % NRFNC .EQ. "STP") THEN
           FertFile(Fertype) % NSIGK = 2.0
         ELSE 
-          IF (FertFile(Fertype) % NSIGK .LT. 0.2) THEN
-            FertFile(Fertype) % NSIGK = 0.2
+          IF (FertFile(Fertype) % NSIGK .LT. 0.1) THEN
+            FertFile(Fertype) % NSIGK = 0.1
           ENDIF
           IF (FertFile(Fertype) % NSIGK .GT. 2.0) THEN
             FertFile(Fertype) % NSIGK = 2.0
