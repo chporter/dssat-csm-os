@@ -356,13 +356,14 @@ C=======================================================================
         OXLAYR % DailyCalc = .FALSE.
         LFD10 = INCYD(YRDOY, 10)  !Use YRDOY format, increment 10 days
 
-        IF (IUON) THEN
-!         If urease inhibitor is active, reduce hydrolysis rate
-          UHreduce = 1.0 !assume no reduction
-          IF (YRDOY .LT. UIData % UIEND) THEN
-            UHreduce = 1.0 - UIData % UIEFF/100.
-          ENDIF
-        ENDIF
+      ENDIF
+
+      UHreduce = 1.0
+!     If urease inhibitor is active, reduce hydrolysis rate
+      IF (YRDOY .LT. UIData % UIEND) THEN
+        UHreduce = 1.0 - UIData % UIEFF/100.
+        IUYRDOY = INCDAT(YRDOY, 21)
+        CALL YR_DOY (IUYRDOY, YEAR, IUOF)
       ENDIF
 
 !     ------------------------------------------------------------------
@@ -501,7 +502,7 @@ C=======================================================================
 ! 2020-04-13 US & CHP
 ! Move oxidation layer call here. Urea hydrolysis was being done twice
 !       for top layer when fertilizer is unincorporated.
-          IF (L == 1 .AND. FLOOD .LE. 0.0) THEN
+          IF (L == 1 .AND. FLOOD .LE. 0.0 .AND. FERTDATA % UNINCO) THEN
 !           Do nothing because OXLAYR already computed NH3 volatilization
          ELSE
 !           Calculate the maximum hydrolysis rate of urea.

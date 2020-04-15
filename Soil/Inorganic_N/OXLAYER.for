@@ -221,15 +221,16 @@ C=======================================================================
         DailyCalc = .FALSE.
       ENDIF
 
-      IF (DailyCalc) THEN
+! IF just dried from flooded conditions, do this:
+!      IF (DailyCalc) THEN
          IHDAY = 1
          IST   = 6
          IHR   = 6
-      ELSE
-         IHDAY = 12
-         IST   = 1
-         IHR   = 12
-      ENDIF
+!      ELSE
+!         IHDAY = 12
+!         IST   = 1
+!         IHR   = 12
+!      ENDIF
 
 !     Potential Hydrolysis
 !     AK = -1.12+0.31*OC(1)+0.203*PH(1)-0.0355*OC(1)*PH(1)
@@ -294,7 +295,8 @@ C=======================================================================
          ENDIF
          SWF     = AMIN1 (SWF,1.0)
          SWF     = AMAX1 (SWF,0.0)
-         UALGCT  = 0.25*ALGACT
+!        UALGCT  = 0.25*ALGACT
+         UALGCT  = 0.0
          OXUHYDR = AMAX1 (AK,UALGCT)*AMIN1 (SWF,TEMPFU)*TMPOXU
 
 !        CHP added this check, but still get negative urea 
