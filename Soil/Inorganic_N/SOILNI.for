@@ -286,8 +286,8 @@ C=======================================================================
         CALL NH3Vol (CONTROL,
      &    ES, FLOODWAT, NSWITCH, SNH4, SNO3,              !Input
      &    SOILPROP, SRAD, ST, SW, TMAX, TMIN,             !Input
-     &    UHreduce, UHYDR1,UREA, XHLAI,                   !Input
-     &    DLTSNH4, DLTSNO3, DLTUREA, OXLAYR,              !I/O
+     &    UHYDR1,UREA, XHLAI,                             !Input
+     &    DLTSNH4, DLTSNO3, DLTUREA,                      !I/O
      &    TOTAML)                                         !Output
 
         LFD10 = CONTROL % YRSIM
@@ -418,8 +418,8 @@ C=======================================================================
           CALL NH3Vol (CONTROL,
      &      ES, FLOODWAT, NSWITCH, SNH4, SNO3,            !Input
      &      SOILPROP, SRAD, ST, SW, TMAX, TMIN,           !Input
-     &      UHreduce, UHYDR1,UREA, XHLAI,                 !Input
-     &      DLTSNH4, DLTSNO3, DLTUREA, OXLAYR,            !I/O
+     &      UHYDR1,UREA, XHLAI,                           !Input
+     &      DLTSNH4, DLTSNO3, DLTUREA,                    !I/O
      &      TOTAML)                                       !Output
       ENDIF
 
@@ -907,8 +907,8 @@ C=======================================================================
         CALL NH3Vol (CONTROL,
      &    ES, FLOODWAT, NSWITCH, SNH4, SNO3,              !Input
      &    SOILPROP, SRAD, ST, SW, TMAX, TMIN,             !Input
-     &    UHreduce, UHYDR1,UREA, XHLAI,                   !Input
-     &    DLTSNH4, DLTSNO3, DLTUREA, OXLAYR,              !I/O
+     &    UHYDR1,UREA, XHLAI,                             !Input
+     &    DLTSNH4, DLTSNO3, DLTUREA,                      !I/O
      &    TOTAML)                                         !Output
       ENDIF
 
