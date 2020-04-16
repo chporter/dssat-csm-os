@@ -73,6 +73,10 @@ C=======================================================================
       IMPLICIT  NONE
       SAVE
 !-----------------------------------------------------------------------
+      EXTERNAL SoilNi_init, Ncheck_inorg, Flood_chem, OXLAYER, 
+     &  Denit_DayCent, Denit_CERES, NOx_pulse, YR_DOY, NFLUX, 
+     &  SoilNiBal, OpSoilNi, DayCent_Diffusivity, NH3Vol
+
       CHARACTER*1 ISWNIT, MEGHG
 
       LOGICAL IUON
@@ -85,7 +89,7 @@ C=======================================================================
       REAL NFAC, NNOM   
       REAL SNH4_AVAIL, SNO3_AVAIL, SUMFERT
       REAL SWEF, TFUREA
-      REAL TNH4, TNH4NO3, TNO3, UHYDR
+      REAL TNH4, TNH4NO3, TNO3, UHYDR, UHYDR1
       REAL WFSOM, WFUREA, XL, XMIN
       REAL TUREA
       
@@ -238,6 +242,7 @@ C=======================================================================
         TFNITY = 0.0    !
         IUOF   = 0
         IUON   = .FALSE.
+        UHYDR1 = 0.0
 
         DO L = 1, NLAYR
           DLTSNO3(L)    = 0.0     
@@ -277,6 +282,13 @@ C=======================================================================
      &    SW, TMAX, TMIN, UHreduce, UREA, XHLAI,           !Input
      &    DLTSNH4, DLTSNO3, DLTUREA, OXLAYR,              !I/O
      &    ALI, TOTAML)                                    !Output
+
+        CALL NH3Vol (CONTROL,
+     &    ES, FLOODWAT, NSWITCH, SNH4, SNO3,              !Input
+     &    SOILPROP, SRAD, ST, SW, TMAX, TMIN,             !Input
+     &    UHreduce, UHYDR1,UREA, XHLAI,                   !Input
+     &    DLTSNH4, DLTSNO3, DLTUREA, OXLAYR,              !I/O
+     &    TOTAML)                                         !Output
 
         LFD10 = CONTROL % YRSIM
 
@@ -393,13 +405,22 @@ C=======================================================================
       ENDIF
       
 !     Ammonia volatilization in oxidation layer
-      IF (FLOOD .LE. 0.0) THEN
-        CALL OXLAYER(CONTROL,
-     &    BD1, ES, FERTDATA, FLOODWAT, LFD10,             !Input
-     &    NSWITCH, SNH4, SNO3, SOILPROP, SRAD, ST,        !Input
-     &    SW, TMAX, TMIN, UHreduce, UREA, XHLAI,          !Input
-     &    DLTSNH4, DLTSNO3, DLTUREA, OXLAYR,              !I/O
-     &    ALI, TOTAML)                                    !Output
+      IF (NBUND .GT. 0) THEN
+        IF (FLOOD .LE. 0.0) THEN
+          CALL OXLAYER(CONTROL,
+     &      BD1, ES, FERTDATA, FLOODWAT, LFD10,           !Input
+     &      NSWITCH, SNH4, SNO3, SOILPROP, SRAD, ST,      !Input
+     &      SW, TMAX, TMIN, UHreduce, UREA, XHLAI,        !Input
+     &      DLTSNH4, DLTSNO3, DLTUREA, OXLAYR,            !I/O
+     &      ALI, TOTAML)                                  !Output
+        ENDIF
+      ELSE
+          CALL NH3Vol (CONTROL,
+     &      ES, FLOODWAT, NSWITCH, SNH4, SNO3,            !Input
+     &      SOILPROP, SRAD, ST, SW, TMAX, TMIN,           !Input
+     &      UHreduce, UHYDR1,UREA, XHLAI,                 !Input
+     &      DLTSNH4, DLTSNO3, DLTUREA, OXLAYR,            !I/O
+     &      TOTAML)                                       !Output
       ENDIF
 
 !     ----------------------------------------------------------------
@@ -498,13 +519,12 @@ C=======================================================================
 !       UREA hydrolysis
 !-----------------------------------------------------------------------
         IF (IUON) THEN
-            
 ! 2020-04-13 US & CHP
 ! Move oxidation layer call here. Urea hydrolysis was being done twice
 !       for top layer when fertilizer is unincorporated.
-          IF (L == 1 .AND. FLOOD .LE. 0.0 .AND. FERTDATA % UNINCO) THEN
+!         IF (L == 1 .AND. FLOOD .LE. 0.0 .AND. FERTDATA % UNINCO) THEN
 !           Do nothing because OXLAYR already computed NH3 volatilization
-         ELSE
+!         ELSE
 !           Calculate the maximum hydrolysis rate of urea.
 !           AK = -1.12 + 1.31 * OC(L) + 0.203 * PH(L) - 0.155 * OC(L) * PH(L)
             AK = -1.12 + 1.31 * SSOMC(L) * 1.E-4 * KG2PPM(L)+0.203*PH(L)
@@ -529,7 +549,8 @@ C=======================================================================
             
             DLTUREA(L) = DLTUREA(L) - UHYDR 
             DLTSNH4(L) = DLTSNH4(L) + UHYDR 
-          ENDIF
+            IF (L .EQ. 1) UHYDR1 = UHYDR
+!          ENDIF
         ENDIF   !End of IF block on IUON.
 
 !-----------------------------------------------------------------------
@@ -876,12 +897,19 @@ C=======================================================================
         ENDIF
       
         !Update oxidation layer variables
-        CALL OXLAYER(CONTROL,
-     &    BD1, ES, FERTDATA, FLOODWAT, LFD10,              !Input
+       CALL OXLAYER(CONTROL,
+     &    BD1, ES, FERTDATA, FLOODWAT, LFD10,             !Input
      &    NSWITCH, SNH4, SNO3, SOILPROP, SRAD, ST,        !Input
-     &    SW, TMAX, TMIN, UHreduce, UREA, XHLAI,          !Input
+     &    SW, TMAX, TMIN, UHreduce, UREA, XHLAI,           !Input
      &    DLTSNH4, DLTSNO3, DLTUREA, OXLAYR,              !I/O
      &    ALI, TOTAML)                                    !Output
+
+        CALL NH3Vol (CONTROL,
+     &    ES, FLOODWAT, NSWITCH, SNH4, SNO3,              !Input
+     &    SOILPROP, SRAD, ST, SW, TMAX, TMIN,             !Input
+     &    UHreduce, UHYDR1,UREA, XHLAI,                   !Input
+     &    DLTSNH4, DLTSNO3, DLTUREA, OXLAYR,              !I/O
+     &    TOTAML)                                         !Output
       ENDIF
 
 !     Loop through soil layers for integration
