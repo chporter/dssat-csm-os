@@ -543,14 +543,23 @@ C=======================================================================
               WFUREA = AMAX1 (AMIN1 (WFUREA, 1.), 0.)
             ENDIF
             
+!           temp chp
+            wfurea = 0.7
+
 !           Calculate the amount of urea that hydrolyses.
             UHYDR = AK * AMIN1 (WFUREA, TFUREA) * (UREA(L) + DLTUREA(L))
             UHYDR = AMIN1 (UHYDR, UREA(L)+DLTUREA(L))
-            
+
+            if (l==1) then
+            write(1777,*)yrdoy, ak, wfurea, tfurea, urea(l)
+            endif
+
             DLTUREA(L) = DLTUREA(L) - UHYDR 
             DLTSNH4(L) = DLTSNH4(L) + UHYDR 
             IF (L .EQ. 1) UHYDR1 = UHYDR
 !          ENDIF
+        ELSE
+            UHYDR1 = 0.0
         ENDIF   !End of IF block on IUON.
 
 !-----------------------------------------------------------------------
@@ -662,12 +671,18 @@ C=======================================================================
 
         NITRIFppm(L) = NFAC * NH4(L)
 
+!     temp chp
+        NITRIFppm(L) = NITRIFppm(L) * 0.5
+
         IF (NSWITCH .EQ. 5) THEN
           NITRIF(L) = 0.0
         ELSE
 !         NITRIFppm in ppm; NITRIF in kg/ha  changed by PG from * kg2ppm
           NITRIF(L)  = NITRIFppm(L) / KG2PPM(L)
         ENDIF
+
+!! temp chp
+!        NITRIF(L) = 0.0
 
         IF (NH4(L).LE. 0.01) THEN
           TFNITY(L) = 0.0

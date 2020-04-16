@@ -115,7 +115,7 @@ C=======================================================================
 
 !     chp 2020-04-16
 !     It's not likely that SW(1) will be exactly equal to SAT(1). 
-!     Maybe use Aloha_mod grandual transition between 90% of SAT and SAT.
+!     Maybe use gradual transition between 90% of SAT and SAT.
       IF (SW(1) .EQ. SAT(1)) THEN
          ALI = 1.0 - EXP(-SURAD/10.0)
       ELSE
@@ -137,9 +137,18 @@ C=======================================================================
          SWI = (SAT(1)-DUL(1))/(SAT(1)-SW(1))
       ENDIF
 
+      ! (1)  Calculate indices for bio-chemical activity
+      OXNI = (NH4C+NH3C)/10.0+0.10
+      OXNI = AMIN1 (OXNI,1.0)
+
 !     Biological and chemical activity of "OXIDIZED" layer
       ELAG   = AMIN1(OXNI,FPI,ALI,STI,SWI)
+!      ELAG   = AMIN1(FPI,ALI,STI,SWI)
       ALGACT = ELAG*(4.0-ALGACT)*ALGACT           ! 4->3.5
+
+!     TEMP CHP
+      WRITE(2222,*) YRDOY,OXNI,FPI,ALI,STI,SWI,ALGACT
+
       IF (XHLAI .GT. 1.5) THEN
          ALGACT = AMIN1(ALGACT,ALI)
       ENDIF
@@ -166,7 +175,7 @@ C=======================================================================
 !     CONSTANT VALUE
 !     HES = AMPES*SIN(3.141593*FLOAT(I)/12.0)+0.08    ! 10->9
 !     HES = AMPES*SIN(3.141593*0.5)+0.08    
-      HES = AMPES * 1.08    
+      HES = AMPES + 0.08    
 !     HES = AMAX1 (ES/24.0,ABS(HES))  !<- es/24 will never be > hes
 
 !     BIOACT = AMIN1(1.0,5.0*ALGACT)
@@ -193,9 +202,14 @@ C=======================================================================
          UHYDM = UHYDC*0.001/14.0          ! (Molar conc.)
          PHUHY = AMIN1 (10.0,-LOG10(UHYDM))
          OXPH    = OXPH1 + 1.0*(10.0-PHUHY)/10.0
+      ELSE
+         OXPH = PH(1)
       ENDIF
       OXPH = AMIN1 (OXPH,9.0)
       OXPH = AMAX1 (OXPH,PH(1))
+
+!     TEMP CHP
+      WRITE(1234,*)YRDOY,OXPH, OXPH1
 
 !     AMMONIA loss routine ... calculate surface layer NH3
       TK     = STEMP + 273.15
@@ -212,11 +226,17 @@ C=======================================================================
          NH3C  = SNH3 * KG2PPM(1) * DLAYR(1) / SURF_THICK
       ENDIF
       
+
       WIND    = 7.15*HES           ! 7.15 -> 5.75
       ALOGHK  = 158.559-8621.06/TK-25.6767*ALOG(TK)+0.035388*TK 
       HK      = EXP(ALOGHK)
 !     OXH3M   = OXH3C*0.001/14.0
       NH3M   = NH3C *0.001/14.0  !<-molar
+
+!     HK FOR Daily might be too high, NH3P too low
+!     TEMP CHP
+      HK = HK * 0.75
+
       NH3P   = 10.0 * NH3M / HK  !partial pressure                
       IF (NH3P .GT. 0.0) THEN
          AMLOS1  = 0.0012*NH3P + 0.0014*WIND + 0.00086*NH3P**2 * WIND
@@ -228,7 +248,8 @@ C=======================================================================
          AMLOS1 = 0.0
       ENDIF
 
-      AMLOS1  = AMIN1 (AMLOS1,TMPNH4-SNH4MIN)
+!     Factor of 12 to account for daily vs hourly rates.
+      AMLOS1  = AMIN1 (AMLOS1,TMPNH4-SNH4MIN) * 12. 
       AMLOSS  = AMLOSS + AMLOS1
       TOTAML  = TOTAML + AMLOS1
       TMPNH4  = TMPNH4 - AMLOS1
