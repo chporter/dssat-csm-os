@@ -7,7 +7,7 @@ C  04/15/2020 US/CHP adapted from OXLAYER
 C=======================================================================
 
       SUBROUTINE NH3Vol (CONTROL,
-     &    ES, FLOODWAT, NSWITCH, SNH4, SNO3,              !Input
+     &    ES, FERTDATA, FLOODWAT, NSWITCH, SNH4, SNO3,    !Input
      &    SOILPROP, SRAD, ST, SW, TMAX, TMIN,             !Input
      &    UHYDR1,UREA, XHLAI,                             !Input
      &    DLTSNH4, DLTSNO3, DLTUREA,                      !I/O
@@ -30,15 +30,16 @@ C=======================================================================
       REAL    TOTAML
       REAL NH4C, NH3C, UHYDR1
 
+      LOGICAL UNINCO
       REAL    SNH4MIN  
       REAL    KG2PPM(NL)
-      REAL    SURCEC
+      REAL    SURCEC, SURF_THICK
 
 !     Local Variables
       REAL     SURAD,OXALI,STI,SWI,AMPES,     HTMFAC,MF,TK
       REAL     STEMP,HES,PHSHIFT,XL,XL2,OXPH1 !TEMPFU,SWF,UALGCT,OXUHYDR
       REAL     UHYDC, UHYDM, PHUHY, OXPH,             SNH3,WIND
-      REAL     ALOGHK,HK,NH3M,NH3P,AMLOS1,GLOS1    !,TFACTOR,OXNC,WF2
+      REAL     ALOGHK,HK,NH3M,NH3P,AMLOS1    !,TFACTOR,OXNC,WF2,GLOS1
       REAL     ELAG       !PHFACT,RNTRFI,HOXRNT,
 
 !     Passed Variables
@@ -50,6 +51,7 @@ C=======================================================================
       TYPE (ControlType)  CONTROL
       TYPE (SoilType)     SOILPROP
       TYPE (FloodWatType) FloodWat
+      TYPE (FertType)     FERTDATA
 
       REAL DLTUREA(NL),  DLTSNO3(NL),  DLTSNH4(NL)
       REAL TMPUREA, TMPNH4,  TMPNO3
@@ -70,6 +72,7 @@ C=======================================================================
       MSALB  = SOILPROP % MSALB
       SAT   = SOILPROP % SAT
       SW1 = SW(1)
+      UNINCO  = FERTDATA % UNINCO
 
 !***********************************************************************
 !***********************************************************************
@@ -98,6 +101,13 @@ C=======================================================================
       TMPUREA = UREA(1) + DLTUREA(1)
       TMPNH4  = SNH4(1) + DLTSNH4(1)
       TMPNO3  = SNO3(1) + DLTSNO3(1)
+
+      IF (UNINCO) THEN
+        SURF_THICK = 1.0 !Top 1cm
+      ELSE
+!       if fertilizer is incorporated, use full layer thickness
+        SURF_THICK = DLAYR(1)  
+      ENDIF 
 
 !     Compute algal activity - for saturated soil
       SURAD = SRAD*(1.0-MSALB)*EXP(-0.85*XHLAI)
@@ -179,27 +189,27 @@ C=======================================================================
       ENDIF
 
       IF (UHYDR1 .GT. 0.001) THEN
-         UHYDC = UHYDR1 * KG2PPM(1)
+         UHYDC = UHYDR1 * KG2PPM(1) * DLAYR(1) / SURF_THICK
          UHYDM = UHYDC*0.001/14.0          ! (Molar conc.)
          PHUHY = AMIN1 (10.0,-LOG10(UHYDM))
-         OXPH    = OXPH1 + OXALI*(10.0-PHUHY)/10.0
+         OXPH    = OXPH1 + 1.0*(10.0-PHUHY)/10.0
       ENDIF
       OXPH = AMIN1 (OXPH,9.0)
       OXPH = AMAX1 (OXPH,PH(1))
-      
+
 !     AMMONIA loss routine ... calculate surface layer NH3
       TK     = STEMP + 273.15
-      NH4C   = TMPNH4  * KG2PPM(1)
+      NH4C   = TMPNH4  * KG2PPM(1) * DLAYR(1) / SURF_THICK
       NH3C = NH4C /(1.0+10.0**(0.09018+2729.92/TK-OXPH))
       
 !     Calculate ammonia (Mass) using inverse of (KG2PPM) OXLT in cm)
       IF (NH3C  .LE. 0.00001 .AND. NH3C  .GT. 0.0) THEN
          NH3C = 0.0
       ENDIF
-      SNH3    = NH3C  / KG2PPM(1)
-      IF (SNH3 .GT. (TMPNH4-SNH4MIN)) THEN
+      SNH3    = NH3C  / (KG2PPM(1) * DLAYR(1) / SURF_THICK)
+      IF (SNH3 .GT. (TMPNH4 - SNH4MIN)) THEN
          SNH3  = TMPNH4 - SNH4MIN
-         NH3C  = SNH3 * KG2PPM(1)
+         NH3C  = SNH3 * KG2PPM(1) * DLAYR(1) / SURF_THICK
       ENDIF
       
       WIND    = 7.15*HES           ! 7.15 -> 5.75
@@ -217,17 +227,14 @@ C=======================================================================
       IF (NH3P .LE. 0.0) THEN
          AMLOS1 = 0.0
       ENDIF
-      GLOS1   = AMLOS1
+
       AMLOS1  = AMIN1 (AMLOS1,TMPNH4-SNH4MIN)
       AMLOSS  = AMLOSS + AMLOS1
       TOTAML  = TOTAML + AMLOS1
-      TMPNH4    = TMPNH4   - AMLOS1
-      NH4C    = TMPNH4   * KG2PPM(1)
+      TMPNH4  = TMPNH4 - AMLOS1
 
-      write(888,'(I8,20(1X,E12.4))') yrdoy, amlos1, totaml, tmpnh4, 
-     &     snh4(1), tmpno3, sno3(1), NH3P, WIND, NH3C, NH4C, OXPH
-
-!     DLTSNH4 = TMPNH4 - SNH4(1) is exactly 2X AMLOS1
+!      write(888,'(I8,20(1X,E12.4))') yrdoy, amlos1, totaml, tmpnh4, 
+!     &     snh4(1), tmpno3, sno3(1), NH3P, WIND, NH3C, NH4C, OXPH
 
 !     Surface variables
       DLTUREA(1) = MAX(0.0, TMPUREA) - UREA(1)

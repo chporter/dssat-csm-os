@@ -540,6 +540,7 @@ set(
         "Soil/Inorganic_N/EQUIL2.for"
         "Soil/Inorganic_N/NCHECK_inorg.for"
         "Soil/Inorganic_N/NFLUX.for"
+        "Soil/Inorganic_N/NH3Vol.for"
         "Soil/Inorganic_N/OPSOILNI.for"
         "Soil/Inorganic_N/OXLAYER.for"
         "Soil/Inorganic_N/SOILNI.for"

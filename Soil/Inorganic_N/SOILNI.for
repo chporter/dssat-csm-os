@@ -284,7 +284,7 @@ C=======================================================================
      &    ALI, TOTAML)                                    !Output
 
         CALL NH3Vol (CONTROL,
-     &    ES, FLOODWAT, NSWITCH, SNH4, SNO3,              !Input
+     &    ES, FERTDATA, FLOODWAT, NSWITCH, SNH4, SNO3,    !Input
      &    SOILPROP, SRAD, ST, SW, TMAX, TMIN,             !Input
      &    UHYDR1,UREA, XHLAI,                             !Input
      &    DLTSNH4, DLTSNO3, DLTUREA,                      !I/O
@@ -416,7 +416,7 @@ C=======================================================================
         ENDIF
       ELSE
           CALL NH3Vol (CONTROL,
-     &      ES, FLOODWAT, NSWITCH, SNH4, SNO3,            !Input
+     &      ES, FERTDATA, FLOODWAT, NSWITCH, SNH4, SNO3,  !Input
      &      SOILPROP, SRAD, ST, SW, TMAX, TMIN,           !Input
      &      UHYDR1,UREA, XHLAI,                           !Input
      &      DLTSNH4, DLTSNO3, DLTUREA,                    !I/O
@@ -905,7 +905,7 @@ C=======================================================================
      &    ALI, TOTAML)                                    !Output
 
         CALL NH3Vol (CONTROL,
-     &    ES, FLOODWAT, NSWITCH, SNH4, SNO3,              !Input
+     &    ES, FERTDATA, FLOODWAT, NSWITCH, SNH4, SNO3,    !Input
      &    SOILPROP, SRAD, ST, SW, TMAX, TMIN,             !Input
      &    UHYDR1,UREA, XHLAI,                             !Input
      &    DLTSNH4, DLTSNO3, DLTUREA,                      !I/O
