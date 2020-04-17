@@ -79,7 +79,7 @@ C=======================================================================
 
       CHARACTER*1 ISWNIT, MEGHG
 
-      LOGICAL IUON
+      LOGICAL IUON, UNINCO
 
       INTEGER DOY, DYNAMIC, INCDAT, IUYRDOY, IUOF, L
       INTEGER NLAYR
@@ -156,6 +156,7 @@ C=======================================================================
 
       REAL CumSumFert
       REAL UHreduce
+      REAL NITRIFM, PHNITRIF
 
 !-----------------------------------------------------------------------
 !     Constructed variables are defined in ModuleDefs.
@@ -190,6 +191,7 @@ C=======================================================================
       FLOOD = FLOODWAT % FLOOD
 
       FERTDAY = FERTDATA % FERTDAY
+      UNINCO  = FERTDATA % UNINCO
 
       SRAD = WEATHER % SRAD
       TMAX = WEATHER % TMAX
@@ -243,6 +245,8 @@ C=======================================================================
         IUOF   = 0
         IUON   = .FALSE.
         UHYDR1 = 0.0
+        NITRIFppm = 0.0
+        NFAC = 0.0
 
         DO L = 1, NLAYR
           DLTSNO3(L)    = 0.0     
@@ -646,7 +650,22 @@ C=======================================================================
         WF2 = AMAX1 (WF2, 0.0)
         WF2 = AMIN1 (1.0, WF2)
 
-        PHFACT  = AMIN1 (1.0, 0.33 * PH(L) - 1.36)
+        IF (IUON .AND. L == 1) THEN
+           IF (UNINCO) THEN
+!            (Molar conc. for top 1cm)
+             NITRIFM = NITRIFppm(1)/SW(1)*0.001/14.0 * DLAYR(1) / 1.0 
+           ELSE
+!            (Molar conc. for top layer)
+             NITRIFM = NITRIFppm(1)/SW(1)*0.001/14.0   
+           ENDIF
+           PHNITRIF = -LOG10(NITRIFM*5)+5.0
+           PHNITRIF = AMIN1(PH(L), PHNITRIF)
+        ELSE
+           PHNITRIF = PH(L)
+        ENDIF
+
+!       PHFACT  = AMIN1 (1.0, 0.33 * PH(L) - 1.36)
+        PHFACT  = AMIN1 (1.0, 0.33 * PHNITRIF - 1.36)
 !        NH4(L)  = SNH4(L)*KG2PPM(L)
 
         IF (FLOOD .GT. 0.0) THEN
@@ -672,7 +691,7 @@ C=======================================================================
         NITRIFppm(L) = NFAC * NH4(L)
 
 !     temp chp
-        NITRIFppm(L) = NITRIFppm(L) * 0.5
+!        NITRIFppm(L) = NITRIFppm(L) * 0.5
 
         IF (NSWITCH .EQ. 5) THEN
           NITRIF(L) = 0.0
