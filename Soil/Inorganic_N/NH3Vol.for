@@ -54,7 +54,7 @@ C=======================================================================
       TYPE (FertType)     FERTDATA
 
       REAL DLTUREA(NL),  DLTSNO3(NL),  DLTSNH4(NL)
-      REAL TMPUREA, TMPNH4,  TMPNO3
+      REAL TMPUREA, TMPNH4,  TMPNO3, TMPNH3
 
 !-----------------------------------------------------------------------
       DYNAMIC = CONTROL % DYNAMIC
@@ -91,6 +91,10 @@ C=======================================================================
 
       ALGACT = 0.1
       SNH4MIN  = 0.0   
+      TMPUREA = 0.0
+      TMPNH4 = 0.0
+      TMPNO3 = 0.0
+      TMPNH3 = 0.0
 
 !***********************************************************************
 !***********************************************************************
@@ -136,6 +140,9 @@ C=======================================================================
       IF (SW(1) .LT. DUL(1)) THEN
          SWI = (SAT(1)-DUL(1))/(SAT(1)-SW(1))
       ENDIF
+
+      NH4C = TMPNH4 * KG2PPM(1) * DLAYR(1) / SURF_THICK
+      NH3C = TMPNH3 * KG2PPM(1) * DLAYR(1) / SURF_THICK
 
       ! (1)  Calculate indices for bio-chemical activity
       OXNI = (NH4C+NH3C)/10.0+0.10
@@ -220,10 +227,10 @@ C=======================================================================
       IF (NH3C  .LE. 0.00001 .AND. NH3C  .GT. 0.0) THEN
          NH3C = 0.0
       ENDIF
-      SNH3    = NH3C  / (KG2PPM(1) * DLAYR(1) / SURF_THICK)
-      IF (SNH3 .GT. (TMPNH4 - SNH4MIN)) THEN
-         SNH3  = TMPNH4 - SNH4MIN
-         NH3C  = SNH3 * KG2PPM(1) * DLAYR(1) / SURF_THICK
+      TMPNH3    = NH3C  / (KG2PPM(1) * DLAYR(1) / SURF_THICK)
+      IF (TMPNH3 .GT. (TMPNH4 - SNH4MIN)) THEN
+         TMPNH3 = TMPNH4 - SNH4MIN
+         NH3C   = TMPNH3 * KG2PPM(1) * DLAYR(1) / SURF_THICK
       ENDIF
       
 
