@@ -47,6 +47,13 @@
 !   Kd should be a user specified input in the Fields section of FILEX
 !   based on field measurement.  For now assume a constant value.  
 
+    DLAYR = SOILPROP % DLAYR
+    DUL   = SOILPROP % DUL
+    DS    = SOILPROP % DS
+    NLAYR = SOILPROP % NLAYR
+    SAT   = SOILPROP % SAT
+    WCR   = SOILPROP % WCR
+
 !***********************************************************************
 !***********************************************************************
     LatInflow  = 0.0
@@ -73,13 +80,6 @@
 !***********************************************************************
   IF (DYNAMIC .EQ. SEASINIT) THEN
 !-----------------------------------------------------------------------
-    DLAYR = SOILPROP % DLAYR
-    DUL   = SOILPROP % DUL
-    DS    = SOILPROP % DS
-    NLAYR = SOILPROP % NLAYR
-    SAT   = SOILPROP % SAT
-    WCR   = SOILPROP % WCR
-
     IF (MgmtWTD < DS(NLAYR)) THEN
 !     Initialize soil water content with water table depth, starting at bottom of profile
       DO L = NLAYR, 1, -1

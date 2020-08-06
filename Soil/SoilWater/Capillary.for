@@ -201,21 +201,21 @@
 !
 
 
-!!     --------------------------------------------------------------------
-!!     TEMP CHP
-!!     output using generic output routine
-!      IF (NLAYR > 12) THEN
-!        DO I = 12, NLAYR
-!          CAPR12 = CAPR12 + CAPRI(I)
-!        ENDDO
-!      ELSE
-!        CAPR12 = CAPRI(12)
-!      ENDIF
-!      CALL OPGENERIC ( 
-!     &    NVars, Width, HeaderTxt, FormatTxt,  
-!     &    CAPRI(1), CAPRI(2), CAPRI(3), CAPRI(4), CAPRI(5), CAPRI(6),
-!     &    CAPRI(7), CAPRI(8), CAPRI(9), CAPRI(10), CAPRI(11), CAPR12)
-!
+!     --------------------------------------------------------------------
+!     TEMP CHP
+!     output using generic output routine
+      IF (NLAYR > 12) THEN
+        DO I = 12, NLAYR
+          CAPR12 = CAPR12 + CAPRI(I)
+        ENDDO
+      ELSE
+        CAPR12 = CAPRI(12)
+      ENDIF
+      CALL OPGENERIC ( 
+     &    NVars, Width, HeaderTxt, FormatTxt,  
+     &    CAPRI(1), CAPRI(2), CAPRI(3), CAPRI(4), CAPRI(5), CAPRI(6),
+     &    CAPRI(7), CAPRI(8), CAPRI(9), CAPRI(10), CAPRI(11), CAPR12)
+
 !***********************************************************************
 !***********************************************************************
 !     END OF DYNAMIC IF CONSTRUCT
