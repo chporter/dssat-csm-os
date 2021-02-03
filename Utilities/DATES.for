@@ -78,9 +78,13 @@ C=======================================================================
 !     CHP 03/26/2014 - change "cross-over" year from 2015 to 2020
 !     CHP 07/06/2017 - change "cross-over" year from 2020 to 2025
           IF (YR .LE. 25) THEN
-            YRDOY = (2000 + YR) * 1000 + DOY
-          ELSE
+!           for isimip
+!           YRDOY = (2000 + YR) * 1000 + DOY
             YRDOY = (1900 + YR) * 1000 + DOY
+          ELSE
+!           for isimip
+!           YRDOY = (1900 + YR) * 1000 + DOY
+            YRDOY = (1800 + YR) * 1000 + DOY
           ENDIF
         ENDIF
       ENDIF
@@ -157,10 +161,15 @@ C=======================================================================
 !     CHP 03/26/2014 - change "cross-over" year from 2015 to 2020
 !     CHP 07/06/2017 - change "cross-over" year from 2020 to 2025
           IF (YR .LE. 25) THEN
-            YRDOY = (2000 + YR) * 1000 + DOY
-          ELSE
+!           for isimip
+!           YRDOY = (2000 + YR) * 1000 + DOY
             YRDOY = (1900 + YR) * 1000 + DOY
+          ELSE
+!           for isimip
+!           YRDOY = (1900 + YR) * 1000 + DOY
+            YRDOY = (1800 + YR) * 1000 + DOY
           ENDIF 
+          ELSE
         ENDIF
         
       ENDIF
