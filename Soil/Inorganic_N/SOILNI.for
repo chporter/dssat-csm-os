@@ -97,6 +97,7 @@ C=======================================================================
       REAL SNO3(NL), SSOMC(0:NL), ST(NL), SW(NL)
       REAL TFNITY(NL), UNH4(NL), UNO3(NL), UREA(NL), UPPM(NL)
       REAL NH4_plant(NL), NO3_plant(NL)
+      REAL UNO3Y(NL), UNH4Y(NL)
       
       REAL IMM(0:NL,NELEM), MNR(0:NL,NELEM)
 
@@ -251,6 +252,9 @@ C=======================================================================
           N2O_data % wfps(L) = min (1.0, sw(L) / soilprop % poros(L))
         ENDDO
 
+        UNO3Y = 0.0
+        UNH4Y = 0.0
+
 !        IF (INDEX('N',ISWNIT) > 0) RETURN
 
 !         Set initial SOM and nitrogen conditions for each soil layer.
@@ -316,15 +320,21 @@ C=======================================================================
       DLTSNO3 = 0.0 
       DLTSNH4 = 0.0 
 
+!     Save N uptake (yesterday's value) to update later
+      UNO3Y = UNO3
+      UNH4Y = UNH4
+
       DO L = 1, NLAYR
 !       Update with yesterday's plant N uptake
-        SNO3(L) = SNO3(L) - UNO3(L)
-        SNH4(L) = SNH4(L) - UNH4(L)
+!       SNO3(L) = SNO3(L) - UNO3(L)
+!       SNH4(L) = SNH4(L) - UNH4(L)
+
+!       This is yesterday's uptake
+        DLTSNO3(L) = -UNO3(L) 
+        DLTSNH4(L) = -UNH4(L) 
+
         NO3(L)  = SNO3(L) * KG2PPM(L)
         NH4(L)  = SNH4(L) * KG2PPM(L)
-!       Must calculate WTNUP here or it won't be guaranteed to match N
-!       removed from the soil today and the balance will be off.
-        WTNUP = WTNUP + (UNO3(L) + UNH4(L)) / 10.    !g[N]/m2 cumul.
       ENDDO
 
 !     Check for fertilizer added today or active slow release fertilizers 
@@ -881,9 +891,18 @@ C=======================================================================
 
 !     Loop through soil layers for integration
       DO L = 1, NLAYR
+!       Correction for Nuptake from today
+        DLTSNO3(L) = DLTSNO3(L) - UNO3(L) + UNO3Y(L)
+        DLTSNH4(L) = DLTSNH4(L) - UNH4(L) + UNH4Y(L)
+
         SNO3(L) = SNO3(L) + DLTSNO3(L)
         SNH4(L) = SNH4(L) + DLTSNH4(L)
         UREA(L) = UREA(L) + DLTUREA(L)
+
+        IF (SNO3(L) .LT. -1.E-8 .OR. SNH4(L) .LT. -1.E-8) THEN
+          WRITE(567,'(A12,I4,I8,I3,2F12.6)') 
+     &      CONTROL%FILEX, CONTROL%TRTNUM, YRDOY, L, SNO3(L), SNH4(L)
+        ENDIF
 
 !       Underflow trapping
         IF (ABS(SNO3(L)) .LT. 1.E-8) SNO3(L) = 0.0
@@ -910,8 +929,9 @@ C=======================================================================
         TNO3  = TNO3  + SNO3(L)
         TUREA = TUREA + UREA(L)
         TN2OnitrifD = TN2OnitrifD + N2Onitrif(L)
-!       Calculate this where uptake is removed from the soil.
-!       WTNUP = WTNUP + (UNO3(L) + UNH4(L)) / 10.    !g[N]/m2 cumul.
+
+        WTNUP = WTNUP + (UNO3(L) + UNH4(L)) / 10.    !g[N]/m2 cumul.
+
         IF (L ==1) THEN
           TMINERN = MNR(0,N) + MNR(1,N)
           TIMMOBN = IMM(0,N) + IMM(1,N)
