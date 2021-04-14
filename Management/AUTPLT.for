@@ -14,6 +14,7 @@ C  08/01/2002 CHP Merged RUNINIT and SEASINIT into INIT section
 C  08/20/2002 GH  Added YRDIF as a constructred variable
 !  06/10/2005 CHP Fixed initialization for automatic planting
 !  12/05/2014 DK  Forced planting for automatic planting ("F" option)
+!  04/14/2021 CHP Added CONTROL % CropStatus
 C-----------------------------------------------------------------------
 C  INPUT : JUL,DLAYR,LL,DUL,SW,ST,PWDINF,PWDINL,SWPLTL,
 C          SWPLTH,SWPLTD,PTX,PTTN,YRPLT
@@ -50,7 +51,7 @@ C=====================================================================
 
       INTEGER DOY, I, IPLT, MULTI, NOUTDO, PWDINF, PWDINL
       INTEGER YEAR, YR, YRDOY, MDATE, YRPLT, IDATE, YRSIM, YRDIF
-      INTEGER DYNAMIC,YRO,ISIM, PWDPLT,PWDYR, MNUM, CropStatus
+      INTEGER DYNAMIC,YRO,ISIM, PWDPLT,PWDYR, MNUM
 
       REAL AVGSW, CUMSW, DTRY, PTTN, PTX
       REAL SWPLTD, SWPLTL, SWPLTH, TSDEP, XDEP, XDEPL
@@ -305,7 +306,7 @@ C-----------------------------------------------------------------------
       IF (YRDOY .GE. PWDINL .AND. YRPLT .NE. YRDOY) THEN
         YRPLT = -99
         MDATE = YRDOY
-        CropStatus = 11  !failure to plant
+        CONTROL % CropStatus = 11  !failure to plant
         CALL YR_DOY(PWDINF,PWDYR,PWDPLT)
         CALL YR_DOY(PWDINL,YR,IPLT)
 

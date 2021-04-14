@@ -13,6 +13,7 @@ C  04/17/2002 GH  Modified for sequence analysis
 C  08/01/2002 CHP Merged RUNINIT and SEASINIT into INIT section
 C  08/20/2002 GH  Modified for Y2K
 !  12/16/2004 CHP Added defaults for HPC and HBPC
+!  04/14/2021 CHP Added CONTROL % CropStatus
 C=======================================================================
 
       SUBROUTINE AUTHAR(CONTROL, ISWWAT,
@@ -35,7 +36,7 @@ C=======================================================================
       INTEGER NHAR, YR, IDATE, DEARLY, YREARLY
       INTEGER MULTI, TIMDIF, YRPLT, YRDIF, YRSIM
       INTEGER YRDOY, MDATE, DAP, NOUTDO
-      INTEGER DYNAMIC, RUN, CropStatus
+      INTEGER DYNAMIC, RUN
       INTEGER HDATE(3), HSTG(3) 
       INTEGER STGDOY(20) 
 
@@ -133,7 +134,7 @@ C Harvest at maturity, NR8
 C-----------------------------------------------------------------------
       IF (IHARI .EQ. 'M') THEN
         YREND     = MDATE
-        CropStatus = 1    !harvest at maturity
+        CONTROL % CropStatus = 1    !harvest at maturity
 
 C-----------------------------------------------------------------------
 C Harvest on specified day of year, HDATE
@@ -142,7 +143,7 @@ C-----------------------------------------------------------------------
         IF (YRDOY .GE. HDATE(1)) THEN
 C-GH    IF (YRDOY .GE. HDATE(1) .OR. MDATE .EQ. YRDOY) THEN
            YREND     = YRDOY
-           CropStatus = 2 !harvest on reported date
+           CONTROL % CropStatus = 2 !harvest on reported date
         ENDIF
 
 C-----------------------------------------------------------------------

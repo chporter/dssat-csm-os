@@ -69,6 +69,9 @@ C=======================================================================
 !       Added 2019-19-17 CHP Cumulative net mineralization
         REAL NMINC
 
+!       Added 2021-04-14 CHP End of season crop status
+        INTEGER CRST
+
       End Type SummaryType
 
       Type EvaluateType
@@ -142,7 +145,7 @@ C-----------------------------------------------------------------------
       INTEGER NDCH
       REAL TMINA, TMAXA, SRADA, DAYLA, CO2A, PRCP, ETCP, ESCP, EPCP
       REAL N2OEC  !kg/ha
-      INTEGER CO2EC
+      INTEGER CO2EC, CRST
 
 !     2020-12-30 CHP added WYEAR - weather year corresponding to YRSIM date
 !     For forecast mode may be different than simulation year
@@ -376,6 +379,8 @@ C     Initialize OPSUM variables.
       SUMDAT % ESCP   = -99.9 !Cumul soil evap (mm), planting to harvest
       SUMDAT % EPCP   = -99.9 !Cumul transp (mm), planting to harvest
 
+      SUMDAT % CRST   = -99   !End of season crop status code
+
       CALL GET('WEATHER','WSTA',WSTAT)
 !      IF (LenString(WSTAT) < 1) THEN
 !        WSTAT = WSTATION
@@ -468,6 +473,8 @@ C     Initialize OPSUM variables.
       ESCP   = SUMDAT % ESCP  !Cumul soil evap (mm), planting to harvest
       EPCP   = SUMDAT % EPCP  !Cumul transp (mm), planting to harvest
 
+      CRST   = SUMDAT % CRST  !End of season crop status code
+
       CALL GET('WEATHER','WYEAR',WYEAR)
 C-------------------------------------------------------------------
 C
@@ -526,7 +533,8 @@ C-------------------------------------------------------------------
      &'WATER PRODUCTIVITY..................................',
      &'................    ',
      &'NITROGEN PRODUCTIVITY...........  ',
-     &'SEASONAL ENVIRONMENTAL DATA (Planting to harvest)..............')
+     &'SEASONAL ENVIRONMENTAL DATA (Planting to harvest)..............',
+     &'STATUS')
 
           WRITE (NOUTDS,400)
 ! CHP 3/14/2018 USE P# for REPNO instead of C# for CRPNO, which isn't used.
@@ -547,7 +555,8 @@ C-------------------------------------------------------------------
      &   '     YPTM     YPIM',
      &   '    DPNAM    DPNUM    YPNAM    YPNUM',
      &   '  NDCH TMAXA TMINA SRADA DAYLA   CO2A   PRCP   ETCP',
-     &   '   ESCP   EPCP')
+     &   '   ESCP   EPCP',
+     &   '  CRST')
         ENDIF
         END IF   ! VSH
 
@@ -647,7 +656,8 @@ C-------------------------------------------------------------------
      &                 YPPM_TXT, YPEM_TXT, YPTM_TXT, YPIM_TXT,
      &    DPNAM_TXT, DPNUM_TXT, YPNAM_TXT, YPNUM_TXT,
      &    NDCH, TMAXA_TXT, TMINA_TXT, SRADA_TXT, DAYLA_TXT, 
-     &                 CO2A_TXT, PRCP_TXT, ETCP_TXT, ESCP_TXT, EPCP_TXT
+     &                 CO2A_TXT, PRCP_TXT, ETCP_TXT, ESCP_TXT, EPCP_TXT,
+     &    CRST
 
   503   FORMAT(     
                                               
@@ -680,7 +690,10 @@ C-------------------------------------------------------------------
 
 !       NDCH, TMINA, TMAXA, SRADA, DAYLA, CO2A, PRCP, ETCP, ESCP, EPCP
 !    &  I6,3F6.1,F6.2,5F7.1)
-     &  I6,9A)
+     &  I6,9A,
+
+!       CRST
+     &  I6)
 
         CLOSE (NOUTDS)
         END IF   ! VSH
@@ -698,7 +711,7 @@ C-------------------------------------------------------------------
      &KICM, KUPC, SKAM, RECM, ONTAM, ONAM, OPTAM, OPAM, OCTAM, OCAM, 
      &CO2EC, DMPPM, DMPEM, DMPTM, DMPIM, YPPM, YPEM, YPTM, YPIM, DPNAM, 
      &DPNUM, YPNAM, YPNUM, NDCH, TMAXA, TMINA, SRADA, DAYLA, CO2A, 
-     &PRCP, ETCP, ESCP, EPCP,   
+     &PRCP, ETCP, ESCP, EPCP, CRST,   
      &vCsvlineSumOpsum, vpCsvlineSumOpsum, vlngthSumOpsum) 
             
             CALL LinklstSumOpsum(vCsvlineSumOpsum) 
@@ -1057,6 +1070,9 @@ C=======================================================================
 !       From N2O_Mod
         CASE ('N2OEC');SUMDAT % N2OEC  = VALUE(I)
         CASE ('CO2EC');SUMDAT % CO2EC  = VALUE(I)
+
+!       Crop status
+        CASE ('CRST') ;SUMDAT % CRST   = VALUE(I)
 
         END SELECT
       ENDDO

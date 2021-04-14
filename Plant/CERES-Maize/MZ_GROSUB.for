@@ -31,6 +31,7 @@
 !  07/13/2006 CHP Added P model
 !  10/31/2007 CHP Added simple K model.
 !  01/03/2013 CHP Initialization for RLV prevents carryover 
+!  04/14/2021 CHP Added CropStatus
 !----------------------------------------------------------------------
 !
 !  Called : MAIZE
@@ -58,7 +59,7 @@
      &      STOVN, STOVWT, SUMP, SWFAC, TOPWT, TURFAC, UNH4,  !Output
      &      UNO3, VSTAGE, WTLF, WTNCAN, WTNLF, WTNSD, WTNST,  !Output
      &      WTNUP, WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD,      !Output
-     &      KUptake, KSTRES)                                  !Output
+     &      KUptake, KSTRES, CropStatus)                      !Output
 
       USE ModuleDefs
       USE Interface_SenLig_Ceres
@@ -1656,8 +1657,8 @@ C-GH 60     FORMAT(25X,F5.2,13X,F5.2,7X,F5.2)
 !         sensitivity.
 !              IF (ICOLD .GE. 15) THEN
               IF (ICOLD .GE. CDAY) THEN
-                  WRITE(MESSAGE(1),'("Crop experienced ",I3,
-     &               " days below",F6.1,"C") )') CDAY, TSEN
+                  WRITE(MESSAGE(1),'(A,I3,A,F6.1,A)')
+     &              "Crop experienced ",CDAY," days below",TSEN,"C"
                   MESSAGE(2) = "Growth program terminated."
                   CALL WARNING(2,ERRKEY, MESSAGE)
 !                 WRITE (*,2800)
@@ -1693,6 +1694,7 @@ C-GH 60     FORMAT(25X,F5.2,13X,F5.2,7X,F5.2)
               ENDIF   
               ISTAGE = 6           
               MDATE = YRDOY
+              CropStatus = 33  !water stress
           ENDIF
 
 !--------------------------------------------------------------

@@ -30,6 +30,7 @@
 !                 to ecotype file (TSEN)
 !  07/13/2006 CHP Added P model
 !  09/06/2007 JIL Modified and added new components for IXIM model
+!  04/14/2021 CHP Added CropStatus
 !----------------------------------------------------------------------
 !
 !  Called : CERES
@@ -56,7 +57,7 @@
      &      SI1, SI3, SKERWT, SLA, STMWTO, STOVER, STOVN,       !Output
      &      STOVWT, SUMP, SWFAC, TOPWT, TURFAC, UNH4, UNO3,     !Output
      &      VSTAGE, WTLF, WTNCAN, WTNLF, WTNSD, WTNST, WTNUP,   !Output
-     &      WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD)               !Output
+     &      WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD, CropStatus)   !Output
 
       USE ModuleDefs
       USE Interface_SenLig_Ceres
@@ -1832,8 +1833,8 @@ C	         ECNP = (5.0 - 0.0114 * XSTAGE)/100.0 !Ear critical [N] (frac)
 !         sensitivity.
 !              IF (ICOLD .GE. 15) THEN
               IF (ICOLD .GE. CDAY) THEN
-                  WRITE(MESSAGE(1),'("Crop experienced ",I3,
-     &               " days below",F6.1,"C") )') CDAY, TSEN
+                  WRITE(MESSAGE(1),'(A,I3,A,F6.1,A)')
+     &              "Crop experienced ",CDAY," days below",TSEN,"C"
                   MESSAGE(2) = "Growth program terminated."
                   CALL WARNING(2,ERRKEY, MESSAGE)
 !                 WRITE (*,2800)

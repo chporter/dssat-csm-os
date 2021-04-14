@@ -55,6 +55,7 @@ C  08/09/2012 GH  Added CSCAS model
 !  05/10/2017 CHP removed SALUS model
 !  12/01/2015 WDB added Sugarbeet
 !  09/01/2018  MJ modified Canegro interface, IRRAMT added.
+!  04/14/2021 CHP Added CropStatus - start with MZ & SW
 C=======================================================================
 
       SUBROUTINE PLANT(CONTROL, ISWITCH,
@@ -150,6 +151,11 @@ C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
       REAL, DIMENSION(0:NL) :: SomLitC
       REAL, DIMENSION(0:NL,NELEM) :: SomLitE
       LOGICAL, PARAMETER :: OR_OUTPUT = .FALSE.
+
+!     Arrays which contain data for printing in SUMMARY.OUT file
+      INTEGER, PARAMETER :: SUMNUM = 1
+      CHARACTER*4, DIMENSION(SUMNUM) :: LABEL
+      REAL, DIMENSION(SUMNUM) :: VALUE
 
 !-----------------------------------------------------------------------
 !     Constructed variables are defined in ModuleDefs.
@@ -276,6 +282,7 @@ C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
       UNO3     = 0.0
       UH2O     = 0.0
       CropStatus = -99
+      CONTROL % CropStatus = -99
 
       CALL READ_ASCE_KT(CONTROL, MEEVP)
 
@@ -320,6 +327,7 @@ C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
       SENESCE % ResLig = 0.0
       SENESCE % ResE   = 0.0
       CropStatus = -99
+      CONTROL % CropStatus = -99
 
 !***********************************************************************
 !***********************************************************************
@@ -494,6 +502,7 @@ C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
      &     EOP, HARVFRAC, NH4, NO3, SKi_Avail,            !Input
      &     SPi_AVAIL, SNOW,                               !Input
      &     SOILPROP, SW, TRWUP, WEATHER, YREND, YRPLT,    !Input
+     &     CropStatus,                                    !Output
      &     CANHT, HARVRES, KCAN, KEP, KUptake, MDATE,     !Output
      &     NSTRES, PORMIN, PUptake, RLV, RWUMX, SENESCE,  !Output
      &     STGDOY, FracRts, UNH4, UNO3, XLAI, XHLAI)      !Output
@@ -667,6 +676,13 @@ c     Total LAI must exceed or be equal to healthy LAI:
 !     -------------------------------------------------
       END SELECT
 
+!     If the crop status (local value) from crop models was given a value, use it.
+!     Crop status may come in from other routines such as auto-planting and auto-harvest.
+!     Some crops may modify the CONTROL % CropStatus directly.
+      IF (CropStatus > 0) THEN
+        CONTROL % CropStatus = CropStatus
+      ENDIF
+
 !***********************************************************************
 !***********************************************************************
 !     Processing after calls to crop models:
@@ -692,6 +708,32 @@ c     Total LAI must exceed or be equal to healthy LAI:
           CANHT = 0.5
           FixCanht = .FALSE.
         ENDIF
+
+!***********************************************************************
+!***********************************************************************
+      ELSEIF (DYNAMIC .EQ. SEASEND) THEN
+!-----------------------------------------------------------------------
+!     Store Summary.out labels and values in arrays to send to
+!     OPSUM routines for printing.  Integers are temporarily 
+!     saved as real numbers for placement in real array.
+      LABEL(1)  = 'CRST'; VALUE(1)  = CONTROL % CropStatus
+
+      !Send labels and values to OPSUM
+      CALL SUMVALS (SUMNUM, LABEL, VALUE) 
+
+! End of season crop status codes:
+! Code - Definition
+!    1 - crop matured normally
+!    2 - crop harvested on reported date
+!   11 - failure to plant (automatic planting)
+!   12 - failure to germinate
+!   21 - crop mature due to slow grain filling
+!   31 - crop died due to heat stress
+!   32 - crop died due to cold stress
+!   33 - crop died due to deficit water stress
+!   34 - crop died due to excess water stress
+!   51 - crop died due to pest damage
+
 
 !***********************************************************************
       ENDIF
