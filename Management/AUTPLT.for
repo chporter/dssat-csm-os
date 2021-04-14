@@ -50,7 +50,7 @@ C=====================================================================
 
       INTEGER DOY, I, IPLT, MULTI, NOUTDO, PWDINF, PWDINL
       INTEGER YEAR, YR, YRDOY, MDATE, YRPLT, IDATE, YRSIM, YRDIF
-      INTEGER DYNAMIC,YRO,ISIM, PWDPLT,PWDYR, MNUM
+      INTEGER DYNAMIC,YRO,ISIM, PWDPLT,PWDYR, MNUM, CropStatus
 
       REAL AVGSW, CUMSW, DTRY, PTTN, PTX
       REAL SWPLTD, SWPLTL, SWPLTH, TSDEP, XDEP, XDEPL
@@ -305,6 +305,7 @@ C-----------------------------------------------------------------------
       IF (YRDOY .GE. PWDINL .AND. YRPLT .NE. YRDOY) THEN
         YRPLT = -99
         MDATE = YRDOY
+        CropStatus = 11  !failure to plant
         CALL YR_DOY(PWDINF,PWDYR,PWDPLT)
         CALL YR_DOY(PWDINL,YR,IPLT)
 

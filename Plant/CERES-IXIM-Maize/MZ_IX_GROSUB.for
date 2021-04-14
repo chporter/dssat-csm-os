@@ -92,7 +92,8 @@
 	REAL        CVF
       REAL        CO2X(10)    
       REAL        CO2Y(10)    
-      REAL        CO2         
+      REAL        CO2
+      INTEGER     CropStatus         
       REAL        CSD1        
       REAL        CSD2        
       REAL        CUMDTTEG      
@@ -1613,7 +1614,8 @@ C	         ECNP = (5.0 - 0.0114 * XSTAGE)/100.0 !Ear critical [N] (frac)
                 ELSE                                                   !
                   SUMDTT = P5                                          !
 	            ISTAGE = 6                                           !
-	            MDATE  = YRDOY                                       !
+	            MDATE  = YRDOY 
+                  CropStatus = 21  !mature due to slow grain filling    !
                   CALL YR_DOY(YRDOY, YR, DOY)                          !
                   WRITE(MESSAGE(1),2700) DOY                           !
                   CALL WARNING(1,ERRKEY, MESSAGE)                      !
@@ -1631,6 +1633,7 @@ C	         ECNP = (5.0 - 0.0114 * XSTAGE)/100.0 !Ear critical [N] (frac)
                 SUMDTT = P5                                            !
 	          ISTAGE = 6                                             !
 	          MDATE  = YRDOY                                         !
+                CropStatus = 21  !mature due to slow grain filling    !
                 CALL YR_DOY(YRDOY, YR, DOY)                            !
                 WRITE(MESSAGE(1),2700) DOY                             !
                 CALL WARNING(1,ERRKEY, MESSAGE)                        !
@@ -1823,20 +1826,24 @@ C	         ECNP = (5.0 - 0.0114 * XSTAGE)/100.0 !Ear critical [N] (frac)
               ENDIF
               ISTAGE = 6
               MDATE = YRDOY
+              CropStatus = 32  !cold stress
           ELSE
 !         JIL/CHP Added optional CDAY from ecotype file for cold 
 !         sensitivity.
 !              IF (ICOLD .GE. 15) THEN
               IF (ICOLD .GE. CDAY) THEN
-                  WRITE(MESSAGE(1),2800)
-                  CALL WARNING(1,ERRKEY, MESSAGE)
-                  WRITE (*,2800)
+                  WRITE(MESSAGE(1),'("Crop experienced ",I3,
+     &               " days below",F6.1,"C") )') CDAY, TSEN
+                  MESSAGE(2) = "Growth program terminated."
+                  CALL WARNING(2,ERRKEY, MESSAGE)
+!                 WRITE (*,2800)
                   IF (IDETO .EQ. 'Y') THEN
-                      WRITE (NOUTDO,2800)
+                      WRITE (NOUTDO,'(A)') MESSAGE(1)
                   ENDIF
                   ISTAGE = 6
                   MDATE = YRDOY
-              ENDIF
+                  CropStatus = 32  !cold stress
+             ENDIF
           ENDIF
 
           !------------------------------------------------------------
@@ -1862,6 +1869,7 @@ C	         ECNP = (5.0 - 0.0114 * XSTAGE)/100.0 !Ear critical [N] (frac)
               ENDIF   
               ISTAGE = 6           
               MDATE = YRDOY
+              CropStatus = 33  !water stress
           ENDIF
 
           !------------------------------------------------------------

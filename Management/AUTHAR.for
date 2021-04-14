@@ -35,7 +35,7 @@ C=======================================================================
       INTEGER NHAR, YR, IDATE, DEARLY, YREARLY
       INTEGER MULTI, TIMDIF, YRPLT, YRDIF, YRSIM
       INTEGER YRDOY, MDATE, DAP, NOUTDO
-      INTEGER DYNAMIC, RUN
+      INTEGER DYNAMIC, RUN, CropStatus
       INTEGER HDATE(3), HSTG(3) 
       INTEGER STGDOY(20) 
 
@@ -133,6 +133,7 @@ C Harvest at maturity, NR8
 C-----------------------------------------------------------------------
       IF (IHARI .EQ. 'M') THEN
         YREND     = MDATE
+        CropStatus = 1    !harvest at maturity
 
 C-----------------------------------------------------------------------
 C Harvest on specified day of year, HDATE
@@ -141,6 +142,7 @@ C-----------------------------------------------------------------------
         IF (YRDOY .GE. HDATE(1)) THEN
 C-GH    IF (YRDOY .GE. HDATE(1) .OR. MDATE .EQ. YRDOY) THEN
            YREND     = YRDOY
+           CropStatus = 2 !harvest on reported date
         ENDIF
 
 C-----------------------------------------------------------------------

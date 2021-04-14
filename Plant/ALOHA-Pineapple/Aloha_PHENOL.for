@@ -34,7 +34,7 @@ C=======================================================================
 !     REAL, DIMENSION(NL) :: FBIOM
 !     REAL, DIMENSION(20) :: SI1, SI2, SI3, SI4
 
-      INTEGER      DYNAMIC, EDATE, MDATE,HAREND
+      INTEGER      DYNAMIC, EDATE, MDATE,HAREND, CropStatus
       REAL         XSTAGE
 !TEMP      REAL         GRAINN
 
@@ -489,6 +489,7 @@ C     6 - Physiological maturity
 
           FHDATE = YRDOY                  ! physiological maturity date PMDATE = YRDOY 
           MDATE  = YRDOY                  ! Set MDATE to stop model
+          CropStatus = 1
           STGDOY(ISTAGE) = YRDOY
 
 !         Ready for next stage

@@ -112,7 +112,7 @@ C-----------------------------------------------------------------------
       CHARACTER*78 MESSAGE(10)    !Up to 10 lines of text to be output
 
       INTEGER DYNAMIC
-      INTEGER RUN !, NVALP0
+      INTEGER RUN, CropStatus !, NVALP0
       INTEGER YREND, MDATE, YRPLT  !, YRSIM, YREMRG
       INTEGER STGDOY(20)
 
@@ -275,6 +275,7 @@ C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
       UNH4     = 0.0
       UNO3     = 0.0
       UH2O     = 0.0
+      CropStatus = -99
 
       CALL READ_ASCE_KT(CONTROL, MEEVP)
 
@@ -318,6 +319,7 @@ C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
       SENESCE % ResWt  = 0.0
       SENESCE % ResLig = 0.0
       SENESCE % ResE   = 0.0
+      CropStatus = -99
 
 !***********************************************************************
 !***********************************************************************

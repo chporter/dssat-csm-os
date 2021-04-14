@@ -94,7 +94,8 @@
       REAL        CUMPH       
       REAL        CO2X(10)    
       REAL        CO2Y(10)    
-      REAL        CO2         
+      REAL        CO2 
+      INTEGER     CropStatus        
       REAL        CSD1        
       REAL        CSD2        
       REAL        CUMDTTEG      
@@ -1649,19 +1650,23 @@ C-GH 60     FORMAT(25X,F5.2,13X,F5.2,7X,F5.2)
               ENDIF
               ISTAGE = 6
               MDATE = YRDOY
+              CropStatus = 32 !cold stress
           ELSE
 !         JIL/CHP Added optional CDAY from ecotype file for cold 
 !         sensitivity.
 !              IF (ICOLD .GE. 15) THEN
               IF (ICOLD .GE. CDAY) THEN
-                  WRITE(MESSAGE(1),2800)
-                  CALL WARNING(1,ERRKEY, MESSAGE)
-                  WRITE (*,2800)
+                  WRITE(MESSAGE(1),'("Crop experienced ",I3,
+     &               " days below",F6.1,"C") )') CDAY, TSEN
+                  MESSAGE(2) = "Growth program terminated."
+                  CALL WARNING(2,ERRKEY, MESSAGE)
+!                 WRITE (*,2800)
                   IF (IDETO .EQ. 'Y') THEN
-                      WRITE (NOUTDO,2800)
+                      WRITE (NOUTDO,'(A)') MESSAGE(1)
                   ENDIF
                   ISTAGE = 6
                   MDATE = YRDOY
+                  CropStatus = 32 !cold stress
               ENDIF
           ENDIF
 

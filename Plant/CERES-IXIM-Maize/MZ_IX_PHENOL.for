@@ -574,6 +574,7 @@ C      REAL            PRLF  ! JIL Prolificacy level
                               WRITE (NOUTDO,3500)
                           ENDIF
                           MDATE  = YRDOY
+                          CropStatus = 12  !failure to germinate
                           RETURN
                       ENDIF
                  !Germinate when soil water > 0.02 cm3/cm3
