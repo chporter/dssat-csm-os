@@ -723,16 +723,16 @@ c     Total LAI must exceed or be equal to healthy LAI:
 
 ! End of season crop status codes:
 ! Code - Definition
-!    1 - crop matured normally
-!    2 - crop harvested on reported date
-!   11 - failure to plant (automatic planting)
-!   12 - failure to germinate
-!   21 - crop mature due to slow grain filling
-!   31 - crop died due to heat stress
-!   32 - crop died due to cold stress
-!   33 - crop died due to deficit water stress
-!   34 - crop died due to excess water stress
-!   51 - crop died due to pest damage
+!    1 - crop matured normally                    NORMAL
+!    2 - crop harvested on reported date          NORMAL
+!   11 - failure to plant (automatic planting)    SOWING
+!   12 - failure to germinate                     GRMNAT
+!   21 - crop mature due to slow grain filling    GRAIN 
+!   31 - crop died due to heat stress             HOT   
+!   32 - crop died due to cold stress             COLD  
+!   33 - crop died due to deficit water stress    DRY   
+!   34 - crop died due to excess water stress     WET   
+!   51 - crop died due to pest damage             PEST   
 
 
 !***********************************************************************
