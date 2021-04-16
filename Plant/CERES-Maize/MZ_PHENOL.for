@@ -892,6 +892,7 @@
               !---------------------------------------------------------
               STGDOY(ISTAGE) = YRDOY
               MDATE          = YRDOY
+              CropStatus     = 1  !crop matured normally
               !ISTAGE = 7
               ISTAGE = 10  !CHP - Prevents growth parameters from being
                            ! set back to initial values.  08/11/03
