@@ -240,6 +240,7 @@ BS       Sugar beet                                                           IB
 BW       Broad leaf weeds                                                     IB
 CB       Cabbage                                                              IB
 CH       Chickpea                                                             IB
+CI       Chia                                                                 IB
 CT       Citrus                                                               IB
 CN       Canola                                                               IB
 CO       Cotton                                                               IB
@@ -479,6 +480,7 @@ RE306    forage grasses                                                       IB
 RE401    Bush fallow residue                                                  IB
 RE402    Sugarcane                                                            IB
 RE403    Pineapple                                                            IB
+RE404    Cassava                                                              IB
 
 *Rotation
 @CDE     DESCRIPTION                                                          SO
