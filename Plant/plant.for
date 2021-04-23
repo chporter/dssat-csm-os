@@ -722,7 +722,7 @@ c     Total LAI must exceed or be equal to healthy LAI:
       CALL SUMVALS (SUMNUM, LABEL, VALUE) 
 
 ! End of season crop status codes:
-! Code - Definition
+! CRST - Definition                               Status
 !    1 - crop matured normally                    NORMAL
 !    2 - crop harvested on reported date          NORMAL
 !    3 - crop harvested at reported growth stage  NORMAL
