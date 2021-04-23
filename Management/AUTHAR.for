@@ -154,6 +154,7 @@ C-----------------------------------------------------------------------
         IF (DAP .GE. HDATE(1)) THEN
 C-GH    IF (DAP .GE. HDATE(1) .OR. MDATE .EQ. YRDOY) THEN
            YREND     = YRDOY
+           CONTROL % CropStatus = 2 !harvest on reported date
         ENDIF
 
 C-----------------------------------------------------------------------
@@ -163,6 +164,7 @@ C-----------------------------------------------------------------------
         DO I = 1, 13
           IF (HSTG(1) .EQ. I .AND. YRDOY .EQ. STGDOY(I)) THEN
             YREND     = YRDOY
+            CONTROL % CropStatus = 3 !harvest at reported growth stage
             RETURN
           ENDIF
         END DO
@@ -213,7 +215,8 @@ C           Assume harvest to occur on the first day after the defined
 C           window to terminate the simulation. This needs to be changed 
 C           to account for harvest loss of the crop;
             YREND     = YRDOY
-!            STGDOY(16) = YRDOY
+            CONTROL % CropStatus = 11  !failure to plant (automatic planting)
+!           STGDOY(16) = YRDOY
             RETURN
           ENDIF
 
@@ -236,11 +239,13 @@ C           Compute average soil moisture as percent, AVGSW***
             AVGSW = (CUMSW / SWPLTD) * 100.0
             IF (AVGSW .GE. SWPLTL .AND. AVGSW .LE. SWPLTH) THEN
                YREND = YRDOY
-!               STGDOY(16) = YRDOY
+               CONTROL % CropStatus = 6 !auto-harvest within window
+!              STGDOY(16) = YRDOY
             ENDIF
           ELSE
             !Soil water not being simulated - conditions assumed OK
             YREND = YRDOY
+            CONTROL % CropStatus = 6 !auto-harvest within window
           ENDIF
         ENDIF
 

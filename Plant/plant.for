@@ -725,6 +725,8 @@ c     Total LAI must exceed or be equal to healthy LAI:
 ! Code - Definition
 !    1 - crop matured normally                    NORMAL
 !    2 - crop harvested on reported date          NORMAL
+!    3 - crop harvested at reported growth stage  NORMAL
+!    6 - auto-harvest within window               NORMAL
 !   11 - failure to plant (automatic planting)    SOWING
 !   12 - failure to germinate                     GRMNAT
 !   21 - crop mature due to slow grain filling    GRAIN 
