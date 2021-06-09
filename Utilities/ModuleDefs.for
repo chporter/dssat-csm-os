@@ -430,6 +430,7 @@ C             CHP Added TRTNUM to CONTROL variable.
         REAL CANHT, CANWH, DXR57, EXCESS,
      &    PLTPOP, RNITP, SLAAD, XPOD
         REAL BIOMAS
+        REAL LAI, NUPTAKE
         INTEGER NR5, iSTAGE, iSTGDOY
         CHARACTER*10 iSTNAME
       END TYPE PlantType
@@ -452,11 +453,14 @@ C             CHP Added TRTNUM to CONTROL variable.
 !     Data transferred from Soil water routine
       Type WatType
         REAL DRAIN, RUNOFF, SNOW
+        REAL, DIMENSION(NL) :: SW
       End Type WatType
 
 !     Data transferred from Soil Inorganic Nitrogen routine
       Type NiType
         REAL TNOXD, TLeachD    !, TN2OD     ! added N2O PG
+        REAL NET_MINERALIZED
+        REAL, DIMENSION(NL) :: SNO3, SNH4
       End Type NiType
 
 !     Data transferred from Organic C routines
@@ -464,6 +468,7 @@ C             CHP Added TRTNUM to CONTROL variable.
         REAL TOMINFOM, TOMINSOM, TOMINSOM1, TOMINSOM2
         REAL TOMINSOM3, TNIMBSOM
         REAL MULCHMASS
+        REAL, DIMENSION(NL) :: SOC, SON
       End Type OrgCType
 
 !     Data from weather

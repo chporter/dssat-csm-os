@@ -1,46 +1,50 @@
 !=======================================================================
-!  OPGENERIC, Subroutine
+!  OPGENERIC, Module
 !
 !  Generates output for simulated data, up to 12 variables
+!  Variables must be available through ModuleData GET routines.
+!  Variables are hard-wired in this code, but could be swapped out easily.
 !-----------------------------------------------------------------------
 !  Revision history
 !
 !  09/22/2008 CHP Written
+!  06/09/2021 CHP Modified to compile output from various routines and
+!                 to send to csv generic output.
 !=======================================================================
 
-      SUBROUTINE OPGENERIC ( 
-     &    NVars, Width, HeaderTxt, FormatTxt,  
-     &    VAR1, VAR2, VAR3, VAR4, VAR5, VAR6, 
-     &    VAR7, VAR8, VAR9, VAR10,VAR11,VAR12)
-
-!-----------------------------------------------------------------------
-! FormatTxt = Character string for format, e.g., "(2F8.3)"
-! HeaderTxt = Character string for headers, e.g., "    TRWU   SWFAC"
-! NVars     = Integer number of variables to be output, e.g. 2
-! Width     = Number of characters in header text
-! Var1 thru Var10 = Values to be output daily.  Can supply zero values for 
-!               dummy variables, e.g., TRWU, SWFAC, 0., 0., 0., 0., 0., etc.
-! All variables are real
-!-----------------------------------------------------------------------
+      Module OPGENERIC (SOILPROP)
 
       USE ModuleDefs
       USE ModuleData
       IMPLICIT  NONE
       SAVE
 
-      CHARACTER*80      , INTENT(IN) :: FormatTxt 
-      CHARACTER*120     , INTENT(IN) :: HeaderTxt
-      INTEGER           , INTENT(IN) :: NVars, Width
-      REAL              , INTENT(IN) :: Var1, Var2, Var3, Var4, Var5
-      REAL              , INTENT(IN) :: Var6, Var7, Var8, Var9, Var10
-      REAL              , INTENT(IN) :: Var11, Var12
-
+      CHARACTER*10, DIMENSION(12) :: FormatTxt 
+      CHARACTER*10, DIMENSION(12) :: HeaderTxt
       CHARACTER*11, PARAMETER :: OUTG = 'Generic.OUT'
-      CHARACTER*95 FMT_STRING
+      CHARACTER*120 FMT_STRING
       INTEGER DAS, DOY, DYNAMIC, ERRNUM, LUN
       INTEGER RUN, YEAR, YRDOY
       LOGICAL FEXIST
+
+      INTEGER NVars
+      REAL SoilDepth
+
+!     List of variables to bring in:
+      REAL LAID   !Leaf area index
+      REAL NUPC   !N uptake, cumulative seasonal, kg/ha
+      REAL ESAA   !Soil evaporation, daily, mm
+      REAL EPAA   !Plant transpiration, daily, mm
+      REAL NMNC   !Net N mineralization, cumulative, kg/ha
+      REAL, DIMENSION(NL) :: SW
+      REAL, DIMENSION(NL) :: SNO3
+      REAL, DIMENSION(NL) :: SNH4
+      REAL, DIMENSION(NL) :: SOC
+      REAL, DIMENSION(NL) :: SON
+
       TYPE (ControlType) CONTROL
+      TYPE (SoilType) SOILPROP
+
       CALL GET(CONTROL)
 
       DAS     = CONTROL % DAS
@@ -54,6 +58,29 @@
 !***********************************************************************
       IF (DYNAMIC == SEASINIT) THEN
 !-----------------------------------------------------------------------
+      HeaderTxt = '         '
+      FormatTxt = '         '
+
+!     Initialize headers and output formats
+      HeaderTxt(1) = 'LAID'; FormatTxt(1) = 'F10.2'; LAID = 0.0
+      HeaderTxt(2) = 'NUPC'; FormatTxt(2) = 'F10.2'; NUPC = 0.0
+      HeaderTxt(3) = ''; FormatTxt = 'F10.2';  = 0.0
+      HeaderTxt(4) = ''; FormatTxt = 'F10.2';  = 0.0
+      HeaderTxt(5) = ''; FormatTxt = 'F10.2';  = 0.0
+      HeaderTxt(6) = ''; FormatTxt = 'F10.2';  = 0.0
+      HeaderTxt(7) = ''; FormatTxt = 'F10.2';  = 0.0
+      HeaderTxt(8) = ''; FormatTxt = 'F10.2';  = 0.0
+      HeaderTxt(9) = ''; FormatTxt = 'F10.2';  = 0.0
+      HeaderTxt(10)= ''; FormatTxt = 'F10.2';  = 0.0
+      HeaderTxt(11)= ''; FormatTxt = 'F10.2';  = 0.0
+      HeaderTxt(12)= ''; FormatTxt = 'F10.2';  = 0.0
+     
+!     Depth to report soil variables
+      SoilDepth = 30. !cm
+      CALL GET(SOILPROP)
+      
+
+
         CALL GETLUN('Generic', LUN)
       
         INQUIRE (FILE = OUTG, EXIST = FEXIST)
@@ -65,6 +92,8 @@
      &      IOSTAT = ERRNUM)
           WRITE(LUN,'("*Generic daily output")')
         ENDIF
+
+
 
 !       Write headers
         CALL HEADER(SEASINIT, LUN, RUN)
