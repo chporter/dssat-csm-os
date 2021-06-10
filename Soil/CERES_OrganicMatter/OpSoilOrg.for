@@ -27,6 +27,7 @@
 
 !-----------------------------------------------------------------------
       USE ModuleDefs
+      USE ModuleData
       USE CsvOutput 
       USE Linklist
       IMPLICIT NONE
@@ -46,6 +47,7 @@
       REAL SSOMC(0:NL), SSOME(0:NL,NELEM), HUMC(NL), HUMN(NL), HUMP(NL)
       REAL CumResE(NELEM)
       REAL SomLitC(0:NL), SomLitE(0:NL,NELEM)
+      REAL SCTD, SNTD
 
       LOGICAL FEXIST, DOPRINT
 
@@ -197,6 +199,7 @@
   !   &  '           SPTD         SOMPT    LPTD')
 
 
+
         ELSE
           WRITE(NOUTDC,400) YEAR, DOY, DAS,  
      &      NINT(CumRes), NINT(SCDD), NINT(SOCD), NINT(SomLitC(0)),  
@@ -232,6 +235,11 @@
      &    6I8, F8.1,
      &    2(F8.2, 2F8.1, F8.2, 2F8.1, F8.2))
       
+      SCTD = TSOMC + TLITC
+      SNTD = TSOME(N) + TLITE(N)
+
+      CALL PUT('ORGC',  'SCTD',    SCTD)
+      CALL PUT('ORGC',  'SNTD',    SNTD)
 !***********************************************************************
 !***********************************************************************
 !     SEASEND

@@ -289,6 +289,10 @@ C-----------------------------------------------------------------------
         CALL OPSUM (CONTROL, ISWITCH, YRPLT)
       ENDIF
 
+!       What should trigger this?
+!       IF (Something .eq. something) then
+        CALL OPGENERIC
+
 C***********************************************************************
 C***********************************************************************
 C     DAILY RATE CALCULATIONS
@@ -460,6 +464,10 @@ C-----------------------------------------------------------------------
      &    STGDOY, SW, WEATHER,                            !Input
      &    YREND, FERTDATA, HARVFRAC, IRRAMT,              !Output
      &    MDATE, OMADATA, TILLVALS, YRPLT)                !Output
+
+!       What should trigger this?
+!       IF (Something .eq. something) then
+        CALL OPGENERIC
 
 C*********************************************************************** 
 C***********************************************************************

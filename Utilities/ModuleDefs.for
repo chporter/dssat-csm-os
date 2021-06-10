@@ -430,7 +430,7 @@ C             CHP Added TRTNUM to CONTROL variable.
         REAL CANHT, CANWH, DXR57, EXCESS,
      &    PLTPOP, RNITP, SLAAD, XPOD
         REAL BIOMAS
-        REAL LAI, NUPTAKE
+        REAL LAID, NUPTAKE
         INTEGER NR5, iSTAGE, iSTGDOY
         CHARACTER*10 iSTNAME
       END TYPE PlantType
@@ -459,7 +459,7 @@ C             CHP Added TRTNUM to CONTROL variable.
 !     Data transferred from Soil Inorganic Nitrogen routine
       Type NiType
         REAL TNOXD, TLeachD    !, TN2OD     ! added N2O PG
-        REAL NET_MINERALIZED
+        REAL NET_MIN
         REAL, DIMENSION(NL) :: SNO3, SNH4
       End Type NiType
 
@@ -468,7 +468,7 @@ C             CHP Added TRTNUM to CONTROL variable.
         REAL TOMINFOM, TOMINSOM, TOMINSOM1, TOMINSOM2
         REAL TOMINSOM3, TNIMBSOM
         REAL MULCHMASS
-        REAL, DIMENSION(NL) :: SOC, SON
+        REAL SCTD, SNTD
       End Type OrgCType
 
 !     Data from weather
@@ -672,6 +672,8 @@ C             CHP Added TRTNUM to CONTROL variable.
         Case ('CANWH') ; Value = SAVE_data % PLANT % CANWH
         Case ('DXR57') ; Value = SAVE_data % PLANT % DXR57
         Case ('EXCESS'); Value = SAVE_data % PLANT % EXCESS
+        Case ('LAID')  ; Value = SAVE_data % PLANT % LAID
+        Case ('NUPTAKE');Value = SAVE_data % PLANT % NUPTAKE
         Case ('PLTPOP'); Value = SAVE_data % PLANT % PLTPOP
         Case ('RNITP') ; Value = SAVE_data % PLANT % RNITP
         Case ('SLAAD') ; Value = SAVE_data % PLANT % SLAAD
@@ -701,8 +703,9 @@ C             CHP Added TRTNUM to CONTROL variable.
       Case ('NITR')
         SELECT CASE (VarName)
         Case ('TNOXD'); Value = SAVE_data % NITR % TNOXD
-       Case ('TLCHD'); Value = SAVE_data % NITR % TLeachD
+        Case ('TLCHD'); Value = SAVE_data % NITR % TLeachD
 !       Case ('TN2OD'); Value = SAVE_data % NITR % TN2OD
+        Case ('NET_MIN');Value= SAVE_data % NITR % NET_MIN
         Case DEFAULT; ERR = .TRUE.
         END SELECT
 
@@ -715,19 +718,21 @@ C             CHP Added TRTNUM to CONTROL variable.
         Case ('TOMINSOM2');Value = SAVE_data % ORGC % TOMINSOM2
         Case ('TOMINSOM3');Value = SAVE_data % ORGC % TOMINSOM3
         Case ('TNIMBSOM'); Value = SAVE_data % ORGC % TNIMBSOM
+        Case ('SCTD'); Value = SAVE_data % ORGC % SCTD
+        Case ('SNTD'); Value = SAVE_data % ORGC % SNTD
         Case DEFAULT; ERR = .TRUE.
         END SELECT
 
-      Case ('SOIL')
-        SELECT CASE (VarName)
-        Case ('TOMINFOM'); Value = SAVE_data % ORGC % TOMINFOM
-        Case ('TOMINSOM'); Value = SAVE_data % ORGC % TOMINSOM
-        Case ('TOMINSOM1');Value = SAVE_data % ORGC % TOMINSOM1
-        Case ('TOMINSOM2');Value = SAVE_data % ORGC % TOMINSOM2
-        Case ('TOMINSOM3');Value = SAVE_data % ORGC % TOMINSOM3
-        Case ('TNIMBSOM'); Value = SAVE_data % ORGC % TNIMBSOM
-        Case DEFAULT; ERR = .TRUE.
-        END SELECT
+!      Case ('SOIL')
+!        SELECT CASE (VarName)
+!        Case ('TOMINFOM'); Value = SAVE_data % ORGC % TOMINFOM
+!        Case ('TOMINSOM'); Value = SAVE_data % ORGC % TOMINSOM
+!        Case ('TOMINSOM1');Value = SAVE_data % ORGC % TOMINSOM1
+!        Case ('TOMINSOM2');Value = SAVE_data % ORGC % TOMINSOM2
+!        Case ('TOMINSOM3');Value = SAVE_data % ORGC % TOMINSOM3
+!        Case ('TNIMBSOM'); Value = SAVE_data % ORGC % TNIMBSOM
+!        Case DEFAULT; ERR = .TRUE.
+!        END SELECT
 
       CASE ('PDLABETA')
         SELECT CASE(VarName)
@@ -798,6 +803,8 @@ C             CHP Added TRTNUM to CONTROL variable.
         Case ('CANWH');  SAVE_data % PLANT % CANWH  = Value
         Case ('DXR57');  SAVE_data % PLANT % DXR57  = Value
         Case ('EXCESS'); SAVE_data % PLANT % EXCESS = Value
+        Case ('LAID')  ; SAVE_data % PLANT % LAID   = Value
+        Case ('NUPTAKE');SAVE_data % PLANT % NUPTAKE= Value
         Case ('PLTPOP'); SAVE_data % PLANT % PLTPOP = Value
         Case ('RNITP');  SAVE_data % PLANT % RNITP  = Value
         Case ('SLAAD');  SAVE_data % PLANT % SLAAD  = Value
@@ -826,9 +833,10 @@ C             CHP Added TRTNUM to CONTROL variable.
 
       Case ('NITR')
         SELECT CASE (VarName)
-        Case ('TNOXD'); SAVE_data % NITR % TNOXD = Value
+        Case ('TNOXD'); SAVE_data % NITR % TNOXD   = Value
         Case ('TLCHD'); SAVE_data % NITR % TLeachD = Value
-!       Case ('TN2OD'); SAVE_data % NITR % TN2OD = Value
+!       Case ('TN2OD'); SAVE_data % NITR % TN2OD   = Value
+        Case ('NET_MIN');SAVE_data% NITR % NET_MIN = Value
         Case DEFAULT; ERR = .TRUE.
         END SELECT
 
@@ -841,6 +849,8 @@ C             CHP Added TRTNUM to CONTROL variable.
         Case ('TOMINSOM2');SAVE_data % ORGC % TOMINSOM2 = Value
         Case ('TOMINSOM3');SAVE_data % ORGC % TOMINSOM3 = Value
         Case ('TNIMBSOM'); SAVE_data % ORGC % TNIMBSOM  = Value
+        Case ('SCTD'); SAVE_data % ORGC % SCTD  = Value
+        Case ('SNTD'); SAVE_data % ORGC % SNTD  = Value
         Case DEFAULT; ERR = .TRUE.
         END SELECT
 
@@ -884,6 +894,19 @@ C             CHP Added TRTNUM to CONTROL variable.
           CASE DEFAULT; ERR = .TRUE.
         END SELECT
 
+      CASE ('WATER')
+        SELECT CASE (VarName)
+          CASE ('SW'); ; Value = SAVE_data % WATER % SW
+          CASE DEFAULT; ERR = .TRUE.
+        END SELECT
+
+      CASE ('NITR')
+        SELECT CASE (VarName)
+          CASE ('SNO3'); ; Value = SAVE_data % NITR % SNO3
+          CASE ('SNH4'); ; Value = SAVE_data % NITR % SNH4
+          CASE DEFAULT; ERR = .TRUE.
+        END SELECT
+
         CASE DEFAULT; ERR = .TRUE.
       END SELECT
 
@@ -912,6 +935,19 @@ C             CHP Added TRTNUM to CONTROL variable.
       Case ('SPAM')
         SELECT CASE (VarName)
         Case ('UH2O'); SAVE_data % SPAM % UH2O = Value
+        Case DEFAULT; ERR = .TRUE.
+        END SELECT
+
+      Case ('WATER')
+        SELECT CASE (VarName)
+        Case ('SW'); SAVE_data % WATER % SW = Value
+        Case DEFAULT; ERR = .TRUE.
+        END SELECT
+
+      Case ('NITR')
+        SELECT CASE (VarName)
+        Case ('SNO3'); SAVE_data % NITR % SNO3 = Value
+        Case ('SNH4'); SAVE_data % NITR % SNH4 = Value
         Case DEFAULT; ERR = .TRUE.
         END SELECT
 

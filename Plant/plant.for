@@ -133,7 +133,7 @@ C         Variables needed to run ceres maize.....W.D.B. 12-20-01
       REAL    SRAD
 
 !-----------------------------------------------------------------------
-C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
+C     Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
       REAL PAR, TAVG, TGROAV  !CHP 7/26/04 , TDAY
       REAL TGRO(TS)
 
@@ -693,6 +693,8 @@ c     Total LAI must exceed or be equal to healthy LAI:
 
 !***********************************************************************
       ENDIF
+
+      CALL PUT('PLANT','LAID',XHLAI)
 
 !***********************************************************************
       RETURN
