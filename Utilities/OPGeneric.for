@@ -93,7 +93,7 @@
         HeaderTxt(8) ='      SWD3' ; FormatTxt(8) = 'F10.3'; SWD3  = 0.0
         HeaderTxt(9) ='     SNO3D' ; FormatTxt(9) = 'F10.2'; SNO3D = 0.0
         HeaderTxt(10)='     SNH4D' ; FormatTxt(10)= 'F10.2'; SNH4D = 0.0
-        HeaderTxt(11)='      SNTD' ; FormatTxt(11)= 'F10.0'; SCTD  = 0.0
+        HeaderTxt(11)='      SCTD' ; FormatTxt(11)= 'F10.0'; SCTD  = 0.0
         HeaderTxt(12)='      SNTD' ; FormatTxt(12)= 'F10.0'; SNTD  = 0.0
      
 !       Build the format string and the header text
@@ -145,11 +145,16 @@
           ENDIF
           WRITE(LUN2,'(A,A)') "YEAR,DOY,DAS,",TRIM(HDR_String_C)
         ENDIF
+
+!       Initialization values printed for seasinit
+        DOY = DOY - 1
       ENDIF
 
 !***********************************************************************
 !***********************************************************************
 !     Daily OUTPUT
+!***********************************************************************
+!     ELSEIF (DYNAMIC .EQ. OUTPUT) THEN
 !***********************************************************************
 !     Get daily values
       CALL GET(SOILPROP)
@@ -172,9 +177,9 @@
       SWD2 = SW(1)
       SWD3 = SW(1)
       DO L = 2, NLayr
-        IF (DS(L) > SoilDepth(1)) SWD1 = SW(L)
-        IF (DS(L) > SoilDepth(2)) SWD2 = SW(L)
-        IF (DS(L) > SoilDepth(3)) SWD3 = SW(L)
+        IF (DS(L-1) .LT. SoilDepth(1)) SWD1 = SW(L)
+        IF (DS(L-1) .LT. SoilDepth(2)) SWD2 = SW(L)
+        IF (DS(L-1) .LT. SoilDepth(3)) SWD3 = SW(L)
       ENDDO
 
 !     Extract SNO3 and SNH4 through rooting depth

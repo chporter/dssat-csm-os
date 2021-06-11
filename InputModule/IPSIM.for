@@ -377,10 +377,11 @@ C
 !           By default, use ASCII outputs
             IF (INDEX('CA',FMOPT) < 1) FMOPT = 'A'
 
-!           IDETL = VBOSE. 
+!           IDETL = VBOSE
 !             0  Only Summary.OUT
 !             N  Minimal output  
 !             Y  Normal output   
+!             G  Normal output plus Generic.OUT
 !             D  Detailed output 
 !             A  All outputs     
 

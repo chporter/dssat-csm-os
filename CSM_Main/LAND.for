@@ -289,9 +289,10 @@ C-----------------------------------------------------------------------
         CALL OPSUM (CONTROL, ISWITCH, YRPLT)
       ENDIF
 
-!       What should trigger this?
-!       IF (Something .eq. something) then
-        CALL OPGENERIC
+!       Custom output
+        IF (ISWITCH%IDETL .EQ. 'G') THEN
+          CALL OPGENERIC
+        ENDIF
 
 C***********************************************************************
 C***********************************************************************
@@ -465,9 +466,10 @@ C-----------------------------------------------------------------------
      &    YREND, FERTDATA, HARVFRAC, IRRAMT,              !Output
      &    MDATE, OMADATA, TILLVALS, YRPLT)                !Output
 
-!       What should trigger this?
-!       IF (Something .eq. something) then
-        CALL OPGENERIC
+!       Custom output
+        IF (ISWITCH%IDETL .EQ. 'G') THEN
+          CALL OPGENERIC
+        ENDIF
 
 C*********************************************************************** 
 C***********************************************************************
