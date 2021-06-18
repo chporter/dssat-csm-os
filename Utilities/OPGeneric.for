@@ -1,7 +1,7 @@
 !=======================================================================
-!  OPGENERIC, Module
+!  OPGENERIC, Subroutine
 !
-!  Generates output for simulated data, up to 12 variables
+!  Generates output for a mix of simulated data from various modules.
 !  Variables must be available through ModuleData GET routines.
 !  Variables are hard-wired in this code, but could be swapped out easily.
 !-----------------------------------------------------------------------
@@ -26,7 +26,7 @@
       CHARACTER*220 FMT_STRING_A, FMT_STRING_C
       CHARACTER*220 HDR_String_A, HDR_String_C
       INTEGER DAS, DOY, DYNAMIC, ERRNUM, LUN1, LUN2
-      INTEGER RUN, YEAR, YRDOY, NLayr
+      INTEGER NLayr, INCDAT, RUN, YEAR, YRDOY, YRDOY0
       LOGICAL FEXIST, FIRST
 
       INTEGER NVars, I, L
@@ -39,19 +39,19 @@
       REAL ESAA   !Soil evaporation, daily, mm
       REAL EPAA   !Plant transpiration, daily, mm
       REAL NMNC   !Net N mineralization, cumulative, kg/ha
+      REAL SCTD   !Soil organic C, kg/ha
+      REAL SNTD   !Soil organic N, kg/ha
       REAL SWD1   !Soil water content at specified depth, mm3/mm3
       REAL SWD2   !Soil water content at specified depth, mm3/mm3
       REAL SWD3   !Soil water content at specified depth, mm3/mm3
       REAL SNO3D  !Soil nitrate content to rooting depth, kg/ha
       REAL SNH4D  !Soil ammonium content to rooting depth, kg/ha
-      REAL SCTD   !Soil organic C, kg/ha
-      REAL SNTD   !Soil organic N, kg/ha
 
-!     Variables needed for computation:
-      REAL, DIMENSION(NL) :: SW
-      REAL, DIMENSION(NL) :: SNO3
-      REAL, DIMENSION(NL) :: SNH4
-      REAL, DIMENSION(NL) :: DS
+!     Variables needed for computation of output variables:
+      REAL, DIMENSION(NL) :: SW   !used to calculate SWD1, SWD2, SWD3
+      REAL, DIMENSION(NL) :: SNO3 !used to calculate SNO3D
+      REAL, DIMENSION(NL) :: SNH4 !used to calculate SNH4D
+      REAL, DIMENSION(NL) :: DS   !depth to bottom of soil layer (cm)
 
       TYPE (ControlType) CONTROL
       TYPE (SoilType) SOILPROP
@@ -75,6 +75,10 @@
         NVars = 12
         HeaderTxt = '         '
         FormatTxt = '         '
+
+!       Initialization values printed for seasinit represent end of previous day 
+        YRDOY0 = INCDAT(YRDOY,-1)
+        CALL YR_DOY(YRDOY0, YEAR, DOY)
         
 !       Depths to report soil variables
         SoilDepth(1) = 5.   !cm (SW1D)
@@ -96,28 +100,22 @@
         HeaderTxt(11)='      SCTD' ; FormatTxt(11)= 'F10.0'; SCTD  = 0.0
         HeaderTxt(12)='      SNTD' ; FormatTxt(12)= 'F10.0'; SNTD  = 0.0
      
-!       Build the format string and the header text
+!       Build the format strings and the header text for ASCII and CSV
         FMT_STRING_A = "(I5,I4,I6," // TRIM(FormatTxt(1))   !Format for outputs
-!       FMT_STRING_C = "(I5,A1,I4,A1,I6,A1," // TRIM(FormatTxt(1))
         HDR_String_A = HeaderTxt(1) !ASCII header line
         HDR_String_C = ADJUSTL(HeaderTxt(1)) !CSV header line
         DO I = 2, NVars
           FMT_STRING_A = TRIM(FMT_STRING_A) // "," // TRIM(FormatTxt(I))
-!         FMT_STRING_C = TRIM(FMT_STRING_C) //",A1,"//TRIM(FormatTxt(I))
           HDR_String_A = TRIM(HDR_String_A) // TRIM(HeaderTxt(I))
           HDR_String_C = TRIM(HDR_String_C) // "," // 
      &                   TRIM(ADJUSTL(HeaderTxt(I)))
         ENDDO
         FMT_STRING_A = TRIM(FMT_STRING_A) // ")"
-!       FMT_STRING_C = TRIM(FMT_STRING_C) // ")"
-
-
         WRITE(FMT_STRING_C,'(A,I2,A)') "(", NVars+7, "(g0,','),g0)"
 
 !       ----------------------------------------------------
-!       ASCII format output
+!       Open ASCII file and write headers
         CALL GETLUN('GenericA', LUN1)
-      
         INQUIRE (FILE = OUTG1, EXIST = FEXIST)
         IF (FEXIST) THEN
           OPEN (UNIT = LUN1, FILE = OUTG1, STATUS = 'OLD',
@@ -131,7 +129,7 @@
         WRITE(LUN1,'(A,A)') "@YEAR DOY   DAS", TRIM(HDR_String_A)
 
 !       ----------------------------------------------------
-!       CSV format output
+!       Open CSV file and write headers
         IF (FIRST) THEN
           FIRST = .FALSE.
           CALL GETLUN('GenericC', LUN2)
@@ -143,18 +141,14 @@
             OPEN (UNIT = LUN2, FILE = OUTG2, STATUS = 'NEW',
      &        IOSTAT = ERRNUM)
           ENDIF
-          WRITE(LUN2,'(A,A)') "YEAR,DOY,DAS,",TRIM(HDR_String_C)
+          WRITE(LUN2,'(A,A)') 
+     &    "RUN,EXP,TRTNUM,ROTNUM,REPNO,YEAR,DOY,DAS,",TRIM(HDR_String_C)
         ENDIF
-
-!       Initialization values printed for seasinit
-        DOY = DOY - 1
-      ENDIF
+      ENDIF  !End of seasinit section
 
 !***********************************************************************
 !***********************************************************************
-!     Daily OUTPUT
-!***********************************************************************
-!     ELSEIF (DYNAMIC .EQ. OUTPUT) THEN
+!     Daily OUTPUT (do for all values of DYNAMIC)
 !***********************************************************************
 !     Get daily values
       CALL GET(SOILPROP)
@@ -187,13 +181,16 @@
       SNH4D = SNH4(1)
       DO L = 2, NLAYR
         IF (DS(L) < RootingDepth) THEN
+!         Entire layer is within rooting depth
           SNO3D = SNO3D + SNO3(L)
           SNH4D = SNH4D + SNH4(L)
         ELSEIF (DS(L-1) < RootingDepth) THEN
+!         Partial layer in rooting depth
           Fraction = (RootingDepth - DS(L-1)) / (DS(L) - DS(L-1))
           SNO3D = SNO3D + SNO3(L) * Fraction
           SNH4D = SNH4D + SNH4(L) * Fraction
         ELSE
+!         Layer is entirely below rooting depth
           EXIT
         ENDIF
       ENDDO
@@ -205,9 +202,6 @@
      
 !     ----------------------------------------------------
 !     CSV format output
-!      WRITE(LUN2,FMT_STRING_C) YEAR, ",", DOY, ",", DAS, ",", LAID, 
-!     &  ",", NUPC, ",", ESAA, ",", EPAA, ",", NMNC, ",", SWD1, ",", 
-!     &  SWD2, ",", SWD3, ",", SNO3D, ",", SNH4D, ",", SCTD, ",", SNTD
       WRITE(LUN2,TRIM(FMT_STRING_C)) RUN, CONTROL%FILEX, CONTROL%TRTNUM,
      &    CONTROL%ROTNUM, CONTROL%REPNO, YEAR, DOY, DAS, 
      &    LAID, NUPC, ESAA, EPAA, NMNC, 
