@@ -1210,11 +1210,19 @@ C  tillage and rainfall kinetic energy
             ENDIF
             DUL_SOM(L) = DUL_INIT(L) + dDUL_SOM
 
+!           Issue #153
+            IF (DUL_SOM(L) .GT. SAT(L) - 0.10) THEN
+              DUL_SOM(L) = SAT(L) - 0.10
+            ENDIF
+
 !           Lower limit
             dLL_SOM = 0.002228 * dOC + 0.02671 * dBD_SOM
             LL_SOM(L)  = LL_INIT(L) + dLL_SOM
 
-!            IF (L==1) WRITE(1000,*)dOC, dBD_SOM, dLL_SOM, LL_SOM(1)
+!           Issue #153
+            IF (LL_SOM(L) .GT. DUL_SOM(L) - 0.10) THEN
+              LL_SOM(L) = DUL_SOM(L) - 0.10
+            ENDIF
           ENDIF
         ENDDO
       ENDIF
