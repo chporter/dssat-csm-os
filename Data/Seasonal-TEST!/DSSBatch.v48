@@ -1,0 +1,64 @@
+$BATCH(SEASONAL)
+!
+! Directory    : C:\DSSAT48\Seasonal
+! Command Line : C:\DSSAT48\DSCSM048.EXE N DSSBatch.v48
+! Crop         : Seasonal
+! Experiment   : KADO9901.SNX
+! ExpNo        : 1
+! Debug        : C:\DSSAT48\DSCSM048.EXE " N DSSBatch.v48"
+!
+@FILEX                                                                                        TRTNO     RP     SQ     OP     CO
+C:\DSSAT48\Seasonal\ufga7899.SNX                                                                  1      1      0      1      0
+C:\DSSAT48\Seasonal\ufga7899.SNX                                                                  2      1      0      1      0
+C:\DSSAT48\Seasonal\ufga7899.SNX                                                                  3      1      0      1      0
+!XC:\DSSAT48\Seasonal\ufga7899.SNX                                                                  4      1      0      1      0
+C:\DSSAT48\Seasonal\ufga7899.SNX                                                                  5      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                  6      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                  7      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                  8      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                  9      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 10      1      0      1      0
+!XC:\DSSAT48\Seasonal\ufga7899.SNX                                                                 11      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 12      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 13      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 14      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 15      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 16      1      0      1      0
+C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 17      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 18      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 19      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 20      1      0      1      0
+C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 21      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 22      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 23      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 24      1      0      1      0
+C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 25      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 26      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 27      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 28      1      0      1      0
+C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 29      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 30      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 31      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 32      1      0      1      0
+C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 33      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 34      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 35      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 36      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 37      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 38      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 39      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 40      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 41      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 42      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 43      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 44      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 45      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 46      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 47      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 48      1      0      1      0
+C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 49      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 50      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 51      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 52      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 53      1      0      1      0
+!C:\DSSAT48\Seasonal\ufga7899.SNX                                                                 54      1      0      1      0

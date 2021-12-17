@@ -282,6 +282,10 @@ C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
 
       CALL READ_ASCE_KT(CONTROL, MEEVP)
 
+!     temp chp
+      write(5555,'(A,A)') "CR MODEL EORATIO    KCAN     KEP", 
+     &"  KSEVAP  KTRANS  PORMIN  RWUEP1   RWUMX"
+
 !***********************************************************************
 !***********************************************************************
       ELSEIF (DYNAMIC .EQ. SEASINIT) THEN
@@ -322,6 +326,10 @@ C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
       SENESCE % ResWt  = 0.0
       SENESCE % ResLig = 0.0
       SENESCE % ResE   = 0.0
+
+!     temp chp
+      write(5555,'(A,1X,A,10F8.3)') CROP, MODEL(1:5), 
+     &    EORATIO, KCAN, KEP, KSEVAP, KTRANS, PORMIN, RWUEP1, RWUMX
 
 !***********************************************************************
 !***********************************************************************
