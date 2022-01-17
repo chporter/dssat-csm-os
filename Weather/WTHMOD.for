@@ -257,7 +257,7 @@ C       Adjustment of wind speed.
 
         CALL DailyWeatherCheck(CONTROL,
      &    ERRKEY, FILEWW, RAIN, 0, RHUM,                  !Input 
-     &    SRAD, TDEW, TMAX, TMIN, WINDSP, YYDDD,          !Input
+     &    SRAD, TDEW, TMAX, TMIN, YRDOYW,                 !Input
      &    YREND)                                          !Output
 
       ENDIF

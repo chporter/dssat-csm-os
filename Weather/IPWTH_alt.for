@@ -615,7 +615,7 @@ C       Substitute default values if REFHT or WINDHT are missing.
 !     Error checking
       CALL DailyWeatherCheck(CONTROL,
      &    "WTHINIT", FILEWW, RAIN, RecNum, RHUM,          !Input
-     &    SRAD, TDEW, TMAX, TMIN, WINDSP, YRDOY,          !Input
+     &    SRAD, TDEW, TMAX, TMIN, YRDOYW,                 !Input
      &    YREND)                                          !Output
 
       IF (YREND > 0) THEN
@@ -636,7 +636,7 @@ C       Substitute default values if REFHT or WINDHT are missing.
 !       Error checking
         CALL DailyWeatherCheck(CONTROL,
      &    ERRKEY, FILEWW, RAIN, RecNum, RHUM,             !Input
-     &    SRAD, TDEW, TMAX, TMIN, WINDSP, YRDOY,          !Input
+     &    SRAD, TDEW, TMAX, TMIN, YRDOYW,                 !Input
      &    YREND)                                          !Output
 
       ENDIF
@@ -792,7 +792,7 @@ C         Read in weather file header.
 !     Error checking
       CALL DailyWeatherCheck(CONTROL,
      &    ERRKEY, FILEWW, RAIN, RecNum, RHUM,             !Input
-     &    SRAD, TDEW, TMAX, TMIN, WINDSP, YRDOY,          !Input
+     &    SRAD, TDEW, TMAX, TMIN, YRDOYW,                 !Input
      &    YREND)                                          !Output
 
 !      ERR = 0
@@ -1063,7 +1063,7 @@ C         Read in weather file header.
             CALL Y2K_DOYW(MULTI, YRDOYWY, YRDOYW, CENTURY)
             IF (NRecords == 0 .AND. YRDOY == YRSIM .AND.  !First record
      &          YRDOYW > YRSIM .AND.                      ! > YRSIM
-     &          YRDOYW_SAVE < 99366) THEN       ! & century set by program
+     &          YRDOYW_SAVE < 99366) THEN     ! & century set by program
               CENTURY = CENTURY - 1
               YRDOYW = YRDOYW - 100000
             ENDIF
@@ -1248,7 +1248,7 @@ C         Read in weather file header.
 !-----------------------------------------------------------------------
       Subroutine DailyWeatherCheck(CONTROL,
      &    ERRKEY, FILEWW, RAIN, RecNum, RHUM,             !Input
-     &    SRAD, TDEW, TMAX, TMIN, WINDSP, YRDOYW,         !Input
+     &    SRAD, TDEW, TMAX, TMIN, YRDOYW,                 !Input
      &    YREND)                                          !Output
 
 !     Checks validity of daily weather for observed or generated values.
@@ -1260,7 +1260,7 @@ C         Read in weather file header.
       CHARACTER*(*) ERRKEY, FILEWW
       CHARACTER*78 MSG(10)
       Integer ErrCode, NChar, RecNum, YRDOYW, YREND
-      REAL RAIN, RHUM, SRAD, TDEW, TMAX, TMIN, WINDSP
+      REAL RAIN, RHUM, SRAD, TDEW, TMAX, TMIN !, WINDSP
       REAL CALC_TDEW
       TYPE (ControlType) CONTROL
 
