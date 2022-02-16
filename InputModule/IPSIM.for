@@ -9,7 +9,6 @@ C  05/28/1993 PWW Header revision and minor changes
 C  11/19/2003 CHP Added check for MEPHO and incompatible models.
 C  02/21/2006 GH  Removed crop model selection
 !  10/25/2006 CHP CRMODEL from FILEX overrides MODEL in DSSATPRO 
-!  05/09/2007 CHP Make Sulieman-Ritchie the default soil evaporation method
 !  04/28/2008 CHP Added switch for CO2 from file (ICO2)
 !  12/09/2009 CHP IPSIM separate file.  
 !  02/11/2010 CHP Added checks for P model linked with crop models.
@@ -132,7 +131,7 @@ C=======================================================================
          NSWITCH =  1
          MESOM   = 'G'
          MESOL   = '2'    !was '1'
-         MESEV   = 'S'    !new Sulieman-Ritchie (2006)
+         MESEV   = 'R'    !old Ritchie two-stage method
          METMP   = 'D'    !DSSAT original soil temperature
 !        METMP   = 'E'    ! EPIC soil temp routine.
          MEGHG   = '0'
@@ -222,9 +221,8 @@ C
 !        IF (INDEX ('BNSBPNPECHPPVBCPCBFB',CROP) .EQ. 0) THEN
          SELECT CASE (CROP)
          CASE ('BN','SB','PN','PE','CH','PP',
-     &          'VB','CP','CB','FB','GB','LT','AL')
+     &          'VB','CP','CB','FB','GB','LT','AL','BG')
 C     &          'VB','CP','CB','FB','GB','LT')
-C  KJB, ADDED AL TO THIS, SO N-FIXATION WORKS FOR ALFALFA
 !          Do nothing -- these crops fix N and can have Y or N
          CASE DEFAULT; ISWSYM = 'N'  !other crops don't have a choice
          END SELECT
@@ -313,7 +311,8 @@ C
 
          SELECT CASE(MESEV)
          CASE('R','r'); MESEV = 'R'
-         CASE DEFAULT;  MESEV = 'S'   !Default method -- use NEW
+         CASE('s','S'); MESEV = 'S'
+         CASE DEFAULT;  MESEV = 'R'   !Default method Ritchie
          END SELECT
 
          IF (MEEVP == 'Z' .AND. MEPHO /= 'L') CALL ERROR(ERRKEY,3,' ',0)
@@ -341,15 +340,31 @@ C
 
          IF ((INDEX('CSPT',CROP)) .GT. 0) THEN
            IF (IHARI .EQ. 'A') THEN
+              WRITE(MSG(1),'("Automatic harvest option ",
+     &          "is not valid for crop type: ",A2)') CROP
+              CALL WARNING(1, ERRKEY, MSG)
               CALL ERROR (ERRKEY,4,FILEX,LINEXP)
+           ENDIF
+         ENDIF
+          
+         IF ((INDEX('CS',CROP)) .GT. 0) THEN
+           IF (IHARI .EQ. 'M') THEN
+             WRITE(MSG(1),'("Harvest at maturity option is ",
+     &         "not valid for crop type: ",A2)') CROP
+             CALL WARNING(1, ERRKEY, MSG)
+             CALL ERROR ('IPSIM ',11,FILEX,LINEXP)
            ENDIF
          ENDIF
 
          IF ((INDEX('PT',CROP)) .GT. 0) THEN
            IF (IPLTI .EQ. 'A') THEN
+              WRITE(MSG(1),'("Automatic planting option is ",
+     &    "not valid for crop type: ",A2)') CROP
+              CALL WARNING(1, ERRKEY, MSG)
               CALL ERROR (ERRKEY,5,FILEX,LINEXP)
            ENDIF
-         ENDIF
+      ENDIF
+      
 C
 !     ==============================================================
 C        Read FIFTH line of simulation control - OUTPUTS
@@ -1590,6 +1605,16 @@ C  KJB, ADDED AL TO THIS, SO N-FIXATION WORKS FOR ALFALFA
      &    "crop type: ",A2)') CONTROL%CROP
           CALL WARNING(2, ERRKEY, MSG)
           CALL ERROR ('IPSIM ',4,FILEX,LINEXP)
+        ENDIF
+      ENDIF
+      
+      IF ((INDEX('CS',CONTROL % CROP)) .GT. 0) THEN
+        IF (IHARI .EQ. 'M') THEN
+          MSG(1) = "Default Simulation controls file used."
+          WRITE(MSG(2),'("Harvest at maturity option is not valid for ",
+     &    "crop type: ",A2)') CONTROL%CROP
+          CALL WARNING(1, ERRKEY, MSG)
+          CALL ERROR ('IPSIM ',11,FILEX,LINEXP)
         ENDIF
       ENDIF
 

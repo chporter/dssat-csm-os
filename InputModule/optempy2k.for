@@ -688,6 +688,13 @@ C-GH &               P1,P2O,P2R,P5,G1,G2,PHINT,P3,P4
      &             P1,P2R,P5,P2O,G1,G2,G3,PHINT, THOT, TCLDP, TCLDF
  1985 FORMAT (A6,1X,A16,1X,A6,5(F6.1),F6.3,2(F6.2),3F6.1)
 
+!       Ceres TEFF
+        CASE ('TFCER')
+            WRITE (LUNIO,1986,IOSTAT=ERRNUM) VARNO,VRNAME,ECONO,
+!    &             P1,P2R,P5,P2O,G1,G2,G3,G4,PHINT, G5
+     &             P1,P2R,P5,P2O,G1,G2,G3,PHINT, THOT, TCLDP, TCLDF
+ 1986 FORMAT (A6,1X,A16,1X,A6,5(F6.1),F6.3,2(F6.2),3F6.1)
+
 !!       ORYZA rice
 !        CASE ('RIORZ')
 !            WRITE (LUNIO,'(A6,1X,A16,1X,A)',IOSTAT=ERRNUM) VARNO,VRNAME,
@@ -754,7 +761,7 @@ C-----------------------------------------------------------------------
    59 FORMAT (3X,A8,1X,A8,1X,F5.1,1X,F5.0,1X,A5,1X,F5.0,1X,F5.1,
      &        2(1X,A5),1X,F5.0,1X,A10)
 !chp   60 FORMAT (3X,2(F15.5,1X),F9.2,1X,F17.1,1X,F5.0,2(1X,F5.1))
-   60 FORMAT (3X,2(F15.5,1X),F9.2,1X,F17.1,1X,F5.0,2(1X,F5.1),1X,A5,I6)
+   60 FORMAT (3X,2(F15.10,1X),F9.3,1X,F17.1,1X,F5.0,2(1X,F5.1),1X,A5,I6)
 C  61 FORMAT (3X,A2,4X,I5,2(1X,F5.0),2(1X,F5.2),1X,F5.1,1X,F5.0,
 C    &        2(1X,F5.2),2(1X,F5.0))
 C-Y2K 61 FORMAT (3X,A2,4X,I5,2(1X,F5.0),2(1X,F5.2),1X,F5.1,1X,I5,

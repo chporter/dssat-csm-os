@@ -221,8 +221,8 @@ C-----------------------------------------------------------------------
       PlantStres % ACTIVE = .FALSE.
       PlantStres % StageName = '                       '
       SELECT CASE (CROP)
-      CASE ('BN','CH','CN','CO','CP','FB','GB','PE','LT',
-     &      'PN','PP','PR','QU','SB','SF','SU','TM','VB')
+      CASE ('BG','BN','CH','CI','CN','CO','CP','FB','GB','PE',
+     &      'LT','PN','PP','PR','QU','SB','SF','SU','TM','VB')
         PlantStres % NSTAGES = 4
         PlantStres % StageName(1)  = 'Emergence -First Flower'
         PlantStres % StageName(2)  = 'First Flower-First Seed'
@@ -265,7 +265,7 @@ C-----------------------------------------------------------------------
 
 !     Set ACTIVE variable to indicate that current phase is active
       SELECT CASE (CROP)
-      CASE ('BN','CH','CN','CO','CP','FB','GB','LT',
+      CASE ('BG','BN','CH','CI','CN','CO','CP','FB','GB','LT',
      &     'PE','PN','PP','PR','QU','SB','SF','SU','TM','VB')
         IF (YRDOY > STGDOY(1) .AND. YRDOY <= STGDOY(5)) THEN
           PlantStres % ACTIVE(1) = .TRUE.
@@ -482,9 +482,9 @@ C-----------------------------------------------------------------------
       WRITE(Simulated(15),'(F8.3)')HI;   WRITE(Measured(15),'(A8)')X(15)
       WRITE(Simulated(16),'(F8.2)')THRES;WRITE(Measured(16),'(A8)')X(16)
       WRITE(Simulated(17),'(F8.2)')LAIMX;WRITE(Measured(17),'(A8)')X(17)
-      WRITE(Simulated(18),'(F8.2)')VSTAGE
+      WRITE(Simulated(18),'(F8.2)')VSTAGE;
                                          WRITE(Measured(18),'(A8)')X(18)
-      WRITE(Simulated(19),'(F8.2)')CANHT;WRITE(Measured(19),'(A8)')X(18)
+      WRITE(Simulated(19),'(F8.2)')CANHT;WRITE(Measured(19),'(A8)')X(19)
       WRITE(Simulated(20),'(I8)') NINT(CANNAA*10);
                                          WRITE(Measured(20),'(A8)')X(20)
       WRITE(Simulated(21),'(I8)') NINT(WTNCAN*10);
@@ -627,7 +627,7 @@ C-----------------------------------------------------------------------
       ENDDO
 
       SELECT CASE (CROP)
-      CASE ('BN','CH','CN','CP','FB','GB','PE','PP',
+      CASE ('BN','CH','CI','CN','CP','FB','GB','PE','PP',
      &      'PR','SB','TM','VB','LT')
 !     For stage-dependant irrigation - send GSTAGE back to irrig routine
         STNAME(1) = 'Emergence '    !; GSTAGE(1) = "GS001"
@@ -690,7 +690,7 @@ C-----------------------------------------------------------------------
         STNAME(16)= 'Harvest   '
         
 ! KJB
-      CASE ('PN')
+      CASE ('BG','PN')
         STNAME(1) = 'Emergence '
         STNAME(2) = 'Unifoliate'
         STNAME(3) = 'End Juven.'

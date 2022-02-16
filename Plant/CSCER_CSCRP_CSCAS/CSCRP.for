@@ -1950,7 +1950,9 @@
 
           ! IDETO FILES
           ! NB. Renaming of Overview and Evaluate handled by CSM
-          FNAMEOV = 'Overview.'//out
+          ! TF - Updated OVERVIEW.OUT name to avoid issues
+          ! with case sensitive systems (07/27/2021) 
+          FNAMEOV = 'OVERVIEW.'//out
           FNAMEEVAL = 'Evaluate.'//out
           FNAMEMEAS = 'Measured.'//out
           CALL GETLUN (FNAMEEVAL,fnumeval)
@@ -10542,7 +10544,7 @@ C  FO - 05/07/2020 Add new Y4K subroutine call to convert YRDOY
               vnpcm = -99
               cnam = -99
               hnam = -99
-              hinm = -99
+!             hinm = -99
               sdnap = -99
               rnam = -99
               nupac = -99
@@ -10550,8 +10552,12 @@ C  FO - 05/07/2020 Add new Y4K subroutine call to convert YRDOY
 
             ! Calculate N% without dead matter            
             VNPCM = 100.0*(LEAFN+STEMN+RSN)/(LFWT+STWT+RSWT)
-            HINM = GRAINN/(GRAINN+LEAFN+STEMN+RSN)
-          
+C-GH 1/20/2022 For ISWNI set to N
+            IF (ISWNIT.EQ.'N') THEN
+               hinm = -99
+            ELSE
+               HINM = GRAINN/(GRAINN+LEAFN+STEMN+RSN)
+            ENDIF       
            
             ! Create character equivalents for outputing
             CALL Csopline(hwumchar,hwum)
@@ -10574,12 +10580,12 @@ C  FO - 05/07/2020 Add new Y4K subroutine call to convert YRDOY
               IF (RUN.EQ.1) THEN
                 EVALOUT = 0
                 EVHEADNM = 0
-                EVHEADNMMAX = 7
+                EVHEADNMMAX = 1
               ENDIF
               IF (EXCODE.NE.EXCODEPREV) THEN
                 EVHEADNM = EVHEADNM + 1
                 OPEN (UNIT=FNUMEVAL,FILE=FNAMEEVAL,POSITION='APPEND')
-                IF (EVHEADNM.LT.EVHEADNMMAX.AND.EVHEADNMMAX.GT.1) THEN
+                IF (EVHEADNM.LE.EVHEADNMMAX.AND.EVHEADNMMAX.GE.1) THEN
                   LENENAME = TVILENT(ENAME)
                   WRITE (FNUMEVAL,*) ' '
                   WRITE (FNUMEVAL,993) 
