@@ -116,7 +116,7 @@
       TYPE (SoilType)      SOILPROP
 
 !     IDETL = 'N' or '0' (zero) -- supress output
-      IF (INDEX('N0',ISWITCH % IDETL) > 0) RETURN
+!     IF (INDEX('N0',ISWITCH % IDETL) > 0) RETURN
 
 !     Transfer values from constructed data types into local variables.
       DAS     = CONTROL % DAS

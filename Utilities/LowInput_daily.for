@@ -66,21 +66,20 @@
 !-----------------------------------------------------------------------
         NVars = 7
         HeaderTxt = '         '
-        FormatTxt = '         '
 
-!       Initialization values printed for seasinit represent end of previous day 
-        YRDOY0 = INCDAT(YRDOY,-1)
-        CALL YR_DOY(YRDOY0, YEAR, DOY)
+!!       Initialization values printed for seasinit represent end of previous day 
+!        YRDOY0 = INCDAT(YRDOY,-1)
+!        CALL YR_DOY(YRDOY0, YEAR, DOY)
 
 !-----------------------------------------------------------------------
 !       Initialize headers and output formats, set everything to zero for now.
-        HeaderTxt(1) ='          SOC' ; FormatTxt(1) = 'F13.0'
-        HeaderTxt(2) ='          SON' ; FormatTxt(2) = 'F13.1'
-        HeaderTxt(3) ='      QCO2hum' ; FormatTxt(3) = 'F13.2'
-        HeaderTxt(4) ='      QCO2res' ; FormatTxt(4) = 'F13.2'
-        HeaderTxt(5) ='        QNhum' ; FormatTxt(5) = 'F13.2'
-        HeaderTxt(6) ='        QNres' ; FormatTxt(6) = 'F13.2'
-        HeaderTxt(7) =' SoilW.layer1' ; FormatTxt(7) = 'F13.3'
+        HeaderTxt(1) ='          SOC' 
+        HeaderTxt(2) ='          SON' 
+        HeaderTxt(3) ='      QCO2hum' 
+        HeaderTxt(4) ='      QCO2res' 
+        HeaderTxt(5) ='        QNhum' 
+        HeaderTxt(6) ='        QNres' 
+        HeaderTxt(7) =' SoilW.layer1' 
 
         QCO2hum = 0.0
         QCO2res = 0.0
@@ -88,32 +87,11 @@
         QNres = 0.0
 
 !       Build the format strings and the header text for ASCII and CSV
-!        FMT_STRING_A = "(I5,I4,I6," // TRIM(FormatTxt(1)) 
-!        HDR_String_A = HeaderTxt(1) !ASCII header line
         HDR_String_C = ADJUSTL(HeaderTxt(1)) !CSV header line
         DO I = 2, NVars
-!          FMT_STRING_A = TRIM(FMT_STRING_A) // "," // TRIM(FormatTxt(I))
-!          HDR_String_A = TRIM(HDR_String_A) // TRIM(HeaderTxt(I))
           HDR_String_C = TRIM(HDR_String_C) // "," // 
      &                   TRIM(ADJUSTL(HeaderTxt(I)))
         ENDDO
-!        FMT_STRING_A = TRIM(FMT_STRING_A) // ")"
-!        WRITE(FMT_STRING_C,'(A,I2,A)') "(", NVars+4, "(g0,','),F5.3)"
-
-!!       ----------------------------------------------------
-!!       Open ASCII file and write headers
-!        CALL GETLUN('GenericA', LUN1)
-!        INQUIRE (FILE = OUTG1, EXIST = FEXIST)
-!        IF (FEXIST) THEN
-!          OPEN (UNIT = LUN1, FILE = OUTG1, STATUS = 'OLD',
-!     &      IOSTAT = ERRNUM, POSITION = 'APPEND')
-!        ELSE
-!          OPEN (UNIT = LUN1, FILE = OUTG1, STATUS = 'NEW',
-!     &      IOSTAT = ERRNUM)
-!          WRITE(LUN1,'("*Generic daily output")')
-!        ENDIF
-!        CALL HEADER(SEASINIT, LUN1, RUN)
-!        WRITE(LUN1,'(A,A)') "@YEAR DOY   DAS", TRIM(HDR_String_A)
 
 !       ----------------------------------------------------
 !       Open CSV file and write headers
