@@ -848,6 +848,7 @@ C-----------------------------------------------------------------------
       CALL IPTILL (LUNEXP,FILEX,LNTIL,YRSIM,ISWTIL,NTIL,TDATE,
      &    TIMPL,TDEP,LNSIM)
 
+      CONTROL % TITLET = TITLET
       CLOSE(LUNEXP)
       RETURN
 
