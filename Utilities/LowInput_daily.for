@@ -1,7 +1,7 @@
 !=======================================================================
 !  LowInput_daily, Subroutine
 !
-!  Generates output in csv format for the Low Input systems model intercomparison 2021.
+!  Generates output in tsv format for the Low Input systems model intercomparison 2021.
 !  Variables must be available through ModuleData GET routines.
 !  Variables are hard-wired in this code, but could be swapped out easily.
 !-----------------------------------------------------------------------
@@ -9,7 +9,7 @@
 !
 !  09/22/2008 CHP Written
 !  06/09/2021 CHP Modified to compile output from various routines and
-!                 to send to csv generic output.
+!                 to send to tsv generic output.
 !  02/17/2022 CHP Adapted OPGENERIC for use by Low Input Systems study
 !=======================================================================
 
@@ -23,8 +23,7 @@
       CHARACTER*2 CROPID
       CHARACTER*6, PARAMETER :: ERRKEY = 'GENPRN'
       CHARACTER*11 SEASONID
-!     CHARACTER*11, PARAMETER :: OUTG1 = 'Generic.OUT'
-      CHARACTER*18, PARAMETER :: OUTG2 = 'LowInput_daily.csv'
+      CHARACTER*19 OUTG2 
       CHARACTER*13, DIMENSION(12) :: HeaderTxt
       CHARACTER*10 DateText
       CHARACTER*78, MSG(10)
@@ -64,12 +63,19 @@
 !***********************************************************************
       IF (DYNAMIC == SEASINIT) THEN
 !-----------------------------------------------------------------------
+!       Use treatment name to get site ID and Low Input treatment
+        SITEID  = CONTROL % TITLET(1:4)
+        TRTNAME = CONTROL % TITLET(13:16)
+        SEASONID= CONTROL % TITLET(1:11)
+        CROPID  = CONTROL % TITLET(18:19)
+        IF (CROPID == 'FA') THEN
+          SEASONID = TRIM(SEASONID) // "_FA"
+        ENDIF
+
+        OUTG2 = SITEID // "_" // TRTNAME // "_daily.txt"
+
         NVars = 7
         HeaderTxt = '         '
-
-!!       Initialization values printed for seasinit represent end of previous day 
-!        YRDOY0 = INCDAT(YRDOY,-1)
-!        CALL YR_DOY(YRDOY0, YEAR, DOY)
 
 !-----------------------------------------------------------------------
 !       Initialize headers and output formats, set everything to zero for now.
@@ -86,15 +92,15 @@
         QNhum = 0.0
         QNres = 0.0
 
-!       Build the format strings and the header text for ASCII and CSV
-        HDR_String_C = ADJUSTL(HeaderTxt(1)) !CSV header line
+!       Build the format strings and the header text for tsv
+        HDR_String_C = ADJUSTL(HeaderTxt(1)) !tsv header line
         DO I = 2, NVars
-          HDR_String_C = TRIM(HDR_String_C) // "," // 
+          HDR_String_C = TRIM(HDR_String_C) // achar(9) // 
      &                   TRIM(ADJUSTL(HeaderTxt(I)))
         ENDDO
 
 !       ----------------------------------------------------
-!       Open CSV file and write headers
+!       Open tab-delimited file and write headers
         IF (FIRST) THEN
           FIRST = .FALSE.
           CALL GETLUN('GenericC', LUN2)
@@ -106,18 +112,9 @@
             OPEN (UNIT = LUN2, FILE = OUTG2, STATUS = 'NEW',
      &        IOSTAT = ERRNUM)
           ENDIF
-          WRITE(LUN2,'(A,A)') 
-     &      "Model,id_site,id_season,id_treatment,Date,",
-     &      TRIM(HDR_String_C)
-        ENDIF
-
-!       Use treatment name to get site ID and Low Input treatment
-        SITEID  = CONTROL % TITLET(1:4)
-        TRTNAME = CONTROL % TITLET(13:16)
-        SEASONID= CONTROL % TITLET(1:11)
-        CROPID  = CONTROL % TITLET(18:19)
-        IF (CROPID == 'FA') THEN
-          SEASONID = TRIM(SEASONID) // "_FA"
+          WRITE(LUN2,'(20A)') 
+     &      "Model",achar(9),"id_site",achar(9),"id_season",achar(9),
+     &      "id_treatment",achar(9),"Date",achar(9),TRIM(HDR_String_C)
         ENDIF
 
 !       For Low input systems, the layer depth is dependent on location
@@ -172,17 +169,13 @@
       SONtop = SONtop / 1000.   !t
 
 !     ----------------------------------------------------
-!!     ASCII format output
-!      WRITE(LUN1,TRIM(FMT_STRING_A)) YEAR, DOY, DAS, 
-!     &    SOCtop, SONtop, QCO2hum, QCO2res, QNhum, QNres, SWAVG
-     
-!     ----------------------------------------------------
-!     CSV format output
+!     TSV format output
       WRITE(LUN2,
-     &  '(A,",",A,",",A,",",A,",",A,",",
-     &    F0.1,",",F0.2,",",F0.2,",",F0.2,",",F0.2,",",F0.2,",",F5.3)')
-     &  "CE1", SITEID, TRIM(SEASONID), TRTNAME, TRIM(DateText),
-     &  SOCtop, SONtop, QCO2hum, QCO2res, QNhum, QNres, SWAVG
+     &  '(10A,F0.1,A,F0.2,A,F0.2,A,F0.2,A,F0.2,A,F0.2,A,F5.3)')
+     &  "CE1", achar(9), SITEID, achar(9), TRIM(SEASONID), achar(9), 
+     &  TRTNAME, achar(9), TRIM(DateText), achar(9), 
+     &  SOCtop, achar(9), SONtop, achar(9), QCO2hum, achar(9), 
+     &  QCO2res, achar(9), QNhum, achar(9), QNres, achar(9), SWAVG
 
       ENDIF
 !***********************************************************************
