@@ -679,7 +679,7 @@ C=======================================================================
 C=======================================================================
 C  ETAD_NAILUJ, Subroutine
 C
-C  Determines Julian date, exports integer year, month, day
+C  Determines Julian date, exports integer month, day
 C-----------------------------------------------------------------------
 C  Revision history
 C
@@ -749,3 +749,25 @@ C=======================================================================
 C=======================================================================
 
 
+C=======================================================================
+C  DateText, Subroutine
+C  Input YRDOY with 4-digit year, output text string as "YYYY-MM-DD"
+C-----------------------------------------------------------------------
+C  Revision history
+C  02/17/2022 CHP Written 
+C=======================================================================
+
+      Subroutine Date_Text (YRDOY, DateText)
+      IMPLICIT    NONE
+
+      CHARACTER*10 DateText
+      INTEGER YRDOY, YEAR, DOY, iMON, NDAY
+
+      CALL YR_DOY(YRDOY, YEAR, DOY)
+      CALL ETAD_NAILUJ (DOY, YEAR, iMON, NDAY)
+      WRITE(DateText,'(I4.4,"-",I2.2,"-",I2.2)') YEAR, iMON, NDAY
+
+      RETURN
+      END Subroutine Date_Text
+
+C=======================================================================

@@ -22,20 +22,19 @@
 
       CHARACTER*2 CROPID
       CHARACTER*6, PARAMETER :: ERRKEY = 'GENPRN'
-      CHARACTER*10, DIMENSION(12) :: FormatTxt 
       CHARACTER*11 SEASONID
 !     CHARACTER*11, PARAMETER :: OUTG1 = 'Generic.OUT'
       CHARACTER*18, PARAMETER :: OUTG2 = 'LowInput_daily.csv'
       CHARACTER*13, DIMENSION(12) :: HeaderTxt
-      CHARACTER*13 DATETXT
+      CHARACTER*10 DateText
       CHARACTER*78, MSG(10)
 !     CHARACTER*220 FMT_STRING_A, FMT_STRING_C
       CHARACTER*220 HDR_String_C  !, HDR_String_A, 
       INTEGER DAS, DOY, DYNAMIC, ERRNUM, LUN1, LUN2
-      INTEGER NLayr, INCDAT, RUN, YEAR, YRDOY, YRDOY0, NLayers
+      INTEGER NLayr, RUN, YEAR, YRDOY, NLayers
       LOGICAL FEXIST, FIRST
 
-      INTEGER NVars, I, L, iMON, NDAY
+      INTEGER NVars, I, L
 
 !     Variables needed for computation of output variables:
       REAL, DIMENSION(NL) :: SON, SOC, SW   
@@ -167,8 +166,7 @@
       ELSE
 !***********************************************************************
 !     Today's date
-      CALL ETAD_NAILUJ (DOY, YEAR, iMON, NDAY)
-      WRITE(DATETXT, '(I4,"-",I2.2,"-",I2.2)') YEAR, iMON, NDAY
+      CALL Date_Text (YRDOY, DateText)
 
 !     Get daily values
       CALL GET('ORGC', 'SOC', SOC)
@@ -205,7 +203,7 @@
       WRITE(LUN2,
      &  '(A,",",A,",",A,",",A,",",A,",",
      &    F0.1,",",F0.2,",",F0.2,",",F0.2,",",F0.2,",",F0.2,",",F5.3)')
-     &  "CE1", SITEID, TRIM(SEASONID), TRTNAME, TRIM(DATETXT),
+     &  "CE1", SITEID, TRIM(SEASONID), TRTNAME, TRIM(DateText),
      &  SOCtop, SONtop, QCO2hum, QCO2res, QNhum, QNres, SWAVG
 
       ENDIF
