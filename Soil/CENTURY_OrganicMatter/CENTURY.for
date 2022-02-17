@@ -49,6 +49,7 @@
 
 !     ------------------------------------------------------------------
       USE ModuleDefs
+      USE ModuleData
       USE FloodModule             
       USE ModSoilMix
       USE GHG_mod
@@ -137,6 +138,11 @@
 
 !     Added for tillage
       REAL MIXPCT
+
+!     For low input model intercomparison report
+      REAL QCO2res, QCO2hum
+      REAL QNres, QNresMNR, QNresIMM
+      REAL QNhum, QNhumMNR, QNhumIMM
 
 !     Methane variables:
 !     REAL CH4Consumption, CH4Emission, CH4Leaching, CH4Stored,
@@ -721,15 +727,55 @@
         IF (L == SRFC) THEN
           newCO2(SRFC) = CO2FMET(SRFC) + CO2FSTR(SRFC,LIG) + 
      &      CO2FSTR(SRFC,NONLIG) + CO2FS1(SRFC)
+          QCO2res = CO2FMET(SRFC) + CO2FSTR(SRFC,LIG) + 
+     &      CO2FSTR(SRFC,NONLIG) 
+          QCO2hum = CO2FS1(SRFC)
         ELSE
           newCO2(L) = CO2FMET(L) + CO2FSTR(L,LIG) + CO2FSTR(L,NONLIG) + 
      &      CO2FS1(L) + CO2FS2(L) + CO2FS3(L)
+          QCO2res = QCO2res + CO2FMET(L) + CO2FSTR(L,LIG) + 
+     &        CO2FSTR(L,NONLIG)
+          QCO2hum = QCO2hum + CO2FS1(L) + CO2FS2(L) + CO2FS3(L)
         ENDIF   
       ENDDO
 
       CALL MethaneDynamics(CONTROL, ISWITCH, SOILPROP,        !Input
      &    FLOODWAT, SW, RLV, newCO2, DRAIN,                   !Input
      &    CH4_data)                                           !Output
+
+!     ------------------------------------------------------------------
+!     Daily net mineralization broken down by source, humic or FOM
+      DO L = 0, NLAYR
+        IF (L == SRFC) THEN
+          QNresMNR = MNRMETS1(SRFC,N) + MNRSTRS1(SRFC,N) + 
+     &                                                  MNRSTRS2(SRFC,N)
+          QNresIMM = IMMMETS1(SRFC,N) + IMMSTRS1(SRFC,N) + 
+     &                                                  IMMSTRS2(SRFC,N)
+          QNhumMNR = MNRS1S2(SRFC,N)
+          QNhumIMM = IMMS1S2(SRFC,N)
+        ELSE
+          QNresMNR = QNresMNR + MNRMETS1(L,N) + MNRSTRS1(L,N) + 
+     &                                                     MNRSTRS2(L,N)
+          QNresIMM = QNresIMM + IMMMETS1(L,N) + IMMSTRS1(L,N) + 
+     &                                                     IMMSTRS2(L,N)
+          QNhumMNR = QNhumMNR + MNRS1S2(L,N) + MNRS1S3(L,N) + 
+     &               MNRS2S1(L,N) + MNRS2S3(L,N) + MNRS3S1(L,N)
+          QNhumIMM = QNhumIMM + IMMS1S2(L,N) + IMMS1S3(L,N) + 
+     &               IMMS2S1(L,N) + IMMS2S3(L,N) + IMMS3S1(L,N)
+          
+        ENDIF   
+          QNres = QNresMNR - QNresIMM
+          QNhum = QNhumMNR - QNhumIMM
+      ENDDO
+
+!     CO2 - convert from units of C to units of CO2 for low input report
+      QCO2res = QCO2res * 3.67
+      QCO2hum = QCO2hum * 3.67
+
+      CALL PUT('ORGC','QCO2res',QCO2res)
+      CALL PUT('ORGC','QCO2hum',QCO2hum)
+      CALL PUT('ORGC','QNres',QNres)
+      CALL PUT('ORGC','QNhum',QNhum)
 
 !***********************************************************************
 !***********************************************************************

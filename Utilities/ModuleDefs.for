@@ -471,6 +471,8 @@ C             CHP Added TRTNUM to CONTROL variable.
         REAL TOMINSOM3, TNIMBSOM
         REAL MULCHMASS
         REAL SCTD, SNTD
+        REAL QCO2res, QCO2hum
+        REAL QNres, QNhum
         REAL, DIMENSION(NL) :: SOC, SON
       End Type OrgCType
 
@@ -725,6 +727,10 @@ C             CHP Added TRTNUM to CONTROL variable.
         Case ('TNIMBSOM'); Value = SAVE_data % ORGC % TNIMBSOM
         Case ('SCTD'); Value = SAVE_data % ORGC % SCTD
         Case ('SNTD'); Value = SAVE_data % ORGC % SNTD
+        Case ('QCO2hum'); Value = SAVE_data % ORGC % QCO2hum
+        Case ('QCO2res'); Value = SAVE_data % ORGC % QCO2res
+        Case ('QNhum'); Value = SAVE_data % ORGC % QNhum
+        Case ('QNres'); Value = SAVE_data % ORGC % QNres
         Case DEFAULT; ERR = .TRUE.
         END SELECT
 
@@ -856,6 +862,10 @@ C             CHP Added TRTNUM to CONTROL variable.
         Case ('TNIMBSOM'); SAVE_data % ORGC % TNIMBSOM  = Value
         Case ('SCTD'); SAVE_data % ORGC % SCTD  = Value
         Case ('SNTD'); SAVE_data % ORGC % SNTD  = Value
+        Case ('QCO2hum'); SAVE_data % ORGC % QCO2hum = Value
+        Case ('QCO2res'); SAVE_data % ORGC % QCO2res = Value
+        Case ('QNhum'); SAVE_data % ORGC % QNhum = Value
+        Case ('QNres'); SAVE_data % ORGC % QNres = Value
         Case DEFAULT; ERR = .TRUE.
         END SELECT
 

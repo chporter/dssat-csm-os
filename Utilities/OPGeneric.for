@@ -19,19 +19,22 @@
       IMPLICIT  NONE
       SAVE
 
+      CHARACTER*2 CROPID
       CHARACTER*6, PARAMETER :: ERRKEY = 'GENPRN'
       CHARACTER*10, DIMENSION(12) :: FormatTxt 
-      CHARACTER*10, DIMENSION(12) :: HeaderTxt, DATETXT
+      CHARACTER*11 SEASONID
       CHARACTER*11, PARAMETER :: OUTG1 = 'Generic.OUT'
       CHARACTER*11, PARAMETER :: OUTG2 = 'Generic.CSV'
+      CHARACTER*13, DIMENSION(12) :: HeaderTxt
+      CHARACTER*13 DATETXT
       CHARACTER*78, MSG(10)
-      CHARACTER*220 FMT_STRING_A, FMT_STRING_C
-      CHARACTER*220 HDR_String_A, HDR_String_C
+!     CHARACTER*220 FMT_STRING_A, FMT_STRING_C
+      CHARACTER*220 HDR_String_C  !, HDR_String_A, 
       INTEGER DAS, DOY, DYNAMIC, ERRNUM, LUN1, LUN2
       INTEGER NLayr, INCDAT, RUN, YEAR, YRDOY, YRDOY0, NLayers
       LOGICAL FEXIST, FIRST
 
-      INTEGER NVars, I, L, YR, iMON, NDAY
+      INTEGER NVars, I, L, iMON, NDAY
 
 !     Variables needed for computation of output variables:
       REAL, DIMENSION(NL) :: SON, SOC, SW   
@@ -71,12 +74,12 @@
 
 !-----------------------------------------------------------------------
 !       Initialize headers and output formats, set everything to zero for now.
-        HeaderTxt(1) ='       SOC' ; FormatTxt(1) = 'F10.0'
-        HeaderTxt(2) ='       SON' ; FormatTxt(2) = 'F10.1'
-        HeaderTxt(3) ='   QCO2hum' ; FormatTxt(3) = 'F10.2'
-        HeaderTxt(4) ='   QCO2res' ; FormatTxt(4) = 'F10.2'
-        HeaderTxt(5) ='     QNhum' ; FormatTxt(5) = 'F10.2'
-        HeaderTxt(6) ='     QNres' ; FormatTxt(6) = 'F10.2'
+        HeaderTxt(1) ='          SOC' ; FormatTxt(1) = 'F13.0'
+        HeaderTxt(2) ='          SON' ; FormatTxt(2) = 'F13.1'
+        HeaderTxt(3) ='      QCO2hum' ; FormatTxt(3) = 'F13.2'
+        HeaderTxt(4) ='      QCO2res' ; FormatTxt(4) = 'F13.2'
+        HeaderTxt(5) ='        QNhum' ; FormatTxt(5) = 'F13.2'
+        HeaderTxt(6) ='        QNres' ; FormatTxt(6) = 'F13.2'
         HeaderTxt(7) =' SoilW.layer1' ; FormatTxt(7) = 'F13.3'
 
         QCO2hum = 0.0
@@ -85,32 +88,32 @@
         QNres = 0.0
 
 !       Build the format strings and the header text for ASCII and CSV
-        FMT_STRING_A = "(I5,I4,I6," // TRIM(FormatTxt(1)) 
-        HDR_String_A = HeaderTxt(1) !ASCII header line
+!        FMT_STRING_A = "(I5,I4,I6," // TRIM(FormatTxt(1)) 
+!        HDR_String_A = HeaderTxt(1) !ASCII header line
         HDR_String_C = ADJUSTL(HeaderTxt(1)) !CSV header line
         DO I = 2, NVars
-          FMT_STRING_A = TRIM(FMT_STRING_A) // "," // TRIM(FormatTxt(I))
-          HDR_String_A = TRIM(HDR_String_A) // TRIM(HeaderTxt(I))
+!          FMT_STRING_A = TRIM(FMT_STRING_A) // "," // TRIM(FormatTxt(I))
+!          HDR_String_A = TRIM(HDR_String_A) // TRIM(HeaderTxt(I))
           HDR_String_C = TRIM(HDR_String_C) // "," // 
      &                   TRIM(ADJUSTL(HeaderTxt(I)))
         ENDDO
-        FMT_STRING_A = TRIM(FMT_STRING_A) // ")"
-        WRITE(FMT_STRING_C,'(A,I2,A)') "(", NVars+5, "(g0,','),g0)"
+!        FMT_STRING_A = TRIM(FMT_STRING_A) // ")"
+!        WRITE(FMT_STRING_C,'(A,I2,A)') "(", NVars+4, "(g0,','),F5.3)"
 
-!       ----------------------------------------------------
-!       Open ASCII file and write headers
-        CALL GETLUN('GenericA', LUN1)
-        INQUIRE (FILE = OUTG1, EXIST = FEXIST)
-        IF (FEXIST) THEN
-          OPEN (UNIT = LUN1, FILE = OUTG1, STATUS = 'OLD',
-     &      IOSTAT = ERRNUM, POSITION = 'APPEND')
-        ELSE
-          OPEN (UNIT = LUN1, FILE = OUTG1, STATUS = 'NEW',
-     &      IOSTAT = ERRNUM)
-          WRITE(LUN1,'("*Generic daily output")')
-        ENDIF
-        CALL HEADER(SEASINIT, LUN1, RUN)
-        WRITE(LUN1,'(A,A)') "@YEAR DOY   DAS", TRIM(HDR_String_A)
+!!       ----------------------------------------------------
+!!       Open ASCII file and write headers
+!        CALL GETLUN('GenericA', LUN1)
+!        INQUIRE (FILE = OUTG1, EXIST = FEXIST)
+!        IF (FEXIST) THEN
+!          OPEN (UNIT = LUN1, FILE = OUTG1, STATUS = 'OLD',
+!     &      IOSTAT = ERRNUM, POSITION = 'APPEND')
+!        ELSE
+!          OPEN (UNIT = LUN1, FILE = OUTG1, STATUS = 'NEW',
+!     &      IOSTAT = ERRNUM)
+!          WRITE(LUN1,'("*Generic daily output")')
+!        ENDIF
+!        CALL HEADER(SEASINIT, LUN1, RUN)
+!        WRITE(LUN1,'(A,A)') "@YEAR DOY   DAS", TRIM(HDR_String_A)
 
 !       ----------------------------------------------------
 !       Open CSV file and write headers
@@ -126,13 +129,18 @@
      &        IOSTAT = ERRNUM)
           ENDIF
           WRITE(LUN2,'(A,A)') 
-     &      "Model,id_site,id_season,id_treatment,Date",
+     &      "Model,id_site,id_season,id_treatment,Date,",
      &      TRIM(HDR_String_C)
         ENDIF
 
 !       Use treatment name to get site ID and Low Input treatment
         SITEID  = CONTROL % TITLET(1:4)
-        TRTNAME = CONTROL % TITLET(6:9)
+        TRTNAME = CONTROL % TITLET(13:16)
+        SEASONID= CONTROL % TITLET(1:11)
+        CROPID  = CONTROL % TITLET(18:19)
+        IF (CROPID == 'FA') THEN
+          SEASONID = TRIM(SEASONID) // "_FA"
+        ENDIF
 
 !       For Low input systems, the layer depth is dependent on location
         SELECT CASE(SITEID)
@@ -149,20 +157,25 @@
         CALL GET(SOILPROP)
         NLayr = SOILPROP % NLayr
         DS    = SOILPROP % DS
-
-      ENDIF  !End of seasinit section
+        DLAYR = SOILPROP % DLAYR
 
 !***********************************************************************
 !***********************************************************************
-!     Daily OUTPUT (do for all values of DYNAMIC)
+!     Daily OUTPUT 
+!-----------------------------------------------------------------------
+      ELSE
 !***********************************************************************
 !     Today's date
-      CALL ETAD_NAILUJ (YRDOY, YR, iMON, NDAY)
-      WRITE(DATETXT, '(I4,"-",I2.2,"-",I2.2)') YR, iMON, NDAY
+      CALL ETAD_NAILUJ (DOY, YEAR, iMON, NDAY)
+      WRITE(DATETXT, '(I4,"-",I2.2,"-",I2.2)') YEAR, iMON, NDAY
 
 !     Get daily values
       CALL GET('ORGC', 'SOC', SOC)
       CALL GET('ORGC', 'SON', SON)
+      CALL GET('ORGC', 'QCO2hum', QCO2hum)
+      CALL GET('ORGC', 'QCO2res', QCO2res)
+      CALL GET('ORGC', 'QNhum', QNhum)
+      CALL GET('ORGC', 'QNres', QNres)
       CALL GET('WATER', 'SW', SW) 
 
 !     Extract soil water at specified depths
@@ -182,16 +195,19 @@
       SONtop = SONtop / 1000.   !t
 
 !     ----------------------------------------------------
-!     ASCII format output
-      WRITE(LUN1,TRIM(FMT_STRING_A)) YEAR, DOY, DAS, 
-     &    SOCtop, SONtop, QCO2hum, QCO2res, QNhum, QNres, SWAVG
+!!     ASCII format output
+!      WRITE(LUN1,TRIM(FMT_STRING_A)) YEAR, DOY, DAS, 
+!     &    SOCtop, SONtop, QCO2hum, QCO2res, QNhum, QNres, SWAVG
      
 !     ----------------------------------------------------
 !     CSV format output
-      WRITE(LUN2,TRIM(FMT_STRING_C)) "CE1", SITEID, 
-     &    CONTROL%ROTNUM, TRTNAME, DATETXT,
-     &    SOCtop, SONtop, QCO2hum, QCO2res, QNhum, QNres, SWAVG
+      WRITE(LUN2,
+     &  '(A,",",A,",",A,",",A,",",A,",",
+     &    F0.1,",",F0.2,",",F0.2,",",F0.2,",",F0.2,",",F0.2,",",F5.3)')
+     &  "CE1", SITEID, TRIM(SEASONID), TRTNAME, TRIM(DATETXT),
+     &  SOCtop, SONtop, QCO2hum, QCO2res, QNhum, QNres, SWAVG
 
+      ENDIF
 !***********************************************************************
 !***********************************************************************
 !     End of season
