@@ -19,7 +19,7 @@
       TYPE (VersionType) Version
 !     CMake no longer able to change the branch name, do it manually.      
 !     CHARACTER(len=*), PARAMETER :: VBranch = '-@BRANCH@'
-      CHARACTER(len=*), PARAMETER :: VBranch = '-flexOUT'
+      CHARACTER(len=*), PARAMETER :: VBranch = '-LowInput'
 
 !     Version history:  
 !       4.8.0.23 chp 2022-02-15 More CROPGRO calibrations. Lat-long fix. Methane updates.
