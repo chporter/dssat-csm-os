@@ -46,7 +46,7 @@ C  08/20/2002 GH  Modified for Y2K
       LOGICAL FEXIST
 
 !     Arrays which contain data for printing in SUMMARY.OUT file
-      INTEGER, PARAMETER :: SUMNUM = 5
+      INTEGER, PARAMETER :: SUMNUM = 9
       CHARACTER*5, DIMENSION(SUMNUM) :: LABEL
       CHARACTER*50 FRMT1, FRMT2
       REAL, DIMENSION(SUMNUM) :: VALUE
@@ -243,6 +243,12 @@ C-----------------------------------------------------------------------
           LABEL(3)  = 'NLCM'; VALUE(3)  = CLeach
           LABEL(4)  = 'NIAM'; VALUE(4)  = TNH4NO3
           LABEL(5)  = 'NMINC';VALUE(5)  = CNETMINRN
+
+!         Added for low input systems intercomparison
+          LABEL(6)  = 'NMIN'; VALUE(6)  = CMINERN
+          LABEL(7)  = 'NVOL'; VALUE(7)  = TOTAML
+          LABEL(8)  = 'NIMM'; VALUE(8)  = CIMMOBN
+          LABEL(9)  ='NDENIT';VALUE(9)  = CNOX
 
           !Send labels and values to OPSUM
           CALL SUMVALS (SUMNUM, LABEL, VALUE) 

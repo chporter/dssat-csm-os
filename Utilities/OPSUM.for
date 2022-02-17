@@ -77,6 +77,9 @@ C=======================================================================
         INTEGER FCWAM, FHWAM, FPWAM
         REAL HWAHF, FBWAH
 
+!       Added for low input systems output
+        REAL RWAMt, RNAM, NMIN, NVOL, NIMM, NDENIT
+
       End Type SummaryType
 
       Type EvaluateType
@@ -160,10 +163,16 @@ C-----------------------------------------------------------------------
 !     For forecast mode may be different than simulation year
       INTEGER WYEAR
       
-!       Added 2021-20-04 LPM Fresh weight variables
-        INTEGER FCWAM, FHWAM, FPWAM
-        REAL HWAHF, FBWAH
+!     Added 2021-20-04 LPM Fresh weight variables
+      INTEGER FCWAM, FHWAM, FPWAM
+      REAL HWAHF, FBWAH
 
+!     Added for Low Input Systems model intercomparison
+      CHARACTER*4  id_site, id_treatment
+      CHARACTER*10 Pdate, Edate, Adate, Mdate
+      CHARACTER*11 id_season
+      REAL HWAHt, CWAMt, RWAMt, RNAM, RCAM, NMIN, NVOL, NIMM, NDENIT
+      
       LOGICAL FEXIST
 
 !     Text values for some variables that get overflow with "-99" values
@@ -837,7 +846,7 @@ C-------------------------------------------------------------------
         NLINES=NLINES+1
       ENDIF
 
-C-------------------------------------------------------------------
+!-------------------------------------------------------------------
 !     Write Evaluate.OUT file
 !     IF((INDEX('0',IDETL) < 1 .AND. INDEX('IAEBCGDT',RNMODE) > 0) .AND.
 !     Evaluate.OUT printed whenever Overview.OUT is printed (i.e., switch
@@ -926,6 +935,35 @@ C-------------------------------------------------------------------
          
         END SELECT
       ENDIF
+
+!-------------------------------------------------------------------
+!     Write LowInput_sum.csv file
+!     Metadata:
+      id_site      = TITLET(1:4)
+      id_treatment = TITLET(13:16)
+      id_season    = TITLET(1:11)
+      IF (CROP == 'FA') THEN
+        id_season = TRIM(id_season) // "_FA"
+      ENDIF
+
+!     Dates in YYYY-MM-DD text format
+      CALL Date_Text (YRPLT, Pdate)
+      CALL Date_Text (EDAT, Edate)
+      CALL Date_Text (ADAT, Adate)
+      CALL Date_Text (MDAT, Mdate)
+
+      HWAHt = HWAH / 1000. !convert to t/ha
+      CWAMt = CWAM / 1000.
+      RWAMt = SUMDAT % RWAMt / 1000. !root weight at maturity (t[DM]/ha)
+      RNAM  = SUMDAT % RNAM          !root N (kg[N]/ha)
+      RCAM  = RWAMt * 400.           !root C (kg[C]/ha)
+
+      NMIN = SUMDAT % NMIN
+      NVOL = SUMDAT % NVOL
+      NIMM = SUMDAT % NIMM
+      NDENIT = SUMDAT % NDENIT
+
+
 
 !***********************************************************************
 !***********************************************************************
@@ -1129,6 +1167,14 @@ C=======================================================================
         CASE ('YCRD'); SUMDAT % YCRD  = VALUE(I)
         CASE ('XCRD'); SUMDAT % XCRD  = VALUE(I)
         CASE ('ELEV'); SUMDAT % ELEV  = VALUE(I)
+
+!       Low input systems
+        CASE ('RWAMt'); SUMDAT % RWAMt = VALUE(I)
+        CASE ('RNAM');  SUMDAT % RNAM  = VALUE(I)
+        CASE ('NMIN');  SUMDAT % NMIN  = VALUE(I)
+        CASE ('NVOL');  SUMDAT % NVOL  = VALUE(I)
+        CASE ('NIMM');  SUMDAT % NIMM  = VALUE(I)
+        CASE ('NDENIT');SUMDAT % NDENIT= VALUE(I)
 
         END SELECT
       ENDDO

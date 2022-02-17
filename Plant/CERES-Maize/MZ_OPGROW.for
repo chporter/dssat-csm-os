@@ -21,7 +21,7 @@ C  Calls:     None
      &  PCNL, PLTPOP, PODNO, PODWT, PSTRES1, PSTRES2, RLV, RSTAGE, 
      &  RTDEP, RTWT, SATFAC, SDWT, SEEDNO, SENESCE, SHELPC, SLA, 
      &  STMWTO, SWFAC, TOPWT, TURFAC, VSTAGE, WTCO, WTLF, WTLO, 
-     &  WTSO, XLAI, YRPLT)
+     &  WTSO, XLAI, YRPLT, ROOTN)
 
 !----------------------------------------------------------------------
       USE ModuleDefs 
@@ -55,6 +55,13 @@ C  Calls:     None
       CHARACTER*6, PARAMETER :: ERRKEY = 'MZ_OPG'
       INTEGER         ERRNUM, FROP, NLAYR, L
       LOGICAL         FEXIST, FIRST
+
+!     Arrays which contain data for printing in SUMMARY.OUT file
+!     Added for Low input systems summary output
+      INTEGER, PARAMETER :: SUMNUM = 2
+      CHARACTER*4, DIMENSION(SUMNUM) :: LABEL
+      REAL, DIMENSION(SUMNUM) :: VALUE
+      REAL ROOTN !for low input
 
       TYPE (ControlType) CONTROL
       TYPE (SwitchType)  ISWITCH
@@ -260,6 +267,17 @@ C-------------------------------------------------------------------
      & .AND. (FMOPT == 'A' .OR. FMOPT == ' ')) THEN
         !Close daily output files.
         CLOSE (NOUTDG)
+
+!     Low input systems summary output
+
+!     Store Summary.out labels and values in arrays to send to
+!     OPSUM routines for printing.  Integers are temporarily 
+!     saved as real numbers for placement in real array.
+      LABEL(1) = 'RWAMt'; VALUE(1) = RTWT*10.*PLTPOP
+      LABEL(2) = 'RNAM' ; VALUE(2) = ROOTN*10.*PLTPOP
+
+      !Send labels and values to OPSUM
+      CALL SUMVALS (SUMNUM, LABEL, VALUE) 
 
       ENDIF
 
