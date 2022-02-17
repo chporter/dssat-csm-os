@@ -471,6 +471,7 @@ C             CHP Added TRTNUM to CONTROL variable.
         REAL TOMINSOM3, TNIMBSOM
         REAL MULCHMASS
         REAL SCTD, SNTD
+        REAL, DIMENSION(NL) :: SOC, SON
       End Type OrgCType
 
 !     Data from weather
@@ -911,6 +912,13 @@ C             CHP Added TRTNUM to CONTROL variable.
           CASE DEFAULT; ERR = .TRUE.
         END SELECT
 
+      CASE ('ORGC')
+        SELECT CASE (VarName)
+          CASE ('SOC'); ; Value = SAVE_data % ORGC % SOC
+          CASE ('SON'); ; Value = SAVE_data % ORGC % SON
+          CASE DEFAULT; ERR = .TRUE.
+        END SELECT
+
         CASE DEFAULT; ERR = .TRUE.
       END SELECT
 
@@ -952,6 +960,13 @@ C             CHP Added TRTNUM to CONTROL variable.
         SELECT CASE (VarName)
         Case ('SNO3'); SAVE_data % NITR % SNO3 = Value
         Case ('SNH4'); SAVE_data % NITR % SNH4 = Value
+        Case DEFAULT; ERR = .TRUE.
+        END SELECT
+
+      Case ('ORGC')
+        SELECT CASE (VarName)
+        Case ('SOC'); SAVE_data % ORGC % SOC = Value
+        Case ('SON'); SAVE_data % ORGC % SON = Value
         Case DEFAULT; ERR = .TRUE.
         END SELECT
 

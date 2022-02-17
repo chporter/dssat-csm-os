@@ -28,9 +28,8 @@
      &  TSOM3C, TSOM3E, TSOMC, TSOME, TSTRUCC, TSTRUCE)   !Input
 
 !     ------------------------------------------------------------------
-      USE ModuleDefs     !Definitions of constructed variable types, 
-                         !which contain control information, soil
-                         !parameters, hourly weather data.
+      USE ModuleDefs
+      USE ModuleData
       ! VSH
       USE CsvOutput 
       USE Linklist
@@ -76,6 +75,9 @@
       REAL LITE(0:NL,3), METABE(0:NL,3), SOM1E(0:NL,3), SOM2E(NL,3),
      &  SOM23E(NL,3), SOM3E(NL,3), STRUCE(0:NL,3) !, SSOME(0:NL,3)
       REAL SomLitC(0:NL), SomLitE(0:NL,NELEM)
+
+!     For Low Input Systems output
+      REAL, DIMENSION(NL) :: SOC, SON
 
       LOGICAL DOPRINT, FEXIST, PRINTC, PRINTN, PRINTP
 
@@ -361,7 +363,10 @@
           MET(5) = MET(5) + METABC(L)
           STR(5) = STR(5) + STRUCC(L)
         END SELECT
+        SOC(L) = SomLitC(L)
       ENDDO
+      SOC(1) = SOC(1) + SomLitC(0)
+      CALL PUT('ORGC', 'SOC', SOC)
 
 !     Calculate sample carbon from 0-20 cm and from 20-40 cm
 !       in kg/ha and percent
@@ -490,7 +495,10 @@
             MEN(5) = MEN(5) + METABE(L,N)
             STN(5) = STN(5) + STRUCE(L,N)
           END SELECT
+          SON(L) = SomLitE(L,N)
         ENDDO
+        SON(1) = SON(1) + SomLitE(0,N)
+        CALL PUT('ORGC', 'SON', SON)
 
         TNTD = SomLitE(0,N) + TSOME(N) + TLITE(N)
         TN0D = SomLitE(0,N)
