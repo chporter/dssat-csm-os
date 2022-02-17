@@ -119,7 +119,7 @@ set(
         "Utilities/ERROR.for"
         "Utilities/Info.for"
         "Utilities/IPIBS.for"
-        "Utilities/OPGeneric.for"
+        "Utilities/LowInput_daily.for"
         "Utilities/OPSTRESS.for"
         "Utilities/OPSUM.for"
         "Utilities/OPVIEW.for"

@@ -1,7 +1,7 @@
 !=======================================================================
-!  OPGENERIC, Subroutine
+!  LowInput_daily, Subroutine
 !
-!  Generates output for a mix of simulated data from various modules.
+!  Generates output in csv format for the Low Input systems model intercomparison 2021.
 !  Variables must be available through ModuleData GET routines.
 !  Variables are hard-wired in this code, but could be swapped out easily.
 !-----------------------------------------------------------------------
@@ -10,9 +10,10 @@
 !  09/22/2008 CHP Written
 !  06/09/2021 CHP Modified to compile output from various routines and
 !                 to send to csv generic output.
+!  02/17/2022 CHP Adapted OPGENERIC for use by Low Input Systems study
 !=======================================================================
 
-      Subroutine OPGENERIC
+      Subroutine LowInput_daily
 
       USE ModuleDefs
       USE ModuleData
@@ -23,8 +24,8 @@
       CHARACTER*6, PARAMETER :: ERRKEY = 'GENPRN'
       CHARACTER*10, DIMENSION(12) :: FormatTxt 
       CHARACTER*11 SEASONID
-      CHARACTER*11, PARAMETER :: OUTG1 = 'Generic.OUT'
-      CHARACTER*11, PARAMETER :: OUTG2 = 'Generic.CSV'
+!     CHARACTER*11, PARAMETER :: OUTG1 = 'Generic.OUT'
+      CHARACTER*18, PARAMETER :: OUTG2 = 'LowInput_daily.csv'
       CHARACTER*13, DIMENSION(12) :: HeaderTxt
       CHARACTER*13 DATETXT
       CHARACTER*78, MSG(10)
@@ -223,5 +224,5 @@
       ENDIF
 !***********************************************************************
       RETURN
-      END SUBROUTINE OPGENERIC
+      END SUBROUTINE LowInput_daily
 !=======================================================================

@@ -292,9 +292,9 @@ C-----------------------------------------------------------------------
       ENDIF
 
 !       Custom output
-        IF (ISWITCH%IDETL .EQ. 'G') THEN
-          CALL OPGENERIC
-        ENDIF
+!        IF (ISWITCH%IDETL .EQ. 'G') THEN
+          CALL LowInput_daily
+!        ENDIF
 
 C***********************************************************************
 C***********************************************************************
@@ -472,9 +472,9 @@ C-----------------------------------------------------------------------
      &    MDATE, OMADATA, TILLVALS, YRPLT)                !Output
 
 !       Custom output
-        IF (ISWITCH%IDETL .EQ. 'G') THEN
-          CALL OPGENERIC
-        ENDIF
+!        IF (ISWITCH%IDETL .EQ. 'G') THEN
+          CALL LowInput_daily
+!        ENDIF
 
 C*********************************************************************** 
 C***********************************************************************
