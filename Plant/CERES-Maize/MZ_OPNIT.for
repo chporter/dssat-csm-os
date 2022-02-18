@@ -41,6 +41,12 @@ C  Calls:     None
 
       LOGICAL FEXIST, FIRST
 
+!     Arrays which contain data for printing in SUMMARY.OUT file
+!     Added for Low input systems summary output
+      INTEGER, PARAMETER :: SUMNUM = 1
+      CHARACTER*5, DIMENSION(SUMNUM) :: LABEL
+      REAL, DIMENSION(SUMNUM) :: VALUE
+
 !     The variable "CONTROL" is of type "ControlType".
       TYPE (ControlType) CONTROL
 
@@ -157,10 +163,24 @@ C  Calls:     None
 !***********************************************************************
 !     SEASEND
 !***********************************************************************
-      IF ((DYNAMIC .EQ. SEASEND)
-     & .AND. (FMOPT == 'A' .OR. FMOPT == ' ')) THEN    ! VSH
+      IF (DYNAMIC .EQ. SEASEND) THEN
+!     & .AND. (FMOPT == 'A' .OR. FMOPT == ' ')) THEN    ! VSH
 !-----------------------------------------------------------------------
         CLOSE (NOUTDN)
+
+!     Low input systems summary output
+
+!     Store Summary.out labels and values in arrays to send to
+!     OPSUM routines for printing.  Integers are temporarily 
+!     saved as real numbers for placement in real array.
+      LABEL(1) = 'PCNRT'; VALUE(1) = PCNRT
+
+      !Send labels and values to OPSUM
+      CALL SUMVALS (SUMNUM, LABEL, VALUE) 
+
+
+
+
 
 !***********************************************************************
 !***********************************************************************

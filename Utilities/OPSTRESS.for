@@ -422,8 +422,8 @@
             ENDIF
           
             IF (SUMDAT % NUCM > 1.E-3) THEN
-              DMP_NUpt = Biomas / float(SUMDAT % NUCM)
-              GrP_NUpt = YIELD  / float(SUMDAT % NUCM)
+              DMP_NUpt = Biomas / SUMDAT % NUCM
+              GrP_NUpt = YIELD  / SUMDAT % NUCM
               IF (IDETO_SAVE == 'Y') THEN
                 WRITE(NOUTDO, 1230) SUMDAT % NUCM, DMP_NUpt,GrP_NUpt
               ENDIF

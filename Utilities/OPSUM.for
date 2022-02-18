@@ -36,13 +36,16 @@ C=======================================================================
       Type SummaryType
         INTEGER ADAT, EDAT, MDAT, DWAP, CWAM
         INTEGER HWAM
-        INTEGER HNUMAM, NFXM, NUCM, CNAM, GNAM
+        INTEGER HNUMAM, NFXM
         INTEGER IRNUM, IRCM, ETCM
-        INTEGER PRCM, ROCM, DRCM, SWXM
-        INTEGER NINUMM, NICM, NLCM, NIAM, RECM, ONAM, OCAM
+        INTEGER PRCM, ROCM, SWXM
+        INTEGER NINUMM, NICM, RECM, ONAM, OCAM
         INTEGER PINUMM, PICM, PUPC, SPAM
         INTEGER KINUMM, KICM, KUPC, SKAM
         REAL HWAH, HWUM, BWAH, HNUMUM 
+
+!       CHP changed to REAL for low input
+        REAL CNAM, GNAM, NUCM, NLCM, DRCM, NIAM
 
 !       Added 2/6/2005 for v4.0.2.0
         REAL LAIX, HIAM
@@ -78,7 +81,7 @@ C=======================================================================
         REAL HWAHF, FBWAH
 
 !       Added for low input systems output
-        REAL RWAMt, RNAM, NMIN, NVOL, NIMM, NDENIT
+        REAL RWAMt, PCNRT, NMIN, NVOL, NIMM, NDENIT
 
       End Type SummaryType
 
@@ -120,17 +123,20 @@ C-----------------------------------------------------------------------
       CHARACTER*30 FILEIO
       CHARACTER*60 ENAME
 
-      INTEGER ADAT, CNAM, CRPNO, CWAM, DNR1, DNR7, DRCM, DWAP, DYNAMIC
-      INTEGER EDAT, ERRNUM, ETCM, FOUND, GNAM, HNUMAM, HWAM
+      INTEGER ADAT, CRPNO, CWAM, DNR1, DNR7, DWAP, DYNAMIC
+      INTEGER EDAT, ERRNUM, ETCM, FOUND, HNUMAM, HWAM
       INTEGER I, IRCM, LUNIO, LINC, LNUM, MDAT, IRNUM, NINUMM
-      INTEGER NFXM, NIAM, NICM, NLCM, NLINES, NMINC  !, NNAPHO
-      INTEGER NOUTDS, NUCM, NYRS, PRCM, RECM, ROCM, ONAM, OCAM
+      INTEGER NFXM, NICM, NLINES, NMINC  !, NNAPHO
+      INTEGER NOUTDS, NYRS, PRCM, RECM, ROCM, ONAM, OCAM
       INTEGER REPNO  !CHP 3/15/2018
       INTEGER ROTNO, ROTOPT, RUN, SLUN, SWXM, TIMDIF, TRTNUM, YRPLT
       INTEGER YRSIM, YRDOY
       INTEGER RUN2, SimLen, LenString
       INTEGER PINUMM, PICM, PUPC, SPAM    !P data
       INTEGER KINUMM, KICM, KUPC, SKAM    !K data
+
+!     CHP changed to REAL for low input
+      REAL CNAM, GNAM, NUCM, NLCM, DRCM, NIAM, RNAM
 
       REAL BWAH, HNUMUM, HWAH, HWUM   !, HBPC, HPC
 
@@ -173,7 +179,7 @@ C-----------------------------------------------------------------------
       CHARACTER*11 id_season
       CHARACTER*21 OUTLI
       INTEGER LUN2
-      REAL HWAHt, CWAMt, RWAMt, RNAM, RCAM, NMIN, NVOL, NIMM, NDENIT
+      REAL HWAHt, CWAMt, RWAMt, PCNRT, RCAM, NMIN, NVOL, NIMM, NDENIT
       
       LOGICAL FEXIST
 
@@ -337,18 +343,18 @@ C     Initialize OPSUM variables.
       SUMDAT % EPCM   = -99
       SUMDAT % ESCM   = -99
       SUMDAT % ROCM   = -99
-      SUMDAT % DRCM   = -99
+      SUMDAT % DRCM   = -99.
       SUMDAT % SWXM   = -99
       SUMDAT % NINUMM = -99
       SUMDAT % NICM   = -99
       SUMDAT % NFXM   = -99
-      SUMDAT % NUCM   = -99
-      SUMDAT % NLCM   = -99
-      SUMDAT % NIAM   = -99
+      SUMDAT % NUCM   = -99.
+      SUMDAT % NLCM   = -99.
+      SUMDAT % NIAM   = -99.
       SUMDAT % NMINC  = -99
-      SUMDAT % CNAM   = -99
-      SUMDAT % GNAM   = -99
-      
+      SUMDAT % CNAM   = -99.
+      SUMDAT % GNAM   = -99.
+
 !     N2O emissions
       SUMDAT % N2OEC  = -99. !N2O emissions (kg[N]/ha)
       SUMDAT % CO2EC  = -99  !CO2 emissions from OM decomp (kg[C]/ha)
@@ -696,9 +702,9 @@ C-------------------------------------------------------------------
 
         WRITE (NOUTDS,503) LAIX, 
      &    FCWAM, FHWAM, NINT(HWAHF), NINT(FBWAH), FPWAM,
-     &    IRNUM, IRCM, PRCM, ETCM, EPCM, ESCM, ROCM, DRCM, SWXM, 
-     &    NINUMM, NICM, NFXM, NUCM, NLCM, NIAM, NMINC, CNAM, GNAM, 
-     &    N2OEC_TXT,
+     &    IRNUM, IRCM, PRCM, ETCM, EPCM, ESCM, ROCM, NINT(DRCM), SWXM, 
+     &    NINUMM, NICM, NFXM, NINT(NUCM), NINT(NLCM), NINT(NIAM), NMINC,
+     &    NINT(CNAM), NINT(GNAM), N2OEC_TXT,
 !    &    N2OGC_TXT,
      &    PINUMM, PICM, PUPC, SPAM,        !P data
      &    KINUMM, KICM, KUPC, SKAM,        !K data
@@ -754,19 +760,20 @@ C-------------------------------------------------------------------
             
 !           CALL CsvOutSumOpsum(RUN, TRTNUM, ROTNO, ROTOPT, CRPNO, CROP,
             CALL CsvOutSumOpsum(RUN, TRTNUM, ROTNO, ROTOPT, REPNO, CROP,
-     &MODEL, CONTROL%FILEX(1:8), TITLET, FLDNAM, WSTAT,WYEAR,SLNO,
-     &LATI,LONG,ELEV,YRSIM,YRPLT, EDAT, ADAT, MDAT, YRDOY, HYEAR, DWAP, 
-     &CWAM, HWAM, HWAH, BWAH, 
-!     &PWAM, HWUM, HNUMUM, HIAM, LAIX, HNUMAM, IRNUM, IRCM, PRCM, ETCM,
-     &PWAM, HWUM, HNUMUM, HIAM, LAIX, HNUMAM, FCWAM, FHWAM, HWAHF, 
-     &FBWAH, FPWAM, IRNUM, IRCM, PRCM, ETCM,
-     &EPCM, ESCM, ROCM, DRCM, SWXM, NINUMM, NICM, NFXM, NUCM, NLCM, 
-     &NIAM, NMINC, CNAM, GNAM, N2OEC, PINUMM, PICM, PUPC, SPAM, KINUMM, 
-     &KICM, KUPC, SKAM, RECM, ONTAM, ONAM, OPTAM, OPAM, OCTAM, OCAM, 
-     &CO2EC, CH4EC, DMPPM, DMPEM, DMPTM, DMPIM, YPPM, YPEM, YPTM, YPIM, 
-     &DPNAM, DPNUM, YPNAM, YPNUM, NDCH, TMAXA, TMINA, SRADA, DAYLA, 
-     &CO2A, PRCP, ETCP, ESCP, EPCP,   
-     &vCsvlineSumOpsum, vpCsvlineSumOpsum, vlngthSumOpsum) 
+     & MODEL, CONTROL%FILEX(1:8), TITLET, FLDNAM, WSTAT,WYEAR,SLNO,
+     & LATI,LONG,ELEV,YRSIM,YRPLT, EDAT, ADAT, MDAT, YRDOY, HYEAR, DWAP,
+     & CWAM, HWAM, HWAH, BWAH, 
+!      &PWAM, HWUM, HNUMUM, HIAM, LAIX, HNUMAM, IRNUM, IRCM, PRCM, ETCM,
+     & PWAM, HWUM, HNUMUM, HIAM, LAIX, HNUMAM, FCWAM, FHWAM, HWAHF, 
+     & FBWAH, FPWAM, IRNUM, IRCM, PRCM, ETCM,
+     & EPCM, ESCM, ROCM, NINT(DRCM), SWXM, NINUMM, NICM, NFXM, 
+     & NINT(NUCM), NINT(NLCM), NINT(NIAM), NMINC, NINT(CNAM), 
+     & NINT(GNAM), N2OEC, PINUMM, PICM, PUPC, SPAM, KINUMM, 
+     & KICM, KUPC, SKAM, RECM, ONTAM, ONAM, OPTAM, OPAM, OCTAM, OCAM, 
+     & CO2EC, CH4EC, DMPPM, DMPEM, DMPTM, DMPIM, YPPM, YPEM, YPTM, YPIM,
+     & DPNAM, DPNUM, YPNAM, YPNUM, NDCH, TMAXA, TMINA, SRADA, DAYLA, 
+     & CO2A, PRCP, ETCP, ESCP, EPCP,   
+     & vCsvlineSumOpsum, vpCsvlineSumOpsum, vlngthSumOpsum) 
             
             CALL LinklstSumOpsum(vCsvlineSumOpsum) 
         END IF
@@ -839,7 +846,7 @@ C-------------------------------------------------------------------
           WRITE(*,'(3I6)',ADVANCE='NO') CWAM, NINT(HWAH), PRCM
         ENDIF
 
-        WRITE(*,'(5I6,I7,I5)') IRCM, ETCM, SWXM, NUCM, NIAM, 
+        WRITE(*,'(5I6,I7,I5)') IRCM, ETCM, SWXM, NINT(NUCM), NINT(NIAM),
      &      ONAM, NINT(OCAM/1000.)
         NLINES=NLINES+1
       ENDIF
@@ -979,9 +986,11 @@ C-------------------------------------------------------------------
         HWAHt = HWAH / 1000. !convert to t/ha
         CWAMt = CWAM / 1000.
         RWAMt = SUMDAT % RWAMt / 1000. !root weight at maturity (t[DM]/ha)
-        RNAM  = SUMDAT % RNAM          !root N (kg[N]/ha)
         RCAM  = RWAMt * 400.           !root C (kg[C]/ha)
         
+        PCNRT = SUMDAT % PCNRT
+        RNAM  = PCNRT * RWAMt *10.     !root N (kg[N]/ha)
+
         NMIN = SUMDAT % NMIN
         NVOL = SUMDAT % NVOL
         NIMM = SUMDAT % NIMM
@@ -996,11 +1005,14 @@ C-------------------------------------------------------------------
      &  NUCM,achar(9),NLCM,achar(9),NMIN,achar(9),DRCM,achar(9),    !6
      &  NVOL,achar(9),NIMM,achar(9),NDENIT,achar(9),NIAM            !7
 
- 100    FORMAT(10A,F0.3,7A,F0.3,A,                  !1, 2, 3
-     &  2(F0.2,A), 2(F0.1,A), I0, 2(F0.2,A), I0,    !4, 5
-     &  2I0, F0.2,A, I0, 3(F0.2,A), I0)             !6, 7
+ 100    FORMAT(10A, F0.3, 7A, F0.3,A,                  !1, 2, 3
+     &  F0.3,A, F0.2,A, 2(F0.1,A), 4(F0.2,A),  !4, 5
+     &  8(F0.2,A))                                     !6, 7
 
       ENDIF
+
+! These variables changed from integer to real for low input intercomparison
+! CNAM, GNAM, NUCM, NLCM, DRCM, NIAM
 
 !***********************************************************************
 !***********************************************************************
@@ -1113,9 +1125,9 @@ C=======================================================================
         CASE ('H#AM'); SUMDAT % HNUMAM = NINT(VALUE(I))
         CASE ('H#UM'); SUMDAT % HNUMUM = VALUE(I) !Float
         CASE ('NFXM'); SUMDAT % NFXM   = NINT(VALUE(I))
-        CASE ('NUCM'); SUMDAT % NUCM   = NINT(VALUE(I))
-        CASE ('CNAM'); SUMDAT % CNAM   = NINT(VALUE(I))
-        CASE ('GNAM'); SUMDAT % GNAM   = NINT(VALUE(I))
+        CASE ('NUCM'); SUMDAT % NUCM   = VALUE(I)
+        CASE ('CNAM'); SUMDAT % CNAM   = VALUE(I)
+        CASE ('GNAM'); SUMDAT % GNAM   = VALUE(I)
         CASE ('PWAM'); SUMDAT % PWAM   = NINT(VALUE(I)) 
         CASE ('LAIX'); SUMDAT % LAIX   = VALUE(I) !Float
         CASE ('HIAM'); SUMDAT % HIAM   = VALUE(I) !Float
@@ -1138,14 +1150,14 @@ C=======================================================================
         !From OPWBAL:
         CASE ('PRCM'); SUMDAT % PRCM = NINT(VALUE(I))
         CASE ('ROCM'); SUMDAT % ROCM = NINT(VALUE(I))
-        CASE ('DRCM'); SUMDAT % DRCM = NINT(VALUE(I))
+        CASE ('DRCM'); SUMDAT % DRCM = VALUE(I)
         CASE ('SWXM'); SUMDAT % SWXM = NINT(VALUE(I))
 
         !From OpSoilNC:
         CASE ('NI#M '); SUMDAT % NINUMM = NINT(VALUE(I))
         CASE ('NICM '); SUMDAT % NICM   = NINT(VALUE(I))
-        CASE ('NLCM '); SUMDAT % NLCM   = NINT(VALUE(I))
-        CASE ('NIAM '); SUMDAT % NIAM   = NINT(VALUE(I))
+        CASE ('NLCM '); SUMDAT % NLCM   = VALUE(I)
+        CASE ('NIAM '); SUMDAT % NIAM   = VALUE(I)
         CASE ('NMINC');SUMDAT % NMINC  = NINT(VALUE(I))
         CASE ('RECM'); SUMDAT % RECM   = NINT(VALUE(I))
 
@@ -1207,10 +1219,10 @@ C=======================================================================
 
 !       Low input systems
         CASE ('RWAMt'); SUMDAT % RWAMt = VALUE(I)
-        CASE ('RNAM '); SUMDAT % RNAM  = VALUE(I)
-        CASE ('NMIN ');SUMDAT % NMIN  = VALUE(I)
-        CASE ('NVOL ');SUMDAT % NVOL  = VALUE(I)
-        CASE ('NIMM ');SUMDAT % NIMM  = VALUE(I)
+        CASE ('PCNRT'); SUMDAT % PCNRT = VALUE(I)
+        CASE ('NMIN');SUMDAT % NMIN  = VALUE(I)
+        CASE ('NVOL');SUMDAT % NVOL  = VALUE(I)
+        CASE ('NIMM');SUMDAT % NIMM  = VALUE(I)
         CASE ('NDNIT');SUMDAT % NDENIT= VALUE(I)
 
         END SELECT

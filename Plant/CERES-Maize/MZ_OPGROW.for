@@ -21,7 +21,7 @@ C  Calls:     None
      &  PCNL, PLTPOP, PODNO, PODWT, PSTRES1, PSTRES2, RLV, RSTAGE, 
      &  RTDEP, RTWT, SATFAC, SDWT, SEEDNO, SENESCE, SHELPC, SLA, 
      &  STMWTO, SWFAC, TOPWT, TURFAC, VSTAGE, WTCO, WTLF, WTLO, 
-     &  WTSO, XLAI, YRPLT, ROOTN)
+     &  WTSO, XLAI, YRPLT)
 
 !----------------------------------------------------------------------
       USE ModuleDefs 
@@ -58,10 +58,9 @@ C  Calls:     None
 
 !     Arrays which contain data for printing in SUMMARY.OUT file
 !     Added for Low input systems summary output
-      INTEGER, PARAMETER :: SUMNUM = 2
+      INTEGER, PARAMETER :: SUMNUM = 1
       CHARACTER*5, DIMENSION(SUMNUM) :: LABEL
       REAL, DIMENSION(SUMNUM) :: VALUE
-      REAL ROOTN !for low input
 
       TYPE (ControlType) CONTROL
       TYPE (SwitchType)  ISWITCH
@@ -274,7 +273,6 @@ C-------------------------------------------------------------------
 !     OPSUM routines for printing.  Integers are temporarily 
 !     saved as real numbers for placement in real array.
       LABEL(1) = 'RWAMt'; VALUE(1) = RTWT*10.*PLTPOP
-      LABEL(2) = 'RNAM' ; VALUE(2) = ROOTN*10.*PLTPOP
 
       !Send labels and values to OPSUM
       CALL SUMVALS (SUMNUM, LABEL, VALUE) 

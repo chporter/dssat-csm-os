@@ -937,7 +937,7 @@ C=======================================================================
 !     These are accumulated in the Denit routines:
 !     CNOX       = CNOX       + TNOXD         !Denitrification
 !     CN2Odenit  = CN2Odenit  + TN2OdenitD    !N2O from denitrification
-!     CN2        = CN2        + TN2D          !N2 flux                 
+!     CN2        = CN2        + TN2D          !N2 flux     
 
       CNUPTAKE = WTNUP * 10.
 
