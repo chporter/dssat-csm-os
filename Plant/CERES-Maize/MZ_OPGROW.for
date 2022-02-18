@@ -59,7 +59,7 @@ C  Calls:     None
 !     Arrays which contain data for printing in SUMMARY.OUT file
 !     Added for Low input systems summary output
       INTEGER, PARAMETER :: SUMNUM = 2
-      CHARACTER*4, DIMENSION(SUMNUM) :: LABEL
+      CHARACTER*5, DIMENSION(SUMNUM) :: LABEL
       REAL, DIMENSION(SUMNUM) :: VALUE
       REAL ROOTN !for low input
 
@@ -263,8 +263,8 @@ C  Calls:     None
 !-----------------------------------------------------------------------
 C     Simulation Summary File
 C-------------------------------------------------------------------
-      ELSEIF ((DYNAMIC .EQ. SEASEND) 
-     & .AND. (FMOPT == 'A' .OR. FMOPT == ' ')) THEN
+      ELSEIF (DYNAMIC .EQ. SEASEND) THEN
+!     & .AND. (FMOPT == 'A' .OR. FMOPT == ' ')) THEN
         !Close daily output files.
         CLOSE (NOUTDG)
 

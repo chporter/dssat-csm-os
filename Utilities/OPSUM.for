@@ -171,6 +171,8 @@ C-----------------------------------------------------------------------
       CHARACTER*4  id_site, id_treatment
       CHARACTER*10 Pdate, Edate, Adate, Mdate
       CHARACTER*11 id_season
+      CHARACTER*21 OUTLI
+      INTEGER LUN2
       REAL HWAHt, CWAMt, RWAMt, RNAM, RCAM, NMIN, NVOL, NIMM, NDENIT
       
       LOGICAL FEXIST
@@ -312,10 +314,6 @@ C***********************************************************************
 C     Seasonal initialization - run once per season
 C***********************************************************************
       ELSEIF (DYNAMIC .EQ. SEASINIT) THEN
-C-----------------------------------------------------------------------
-C     Initialize temporary file which will store variables needed by
-C       OPSUM.  This file will be written to by various modules and
-C       deleted upon closing.
 C-----------------------------------------------------------------------
 C     Initialize OPSUM variables.
       SUMDAT % EDAT   = -99
@@ -946,24 +944,63 @@ C-------------------------------------------------------------------
         id_season = TRIM(id_season) // "_FA"
       ENDIF
 
-!     Dates in YYYY-MM-DD text format
-      CALL Date_Text (YRPLT, Pdate)
-      CALL Date_Text (EDAT, Edate)
-      CALL Date_Text (ADAT, Adate)
-      CALL Date_Text (MDAT, Mdate)
+!     ----------------------------------------------------
+!     Open tab-delimited file and write headers
+      IF (RUN == 1) THEN
+        OUTLI = id_site // "_" // id_treatment // "_summary.txt"
+        CALL GETLUN('LISum', LUN2)
+        INQUIRE (FILE = OUTLI, EXIST = FEXIST)
+        IF (FEXIST) THEN
+          OPEN (UNIT = LUN2, FILE = OUTLI, STATUS = 'REPLACE',
+     &      IOSTAT = ERRNUM)
+        ELSE
+          OPEN (UNIT = LUN2, FILE = OUTLI, STATUS = 'NEW',
+     &      IOSTAT = ERRNUM)
+        ENDIF
+        WRITE(LUN2,'(60A)') 
+     &    "Model",achar(9),"id_site",achar(9),"id_season",achar(9),
+     &    "id_treatment",achar(9),"Planting.date",achar(9),
+     &    "Yield",achar(9),"Emergence",achar(9),"Ant",achar(9),
+     &    "Mat",achar(9),"Biom-agb",achar(9),"Biom-roots",achar(9),
+     &    "MaxLAI",achar(9),"CumE",achar(9),"Transp",achar(9),
+     &    "CroN-agb",achar(9),"CroN-roots",achar(9),
+     &    "CroC-roots",achar(9),"GrainN",achar(9),"Nuptake",achar(9),
+     &    "Nleac",achar(9),"Nmin",achar(9),"Drainage",achar(9),
+     &    "Nvol",achar(9),"Nimmo",achar(9),"Nden",achar(9),"SoilN"
+      ENDIF
 
-      HWAHt = HWAH / 1000. !convert to t/ha
-      CWAMt = CWAM / 1000.
-      RWAMt = SUMDAT % RWAMt / 1000. !root weight at maturity (t[DM]/ha)
-      RNAM  = SUMDAT % RNAM          !root N (kg[N]/ha)
-      RCAM  = RWAMt * 400.           !root C (kg[C]/ha)
+      IF (CROP .NE. "FA") THEN
+!       Dates in YYYY-MM-DD text format
+        CALL Date_Text (YRPLT, Pdate)
+        CALL Date_Text (EDAT, Edate)
+        CALL Date_Text (ADAT, Adate)
+        CALL Date_Text (MDAT, Mdate)
+        
+        HWAHt = HWAH / 1000. !convert to t/ha
+        CWAMt = CWAM / 1000.
+        RWAMt = SUMDAT % RWAMt / 1000. !root weight at maturity (t[DM]/ha)
+        RNAM  = SUMDAT % RNAM          !root N (kg[N]/ha)
+        RCAM  = RWAMt * 400.           !root C (kg[C]/ha)
+        
+        NMIN = SUMDAT % NMIN
+        NVOL = SUMDAT % NVOL
+        NIMM = SUMDAT % NIMM
+        NDENIT = SUMDAT % NDENIT
 
-      NMIN = SUMDAT % NMIN
-      NVOL = SUMDAT % NVOL
-      NIMM = SUMDAT % NIMM
-      NDENIT = SUMDAT % NDENIT
+        WRITE(LUN2,100) 
+     &  "CE1",achar(9),id_site,achar(9),id_season,achar(9),         !1
+     &  id_treatment,achar(9),Pdate,achar(9),HWAHt,achar(9),        !2
+     &  Edate,achar(9),Adate,achar(9),Mdate,achar(9),CWAMt,achar(9),!3
+     &  RWAMt,achar(9),LAIX,achar(9),ESCP,achar(9),EPCP,achar(9),   !4
+     &  CNAM,achar(9),RNAM,achar(9),RCAM,achar(9),GNAM,achar(9),    !5
+     &  NUCM,achar(9),NLCM,achar(9),NMIN,achar(9),DRCM,achar(9),    !6
+     &  NVOL,achar(9),NIMM,achar(9),NDENIT,achar(9),NIAM            !7
 
+ 100    FORMAT(10A,F0.3,7A,F0.3,A,                  !1, 2, 3
+     &  2(F0.2,A), 2(F0.1,A), I0, 2(F0.2,A), I0,    !4, 5
+     &  2I0, F0.2,A, I0, 3(F0.2,A), I0)             !6, 7
 
+      ENDIF
 
 !***********************************************************************
 !***********************************************************************
@@ -1105,10 +1142,10 @@ C=======================================================================
         CASE ('SWXM'); SUMDAT % SWXM = NINT(VALUE(I))
 
         !From OpSoilNC:
-        CASE ('NI#M'); SUMDAT % NINUMM = NINT(VALUE(I))
-        CASE ('NICM'); SUMDAT % NICM   = NINT(VALUE(I))
-        CASE ('NLCM'); SUMDAT % NLCM   = NINT(VALUE(I))
-        CASE ('NIAM'); SUMDAT % NIAM   = NINT(VALUE(I))
+        CASE ('NI#M '); SUMDAT % NINUMM = NINT(VALUE(I))
+        CASE ('NICM '); SUMDAT % NICM   = NINT(VALUE(I))
+        CASE ('NLCM '); SUMDAT % NLCM   = NINT(VALUE(I))
+        CASE ('NIAM '); SUMDAT % NIAM   = NINT(VALUE(I))
         CASE ('NMINC');SUMDAT % NMINC  = NINT(VALUE(I))
         CASE ('RECM'); SUMDAT % RECM   = NINT(VALUE(I))
 
@@ -1170,11 +1207,11 @@ C=======================================================================
 
 !       Low input systems
         CASE ('RWAMt'); SUMDAT % RWAMt = VALUE(I)
-        CASE ('RNAM');  SUMDAT % RNAM  = VALUE(I)
-        CASE ('NMIN');  SUMDAT % NMIN  = VALUE(I)
-        CASE ('NVOL');  SUMDAT % NVOL  = VALUE(I)
-        CASE ('NIMM');  SUMDAT % NIMM  = VALUE(I)
-        CASE ('NDENIT');SUMDAT % NDENIT= VALUE(I)
+        CASE ('RNAM '); SUMDAT % RNAM  = VALUE(I)
+        CASE ('NMIN ');SUMDAT % NMIN  = VALUE(I)
+        CASE ('NVOL ');SUMDAT % NVOL  = VALUE(I)
+        CASE ('NIMM ');SUMDAT % NIMM  = VALUE(I)
+        CASE ('NDNIT');SUMDAT % NDENIT= VALUE(I)
 
         END SELECT
       ENDDO

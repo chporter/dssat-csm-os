@@ -238,17 +238,17 @@ C-----------------------------------------------------------------------
 !         Store Summary.out labels and values in arrays to send to
 !         OPSUM routines for printing.  Integers are temporarily 
 !         saved aS real numbers for placement in real array.
-          LABEL(1)  = 'NI#M'; VALUE(1)  = FLOAT(NAPFER(N))
-          LABEL(2)  = 'NICM'; VALUE(2)  = AMTFER(N)
-          LABEL(3)  = 'NLCM'; VALUE(3)  = CLeach
-          LABEL(4)  = 'NIAM'; VALUE(4)  = TNH4NO3
+          LABEL(1)  = 'NI#M '; VALUE(1)  = FLOAT(NAPFER(N))
+          LABEL(2)  = 'NICM '; VALUE(2)  = AMTFER(N)
+          LABEL(3)  = 'NLCM '; VALUE(3)  = CLeach
+          LABEL(4)  = 'NIAM '; VALUE(4)  = TNH4NO3
           LABEL(5)  = 'NMINC';VALUE(5)  = CNETMINRN
 
 !         Added for low input systems intercomparison
-          LABEL(6)  = 'NMIN'; VALUE(6)  = CMINERN
-          LABEL(7)  = 'NVOL'; VALUE(7)  = TOTAML
-          LABEL(8)  = 'NIMM'; VALUE(8)  = CIMMOBN
-          LABEL(9)  ='NDENIT';VALUE(9)  = CNOX
+          LABEL(6)  = 'NMIN '; VALUE(6)  = CMINERN
+          LABEL(7)  = 'NVOL '; VALUE(7)  = TOTAML
+          LABEL(8)  = 'NIMM '; VALUE(8)  = CIMMOBN
+          LABEL(9)  = 'NDNIT'; VALUE(9)  = CNOX
 
           !Send labels and values to OPSUM
           CALL SUMVALS (SUMNUM, LABEL, VALUE) 
