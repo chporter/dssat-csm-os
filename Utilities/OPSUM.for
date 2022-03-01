@@ -964,6 +964,7 @@ C-------------------------------------------------------------------
           OPEN (UNIT = LUN2, FILE = OUTLI, STATUS = 'NEW',
      &      IOSTAT = ERRNUM)
         ENDIF
+
         WRITE(LUN2,'(60A)') 
      &    "Model",achar(9),"id_site",achar(9),"id_season",achar(9),
      &    "id_treatment",achar(9),"Planting.date",achar(9),
@@ -979,10 +980,28 @@ C-------------------------------------------------------------------
       IF (CROP .NE. "FA") THEN
 !       Dates in YYYY-MM-DD text format
         CALL Date_Text (YRPLT, Pdate)
-        CALL Date_Text (EDAT, Edate)
-        CALL Date_Text (ADAT, Adate)
-        CALL Date_Text (MDAT, Mdate)
-        
+
+        IF (MDAT < 0) THEN
+          Mdate = "        na"
+        ELSE
+          CALL Date_Text (MDAT, Mdate)
+        ENDIF
+
+        IF (ADAT < 0) THEN
+          Adate = "        na"
+          Mdate = "        na"
+        ELSE 
+          CALL Date_Text (ADAT, Adate)
+        ENDIF
+
+        IF (EDAT < 0) THEN
+          Edate = "        na"
+          Adate = "        na"
+          Mdate = "        na"
+        ELSE 
+          CALL Date_Text (EDAT, Edate)
+        ENDIF
+
         HWAHt = HWAH / 1000. !convert to t/ha
         CWAMt = CWAM / 1000.
         RWAMt = SUMDAT % RWAMt / 1000. !root weight at maturity (t[DM]/ha)
