@@ -174,13 +174,18 @@ C-----------------------------------------------------------------------
       REAL HWAHF, FBWAH
 
 !     Added for Low Input Systems model intercomparison
-      CHARACTER*4  id_site, id_treatment
+      CHARACTER*2  run_type
+      CHARACTER*3  RUN_MODE
+      CHARACTER*4  id_site, id_treatment, Year
+      CHARACTER*9  WeatherFile
       CHARACTER*10 Pdate, Edate, Adate, Mdate
       CHARACTER*11 id_season
       CHARACTER*21 OUTLI
-      INTEGER LUN2
+      INTEGER LUN2, Cinput, Ninput
       REAL HWAHt, CWAMt, RWAMt, PCNRT, RCAM, NMIN, NVOL, NIMM, NDENIT
-      
+      REAL SumQCO2hum, SumQCO2res
+      REAL SumQNhum, SumQNres, SWplt, SumSOC, SumSON
+
       LOGICAL FEXIST
 
 !     Text values for some variables that get overflow with "-99" values
@@ -943,13 +948,34 @@ C-------------------------------------------------------------------
 
 !-------------------------------------------------------------------
 !     Write LowInput_sum.csv file
+
 !     Metadata:
       id_site      = TITLET(1:4)
-      id_treatment = TITLET(13:16)
-      id_season    = TITLET(1:11)
-      IF (CROP == 'FA') THEN
-        id_season = TRIM(id_season) // "_FA"
-      ENDIF
+      Year = Pdate(1:4)
+!     Dates in YYYY-MM-DD text format
+      CALL Date_Text (YRPLT, Pdate)
+      Year = Pdate(1:4)
+      Ninput = NICM
+      Cinput = RECM/1000
+
+      RUN_MODE = CONTROL % FILEX(10:12)
+      
+      SELECT CASE (RUN_MODE)
+      CASE ('SQX')
+        id_treatment = TITLET(13:16)
+        id_season    = TITLET(1:11)
+        IF (CROP == 'FA') THEN
+          id_season = TRIM(id_season) // "_FA"
+        ENDIF
+        WeatherFile = id_site // "_xxxx"
+        run_type = "xx"
+
+      CASE ('SNX')
+        id_treatment = "na"
+        WeatherFile = TITLET(1:9)
+        id_season = id_site // "_" // Year // "_" // TITLET(12:12)
+        run_type = "NM"
+      END SELECT
 
 !     ----------------------------------------------------
 !     Open tab-delimited file and write headers
@@ -965,21 +991,49 @@ C-------------------------------------------------------------------
      &      IOSTAT = ERRNUM)
         ENDIF
 
-        WRITE(LUN2,'(60A)') 
-     &    "Model",achar(9),"id_site",achar(9),"id_season",achar(9),
-     &    "id_treatment",achar(9),"Planting.date",achar(9),
-     &    "Yield",achar(9),"Emergence",achar(9),"Ant",achar(9),
-     &    "Mat",achar(9),"Biom-agb",achar(9),"Biom-roots",achar(9),
-     &    "MaxLAI",achar(9),"CumE",achar(9),"Transp",achar(9),
-     &    "CroN-agb",achar(9),"CroN-roots",achar(9),
-     &    "CroC-roots",achar(9),"GrainN",achar(9),"Nuptake",achar(9),
-     &    "Nleac",achar(9),"Nmin",achar(9),"Drainage",achar(9),
-     &    "Nvol",achar(9),"Nimmo",achar(9),"Nden",achar(9),"SoilN"
+        WRITE(LUN2,'(73A)') 
+     &    "Model",achar(9), 
+     &    "id_site",achar(9), 
+     &    "Weather.file",achar(9),
+     &    "id_season",achar(9),
+     &    "Year",achar(9),
+     &    "Ninput",achar(9),
+     &    "Cinput",achar(9),
+     &    "run_type",achar(9),
+     &    "Planting.date",achar(9),
+     &    "Yield",achar(9), 
+     &    "Emergence",achar(9), 
+     &    "Ant",achar(9),
+     &    "Mat",achar(9), 
+     &    "Biom-agb",achar(9), 
+     &    "Biom-roots",achar(9),
+     &    "MaxLAI",achar(9), 
+     &    "CumE",achar(9), 
+     &    "Transp",achar(9),
+     &    "CroN-agb",achar(9), 
+     &    "CroN-roots",achar(9),
+     &    "CroC-roots",achar(9), 
+     &    "GrainN",achar(9), 
+     &    "Nuptake",achar(9),
+     &    "Nleac",achar(9), 
+     &    "Nmin",achar(9), 
+     &    "Drainage",achar(9),
+     &    "Nvol",achar(9), 
+     &    "Nimmo",achar(9), 
+     &    "Nden",achar(9), 
+     &    "SoilN",achar(9),
+     &    "SOC",achar(9),
+     &    "SON",achar(9),
+     &    "QCO2hum",achar(9),
+     &    "QCO2res",achar(9),
+     &    "QNhum",achar(9),
+     &    "QNres",achar(9),
+     &    "SoilW.layer1"
       ENDIF
 
       IF (CROP .NE. "FA") THEN
-!       Dates in YYYY-MM-DD text format
-        CALL Date_Text (YRPLT, Pdate)
+!!       Dates in YYYY-MM-DD text format
+!        CALL Date_Text (YRPLT, Pdate)
 
         IF (MDAT < 0) THEN
           Mdate = "        na"
@@ -1015,18 +1069,44 @@ C-------------------------------------------------------------------
         NIMM = SUMDAT % NIMM
         NDENIT = SUMDAT % NDENIT
 
+        CALL GET('ORGC', 'SumQCO2hum', SumQCO2hum)
+        CALL GET('ORGC', 'SumQCO2res', SumQCO2res)
+        CALL GET('ORGC', 'SumQNhum', SumQNhum)
+        CALL GET('ORGC', 'SumQNres', SumQNres)
+        CALL GET('WATER','SWplt', SWplt)
+        CALL GET('ORGC', 'SumSOC', SumSOC)
+        CALL GET('ORGC', 'SumSON', SumSON)
+
         WRITE(LUN2,100) 
-     &  "CE1",achar(9),id_site,achar(9),id_season,achar(9),         !1
-     &  id_treatment,achar(9),Pdate,achar(9),HWAHt,achar(9),        !2
+     &  "CE1",achar(9),
+     &  id_site,achar(9),
+     &  WeatherFile,achar(9),
+     &  id_season,achar(9),
+     &  Year,achar(9),
+     &  Ninput,achar(9),
+     &  Cinput,achar(9),
+     &  run_type,achar(9),       !1
+        
+     &  Pdate,achar(9),HWAHt,achar(9),                              !2
      &  Edate,achar(9),Adate,achar(9),Mdate,achar(9),CWAMt,achar(9),!3
      &  RWAMt,achar(9),LAIX,achar(9),ESCP,achar(9),EPCP,achar(9),   !4
      &  CNAM,achar(9),RNAM,achar(9),RCAM,achar(9),GNAM,achar(9),    !5
      &  NUCM,achar(9),NLCM,achar(9),NMIN,achar(9),DRCM,achar(9),    !6
-     &  NVOL,achar(9),NIMM,achar(9),NDENIT,achar(9),NIAM            !7
+     &  NVOL,achar(9),NIMM,achar(9),NDENIT,achar(9),NIAM,achar(9),  !7
 
- 100    FORMAT(10A, F0.3, 7A, F0.3,A,                  !1, 2, 3
+     &  SumQCO2hum,achar(9),
+     &  SumQCO2res,achar(9),
+     &  SumQNhum,achar(9),
+     &  SumQNres,achar(9),
+     &  SWplt,achar(9),
+     &  SumSOC,achar(9),
+     &  SumSON                   !8
+
+ 100    FORMAT(10A, 2(I,A), 4A, F0.3, A,       !1, 2
+     &  6A, F0.3, A,                           !3
      &  F0.3,A, F0.2,A, 2(F0.1,A), 4(F0.2,A),  !4, 5
-     &  8(F0.2,A))                                     !6, 7
+     &  8(F0.2,A),                             !6, 7
+     &  7(F0.3,A))
 
       ENDIF
 

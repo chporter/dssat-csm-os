@@ -433,7 +433,7 @@ C             CHP Added TRTNUM to CONTROL variable.
      &    PLTPOP, RNITP, SLAAD, XPOD
         REAL BIOMAS
         REAL LAID, NUPTAKE
-        INTEGER NR5, iSTAGE, iSTGDOY
+        INTEGER NR5, iSTAGE, iSTGDOY, YRPLT
         CHARACTER*10 iSTNAME
       END TYPE PlantType
 
@@ -454,7 +454,7 @@ C             CHP Added TRTNUM to CONTROL variable.
 
 !     Data transferred from Soil water routine
       Type WatType
-        REAL DRAIN, RUNOFF, SNOW
+        REAL DRAIN, RUNOFF, SNOW, SWplt
         REAL, DIMENSION(NL) :: SW
       End Type WatType
 
@@ -473,6 +473,8 @@ C             CHP Added TRTNUM to CONTROL variable.
         REAL SCTD, SNTD
         REAL QCO2res, QCO2hum
         REAL QNres, QNhum
+        REAL SumSOC, SumSON
+        REAL SumQCO2hum, SumQCO2res, SumQNhum, SumQNres
         REAL, DIMENSION(NL) :: SOC, SON
       End Type OrgCType
 
@@ -704,6 +706,7 @@ C             CHP Added TRTNUM to CONTROL variable.
         Case ('DRAIN'); Value = SAVE_data % WATER % DRAIN
         Case ('RUNOFF');Value = SAVE_data % WATER % RUNOFF
         Case ('SNOW');  Value = SAVE_data % WATER % SNOW
+        Case ('SWplt');  Value = SAVE_data % WATER % SWplt
         Case DEFAULT; ERR = .TRUE.
         END SELECT
 
@@ -731,6 +734,12 @@ C             CHP Added TRTNUM to CONTROL variable.
         Case ('QCO2res'); Value = SAVE_data % ORGC % QCO2res
         Case ('QNhum'); Value = SAVE_data % ORGC % QNhum
         Case ('QNres'); Value = SAVE_data % ORGC % QNres
+        Case ('SumSOC'); Value = SAVE_data % ORGC % SumSOC
+        Case ('SumSON'); Value = SAVE_data % ORGC % SumSON
+        Case ('SumQCO2hum'); Value = SAVE_data % ORGC % SumQCO2hum
+        Case ('SumQCO2res'); Value = SAVE_data % ORGC % SumQCO2res
+        Case ('SumQNhum'); Value = SAVE_data % ORGC % SumQNhum
+        Case ('SumQNres'); Value = SAVE_data % ORGC % SumQNres
         Case DEFAULT; ERR = .TRUE.
         END SELECT
 
@@ -839,6 +848,7 @@ C             CHP Added TRTNUM to CONTROL variable.
         Case ('DRAIN'); SAVE_data % WATER % DRAIN  = Value
         Case ('RUNOFF');SAVE_data % WATER % RUNOFF = Value
         Case ('SNOW');  SAVE_data % WATER % SNOW   = Value
+        Case ('SWplt');  SAVE_data % WATER % SWplt   = Value
         Case DEFAULT; ERR = .TRUE.
         END SELECT
 
@@ -866,6 +876,12 @@ C             CHP Added TRTNUM to CONTROL variable.
         Case ('QCO2res'); SAVE_data % ORGC % QCO2res = Value
         Case ('QNhum'); SAVE_data % ORGC % QNhum = Value
         Case ('QNres'); SAVE_data % ORGC % QNres = Value
+        Case ('SumSOC'); SAVE_data % ORGC % SumSOC = Value
+        Case ('SumSON'); SAVE_data % ORGC % SumSON = Value
+        Case ('SumQCO2hum'); SAVE_data % ORGC % SumQCO2hum = Value
+        Case ('SumQCO2res'); SAVE_data % ORGC % SumQCO2res = Value
+        Case ('SumQNhum'); SAVE_data % ORGC % SumQNhum = Value
+        Case ('SumQNres'); SAVE_data % ORGC % SumQNres = Value
         Case DEFAULT; ERR = .TRUE.
         END SELECT
 
@@ -1011,6 +1027,7 @@ C             CHP Added TRTNUM to CONTROL variable.
         Case ('NR5');  Value = SAVE_data % PLANT % NR5
         Case ('iSTAGE');  Value = SAVE_data % PLANT % iSTAGE
         Case ('iSTGDOY'); Value = SAVE_data % PLANT % iSTGDOY
+        Case ('YRPLT'); Value = SAVE_data % PLANT % YRPLT
         Case DEFAULT; ERR = .TRUE.
         END SELECT
 
@@ -1050,6 +1067,7 @@ C             CHP Added TRTNUM to CONTROL variable.
         Case ('NR5');  SAVE_data % PLANT % NR5  = Value
         Case ('iSTAGE');  SAVE_data % PLANT % iSTAGE  = Value
         Case ('iSTGDOY'); SAVE_data % PLANT % iSTGDOY = Value
+        Case ('YRPLT'); SAVE_data % PLANT % YRPLT = Value
         Case DEFAULT; ERR = .TRUE.
         END SELECT
 

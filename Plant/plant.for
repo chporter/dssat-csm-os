@@ -733,6 +733,7 @@ c     Total LAI must exceed or be equal to healthy LAI:
       ENDIF
 
       CALL PUT('PLANT','LAID',XHLAI)
+      CALL PUT('PLANT','YRPLT',YRPLT)
 
 !***********************************************************************
       RETURN

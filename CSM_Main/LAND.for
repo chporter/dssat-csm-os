@@ -291,7 +291,7 @@ C-----------------------------------------------------------------------
         CALL OPSUM (CONTROL, ISWITCH, YRPLT)
       ENDIF
 
-!       Custom output
+!       Custom output - not needed for sensitivity runs
 !        IF (ISWITCH%IDETL .EQ. 'G') THEN
           CALL LowInput_daily
 !        ENDIF
@@ -471,7 +471,7 @@ C-----------------------------------------------------------------------
      &    YREND, FERTDATA, HARVFRAC, IRRAMT,              !Output
      &    MDATE, OMADATA, TILLVALS, YRPLT)                !Output
 
-!       Custom output
+!       Custom output - not needed for sensitivity runs
 !        IF (ISWITCH%IDETL .EQ. 'G') THEN
           CALL LowInput_daily
 !        ENDIF
@@ -522,6 +522,11 @@ C     Print seasonal summaries and close files.
      &    STGDOY, SW, WEATHER,                            !Input
      &    YREND, FERTDATA, HARVFRAC, IRRAMT,              !Output
      &    MDATE, OMADATA, TILLVALS, YRPLT)                !Output
+
+!       Custom output - not needed for sensitivity runs
+!        IF (ISWITCH%IDETL .EQ. 'G') THEN
+          CALL LowInput_daily
+!        ENDIF
 
 C-----------------------------------------------------------------------
 C     Seasonal Output
