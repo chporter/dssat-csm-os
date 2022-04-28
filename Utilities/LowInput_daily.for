@@ -31,10 +31,10 @@
 !     CHARACTER*220 FMT_STRING_A, FMT_STRING_C
 !     CHARACTER*220 HDR_String_C  !, HDR_String_A, 
       INTEGER DAS, DOY, DYNAMIC, ERRNUM, LUN1, LUN2
-      INTEGER NLayr, RUN, YEAR, YRDOY, NLayers, YRPLT
+      INTEGER NLayr, RUN, YEAR, YRDOY, NLayers, YRPLT, SEASON
       LOGICAL FEXIST, FIRST
 
-      INTEGER NVars, I, L, TargetDOY
+      INTEGER NVars, I, L, TargetDOY, PDOY
 
 !     Variables needed for computation of output variables:
       REAL, DIMENSION(NL) :: SON, SOC, SW   
@@ -115,13 +115,47 @@
 !        ENDIF
 
 !       For Low input systems, the layer depth is dependent on location
+! id_site	season	crop	cultivar	cul_note	pdate_doy	plant_population	row_spacing	planting_depth
+!    ICGA	     1	maize	IRAT83	    hybrid	          103	           5	             80	             5
+!    ICGA	     2	maize	IRAT83	    hybrid	          253	           5	             80	             5
+!    KEEM	     1	maize	H513	    hybrid	           88	           3.92	             85.8	         5
+!    KEEM	     2	maize	H513	    hybrid	          291	           3.92	             85.8	         5
+!    KEMA	     1	maize	Kutamani	hybrid	           88	           5.32	             75	             5
+!    KEMA	     2	maize	Kutamani	hybrid	          297	           5.32	             75	             5
+!    ZIMU	     1	maize	SC525	    hybrid	          329	           4.4444            90	             5
+
+
+!     STILL TO DO:
+!     NEED VALUE OF SEASON
         SELECT CASE(SITEID)
-        CASE ('ICGA','ZIMU')
+        CASE ('ICGA')
+          NLayers = 3     !for SW, SOC, SON
+          TargetDOY = 80  !for SOC, SON
+          SELECT CASE (SEASON)
+            CASE (1); PDOY = 103  ! for SW
+            CASE (2); PDOY = 253
+          END SELECT
+        CASE ('ZIMU')
           NLayers = 3
-        CASE ('KEMA','KEEM')
+          TargetDOY = 304
+          PDOY = 329
+        CASE ('KEMA')
           NLayers = 2
+          TargetDOY = 64
+          SELECT CASE (SEASON)
+            CASE (1); PDOY = 88
+            CASE (2); PDOY = 297
+          END SELECT
+        CASE ('KEEM')
+          NLayers = 2
+          TargetDOY = 66
+          SELECT CASE (SEASON)
+            CASE (1); PDOY = 88
+            CASE (2); PDOY = 291
+          END SELECT
         CASE DEFAULT
           NLayers = 0
+          PDOY = 0
           MSG(1) = "Wrong site ID."
           CALL WARNING(1, ERRKEY, MSG)
         END SELECT
@@ -163,8 +197,9 @@
 
 !     ----------------------------------------------------
 !     Extract soil water at specified depths on planting date.
-      CALL GET('PLANT', 'YRPLT', YRPLT)
-      IF (YRDOY .EQ. YRPLT) THEN
+!      CALL GET('PLANT', 'YRPLT', YRPLT)
+ !     IF (YRDOY .EQ. YRPLT) THEN
+      IF (YRDOY .EQ. PDOY) THEN
         CALL GET('WATER', 'SW', SW) 
 !       Extract soil water at specified depths
         TSW    = 0.0
@@ -177,14 +212,6 @@
       ENDIF
 
 !     ----------------------------------------------------
-!     SOC and SON on selected days at selected depths
-      SELECT CASE (SITEID)
-        CASE ('ICGA'); TargetDOY = 80
-        CASE ('KEEM'); TargetDOY = 66
-        CASE ('KEMA'); TargetDOY = 64
-        CASE ('ZIMU'); TargetDOY = 304
-      END SELECT
-
       IF (DOY .EQ. TargetDOY) THEN
         CALL GET('ORGC', 'SOC', SOC)
         CALL GET('ORGC', 'SON', SON)

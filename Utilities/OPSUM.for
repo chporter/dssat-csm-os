@@ -178,7 +178,7 @@ C-----------------------------------------------------------------------
       CHARACTER*3  RUN_MODE
       CHARACTER*4  id_site, id_treatment, Year
       CHARACTER*9  WeatherFile
-      CHARACTER*10 Pdate, Edate, Adate, Mdate
+      CHARACTER*10 Sdate, Pdate, Edate, Adate, Mdate
       CHARACTER*11 id_season
       CHARACTER*21 OUTLI
       INTEGER LUN2, Cinput, Ninput
@@ -951,32 +951,20 @@ C-------------------------------------------------------------------
 
 !     Metadata:
       id_site      = TITLET(1:4)
-      Year = Pdate(1:4)
+      id_treatment = "na"
+      id_season = id_site // "_" // Year // "_" // TITLET(12:12)
+      run_type = "BS"
+      WeatherFile = id_site // "_xxxx"
+
 !     Dates in YYYY-MM-DD text format
-      CALL Date_Text (YRPLT, Pdate)
-      Year = Pdate(1:4)
+      CALL Date_Text (YRSIM, Sdate)
+      Year = Sdate(1:4)
+      Pdate = "na"
       Ninput = NICM
       Cinput = RECM/1000
 
       RUN_MODE = CONTROL % FILEX(10:12)
       
-      SELECT CASE (RUN_MODE)
-      CASE ('SQX')
-        id_treatment = TITLET(13:16)
-        id_season    = TITLET(1:11)
-        IF (CROP == 'FA') THEN
-          id_season = TRIM(id_season) // "_FA"
-        ENDIF
-        WeatherFile = id_site // "_xxxx"
-        run_type = "xx"
-
-      CASE ('SNX')
-        id_treatment = "na"
-        WeatherFile = TITLET(1:9)
-        id_season = id_site // "_" // Year // "_" // TITLET(12:12)
-        run_type = "NM"
-      END SELECT
-
 !     ----------------------------------------------------
 !     Open tab-delimited file and write headers
       IF (RUN == 1) THEN
@@ -1031,38 +1019,39 @@ C-------------------------------------------------------------------
      &    "SoilW.layer1"
       ENDIF
 
-      IF (CROP .NE. "FA") THEN
+!     For base soil runs, need the fallow output
+!      IF (CROP .NE. "FA") THEN
 !!       Dates in YYYY-MM-DD text format
 !        CALL Date_Text (YRPLT, Pdate)
 
-        IF (MDAT < 0) THEN
-          Mdate = "        na"
-        ELSE
-          CALL Date_Text (MDAT, Mdate)
-        ENDIF
+!        IF (MDAT < 0) THEN
+!          Mdate = "        na"
+!        ELSE
+!          CALL Date_Text (MDAT, Mdate)
+!        ENDIF
 
-        IF (ADAT < 0) THEN
-          Adate = "        na"
-          Mdate = "        na"
-        ELSE 
-          CALL Date_Text (ADAT, Adate)
-        ENDIF
+!        IF (ADAT < 0) THEN
+!          Adate = "        na"
+!          Mdate = "        na"
+!        ELSE 
+!          CALL Date_Text (ADAT, Adate)
+!        ENDIF
 
-        IF (EDAT < 0) THEN
-          Edate = "        na"
-          Adate = "        na"
-          Mdate = "        na"
-        ELSE 
-          CALL Date_Text (EDAT, Edate)
-        ENDIF
+!        IF (EDAT < 0) THEN
+!          Edate = "na"
+!          Adate = "na"
+!          Mdate = "na"
+!        ELSE 
+!          CALL Date_Text (EDAT, Edate)
+!        ENDIF
 
-        HWAHt = HWAH / 1000. !convert to t/ha
-        CWAMt = CWAM / 1000.
-        RWAMt = SUMDAT % RWAMt / 1000. !root weight at maturity (t[DM]/ha)
-        RCAM  = RWAMt * 400.           !root C (kg[C]/ha)
+!        HWAHt = HWAH / 1000. !convert to t/ha
+!        CWAMt = CWAM / 1000.
+!        RWAMt = SUMDAT % RWAMt / 1000. !root weight at maturity (t[DM]/ha)
+!        RCAM  = RWAMt * 400.           !root C (kg[C]/ha)
         
-        PCNRT = SUMDAT % PCNRT
-        RNAM  = PCNRT * RWAMt *10.     !root N (kg[N]/ha)
+!        PCNRT = SUMDAT % PCNRT
+!        RNAM  = PCNRT * RWAMt *10.     !root N (kg[N]/ha)
 
         NMIN = SUMDAT % NMIN
         NVOL = SUMDAT % NVOL
@@ -1091,11 +1080,11 @@ C-------------------------------------------------------------------
      &  Cinput,achar(9),
      &  run_type,achar(9),       !1
         
-     &  Pdate,achar(9),HWAHt,achar(9),                              !2
-     &  Edate,achar(9),Adate,achar(9),Mdate,achar(9),CWAMt,achar(9),!3
-     &  RWAMt,achar(9),LAIX,achar(9),ESCP,achar(9),EPCP,achar(9),   !4
-     &  CNAM,achar(9),RNAM,achar(9),RCAM,achar(9),GNAM,achar(9),    !5
-     &  NUCM,achar(9),NLCM,achar(9),NMIN,achar(9),DRCM,achar(9),    !6
+     &  "na",achar(9),"na",achar(9),                              !2
+     &  "na",achar(9),"na",achar(9),"na",achar(9),"na",achar(9),!3
+     &  "na",achar(9),"na",achar(9),ESCP,achar(9),"na",achar(9),   !4
+     &  "na",achar(9),"na",achar(9),"na",achar(9),"na",achar(9),    !5
+     &  "na",achar(9),NLCM,achar(9),NMIN,achar(9),DRCM,achar(9),    !6
      &  NVOL,achar(9),NIMM,achar(9),NDENIT,achar(9),NIAM,achar(9),  !7
 
      &  SumSOC,achar(9),
@@ -1112,7 +1101,7 @@ C-------------------------------------------------------------------
      &  8(F0.2,A),                             !6, 7
      &  7(F0.3,A))                             !8
 
-      ENDIF
+!      ENDIF
 
 ! These variables changed from integer to real for low input intercomparison
 ! CNAM, GNAM, NUCM, NLCM, DRCM, NIAM
