@@ -1077,6 +1077,10 @@ C-------------------------------------------------------------------
         CALL GET('ORGC', 'SumSOC', SumSOC)
         CALL GET('ORGC', 'SumSON', SumSON)
 
+!!     temp chp
+!      write(555,'(a,7f10.3)') year, sumSOC, sumSON, SumQCO2hum, 
+!     &    SumQCO2res, SumQNhum, SumQNres, SWplt
+
         WRITE(LUN2,100) 
      &  "CE1",achar(9),
      &  id_site,achar(9),
@@ -1094,19 +1098,19 @@ C-------------------------------------------------------------------
      &  NUCM,achar(9),NLCM,achar(9),NMIN,achar(9),DRCM,achar(9),    !6
      &  NVOL,achar(9),NIMM,achar(9),NDENIT,achar(9),NIAM,achar(9),  !7
 
+     &  SumSOC,achar(9),
+     &  SumSON,achar(9), 
      &  SumQCO2hum,achar(9),
      &  SumQCO2res,achar(9),
      &  SumQNhum,achar(9),
      &  SumQNres,achar(9),
-     &  SWplt,achar(9),
-     &  SumSOC,achar(9),
-     &  SumSON                   !8
+     &  SWplt                                  !8
 
  100    FORMAT(10A, 2(I,A), 4A, F0.3, A,       !1, 2
      &  6A, F0.3, A,                           !3
      &  F0.3,A, F0.2,A, 2(F0.1,A), 4(F0.2,A),  !4, 5
      &  8(F0.2,A),                             !6, 7
-     &  7(F0.3,A))
+     &  7(F0.3,A))                             !8
 
       ENDIF
 
