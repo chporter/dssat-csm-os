@@ -169,10 +169,10 @@
 !       Extract soil water at specified depths
         TSW    = 0.0
         DO L = 1, NLayers
-          TSW = TSW + SW(L) * DLAYR(L)
+          TSW = TSW + SW(L) * DLAYR(L) !cm
           TDEP = DS(L)
         ENDDO
-        SWplt = TSW / TDEP
+        SWplt = TSW * 10.  !mm
         CALL PUT('WATER', 'SWplt', SWplt)
       ENDIF
 
