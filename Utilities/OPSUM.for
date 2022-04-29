@@ -49,7 +49,7 @@ C=======================================================================
 
 !       Added 2/6/2005 for v4.0.2.0
         REAL LAIX, HIAM
-        INTEGER PWAM, EPCM, ESCM
+        INTEGER PWAM, EPCM!, ESCM
 
 !       Added 12/12/2005 Organic Matter
         INTEGER OCTAM, ONTAM, OPAM, OPTAM
@@ -63,7 +63,8 @@ C=======================================================================
 
 !       Added 02/23/2011 Seasonal average environmental data
         INTEGER NDCH
-        REAL TMINA, TMAXA, SRADA, DAYLA, CO2A, PRCP, ETCP, ESCP, EPCP
+        REAL TMINA, TMAXA, SRADA, DAYLA, CO2A, PRCP
+        REAL ETCP, ESCP, EPCP, ESCM  !ESCM real for low-input 
         
 !       Added 7/19/2016 N2O emissions
         REAL N2OEC  !kg/ha
@@ -142,7 +143,7 @@ C-----------------------------------------------------------------------
 
 !     Added 2/6/2005 for v4.0.2.0
       REAL LAIX, HIAM
-      INTEGER PWAM, EPCM, ESCM
+      INTEGER PWAM, EPCM  !, ESCM
       CHARACTER* 8 WSTAT, WSTATION
       CHARACTER*10 SLNO
 
@@ -158,6 +159,7 @@ C-----------------------------------------------------------------------
 !     Added 02/23/2011 Seasonal average environmental data
       INTEGER NDCH
       REAL TMINA, TMAXA, SRADA, DAYLA, CO2A, PRCP, ETCP, ESCP, EPCP
+      REAL ESCM
       REAL N2OEC, CH4EC  !kg/ha
       INTEGER CO2EC
 !     Added 05/28/2021 Latitude, Longitude and elevation data
@@ -346,7 +348,7 @@ C     Initialize OPSUM variables.
       SUMDAT % PRCM   = -99
       SUMDAT % ETCM   = -99
       SUMDAT % EPCM   = -99
-      SUMDAT % ESCM   = -99
+      SUMDAT % ESCM   = -99.
       SUMDAT % ROCM   = -99
       SUMDAT % DRCM   = -99.
       SUMDAT % SWXM   = -99
@@ -707,7 +709,8 @@ C-------------------------------------------------------------------
 
         WRITE (NOUTDS,503) LAIX, 
      &    FCWAM, FHWAM, NINT(HWAHF), NINT(FBWAH), FPWAM,
-     &    IRNUM, IRCM, PRCM, ETCM, EPCM, ESCM, ROCM, NINT(DRCM), SWXM, 
+     &    IRNUM, IRCM, PRCM, ETCM, EPCM, NINT(ESCM), ROCM, NINT(DRCM), 
+     &    SWXM, 
      &    NINUMM, NICM, NFXM, NINT(NUCM), NINT(NLCM), NINT(NIAM), NMINC,
      &    NINT(CNAM), NINT(GNAM), N2OEC_TXT,
 !    &    N2OGC_TXT,
@@ -771,7 +774,7 @@ C-------------------------------------------------------------------
 !      &PWAM, HWUM, HNUMUM, HIAM, LAIX, HNUMAM, IRNUM, IRCM, PRCM, ETCM,
      & PWAM, HWUM, HNUMUM, HIAM, LAIX, HNUMAM, FCWAM, FHWAM, HWAHF, 
      & FBWAH, FPWAM, IRNUM, IRCM, PRCM, ETCM,
-     & EPCM, ESCM, ROCM, NINT(DRCM), SWXM, NINUMM, NICM, NFXM, 
+     & EPCM, NINT(ESCM), ROCM, NINT(DRCM), SWXM, NINUMM, NICM, NFXM, 
      & NINT(NUCM), NINT(NLCM), NINT(NIAM), NMINC, NINT(CNAM), 
      & NINT(GNAM), N2OEC, PINUMM, PICM, PUPC, SPAM, KINUMM, 
      & KICM, KUPC, SKAM, RECM, ONTAM, ONAM, OPTAM, OPAM, OCTAM, OCAM, 
@@ -952,9 +955,9 @@ C-------------------------------------------------------------------
 !     Metadata:
       id_site      = TITLET(1:4)
       id_treatment = "na"
-      id_season = id_site // "_" // Year // "_" // TITLET(12:12)
+      id_season    = TITLET(1:11)
       run_type = "BS"
-      WeatherFile = id_site // "_xxxx"
+      WeatherFile = id_site // "_" // TITLET(13:16)
 
 !     Dates in YYYY-MM-DD text format
       CALL Date_Text (YRSIM, Sdate)
@@ -1078,12 +1081,17 @@ C-------------------------------------------------------------------
      &  Year,achar(9),
      &  Ninput,achar(9),
      &  Cinput,achar(9),
-     &  run_type,achar(9),       !1
+     &  run_type,achar(9),        !1
         
-     &  "na",achar(9),"na",achar(9),                              !2
-     &  "na",achar(9),"na",achar(9),"na",achar(9),"na",achar(9),!3
-     &  "na",achar(9),"na",achar(9),ESCP,achar(9),"na",achar(9),   !4
+!    &  Pdate,achar(9),HWAHt,achar(9),                              !2
+     &  "na",achar(9),"na",achar(9),                                !2
+!    &  Edate,achar(9),Adate,achar(9),Mdate,achar(9),CWAMt,achar(9),!3
+     &  "na",achar(9),"na",achar(9),"na",achar(9),"na",achar(9),    !3
+!    &  RWAMt,achar(9),LAIX,achar(9),ESCP,achar(9),EPCP,achar(9),   !4
+     &  "na",achar(9),"na",achar(9),ESCM,achar(9),"na",achar(9),    !4
+!    &  CNAM,achar(9),RNAM,achar(9),RCAM,achar(9),GNAM,achar(9),    !5
      &  "na",achar(9),"na",achar(9),"na",achar(9),"na",achar(9),    !5
+!    &  NUCM,achar(9),NLCM,achar(9),NMIN,achar(9),DRCM,achar(9),    !6
      &  "na",achar(9),NLCM,achar(9),NMIN,achar(9),DRCM,achar(9),    !6
      &  NVOL,achar(9),NIMM,achar(9),NDENIT,achar(9),NIAM,achar(9),  !7
 
@@ -1093,13 +1101,16 @@ C-------------------------------------------------------------------
      &  SumQCO2res,achar(9),
      &  SumQNhum,achar(9),
      &  SumQNres,achar(9),
-     &  SWplt                                  !8
+!    &  SWplt                                  !8
+     &  "na"                                   !8
 
- 100    FORMAT(10A, 2(I,A), 4A, F0.3, A,       !1, 2
-     &  6A, F0.3, A,                           !3
-     &  F0.3,A, F0.2,A, 2(F0.1,A), 4(F0.2,A),  !4, 5
-     &  8(F0.2,A),                             !6, 7
-     &  7(F0.3,A))                             !8
+ 100    FORMAT(10A, 2(I,A), 2A,                 !1
+     &  4A,                                     !2
+     &  8A,                                     !3
+     &  4A, F0.2, 3A,                           !4
+     &  8A,                                     !5
+     &  2A, 7(F0.2,A),                          !6, 7
+     &  6(F0.3,A),A)                            !8
 
 !      ENDIF
 
@@ -1237,7 +1248,7 @@ C=======================================================================
         !From OPSPAM:
         CASE ('ETCM'); SUMDAT % ETCM = NINT(VALUE(I))
         CASE ('EPCM'); SUMDAT % EPCM = NINT(VALUE(I)) 
-        CASE ('ESCM'); SUMDAT % ESCM = NINT(VALUE(I)) 
+        CASE ('ESCM'); SUMDAT % ESCM = VALUE(I) 
 
         !From OPWBAL:
         CASE ('PRCM'); SUMDAT % PRCM = NINT(VALUE(I))

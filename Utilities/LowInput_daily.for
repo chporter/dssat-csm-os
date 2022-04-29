@@ -68,7 +68,8 @@
 !       Use treatment name to get site ID and Low Input treatment
         SITEID  = CONTROL % TITLET(1:4)
 !        TRTNAME = CONTROL % TITLET(13:16)
-!        SEASONID= CONTROL % TITLET(1:11)
+        SEASONID= CONTROL % TITLET(1:11)
+        READ(SEASONID,'(10X,I1)') SEASON
 !        CROPID  = CONTROL % TITLET(18:19)
 !        IF (CROPID == 'FA') THEN
 !          SEASONID = TRIM(SEASONID) // "_FA"
@@ -125,8 +126,6 @@
 !    ZIMU	     1	maize	SC525	    hybrid	          329	           4.4444            90	             5
 
 
-!     STILL TO DO:
-!     NEED VALUE OF SEASON
         SELECT CASE(SITEID)
         CASE ('ICGA')
           NLayers = 3     !for SW, SOC, SON
@@ -134,6 +133,7 @@
           SELECT CASE (SEASON)
             CASE (1); PDOY = 103  ! for SW
             CASE (2); PDOY = 253
+            CASE DEFAULT; PDOY = 0
           END SELECT
         CASE ('ZIMU')
           NLayers = 3
@@ -145,6 +145,7 @@
           SELECT CASE (SEASON)
             CASE (1); PDOY = 88
             CASE (2); PDOY = 297
+            CASE DEFAULT; PDOY = 0
           END SELECT
         CASE ('KEEM')
           NLayers = 2
@@ -152,6 +153,7 @@
           SELECT CASE (SEASON)
             CASE (1); PDOY = 88
             CASE (2); PDOY = 291
+            CASE DEFAULT; PDOY = 0
           END SELECT
         CASE DEFAULT
           NLayers = 0
