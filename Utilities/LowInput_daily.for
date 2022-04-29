@@ -28,8 +28,8 @@
       CHARACTER*13, DIMENSION(12) :: HeaderTxt
       CHARACTER*10 DateText
       CHARACTER*78, MSG(10)
-!     CHARACTER*220 FMT_STRING_A, FMT_STRING_C
-!     CHARACTER*220 HDR_String_C  !, HDR_String_A, 
+      CHARACTER*220 FMT_STRING_A, FMT_STRING_C
+      CHARACTER*220 HDR_String_C  !, HDR_String_A, 
       INTEGER DAS, DOY, DYNAMIC, ERRNUM, LUN1, LUN2
       INTEGER NLayr, RUN, YEAR, YRDOY, NLayers, YRPLT
       LOGICAL FEXIST, FIRST
@@ -42,6 +42,7 @@
       REAL TSW, TDEP, QCO2hum, QCO2res, QNhum, QNres
       REAL SOCtop, SONtop, SumSOC, SumSON, SWplt
       REAL SumQCO2hum, SumQCO2res, SumQNhum, SumQNres
+      REAL SWAVG
 
 !     Site ID
       CHARACTER*4 SITEID, TRTNAME
@@ -67,52 +68,52 @@
 !-----------------------------------------------------------------------
 !       Use treatment name to get site ID and Low Input treatment
         SITEID  = CONTROL % TITLET(1:4)
-!        TRTNAME = CONTROL % TITLET(13:16)
-!        SEASONID= CONTROL % TITLET(1:11)
+        TRTNAME = "na"
+        SEASONID= CONTROL % TITLET(1:11)
 !        CROPID  = CONTROL % TITLET(18:19)
 !        IF (CROPID == 'FA') THEN
 !          SEASONID = TRIM(SEASONID) // "_FA"
 !        ENDIF
 
-!        OUTG2 = SITEID // "_" // TRTNAME // "_daily.txt"
+        OUTG2 = SITEID // "_daily.txt"
 
-!        NVars = 7
-!        HeaderTxt = '         '
+        NVars = 7
+        HeaderTxt = '         '
 
 !-----------------------------------------------------------------------
-!!       Initialize headers and output formats, set everything to zero for now.
-!        HeaderTxt(1) ='          SOC' 
-!        HeaderTxt(2) ='          SON' 
-!        HeaderTxt(3) ='      QCO2hum' 
-!        HeaderTxt(4) ='      QCO2res' 
-!        HeaderTxt(5) ='        QNhum' 
-!        HeaderTxt(6) ='        QNres' 
-!        HeaderTxt(7) =' SoilW.layer1' 
+!       Initialize headers and output formats, set everything to zero for now.
+        HeaderTxt(1) ='          SOC' 
+        HeaderTxt(2) ='          SON' 
+        HeaderTxt(3) ='      QCO2hum' 
+        HeaderTxt(4) ='      QCO2res' 
+        HeaderTxt(5) ='        QNhum' 
+        HeaderTxt(6) ='        QNres' 
+        HeaderTxt(7) =' SoilW.layer1' 
 
-!!       Build the format strings and the header text for tsv
-!        HDR_String_C = ADJUSTL(HeaderTxt(1)) !tsv header line
-!        DO I = 2, NVars
-!          HDR_String_C = TRIM(HDR_String_C) // achar(9) // 
-!     &                   TRIM(ADJUSTL(HeaderTxt(I)))
-!        ENDDO
+!       Build the format strings and the header text for tsv
+        HDR_String_C = ADJUSTL(HeaderTxt(1)) !tsv header line
+        DO I = 2, NVars
+          HDR_String_C = TRIM(HDR_String_C) // achar(9) // 
+     &                   TRIM(ADJUSTL(HeaderTxt(I)))
+        ENDDO
 
-!!       ----------------------------------------------------
-!!       Open tab-delimited file and write headers
-!        IF (FIRST) THEN
-!          FIRST = .FALSE.
-!          CALL GETLUN('GenericC', LUN2)
-!          INQUIRE (FILE = OUTG2, EXIST = FEXIST)
-!          IF (FEXIST) THEN
-!            OPEN (UNIT = LUN2, FILE = OUTG2, STATUS = 'REPLACE',
-!     &        IOSTAT = ERRNUM)
-!          ELSE
-!            OPEN (UNIT = LUN2, FILE = OUTG2, STATUS = 'NEW',
-!     &        IOSTAT = ERRNUM)
-!          ENDIF
-!          WRITE(LUN2,'(20A)') 
-!     &      "Model",achar(9),"id_site",achar(9),"id_season",achar(9),
-!     &      "id_treatment",achar(9),"Date",achar(9),TRIM(HDR_String_C)
-!        ENDIF
+!       ----------------------------------------------------
+!       Open tab-delimited file and write headers
+        IF (FIRST) THEN
+          FIRST = .FALSE.
+          CALL GETLUN('GenericC', LUN2)
+          INQUIRE (FILE = OUTG2, EXIST = FEXIST)
+          IF (FEXIST) THEN
+            OPEN (UNIT = LUN2, FILE = OUTG2, STATUS = 'REPLACE',
+     &        IOSTAT = ERRNUM)
+          ELSE
+            OPEN (UNIT = LUN2, FILE = OUTG2, STATUS = 'NEW',
+     &        IOSTAT = ERRNUM)
+          ENDIF
+          WRITE(LUN2,'(20A)') 
+     &      "Model",achar(9),"id_site",achar(9),"id_season",achar(9),
+     &      "id_treatment",achar(9),"Date",achar(9),TRIM(HDR_String_C)
+        ENDIF
 
 !       For Low input systems, the layer depth is dependent on location
         SELECT CASE(SITEID)
@@ -151,27 +152,31 @@
       CALL Date_Text (YRDOY, DateText)
 
 !     Get daily values, calculate cumulative values
-      CALL GET('ORGC', 'QCO2hum', QCO2hum)
-      CALL GET('ORGC', 'QCO2res', QCO2res)
-      CALL GET('ORGC', 'QNhum', QNhum)
-      CALL GET('ORGC', 'QNres', QNres)
-
-      SumQCO2hum = SumQCO2hum + QCO2hum
-      SumQCO2res = SumQCO2res + QCO2res
-      SumQNhum   = SumQNhum   + QNhum
-      SumQNres   = SumQNres   + QNres
+      IF (YRDOY .GE. YRPLT) THEN
+        CALL GET('ORGC', 'QCO2hum', QCO2hum)
+        CALL GET('ORGC', 'QCO2res', QCO2res)
+        CALL GET('ORGC', 'QNhum', QNhum)
+        CALL GET('ORGC', 'QNres', QNres)
+        
+        SumQCO2hum = SumQCO2hum + QCO2hum
+        SumQCO2res = SumQCO2res + QCO2res
+        SumQNhum   = SumQNhum   + QNhum
+        SumQNres   = SumQNres   + QNres
+      ENDIF
 
 !     ----------------------------------------------------
 !     Extract soil water at specified depths on planting date.
+      CALL GET('WATER', 'SW', SW) 
       CALL GET('PLANT', 'YRPLT', YRPLT)
+!     Extract soil water at specified depths
+      TSW    = 0.0
+      DO L = 1, NLayers
+        TSW = TSW + SW(L) * DLAYR(L) !cm
+        TDEP = DS(L)
+      ENDDO
+      SWAVG = TSW * 10. !mm
+
       IF (YRDOY .EQ. YRPLT) THEN
-        CALL GET('WATER', 'SW', SW) 
-!       Extract soil water at specified depths
-        TSW    = 0.0
-        DO L = 1, NLayers
-          TSW = TSW + SW(L) * DLAYR(L) !cm
-          TDEP = DS(L)
-        ENDDO
         SWplt = TSW * 10.  !mm
         CALL PUT('WATER', 'SWplt', SWplt)
       ENDIF
@@ -203,15 +208,16 @@
         CALL PUT('ORGC', 'SumSON', SumSON)
       ENDIF
 
-!!     ----------------------------------------------------
-!!     TSV format output
-!      WRITE(LUN2,
-!     &  '(10A,F0.1,A,F0.2,A,F0.2,A,F0.2,A,F0.2,A,F0.2,A,F5.3)')
-!     &  "CE1", achar(9), SITEID, achar(9), TRIM(SEASONID), achar(9), 
-!     &  TRTNAME, achar(9), TRIM(DateText), achar(9), 
-!     &  SOCtop, achar(9), SONtop, achar(9), QCO2hum, achar(9), 
-!     &  QCO2res, achar(9), QNhum, achar(9), QNres, achar(9), SWAVG
-
+!     ----------------------------------------------------
+      IF (YRDOY .GE. YRPLT) THEN
+!     TSV format output
+      WRITE(LUN2,
+     &  '(10A,F0.1,A,F0.2,A,F0.2,A,F0.2,A,F0.2,A,F0.2,A,F0.3)')
+     &  "CE1", achar(9), SITEID, achar(9), TRIM(SEASONID), achar(9), 
+     &  TRTNAME, achar(9), TRIM(DateText), achar(9), 
+     &  SOCtop, achar(9), SONtop, achar(9), QCO2hum, achar(9), 
+     &  QCO2res, achar(9), QNhum, achar(9), QNres, achar(9), SWAVG
+      ENDIF
       ENDIF
 !***********************************************************************
 !***********************************************************************

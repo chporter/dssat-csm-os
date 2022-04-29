@@ -951,7 +951,6 @@ C-------------------------------------------------------------------
 
 !     Metadata:
       id_site      = TITLET(1:4)
-      Year = Pdate(1:4)
 !     Dates in YYYY-MM-DD text format
       CALL Date_Text (YRPLT, Pdate)
       Year = Pdate(1:4)
