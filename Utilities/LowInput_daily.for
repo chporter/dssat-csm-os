@@ -125,7 +125,6 @@
 !    KEMA	     2	maize	Kutamani	hybrid	          297	           5.32	             75	             5
 !    ZIMU	     1	maize	SC525	    hybrid	          329	           4.4444            90	             5
 
-
         SELECT CASE(SITEID)
         CASE ('ICGA')
           NLayers = 3     !for SW, SOC, SON

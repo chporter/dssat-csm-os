@@ -971,7 +971,7 @@ C-------------------------------------------------------------------
 !     ----------------------------------------------------
 !     Open tab-delimited file and write headers
       IF (RUN == 1) THEN
-        OUTLI = id_site // "_" // id_treatment // "_summary.txt"
+        OUTLI = CONTROL%FILEX(1:8) // "_summary.txt"
         CALL GETLUN('LISum', LUN2)
         INQUIRE (FILE = OUTLI, EXIST = FEXIST)
         IF (FEXIST) THEN
