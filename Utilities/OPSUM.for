@@ -176,14 +176,16 @@ C-----------------------------------------------------------------------
       REAL HWAHF, FBWAH
 
 !     Added for Low Input Systems model intercomparison
-      CHARACTER*2  run_type
+      LOGICAL FIRST
+      DATA FIRST /.TRUE./
+      CHARACTER*2  run_type, CROPID
       CHARACTER*3  RUN_MODE
       CHARACTER*4  id_site, id_treatment, Year
       CHARACTER*9  WeatherFile
       CHARACTER*10 Sdate, Pdate, Edate, Adate, Mdate
       CHARACTER*11 id_season
       CHARACTER*21 OUTLI
-      INTEGER LUN2, Cinput, Ninput
+      INTEGER LUN2, Cinput, Ninput, SEASON, PDOY, PYRDOY, YR, DOY
       REAL HWAHt, CWAMt, RWAMt, PCNRT, RCAM, NMIN, NVOL, NIMM, NDENIT
       REAL SumQCO2hum, SumQCO2res
       REAL SumQNhum, SumQNres, SWplt, SumSOC, SumSON
@@ -950,7 +952,12 @@ C-------------------------------------------------------------------
       ENDIF
 
 !-------------------------------------------------------------------
+!-------------------------------------------------------------------
+!-------------------------------------------------------------------
 !     Write LowInput_sum.csv file
+!     For bare soil runs, ignore the 'FA' part, but include the "BS" rotations
+      CropID = TITLET(18:19)
+      IF (CROPID .NE. "FA") THEN
 
 !     Metadata:
       id_site      = TITLET(1:4)
@@ -958,11 +965,43 @@ C-------------------------------------------------------------------
       id_season    = TITLET(1:11)
       run_type = "BS"
       WeatherFile = id_site // "_" // TITLET(13:16)
+      read(TITLET,'(10X,I1)') SEASON
 
 !     Dates in YYYY-MM-DD text format
       CALL Date_Text (YRSIM, Sdate)
       Year = Sdate(1:4)
-      Pdate = "na"
+      READ(Year, '(i4)') YR
+
+!     Assign "planting dates" as if there was a crop to the bare soil runs
+      SELECT CASE(id_site)
+      CASE ('ICGA')
+        SELECT CASE (SEASON)
+          CASE (1); PDOY = 103  ! for SW
+          CASE (2); PDOY = 253
+          CASE DEFAULT; PDOY = 0
+        END SELECT
+      CASE ('ZIMU')
+        PDOY = 329
+      CASE ('KEMA')
+        SELECT CASE (SEASON)
+          CASE (1); PDOY = 88
+          CASE (2); PDOY = 297
+          CASE DEFAULT; PDOY = 0
+        END SELECT
+      CASE ('KEEM')
+        SELECT CASE (SEASON)
+          CASE (1); PDOY = 88
+          CASE (2); PDOY = 291
+          CASE DEFAULT; PDOY = 0
+        END SELECT
+      CASE DEFAULT
+        PDOY = 0
+      END SELECT
+
+
+      PYRDOY = YR * 1000 + PDOY
+      CALL Date_Text (PYRDOY, Pdate)
+
       Ninput = NICM
       Cinput = RECM/1000
 
@@ -970,7 +1009,9 @@ C-------------------------------------------------------------------
       
 !     ----------------------------------------------------
 !     Open tab-delimited file and write headers
-      IF (RUN == 1) THEN
+!     IF (RUN == 1) THEN
+      IF (FIRST) THEN
+        FIRST = .FALSE.
         OUTLI = CONTROL%FILEX(1:8) // "_summary.txt"
         CALL GETLUN('LISum', LUN2)
         INQUIRE (FILE = OUTLI, EXIST = FEXIST)
@@ -1022,40 +1063,6 @@ C-------------------------------------------------------------------
      &    "SoilW.layer1"
       ENDIF
 
-!     For base soil runs, need the fallow output
-!      IF (CROP .NE. "FA") THEN
-!!       Dates in YYYY-MM-DD text format
-!        CALL Date_Text (YRPLT, Pdate)
-
-!        IF (MDAT < 0) THEN
-!          Mdate = "        na"
-!        ELSE
-!          CALL Date_Text (MDAT, Mdate)
-!        ENDIF
-
-!        IF (ADAT < 0) THEN
-!          Adate = "        na"
-!          Mdate = "        na"
-!        ELSE 
-!          CALL Date_Text (ADAT, Adate)
-!        ENDIF
-
-!        IF (EDAT < 0) THEN
-!          Edate = "na"
-!          Adate = "na"
-!          Mdate = "na"
-!        ELSE 
-!          CALL Date_Text (EDAT, Edate)
-!        ENDIF
-
-!        HWAHt = HWAH / 1000. !convert to t/ha
-!        CWAMt = CWAM / 1000.
-!        RWAMt = SUMDAT % RWAMt / 1000. !root weight at maturity (t[DM]/ha)
-!        RCAM  = RWAMt * 400.           !root C (kg[C]/ha)
-        
-!        PCNRT = SUMDAT % PCNRT
-!        RNAM  = PCNRT * RWAMt *10.     !root N (kg[N]/ha)
-
         NMIN = SUMDAT % NMIN
         NVOL = SUMDAT % NVOL
         NIMM = SUMDAT % NIMM
@@ -1084,7 +1091,7 @@ C-------------------------------------------------------------------
      &  run_type,achar(9),        !1
         
 !    &  Pdate,achar(9),HWAHt,achar(9),                              !2
-     &  "na",achar(9),"na",achar(9),                                !2
+     &  Pdate,achar(9),"na",achar(9),                                !2
 !    &  Edate,achar(9),Adate,achar(9),Mdate,achar(9),CWAMt,achar(9),!3
      &  "na",achar(9),"na",achar(9),"na",achar(9),"na",achar(9),    !3
 !    &  RWAMt,achar(9),LAIX,achar(9),ESCP,achar(9),EPCP,achar(9),   !4
@@ -1101,8 +1108,7 @@ C-------------------------------------------------------------------
      &  SumQCO2res,achar(9),
      &  SumQNhum,achar(9),
      &  SumQNres,achar(9),
-!    &  SWplt                                  !8
-     &  "na"                                   !8
+     &  SWplt                                  !8
 
  100    FORMAT(10A, 2(I,A), 2A,                 !1
      &  4A,                                     !2
@@ -1110,9 +1116,9 @@ C-------------------------------------------------------------------
      &  4A, F0.2, 3A,                           !4
      &  8A,                                     !5
      &  2A, 7(F0.2,A),                          !6, 7
-     &  6(F0.3,A),A)                            !8
+     &  6(F0.3,A),F0.2)                         !8
 
-!      ENDIF
+      ENDIF
 
 ! These variables changed from integer to real for low input intercomparison
 ! CNAM, GNAM, NUCM, NLCM, DRCM, NIAM

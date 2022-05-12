@@ -34,7 +34,8 @@
       INTEGER NLayr, RUN, YEAR, YRDOY, NLayers, YRPLT, SEASON
       LOGICAL FEXIST, FIRST
 
-      INTEGER NVars, I, L, TargetDOY, PDOY
+      INTEGER NVars, I, L, TargetDOY, PDOY, PYRDOY, YR
+
 
 !     Variables needed for computation of output variables:
       REAL, DIMENSION(NL) :: SON, SOC, SW   
@@ -136,7 +137,7 @@
           END SELECT
         CASE ('ZIMU')
           NLayers = 3
-          TargetDOY = 304
+          TargetDOY = 305
           PDOY = 329
         CASE ('KEMA')
           NLayers = 2
@@ -160,6 +161,9 @@
           MSG(1) = "Wrong site ID."
           CALL WARNING(1, ERRKEY, MSG)
         END SELECT
+
+        CALL YR_DOY(CONTROL % YRSIM, YR, DOY)
+        PYRDOY = YR * 1000 + PDOY
 
         CALL GET(SOILPROP)
         NLayr = SOILPROP % NLayr
@@ -200,7 +204,7 @@
 !     Extract soil water at specified depths on planting date.
 !      CALL GET('PLANT', 'YRPLT', YRPLT)
  !     IF (YRDOY .EQ. YRPLT) THEN
-      IF (YRDOY .EQ. PDOY) THEN
+      IF (YRDOY .EQ. PYRDOY) THEN
         CALL GET('WATER', 'SW', SW) 
 !       Extract soil water at specified depths
         TSW    = 0.0
