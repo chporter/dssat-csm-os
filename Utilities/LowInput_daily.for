@@ -159,20 +159,22 @@
 !     Today's date
       CALL Date_Text (YRDOY, DateText)
 
-!     Get daily values, calculate cumulative values
-      CALL GET('ORGC', 'QCO2hum', QCO2hum)
-      CALL GET('ORGC', 'QCO2res', QCO2res)
-      CALL GET('ORGC', 'QNhum', QNhum)
-      CALL GET('ORGC', 'QNres', QNres)
-
-      SumQCO2hum = SumQCO2hum + QCO2hum
-      SumQCO2res = SumQCO2res + QCO2res
-      SumQNhum   = SumQNhum   + QNhum
-      SumQNres   = SumQNres   + QNres
+      CALL GET('PLANT', 'YRPLT', YRPLT)
+      IF (YRDOY .GE. YRPLT) THEN
+!       Get daily values, calculate cumulative values
+        CALL GET('ORGC', 'QCO2hum', QCO2hum)
+        CALL GET('ORGC', 'QCO2res', QCO2res)
+        CALL GET('ORGC', 'QNhum', QNhum)
+        CALL GET('ORGC', 'QNres', QNres)
+        
+        SumQCO2hum = SumQCO2hum + QCO2hum
+        SumQCO2res = SumQCO2res + QCO2res
+        SumQNhum   = SumQNhum   + QNhum
+        SumQNres   = SumQNres   + QNres
+      ENDIF
 
 !     ----------------------------------------------------
 !     Extract soil water at specified depths on planting date.
-      CALL GET('PLANT', 'YRPLT', YRPLT)
       CALL GET('WATER', 'SW', SW) 
 !     Extract soil water at specified depths
       TSW    = 0.0
