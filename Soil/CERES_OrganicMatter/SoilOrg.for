@@ -670,6 +670,7 @@ C         recruit (NREQ-N CONC) g of N
           CMF     = 1.0
           DLTNI1  = 0.0
           DLTFOM  = 0.0
+          QNres   = 0.0
         ENDIF   !End of IF block on FOM.
 
 !       -------------------
