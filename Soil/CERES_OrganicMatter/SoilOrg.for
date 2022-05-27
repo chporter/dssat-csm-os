@@ -135,6 +135,12 @@
       REAL SOM1C(0:NL)
       REAL CN_SOM(0:NL), CN_FOM(0:NL)
 
+!     For low input model intercomparison report
+      REAL QCO2res, QCO2hum
+      REAL QNres, QNresMNR, QNresIMM
+      REAL QNhum, QNhumMNR, QNhumIMM
+      REAL, DIMENSION(NL) :: SOC, SON
+
 !     Methane variables:
       REAL Immob_OM
 !     REAL CH4Consumption, CH4Emission, CH4Leaching, CH4Stored,
@@ -478,6 +484,11 @@
       TNIMBSOM = 0.0
 
       newCO2 = 0.0
+!     Low input
+      QNres  = 0.0
+      QNhum  = 0.0
+      QCO2res = 0.0
+      QCO2hum = 0.0
 
       DO L = 1, NLAYR
 !       ----------------------------------------------------------------
@@ -638,6 +649,8 @@ C         recruit (NREQ-N CONC) g of N
             ELSE
               TNIMBSOM = TNIMBSOM + DLTNI1
             ENDIF
+!           Low Input
+            QNres  = QNres - DLTNI1
 
           ENDIF     !N_ELEMS > 0, N simulation
 
@@ -657,6 +670,7 @@ C         recruit (NREQ-N CONC) g of N
           CMF     = 1.0
           DLTNI1  = 0.0
           DLTFOM  = 0.0
+          QNres   = 0.0
         ENDIF   !End of IF block on FOM.
 
 !       -------------------
@@ -689,6 +703,8 @@ C         recruit (NREQ-N CONC) g of N
             TNIMBSOM = TNIMBSOM + DLTNI2
           ENDIF
         ENDIF
+!       Low Input
+        QNhum  = QNhum - DLTNI2
 
 !       Phosphorus
         IF (N_ELEMS > 1) THEN
@@ -733,6 +749,18 @@ C         recruit (NREQ-N CONC) g of N
       CALL MethaneDynamics(CONTROL, ISWITCH, SOILPROP,        !Input
      &    FLOODWAT, SW, RLV, newCO2, DRAIN,                   !Input
      &    CH4_data)                                           !Output
+
+!     Low input model intercomparison
+!     CO2 - convert from units of C to units of CO2
+      DO L = 1, NLAYR
+        QCO2res = QCO2res + newCO2_FOM(L) * 3.67
+        QCO2hum = QCO2hum + newCO2_HUM(L) * 3.67
+      ENDDO
+      CALL PUT('ORGC','QCO2res',QCO2res)
+      CALL PUT('ORGC','QCO2hum',QCO2hum)
+
+      CALL PUT('ORGC','QNres',QNres)
+      CALL PUT('ORGC','QNhum',QNhum)
 
 !     Transfer daily mineralization values for use by Cassava model
       CALL PUT('ORGC','TOMINFOM' ,TOMINFOM) !Miner from FOM (kg/ha)
@@ -857,9 +885,21 @@ C         recruit (NREQ-N CONC) g of N
 !     Compute mulch properties
       CALL MULCHLAYER (MULCH)
 
-      CALL MethaneDynamics(CONTROL, ISWITCH, SOILPROP,        !Input
+!     For Low Input systems output:
+      DO L = 1, NLAYR
+        SOC(L) = SOMLITC(L)
+        SON(L) = SOMLITE(l,N)
+      ENDDO
+      SOC(1) = SOC(1) + SOMLITC(0)
+      SON(1) = SON(1) + SOMLITE(0,N)
+      CALL PUT('ORGC', 'SOC', SOC)
+      CALL PUT('ORGC', 'SON', SON)
+
+      IF (DYNAMIC .EQ. INTEGR) THEN
+        CALL MethaneDynamics(CONTROL, ISWITCH, SOILPROP,      !Input
      &    FLOODWAT, SW, RLV, newCO2, DRAIN,                   !Input
      &    CH4_data)                                           !Output
+      ENDIF
 
 C***********************************************************************
 C***********************************************************************
