@@ -648,7 +648,7 @@ C         recruit (NREQ-N CONC) g of N
               TNIMBSOM = TNIMBSOM + DLTNI1
             ENDIF
 !           Low Input
-            QNres  = QNres + DLTNI1
+            QNres  = QNres - DLTNI1
 
           ENDIF     !N_ELEMS > 0, N simulation
 
@@ -701,7 +701,7 @@ C         recruit (NREQ-N CONC) g of N
           ENDIF
         ENDIF
 !       Low Input
-        QNhum  = QNhum + DLTNI2
+        QNhum  = QNhum - DLTNI2
 
 !       Phosphorus
         IF (N_ELEMS > 1) THEN
