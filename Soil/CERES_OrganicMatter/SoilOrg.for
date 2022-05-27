@@ -670,7 +670,6 @@ C         recruit (NREQ-N CONC) g of N
           CMF     = 1.0
           DLTNI1  = 0.0
           DLTFOM  = 0.0
-          QNres   = 0.0
         ENDIF   !End of IF block on FOM.
 
 !       -------------------
@@ -759,6 +758,9 @@ C         recruit (NREQ-N CONC) g of N
 
       CALL PUT('ORGC','QNres',QNres)
       CALL PUT('ORGC','QNhum',QNhum)
+
+!!     temp chp
+!      write(1555,'(i8,4f10.3)') yrdoy, qco2res, qco2hum, qnres, qnhum
 
 !     Transfer daily mineralization values for use by Cassava model
       CALL PUT('ORGC','TOMINFOM' ,TOMINFOM) !Miner from FOM (kg/ha)
@@ -892,6 +894,9 @@ C         recruit (NREQ-N CONC) g of N
       SON(1) = SON(1) + SOMLITE(0,N)
       CALL PUT('ORGC', 'SOC', SOC)
       CALL PUT('ORGC', 'SON', SON)
+
+!!     temp chp
+!      write(2555,'(I8,4F10.3)') yrdoy, TSOMC, TSOME(N), TLITC, TLITE(N)
 
       IF (DYNAMIC .EQ. INTEGR) THEN
         CALL MethaneDynamics(CONTROL, ISWITCH, SOILPROP,      !Input
