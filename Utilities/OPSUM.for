@@ -178,10 +178,10 @@ C-----------------------------------------------------------------------
       CHARACTER*3  RUN_MODE
       CHARACTER*4  id_site, id_treatment, Year
       CHARACTER*9  WeatherFile
-      CHARACTER*10 Pdate, Edate, Adate, Mdate
+      CHARACTER*10 Sdate, Pdate, Edate, Adate, Mdate
       CHARACTER*11 id_season
       CHARACTER*21 OUTLI
-      INTEGER LUN2, Cinput, Ninput
+      INTEGER LUN2, Cinput, Ninput, SEASON, PDOY, PYRDOY, YR, DOY
       REAL HWAHt, CWAMt, RWAMt, PCNRT, RCAM, NMIN, NVOL, NIMM, NDENIT
       REAL SumQCO2hum, SumQCO2res
       REAL SumQNhum, SumQNres, SWplt, SumSOC, SumSON
@@ -946,6 +946,8 @@ C-------------------------------------------------------------------
         END SELECT
       ENDIF
 
+!-------------------------------------------------------------------
+!-------------------------------------------------------------------
 !-------------------------------------------------------------------
 !     Write LowInput_sum.csv file
 

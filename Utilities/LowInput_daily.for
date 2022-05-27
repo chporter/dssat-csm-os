@@ -34,7 +34,7 @@
       INTEGER NLayr, RUN, YEAR, YRDOY, NLayers, YRPLT
       LOGICAL FEXIST, FIRST
 
-      INTEGER NVars, I, L, TargetDOY
+      INTEGER NVars, I, L, TargetDOY, PDOY, PYRDOY, YR
 
 !     Variables needed for computation of output variables:
       REAL, DIMENSION(NL) :: SON, SOC, SW   
@@ -42,7 +42,7 @@
       REAL TSW, TDEP, QCO2hum, QCO2res, QNhum, QNres
       REAL SOCtop, SONtop, SumSOC, SumSON, SWplt
       REAL SumQCO2hum, SumQCO2res, SumQNhum, SumQNres
-      REAL SWAVG
+      REAL SWavg
 
 !     Site ID
       CHARACTER*4 SITEID, TRTNAME
@@ -117,10 +117,18 @@
 
 !       For Low input systems, the layer depth is dependent on location
         SELECT CASE(SITEID)
-        CASE ('ICGA','ZIMU')
+        CASE ('ICGA')
+          NLayers = 3     !for SW, SOC, SON
+          TargetDOY = 80  !for SOC, SON
+        CASE ('ZIMU')
           NLayers = 3
-        CASE ('KEMA','KEEM')
+          TargetDOY = 305
+        CASE ('KEMA')
           NLayers = 2
+          TargetDOY = 64
+        CASE ('KEEM')
+          NLayers = 2
+          TargetDOY = 66
         CASE DEFAULT
           NLayers = 0
           MSG(1) = "Wrong site ID."
@@ -151,8 +159,9 @@
 !     Today's date
       CALL Date_Text (YRDOY, DateText)
 
-!     Get daily values, calculate cumulative values
+      CALL GET('PLANT', 'YRPLT', YRPLT)
       IF (YRDOY .GE. YRPLT) THEN
+!       Get daily values, calculate cumulative values
         CALL GET('ORGC', 'QCO2hum', QCO2hum)
         CALL GET('ORGC', 'QCO2res', QCO2res)
         CALL GET('ORGC', 'QNhum', QNhum)
@@ -167,29 +176,18 @@
 !     ----------------------------------------------------
 !     Extract soil water at specified depths on planting date.
       CALL GET('WATER', 'SW', SW) 
-      CALL GET('PLANT', 'YRPLT', YRPLT)
 !     Extract soil water at specified depths
       TSW    = 0.0
       DO L = 1, NLayers
         TSW = TSW + SW(L) * DLAYR(L) !cm
-        TDEP = DS(L)
       ENDDO
-      SWAVG = TSW * 10. !mm
+      SWavg = TSW * 10.  !mm
 
       IF (YRDOY .EQ. YRPLT) THEN
-        SWplt = TSW * 10.  !mm
-        CALL PUT('WATER', 'SWplt', SWplt)
+        CALL PUT('WATER', 'SWplt', SWavg)
       ENDIF
 
 !     ----------------------------------------------------
-!     SOC and SON on selected days at selected depths
-      SELECT CASE (SITEID)
-        CASE ('ICGA'); TargetDOY = 80
-        CASE ('KEEM'); TargetDOY = 66
-        CASE ('KEMA'); TargetDOY = 64
-        CASE ('ZIMU'); TargetDOY = 304
-      END SELECT
-
       IF (DOY .EQ. TargetDOY) THEN
         CALL GET('ORGC', 'SOC', SOC)
         CALL GET('ORGC', 'SON', SON)
@@ -210,8 +208,8 @@
 
 !     ----------------------------------------------------
       IF (YRDOY .GE. YRPLT) THEN
-!     TSV format output
-      WRITE(LUN2,
+!       TSV format output
+        WRITE(LUN2,
      &  '(10A,F0.1,A,F0.2,A,F0.2,A,F0.2,A,F0.2,A,F0.2,A,F0.3)')
      &  "CE1", achar(9), SITEID, achar(9), TRIM(SEASONID), achar(9), 
      &  TRTNAME, achar(9), TRIM(DateText), achar(9), 
