@@ -57,15 +57,14 @@ C  08/09/2012 GH  Added CSCAS model
 !  09/01/2018  MJ modified Canegro interface, IRRAMT added.
 !  03/17/2020  WP Model TEFF from Mulugeta called on plant (added).
 !  08/19/2021 FV Added OilcropSun
-!  06/15/2022 CHP Added CropStatus - start with MZ & SW
+!  06/15/2022 CHP Added CropStatus - MZ, SW, CROPGRO
 C=======================================================================
 
       SUBROUTINE PLANT(CONTROL, ISWITCH,
      &    EO, EOP, EOS, EP, ES, FLOODWAT, HARVFRAC,       !Input
-     &    NH4, NO3, SKi_Avail, SomLitC, SomLitE,          !Input
-     &    SPi_AVAIL, SNOW, SOILPROP, SRFTEMP, ST, SW,     !Input
-     &    TRWU, TRWUP, UPPM, WEATHER, YREND, YRPLT,       !Input
-     &    IRRAMT,                                         !Input
+     &    IRRAMT, NH4, NO3, SKi_Avail, SPi_AVAIL,         !Input
+     &    SNOW, SOILPROP, SRFTEMP, ST, SW,                !Input
+     &    TRWU, TRWUP, WEATHER, YREND, YRPLT,             !Input
      &    FLOODN,                                         !I/O
      &    CANHT, EORATIO, HARVRES, KSEVAP, KTRANS,        !Output
      &    KUptake, MDATE, NSTRES, PSTRES1,                !Output
@@ -128,7 +127,7 @@ C-----------------------------------------------------------------------
       REAL TRWUP, TWILEN, XLAI, XHLAI
 
       REAL, DIMENSION(2)  :: HARVFRAC
-      REAL, DIMENSION(NL) :: NH4, NO3, RLV, UPPM  !, RWU
+      REAL, DIMENSION(NL) :: NH4, NO3, RLV  !, RWU, UPPM
       REAL, DIMENSION(NL) :: ST, SW, UNO3, UNH4, UH2O
 
       LOGICAL FixCanht, BUNDED    !, CRGRO
@@ -152,9 +151,9 @@ C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
       REAL, DIMENSION(NL) :: KUptake, SKi_Avail
 
 !     ORYZA Rice model
-      REAL, DIMENSION(0:NL) :: SomLitC
-      REAL, DIMENSION(0:NL,NELEM) :: SomLitE
-      LOGICAL, PARAMETER :: OR_OUTPUT = .FALSE.
+!      REAL, DIMENSION(0:NL) :: SomLitC
+!      REAL, DIMENSION(0:NL,NELEM) :: SomLitE
+!      LOGICAL, PARAMETER :: OR_OUTPUT = .FALSE.
 
 !     Arrays which contain data for printing in SUMMARY.OUT file
       INTEGER, PARAMETER :: SUMNUM = 1
@@ -366,8 +365,8 @@ C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
         CALL CROPGRO(CONTROL, ISWITCH,
      &    EOP, HARVFRAC, NH4, NO3, SOILPROP, SPi_AVAIL,   !Input
      &    ST, SW, TRWUP, WEATHER, YREND, YRPLT,           !Input
-     &    CANHT, EORATIO, HARVRES, KSEVAP, KTRANS, MDATE, !Output
-     &    NSTRES, PSTRES1,                                !Output
+     &    CANHT, CropStatus, EORATIO, HARVRES, KSEVAP,    !Output
+     &    KTRANS, MDATE, NSTRES, PSTRES1,                 !Output
      &    PUptake, PORMIN, RLV, RWUMX, SENESCE,           !Output
      &    STGDOY, FracRts, UNH4, UNO3, XHLAI, XLAI)       !Output
 !-----------------------------------------------------------------------
@@ -719,6 +718,7 @@ c     Total LAI must exceed or be equal to healthy LAI:
 !     Some crops may modify the CONTROL % CropStatus directly.
       IF (CropStatus > 0) THEN
         CONTROL % CropStatus = CropStatus
+        CALL PUT(CONTROL)
       ENDIF
 
 !***********************************************************************
@@ -765,14 +765,19 @@ c     Total LAI must exceed or be equal to healthy LAI:
 !    2 - crop harvested on reported date          NORMAL
 !    3 - crop harvested at reported growth stage  NORMAL
 !    6 - auto-harvest within window               NORMAL
-!   11 - failure to plant (automatic planting)    SOWING
-!   12 - failure to germinate                     GRMNAT
-!   21 - crop mature due to slow grain filling    GRAIN 
+!   11 - failure to plant (automatic planting)    NO_SOW
+!   12 - failure to germinate                     NOGERM
+!   21 - crop mature due to slow grain filling    SLOGRN 
 !   31 - crop died due to heat stress             HOT   
 !   32 - crop died due to cold stress             COLD  
 !   33 - crop died due to deficit water stress    DRY   
 !   34 - crop died due to excess water stress     WET   
+!   39 - crop died due to excess stress           STRESS   
 !   51 - crop died due to pest damage             PEST   
+
+!  100 – crop season length exceeded limits	    SEASON
+!  200 – weather data error				        WEATHER
+!  999 – unspecified error condition              UNKNOWN
 
 
 !***********************************************************************
