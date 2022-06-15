@@ -375,8 +375,8 @@ C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
       call FORAGE(CONTROL, ISWITCH,
      &    EOP, HARVFRAC, NH4, NO3, SOILPROP,              !Input
      &    ST, SW, TRWUP, WEATHER, YREND, YRPLT,           !Input
-     &    CANHT, EORATIO, HARVRES, KSEVAP, KTRANS, MDATE, !Output
-     &    NSTRES, PSTRES1,                                !Output
+     &    CANHT, EORATIO, HARVRES, MDATE,                 !Output
+     &    NSTRES, PSTRES1, CropStatus,                    !Output
      &    PORMIN, RLV, RWUMX, SENESCE,                    !Output
      &    STGDOY, UNH4, UNO3, XHLAI, XLAI)                !Output
 
