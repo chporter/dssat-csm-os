@@ -55,7 +55,9 @@ C  08/09/2012 GH  Added CSCAS model
 !  05/10/2017 CHP removed SALUS model
 !  12/01/2015 WDB added Sugarbeet
 !  09/01/2018  MJ modified Canegro interface, IRRAMT added.
-!  04/14/2021 CHP Added CropStatus - start with MZ & SW
+!  03/17/2020  WP Model TEFF from Mulugeta called on plant (added).
+!  08/19/2021 FV Added OilcropSun
+!  06/15/2022 CHP Added CropStatus - start with MZ & SW
 C=======================================================================
 
       SUBROUTINE PLANT(CONTROL, ISWITCH,
@@ -92,8 +94,10 @@ C-----------------------------------------------------------------------
 !         'RIORZ' - IRRI ORYZA Rice model
 !         'WHAPS' - APSIM N-wheat
 !         'TFAPS' - APSIM Tef
+!         'TFCER' - CERES Teff
 !         'PRFRM' - Perennial forage model
 !         'BSCER' - Sugarbeet
+!         'SUOIL' - Sunflower (OilcropSun)
 C-----------------------------------------------------------------------
 
 C-----------------------------------------------------------------------
@@ -304,20 +308,20 @@ C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
 !     Initialize output variables.
 !     Each plant routine may or may not re-compute these values.
       CANHT    = 0.0
-      EORATIO  = 1.0
+!      EORATIO  = 1.0
       FracRts  = 0.0
-      KCAN     = 0.85
-      KEP      = 1.0
-      KSEVAP   = -99.
-      KTRANS   = 1.0
+!      KCAN     = 0.85
+!      KEP      = 1.0
+!      KSEVAP   = -99.
+!      KTRANS   = 1.0
       KUptake = 0.0
       NSTRES   = 1.0
-      PORMIN   = 0.02
+!      PORMIN   = 0.02
       PSTRES1  = 1.0
       PUPTAKE  = 0.0
       RLV      = 0.0
-      RWUEP1   = 1.5
-      RWUMX    = 0.03
+!      RWUEP1   = 1.5
+!      RWUMX    = 0.03
       UH2O     = 0.0
       UNH4     = 0.0
       UNO3     = 0.0
@@ -389,6 +393,7 @@ C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
         IF (DYNAMIC .EQ. SEASINIT) THEN
           KTRANS = KEP
           KSEVAP = KEP
+          XHLAI = XLAI
         ELSEIF (DYNAMIC .EQ. INTEGR) THEN
           XHLAI = XLAI
         ENDIF
@@ -559,6 +564,23 @@ C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
           XHLAI = XLAI
         ENDIF
 
+!     -------------------------------------------------
+!     CERES-TEFF
+      CASE('TFCER')
+        CALL TEFF(CONTROL, ISWITCH,
+     &    CO2, DAYL, EOP, FLOODWAT, HARVFRAC, NH4, NO3,   !Input
+     &    SKi_Avail, SPi_AVAIL,                           !Input
+     &    SOILPROP, SRAD, ST, SW, TMAX, TMIN, TRWUP,      !Input
+     &    TWILEN, YRPLT,                                  !Input
+     &    FLOODN,                                         !I/O
+     &    CANHT, HARVRES, XLAI, KUptake, MDATE, NSTRES,   !Output
+     &    PORMIN, PUptake, RWUEP1, RWUMX,                 !Output
+     &    RLV, SENESCE, STGDOY, FracRts, UNH4, UNO3)      !Output
+
+        IF (DYNAMIC .EQ. INTEGR) THEN
+          XHLAI = XLAI
+        ENDIF
+
 !!     -------------------------------------------------
 !!     ORYZA2000 Rice
 !      CASE('RIORZ')
@@ -648,6 +670,22 @@ c     Total LAI must exceed or be equal to healthy LAI:
           XHLAI = XLAI
         ENDIF
 
+!     -------------------------------------------------
+!     Sunflower
+      CASE('SUOIL')
+        CALL SU_CERES (CONTROL, ISWITCH,              !Input
+     &     EOP, HARVFRAC, NH4, NO3, SKi_Avail,            !Input
+     &     SPi_AVAIL, SNOW,                               !Input
+     &     SOILPROP, SW, TRWUP, WEATHER, YREND, YRPLT,    !Input
+     &     CANHT, HARVRES, KCAN, KEP,KUptake,  MDATE,     !Output
+     &     NSTRES, PORMIN, PUptake, RLV, RWUMX, SENESCE,  !Output
+     &     STGDOY, FracRts, UNH4, UNO3, XLAI, XHLAI)      !Output
+
+        IF (DYNAMIC < RATE) THEN
+          KTRANS = KEP        !KJB/WDB/CHP 10/22/2003
+          KSEVAP = KEP
+        ENDIF
+        
 !     -------------------------------------------------
 !     Aroids-taro
       CASE('TRARO','TNARO')
@@ -908,11 +946,22 @@ c     Total LAI must exceed or be equal to healthy LAI:
           GOTO 100
         ELSE
           CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)
+          !KEP and EORATIO are not used in ASCE PET method,
+          !but must be read in prior to ASCE parameters.
           READ(CHAR,'(2F6.0)',IOSTAT=ERR) KEP, EORATIO
           IF (ERR .NE. 0) THEN
             NMSG = NMSG + 1
-            MSG(NMSG)="Error reading KEP, EORATIO for ASCE PET method."
+            MSG(NMSG)="Error reading KEP and EORATIO."
           ENDIF
+        ENDIF
+        
+!       Read short reference crop parameters
+        CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)
+        IF(ISECT .NE. 1) CALL ERROR (ERRKEY,1,FILECC,LNUM)
+        READ(CHAR,'(2F6.0)',IOSTAT=ERR) SSKC, SKCBMAX
+        IF (ERR .NE. 0) THEN
+          NMSG = NMSG + 1
+          MSG(NMSG)="Error reading SSKC, SKCBMAX for ASCE PET method."
         ENDIF
 
 !       Read tall reference crop parameters
@@ -922,15 +971,6 @@ c     Total LAI must exceed or be equal to healthy LAI:
         IF (ERR .NE. 0) THEN
           NMSG = NMSG + 1
           MSG(NMSG)="Error reading TSKC, TKCBMAX for ASCE PET method."
-        ENDIF
-
-!       Read short reference crop parameters
-        CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)
-        IF(ISECT .NE. 1) CALL ERROR (ERRKEY,1,FILECC,LNUM)
-        READ(CHAR,'(2F6.0)',IOSTAT=ERR) SSKC, SKCBMAX
-        IF (ERR .NE. 0) THEN
-          NMSG = NMSG + 1
-          MSG(NMSG)="Error reading SSKC, SKCBMAX for ASCE PET method."
         ENDIF
 
         CLOSE (LUNCRP)
@@ -955,7 +995,7 @@ c     Total LAI must exceed or be equal to healthy LAI:
         CALL ERROR(ERRKEY,1,FILECC,LNUM)
       ENDIF
 
-!     Store the values for retreival in SPAM.
+!     Store the values for retrieval in SPAM (actually in PET.for).
       IF (MEEVP.EQ.'S') THEN
         CALL PUT('SPAM', 'SKC', SSKC)
         CALL PUT('SPAM', 'KCBMAX', SKCBMAX)

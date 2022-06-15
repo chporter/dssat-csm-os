@@ -57,6 +57,8 @@ C=======================================================================
          WATAVL = 0.0
       ENDIF
 
+      if(snow.lt.0.001) snow = 0
+
 !***********************************************************************
 !***********************************************************************
 !     END OF DYNAMIC IF CONSTRUCT
@@ -100,6 +102,7 @@ C  08/12/2003 CHP Added I/O error checking
                          ! which contain control information, soil
                          ! parameters, hourly weather data.
       IMPLICIT NONE
+      SAVE
 
       REAL, DIMENSION(NL), INTENT(IN) :: DLAYR, LL, SAT
       INTEGER, INTENT(IN) :: NLAYR

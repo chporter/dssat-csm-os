@@ -40,7 +40,7 @@
             RNCM = (RNCMN(0) + RNCMN(1))/2.0
             !LPM 22MAY2015 the stem nitrogen concentration changes according with the canopy level age (non-lignified to lignified)
             IF((LLIFATT+LLIFSTT) > ZERO) THEN
-                DO BR = 0, BRSTAGE                                                                                        
+                DO BR = 0, BRSTAGEINT                                                                                        
                  DO LF = 1, LNUMSIMSTG(BR)
                     IF (isLeafExpanding(node(BR,LF))) THEN
                          node(BR,LF)%SNCX = SNCXS(0)
@@ -70,18 +70,18 @@
 
 
             IF ((woodyWeight()) > ZERO .AND. (STWTP+CRWTP) > ZERO .AND. LFWT > ZERO) THEN
-                DO BR = 0, BRSTAGE                                                                                        
+                DO BR = 0, BRSTAGEINT                                                                                        
                     DO LF = 1, LNUMSIMSTG(BR)
                         IF (node(BR,LF)%NODEWT*(woodyWeight())/(STWTP+CRWTP) > 0.0) THEN
                             node(BR,LF)%SANC = node(BR,LF)%STEMNN / (node(BR,LF)%NODEWT*(woodyWeight())/(STWTP+CRWTP))
                         ENDIF
                         !LPM 01FEB2021 adding restriction to avoid considering leaves that are almost falling
-                        IF (isLeafActive(node(BR,LF))) THEN
+                        IF (isLeafActive(node(BR,LF)) .AND. leafAreaLeftToSenesce(node(BR,LF)) > 0.0) THEN
                             node(BR,LF)%LANC = node(BR,LF)%LEAFNN / ((leafAreaLeftToSenesce(node(BR,LF))/LAWL(1)) / (1.0-LPEFR)) 
                             IF (node(BR,LF)%LANC < 0.0) THEN 
                                 WRITE(Message(1),'(A27,F4.1)') 'LANC below 0 with value of ',node(BR,LF)%LANC
                                 WRITE(Message(2),'(A27,2F8.3)') 'LEAFN,LFWT had values of  ',node(BR,LF)%LEAFNN,LFWT
-                                WRITE(Message(3),'(A27,2I)') 'Branch, leaf number       ',BR,LF
+                                WRITE(Message(3),'(A27,2I5)') 'Branch, leaf number       ',BR,LF
                                 CALL WARNING(3,'CSYCA',MESSAGE)
                                 node(BR,LF)%LANC = AMAX1(0.0,node(BR,LF)%LANC)
                             ENDIF
@@ -97,7 +97,7 @@
             LCNCT = 0.0
             LCNMT = 0.0 
             IF ((LFWT+woodyWeight()) > ZERO .AND. (STWTP+CRWTP) > ZERO) THEN
-                DO BR = 0, BRSTAGE                                                                                        
+                DO BR = 0, BRSTAGEINT                                                                                        
                     DO LF = 1, LNUMSIMSTG(BR)
                         node(BR,LF)%SCNC = (node(BR,LF)%NODEWT*(woodyWeight())/(STWTP+CRWTP))*node(BR,LF)%SNCX
                         SCNCT =  SCNCT + node(BR,LF)%SCNC
@@ -125,7 +125,7 @@
             node%SNCR = 0.0
             RNCR = 0.0
             Lcount = 0
-            DO BR = 0, BRSTAGE                                                                              !LPM25MAY2015 To consider different N concentration by node according with node age                                                                       
+            DO BR = 0, BRSTAGEINT                                                                              !LPM25MAY2015 To consider different N concentration by node according with node age                                                                       
                 DO LF = 1, LNUMSIMSTG(BR)  
                     IF (isLeafAlive(node(BR,LF))) THEN
                         Lcount = Lcount + 1 

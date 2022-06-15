@@ -32,6 +32,7 @@ C             CHP Added TRTNUM to CONTROL variable.
 !  11/19/2010 CHP Added "branch" to version to keep track of non-release branches
 !  08/08/2017 WP  Version identification moved to CSMVersion.for
 !  08/08/2017 WP  Definitions related with OS platform moved to OSDefinitions.for
+!  05/28/2021 FO  Added code for LAT,LONG and ELEV output in Summary.OUT
 !=======================================================================
 
       MODULE ModuleDefs
@@ -471,11 +472,17 @@ C             CHP Added TRTNUM to CONTROL variable.
       Type WeathType
         INTEGER WYEAR
         Character*8 WSTAT
+        Character*9 CELEV
+        Character*15 CYCRD, CXCRD
       End Type WeathType
 
       TYPE PDLABETATYPE
         REAL PDLA
         REAL BETALS
+      END TYPE
+
+      TYPE PMDataType
+        REAL PMFRACTION
       END TYPE
 
 !     Data which can be transferred between modules
@@ -492,6 +499,7 @@ C             CHP Added TRTNUM to CONTROL variable.
         Type (WatType)     WATER
         Type (WeathType)   WEATHER
         TYPE (PDLABETATYPE) PDLABETA
+        TYPE (PMDataType) PM
       End Type TransferType
 
 !     The variable SAVE_data contains all of the components to be 
@@ -731,6 +739,12 @@ C             CHP Added TRTNUM to CONTROL variable.
         CASE('BETA'); Value = SAVE_data % PDLABETA % BETALS
         CASE DEFAULT; ERR = .TRUE.
         END SELECT
+
+      CASE ('PM')
+        SELECT CASE(VarName)
+        CASE('PMFRACTION'); Value = SAVE_data % PM % PMFRACTION
+        CASE DEFAULT; ERR = .TRUE.
+        END SELECT
             
       Case DEFAULT; ERR = .TRUE.
       END SELECT
@@ -844,6 +858,12 @@ C             CHP Added TRTNUM to CONTROL variable.
         SELECT CASE(VarName)
         CASE('PDLA'); SAVE_data % PDLABETA % PDLA = Value
         CASE('BETA'); SAVE_data % PDLABETA % BETALS = Value
+        CASE DEFAULT; ERR = .TRUE.
+        END SELECT
+
+      CASE ('PM')
+        SELECT CASE(VarName)
+            CASE('PMFRACTION'); SAVE_data % PM % PMFRACTION = Value
         CASE DEFAULT; ERR = .TRUE.
         END SELECT
             
@@ -1027,6 +1047,14 @@ C             CHP Added TRTNUM to CONTROL variable.
         Case DEFAULT; ERR = .TRUE.
         END SELECT
 
+      Case ('FIELD')
+        SELECT CASE (VarName)
+        Case ('CXCRD'); Value = SAVE_data % WEATHER % CXCRD
+        Case ('CYCRD'); Value = SAVE_data % WEATHER % CYCRD
+        Case ('CELEV'); Value = SAVE_data % WEATHER % CELEV
+        Case DEFAULT; ERR = .TRUE.
+        END SELECT
+        
       Case Default; ERR = .TRUE.
       END SELECT
 
@@ -1063,6 +1091,14 @@ C             CHP Added TRTNUM to CONTROL variable.
         Case DEFAULT; ERR = .TRUE.
         END SELECT
 
+      Case ('FIELD')
+        SELECT CASE (VarName)
+        Case ('CXCRD');  SAVE_data % WEATHER % CXCRD = Value
+        Case ('CYCRD');  SAVE_data % WEATHER % CYCRD = Value
+        Case ('CELEV');  SAVE_data % WEATHER % CELEV = Value
+        Case DEFAULT; ERR = .TRUE.
+        END SELECT
+        
       Case DEFAULT; ERR = .TRUE.
       END SELECT
 
