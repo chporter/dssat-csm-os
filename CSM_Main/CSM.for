@@ -291,6 +291,7 @@ C***********************************************************************
       CONTROL % ROTNUM  = ROTNUM
       CONTROL % TRTNUM  = TRTNUM
       CONTROL % ERRCODE = 0
+      CONTROL % CropStatus = -99
       CALL PUT(CONTROL)
 
 C-KRT**************************************************************

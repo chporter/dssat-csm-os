@@ -1462,6 +1462,7 @@ c                   available.
       MSG(NMSG) = "Simulation will end."
       YREND = CONTROL%YRDOY
       CONTROL % ErrCode = ErrCode
+      CONTROL % CropStatus = 200
       CALL PUT(CONTROL)
       CALL WARNING(NMSG,ERRKEY,MSG)
 
