@@ -1379,7 +1379,8 @@ c                   available.
 
 !-----------------------------------------------------------------------
 ! REVISION HISTORY
-! 09/01/2009 CHP Written
+!  09/01/2009 CHP Written
+!  06/15/2022 CHP Added CropStatus
 !-----------------------------------------------------------------------
       SUBROUTINE WeatherError(CONTROL, ErrCode, FILEWW, LNUM, 
      &      YRDOYW, YREND)

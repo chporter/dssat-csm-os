@@ -107,6 +107,13 @@ C-----------------------------------------------------------------------
       USE FloodModule
 
       IMPLICIT NONE
+      EXTERNAL ALOHA_PINEAPPLE,BS_CERES,CROPGRO,CSCAS_INTERFACE,
+     &  CSCERES_INTERFACE,CSCRP_INTERFACE,CSP_CASUPRO,CSYCA_INTERFACE,
+     &  FIND,FORAGE,GETLUN,ML_CERES,MZ_CERES,PT_SUBSTOR,READ_ASCE_KT,
+     &  RICE,SAMUCA,SC_CNGRO,SG_CERES,SU_CERES,SUMVALS,TEFF,TF_APSIM,
+     &  TR_SUBSTOR,WARNING,WH_APSIM
+      EXTERNAL INCDAT, ERROR
+
       SAVE
 
       CHARACTER*1  MEEVP, RNMODE
@@ -448,14 +455,14 @@ C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
 !     -------------------------------------------------
 !     APSIM N-wheat WHAPS
       CASE('WHAPS')
-        CALL WH_APSIM (CONTROL, ISWITCH,              !Input
-     &     EO, EOP, ES, HARVFRAC, NH4, NO3, SKi_Avail,            !Input
+        CALL WH_APSIM (CONTROL, ISWITCH,                  !Input
+     &     EO, EOP, ES, HARVFRAC, NH4, NO3, SKi_Avail,    !Input
      &     SPi_AVAIL, SNOW,                               !Input
      &     SOILPROP, SW, TRWUP, WEATHER, YREND, YRPLT,    !Input
      &     CANHT, HARVRES, KCAN, KEP, KUptake, MDATE,     !Output
-     &     NSTRES, PORMIN, PUptake, RLV,                  !Output
+     &     NSTRES, PORMIN, PUptake, rlv_nw,               !Output
      &     RWUMX, SENESCE, STGDOY, FracRts,               !Output
-     &     UNH4, UNO3, XLAI, XHLAI, UH2O)               !Output
+     &     UNH4, UNO3, XLAI, XHLAI, UH2O, CropStatus)     !Output
 
         IF (DYNAMIC < RATE) THEN
 !          KTRANS = KCAN + 0.15        !Or use KEP here??
@@ -487,6 +494,7 @@ C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
      &     CO2, DAYL, EOP, HARVFRAC, NH4, NO3,            !Input
      &     SNOW, SOILPROP, SRAD, SW, TMAX, TMIN,          !Input
      &     TRWUP, TWILEN, YREND, YRPLT,                   !Input
+     &     CropStatus,                                    !Output
      $     CANHT, HARVRES, MDATE, NSTRES, PORMIN, RLV,    !Output
      &     RWUMX, SENESCE, STGDOY, UNO3, UNH4, XLAI,      !Output
      &     KCAN, KEP)                                     !Output
@@ -521,10 +529,9 @@ C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
 !     Sugarbeet
       CASE('BSCER')
         CALL BS_CERES (CONTROL, ISWITCH,              !Input
-     &     EOP, HARVFRAC, NH4, NO3, SKi_Avail,            !Input
-     &     SPi_AVAIL, SNOW,                               !Input
+     &     EOP, HARVFRAC, NH4, NO3, SPi_AVAIL, SNOW,      !Input
      &     SOILPROP, SW, TRWUP, WEATHER, YREND, YRPLT,    !Input
-     &     CANHT, HARVRES, KCAN, KEP, MDATE,              !Output
+     &     CANHT, CropStatus, HARVRES, KCAN, KEP, MDATE,  !Output
      &     NSTRES, PORMIN, PUptake, RLV, RWUMX, SENESCE,  !Output
      &     STGDOY, FracRts,XLAI, XHLAI)          !Output
 
@@ -556,7 +563,7 @@ C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
      &    TWILEN, YRPLT,                                  !Input
      &    FLOODN,                                         !I/O
      &    CANHT, HARVRES, XLAI, KUptake, MDATE, NSTRES,   !Output
-     &    PORMIN, PUptake, RWUEP1, RWUMX,                 !Output
+     &    PORMIN, PUptake, RWUEP1, RWUMX, CropStatus,     !Output
      &    RLV, SENESCE, STGDOY, FracRts, UNH4, UNO3)      !Output
 
         IF (DYNAMIC .EQ. INTEGR) THEN
@@ -659,7 +666,7 @@ c     Total LAI must exceed or be equal to healthy LAI:
      &     TRWUP, TWILEN, YREND, YRPLT,                         !Input
      &     CANHT, HARVRES, MDATE, NSTRES, PORMIN, PUptake,      !Output
      &     RLV, RWUMX, SENESCE, STGDOY, UNO3, UNH4,             !Ouput
-     &     XLAI, KCAN, KEP, FracRts)                            !Output
+     &     XLAI, KCAN, KEP, FracRts, CropStatus)                !Output
 
         IF (DYNAMIC .EQ. SEASINIT) THEN
 !          KTRANS = KCAN + 0.15        !Or use KEP here??
@@ -693,6 +700,7 @@ c     Total LAI must exceed or be equal to healthy LAI:
      &    SOILPROP, SRAD, ST, SW, TMAX, TMIN, TRWUP,      !Input
      &    YRPLT,                                          !Input
      &    FLOODN,                                         !I/O
+     &    CropStatus,                                     !Output
      &    CANHT, HARVRES, XLAI, MDATE, NSTRES, PORMIN,    !Output
      &    RWUEP1, RWUMX, RLV, SENESCE, STGDOY, UNH4, UNO3)!Output
 
@@ -884,7 +892,7 @@ c     Total LAI must exceed or be equal to healthy LAI:
 !     SSKC, SKCBmax ASCE short ref (12 cm grass)
 
       USE ModuleData
-      External IGNORE, WARNING, ERROR
+      External IGNORE, WARNING, ERROR, GETLUN, FIND
 
       CHARACTER*1  BLANK, MEEVP
       PARAMETER (BLANK  = ' ')
