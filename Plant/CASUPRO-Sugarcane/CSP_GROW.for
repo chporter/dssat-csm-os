@@ -20,6 +20,7 @@ C  03-12-2003 CHP Changed senescence variable to composite (SENESCE)
 C                   as defined in ModuleDefs.for
 C  08/14/2003 FSR  Changed from GROW_SC for CASUPRO in DSSAT 4.0
 C  07/26/2004 CHP Removed variables which were not being used
+!  06/15/2022 CHP Added CropStatus
 C-----------------------------------------------------------------------
 C  Called by:  CASUPRO
 C  Calls:      CSP_IPGROW, CSP_STRESS
@@ -39,6 +40,7 @@ C=======================================================================
 
      &    WLFDOT, XHLAI,                                  !Input/Output
 
+     &    CropStatus,                                     !Output
      &    AREALF, BETN, CANNAA, CANWAA, CLW, CSW, GROWTH, !Output
      &    GRWRES, LAIMX, PCNL, PCNRT, PCNST, PLTPOP,      !Output
      &    PLIGLF, PLIGRT, PLIGST, RHOL, RHOS, RNITP,      !Output
@@ -68,7 +70,7 @@ C=======================================================================
 
       INTEGER DYNAMIC, NOUTDO, L, NLAYR
       INTEGER YRDOY, YRNR1, MDATE
-      INTEGER YRPLT
+      INTEGER YRPLT, CropStatus
 
       REAL WTNUP,WTNMOB,WTNCAN,TGROW  !,WTNFX
       REAL DISLA   !WRCSHD,WSDMAN
@@ -991,6 +993,7 @@ C-----------------------------------------------------------------------
      &    RTWT, SUWT, STMWT, TOPWT,                       !Input
      &    TOTWT, TURFAC, WTLF, YRDOY, YRPLT,              !Input
      &    MDATE)                                          !Output
+        CropStatus = 39
         RETURN
       ENDIF
 
@@ -1001,6 +1004,7 @@ C-----------------------------------------------------------------------
      &      RTWT, SUWT, STMWT, TOPWT,                     !Input
      &      TOTWT, TURFAC, WTLF, YRDOY, YRPLT,            !Input
      &      MDATE)                                        !Output
+          CropStatus = 39
           RETURN
         ENDIF
       ENDIF
