@@ -35,7 +35,7 @@
      &    vd, vd1, vd2, VSEN, XN,  YRDOY, YRSIM,                 !INPUT
      &    CUMDTT, DTT, GPP, ISDATE, ISTAGE,                      !OUTPT
      &    MDATE, nwheats_kvalue, Pgdd, STGDOY,                   !OUTPT
-     &    sumstgdtt, XNTI, TLNO, XSTAGE, YREMRG, RUE,            !OUTPT
+     &    sumstgdtt, XNTI, TLNO, XSTAGE, YREMRG,                 !OUTPT
      &    KCAN, KEP, P3, TSEN, CDAY, cumph_nw, CropStatus,       !OUTPT 
      &    SeedFrac, TEMPCR, VegFrac, VREQ, xstag_nw, zstage)     !OUTPT
 C-----------------------------------------------------------------------
@@ -281,7 +281,7 @@ C-----------------------------------------------------------------------
 
       CHARACTER*6 ECOTYP
       INTEGER ISECT
-      CHARACTER*355 C255  ! JG incraesed for large ecotype file
+      CHARACTER*355 C255  ! JG increased for large ecotype file
       CHARACTER*16  ECONAM
       INTEGER LUNCRP
       CHARACTER*92 FILECC
@@ -1294,6 +1294,7 @@ cbak  ears that is not included in lai calculation.
 !              ---------------------------------------------------------
               STGDOY(ISTAGE) = YRDOY
               MDATE          = YRDOY
+              CropStatus = 1
               ISTAGE = 7  !*! was 10  !CHP - Prevents growth parameters 
 !                           from being set back to initial values.  08/11/03
               CUMDTT = 0.0
