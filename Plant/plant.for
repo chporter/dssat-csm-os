@@ -441,6 +441,7 @@ C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
         CALL CSYCA_Interface (CONTROL, ISWITCH,           !Input
      &    EOP, ES, NH4, NO3, SOILPROP, SRFTEMP,           !Input
      &    ST, SW, TRWUP, WEATHER, YREND, YRPLT, HARVFRAC, !Input
+     &    CropStatus,                                     !Output
      &    CANHT, HARVRES, KCAN, KEP, MDATE, NSTRES,       !Output
      &    PORMIN, RLV, RWUMX, SENESCE, STGDOY,            !Output
      &    UNH4, UNO3, XLAI)                               !Output

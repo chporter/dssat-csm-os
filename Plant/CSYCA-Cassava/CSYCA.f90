@@ -40,7 +40,7 @@
        SENCALG, SENNALG, SENLALG,                                                             & !Senescence
        RESCALG, RESNALG, RESLGALG,                                                            & !Residues
        STGYEARDOY, BRSTAGE,                                                                   & !Stage dates     !GSTAGE = BRSTAGE
-       WEATHER     , SOILPROP    , CONTROL     ,                                              & 
+       WEATHER     , SOILPROP    , CONTROL     , CropStatus,                                  & 
        DYNAMIC) !, WEATHER)                                                                        !Control
 
     USE ModuleDefs
@@ -49,6 +49,7 @@
 
       
     IMPLICIT NONE
+    EXTERNAL YCA_RunInit, YCA_SEASINIT, YCA_GROWTH, YCA_INTEGRATE, YCA_OUTPUT
       
     TYPE (ControlType), intent (in) :: CONTROL    ! Defined in ModuleDefs
     TYPE (WeatherType), intent (in) :: WEATHER    ! Defined in ModuleDefs
@@ -56,8 +57,10 @@
     
     INTEGER :: CN       , DOY         , DYNAMIC     , FROP        , NLAYR       , ON          , REP        , RN          
     INTEGER :: RUN      , RUNI        , SN          , STEP        , STGYEARDOY(0:19)            , TN         , YEAR
-    INTEGER :: YEARPLTCSM 
-    INTEGER :: CSTIMDIF , CSYDOY      , DAPCALC     , TVICOLNM    , TVILENT     , CSIDLAYR    , CSYEARDOY              ! Integer function calls
+    INTEGER :: YEARPLTCSM, CropStatus 
+!   Not used
+!   INTEGER :: CSTIMDIF , CSYDOY      , DAPCALC     , TVICOLNM    , TVILENT     , CSIDLAYR    , CSYEARDOY              ! Integer function calls
+
 
     REAL    ALBEDOS     , BD(NL)      , BRSTAGE     , LAI         , CANHT       , CLOUDS      , CO2         , DAYL      ! REPLACED ALBEDO WITH ALBEDOS
     REAL    DEPMAX      , DEWDUR      , DLAYR(NL)   , DRAIN       , DUL(NL)     , EO          , EOP         , EP          
@@ -68,13 +71,13 @@
     REAL    SENNALG(0:NL)             , SHF(NL)     , SLPF        , SRAD        , ST(NL)      , SW(NL)       
     REAL    TLCHD       , TAIRHR(24)  , TMAX        , TMIN        , TNIMBSOM    , TNOXD       , TOMINFOM    , TOMINSOM                                                   
     REAL    TOMINSOM1   , TOMINSOM2   , TOMINSOM3   , TRWUP       , UH2O(NL)    , UNH4(NL)    , UNO3(NL)    , WINDSP      
-!    REAL    PARHR(24)   , RADHR(24)   , RHUMHR(24)  , VPDHR(24)                                                        !MF 14SE14 Hourly weather data
-    REAL    CSVPSAT     , TFAC4       , TFAC5       ,YVALXY      , CSYVAL                                               ! Real function calls !LPM 15sep2017 Added TFAC5 
+!   REAL    PARHR(24)   , RADHR(24)   , RHUMHR(24)  , VPDHR(24)                                                        !MF 14SE14 Hourly weather data
+!   REAL    CSVPSAT    , TFAC4       , TFAC5       ,YVALXY      , CSYVAL                                               ! Real function calls !LPM 15sep2017 Added TFAC5 
 
     CHARACTER(LEN=1)  :: IDETG, IDETL, IDETO, IDETS, ISWDIS, ISWNIT, ISWWAT      
     CHARACTER(LEN=1)  :: MESOM, RNMODE      
     CHARACTER(LEN=120):: FILEIOIN    
-    CHARACTER(LEN=10) :: TL10FROMI                                                                                     ! Character function call
+!   CHARACTER(LEN=10) :: TL10FROMI                                                                                     ! Character function call
 
     INTRINSIC AMAX1,AMIN1,EXP,FLOAT,INDEX,INT,LEN,MAX,MIN,MOD,NINT
     INTRINSIC SQRT,ABS,TRIM
@@ -190,7 +193,7 @@
                 TMAX        , TMIN        , TRWUP       , UH2O        , UNH4        , UNO3        , &
                 WEATHER     , SOILPROP    , CONTROL     , &  
                 WINDSP      , YEAR        , YEARPLTCSM  , LAI         ,&         !LPM 06MAR2016 Added to keep automatic planting
-                IDETG         )
+                IDETG       , CropStatus  )
         !!=======================================================================================================================
         !ENDIF  ! End of after planted (rate) section
         !!=======================================================================================================================

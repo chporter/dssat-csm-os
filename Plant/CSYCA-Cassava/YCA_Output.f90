@@ -25,6 +25,7 @@
      
         INTEGER :: CN          , DOY         , DYNAMIC     , NLAYR       , ON          , REP         , RN          
         INTEGER :: RUN         , RUNI        , SN          , STGYEARDOY(0:19)            , TN          , YEAR
+        INTEGER :: CropStatus
 
         REAL    :: BRSTAGE     , LAI        , CANHT       , CO2         , DAYL        , EO          , EOP         , IRRAMT
         REAL    :: KCAN        , NFP         , RAIN        , RLV(NL)     , SRAD        , TNIMBSOM    , TOMINSOM1   , UNH4(NL)        
@@ -60,7 +61,7 @@
         !               ! If model failure so that cycle not completed
         !-------------------------------------------------------------------------------------------------------------------
         CALL YCA_Out_ModFail ( &
-            BRSTAGE     , LAI        , DYNAMIC     , KCAN        &
+            BRSTAGE     , LAI        , DYNAMIC     , KCAN   , CropStatus     &
             )
 
         !-------------------------------------------------------------------------------------------------------------------
