@@ -460,7 +460,7 @@ C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
      &     SPi_AVAIL, SNOW,                               !Input
      &     SOILPROP, SW, TRWUP, WEATHER, YREND, YRPLT,    !Input
      &     CANHT, HARVRES, KCAN, KEP, KUptake, MDATE,     !Output
-     &     NSTRES, PORMIN, PUptake, rlv_nw,               !Output
+     &     NSTRES, PORMIN, PUptake, rlv,                  !Output
      &     RWUMX, SENESCE, STGDOY, FracRts,               !Output
      &     UNH4, UNO3, XLAI, XHLAI, UH2O, CropStatus)     !Output
 
