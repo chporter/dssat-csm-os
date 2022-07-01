@@ -441,6 +441,7 @@ C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
         CALL CSYCA_Interface (CONTROL, ISWITCH,           !Input
      &    EOP, ES, NH4, NO3, SOILPROP, SRFTEMP,           !Input
      &    ST, SW, TRWUP, WEATHER, YREND, YRPLT, HARVFRAC, !Input
+     &    CropStatus,                                     !Output
      &    CANHT, HARVRES, KCAN, KEP, MDATE, NSTRES,       !Output
      &    PORMIN, RLV, RWUMX, SENESCE, STGDOY,            !Output
      &    UNH4, UNO3, XLAI)                               !Output
@@ -460,7 +461,7 @@ C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
      &     SPi_AVAIL, SNOW,                               !Input
      &     SOILPROP, SW, TRWUP, WEATHER, YREND, YRPLT,    !Input
      &     CANHT, HARVRES, KCAN, KEP, KUptake, MDATE,     !Output
-     &     NSTRES, PORMIN, PUptake, rlv,                  !Output
+     &     NSTRES, PORMIN, PUptake, RLV,                  !Output
      &     RWUMX, SENESCE, STGDOY, FracRts,               !Output
      &     UNH4, UNO3, XLAI, XHLAI, UH2O, CropStatus)     !Output
 
@@ -479,7 +480,7 @@ C         Variables to run CASUPRO from Alt_PLANT.  FSR 07-23-03
      &     CANHT, HARVRES, KCAN, KEP, KUptake, MDATE,     !Output
      &     NSTRES, PORMIN, PUptake, RLV,                  !Output
      &     RWUMX, SENESCE, STGDOY, FracRts,               !Output
-     &     UNH4, UNO3, XLAI, XHLAI, UH2O)               !Output
+     &     UNH4, UNO3, XLAI, XHLAI, UH2O, CropStatus)     !Output
 
         IF (DYNAMIC < RATE) THEN
 !          KTRANS = KCAN + 0.15        !Or use KEP here??

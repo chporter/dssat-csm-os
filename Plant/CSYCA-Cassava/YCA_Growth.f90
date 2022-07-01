@@ -19,7 +19,7 @@
         TMAX        , TMIN        , TRWUP       , UH2O        , UNH4        , UNO3        , &
         WEATHER     , SOILPROP    , CONTROL     , &                                                                                                      ! MF WEATHER needed for VPD
         WINDSP      , YEAR        , YEARPLTCSM  , LAI         ,&         !LPM 06MAR2016 Added to keep automatic planting
-        IDETG         )
+        IDETG       , CropStatus  )
     
         USE ModuleDefs
         USE YCA_First_Trans_m
@@ -31,7 +31,7 @@
         TYPE (SoilType), intent (in) ::   SOILPROP   ! Defined in ModuleDefsR                                                                                          ! MF Defined in ModuleDefs
     
         INTEGER DOY         , NLAYR       , STGYEARDOY(0:19)            , YEAR        , YEARPLTCSM      !LPM 25MAY2015 STGYEARDOY changed according to STGDOY(20) in plant.for            
-        INTEGER CSIDLAYR                 
+        INTEGER CSIDLAYR    , CropStatus                 
 
         REAL    ALBEDOS     , BD(NL)      , BRSTAGE     , CLOUDS      , CO2         , DAYL        , DLAYR(NL)   , DUL(NL)     
         REAL    EO          , EOP         , ES          , KCAN        , kep         , LL(NL)      , NFP         , NH4LEFT(NL) 
@@ -52,7 +52,7 @@
         CALL  YCA_PrePlant( &  
             BD          , CO2         , DLAYR       , DOY         , DUL         , LL          , NH4LEFT     , NLAYR       , &
             NO3LEFT     , RNMODE      , ST          , STGYEARDOY  , SW          , TMAX        , TMIN        , YEAR        , &
-            YEARPLTCSM  &                 ! WEATHER     ,      
+            YEARPLTCSM  , CropStatus  &                 ! WEATHER     ,      
             )
         
         !===================================================================================================================

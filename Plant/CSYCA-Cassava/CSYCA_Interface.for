@@ -14,16 +14,19 @@ C=======================================================================
       SUBROUTINE CSYCA_Interface (CONTROL, ISWITCH,       !Input
      &    EOP, ES, NH4, NO3,SOILPROP, SRFTEMP,            !Input
      &    ST, SW, TRWUP, WEATHER, YREND, YRPLT, HARVFRAC, !Input
+     &    CropStatus,                                     !Output
      &    CANHT, HARVRES, KCAN, KEP, MDATE, NSTRES,       !Output
-     &    RWUPM, RLV, RWUMX, SENESCE, STGDOY,            !Output       ! MF 20JA15 REPLACED PORMIN with RWUMP
+! MF 20JA15 REPLACED PORMIN with RWUMP
+     &    RWUPM, RLV, RWUMX, SENESCE, STGDOY,             !Output       
      &    UNH4, UNO3, XLAI)                               !Output
 
       USE ModuleDefs
       USE ModuleData
-      USE YCA_Albedo_Check_m                                             ! MF 18JA15 For WORK.OUT
+      USE YCA_Albedo_Check_m   ! MF 18JA15 For WORK.OUT
       USE YCA_First_Trans_m
 
       IMPLICIT NONE
+      EXTERNAL YR_DOY, CSYCA
       SAVE
 
       CHARACTER*1   IDETG, IDETL, IDETO, IDETS
@@ -31,18 +34,22 @@ C=======================================================================
       CHARACTER (LEN=120) FILEIOIN      ! Name of input file
 
       INTEGER DYNAMIC, RUN, TN, RUNI, RN, ON
-      INTEGER REP, STEP, CN, YRHAR, YREND, YRDOY
+      INTEGER REP, STEP, CN, YRHAR, YREND, YRDOY, CropStatus
       INTEGER MDATE, NLAYR
       INTEGER MULTI, FROP, SN, YEAR, DOY
       INTEGER STGYEARDOY(0:19), STGDOY(0:19), YRPLT
-      INTEGER YEARPLTCSM                                                ! MF 26OC14 to run CSCAS from ORIGINAL_CSCAS                                        
+! MF 26OC14 to run CSCAS from ORIGINAL_CSCAS                                        
+!     INTEGER YEARPLTCSM                                              
 
       REAL CLOUDS, ES, WUPT, EOP, TRWUP, SRAD, TMAX, TMIN, CO2
       REAL KCAN, KEP, DEPMAX, DAYLT, DEWDUR
-      REAL NSTRES, XLAI, NFP, MSALB, ALBEDOS                            ! MF 26OC14 REPLACED ALBEDO WITH ALBEDOS 
-      REAL DAYL, RWUPM, RAIN, RWUMX, SRFTEMP, TWILEN                    ! MF 26OC14 REPLACED PORMIN WITH RWUMP
+! MF 26OC14 REPLACED ALBEDO WITH ALBEDOS 
+      REAL NSTRES, XLAI, NFP, MSALB, ALBEDOS                            
+! MF 26OC14 REPLACED PORMIN WITH RWUMP
+      REAL DAYL, RWUPM, RAIN, RWUMX, SRFTEMP, TWILEN                    
       REAL CANHT, EO, WINDSP, PARIP, PARIPA   
-      REAL BRSTAGE, LAI                                                ! MF 26OC14 REPLACED GSTAGE WITH BRSTAGE
+! MF 26OC14 REPLACED GSTAGE WITH BRSTAGE
+      REAL BRSTAGE, LAI                                                
       REAL TAIRHR(TS), TDEW, SLPF
 !      REAL LAIL, LAILA, TWILEN
 
@@ -110,8 +117,8 @@ C=======================================================================
       NO3Left = NO3
       PARIP  = -99.   !Not used w/ DSSAT
       PARIPA = -99.   !Not used w/ DSSAT
-      ALBEDOS = MSALB                                                   ! MF 26OC14 REPLACED ALBEDO WITH ALBEDOS
-      ALBEDOS_Interface = MSALB                                         ! MF 18JA15 For WORK.OUT
+      ALBEDOS = MSALB           ! MF 26OC14 REPLACED ALBEDO WITH ALBEDOS
+      ALBEDOS_Interface = MSALB ! MF 18JA15 For WORK.OUT
 
       DEPMAX = DS(NLAYR)
 
@@ -203,7 +210,7 @@ C-----------------------------------------------------------------------
      & SENCALG, SENNALG, SENLALG,                          !Senescence   
      & RESCALG, RESNALG, RESLGALG,                         !Residues     
      & STGYEARDOY, BRSTAGE,                                !Stage dates  
-     & WEATHER     , SOILPROP    , CONTROL     , 
+     & WEATHER     , SOILPROP    , CONTROL     , CropStatus, 
      & DYNAMIC) !, WEATHER)                                !Control         ! MF 10JA15 WEATHER IS NEEDED FOR HOURLY EVALUATIONS
       
       ! MF 26OC14 There are 92 actual variables in the call to CSCAS. The only variables that need to be passed are the dummy variables of

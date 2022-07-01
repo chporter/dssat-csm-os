@@ -10,20 +10,22 @@
     SUBROUTINE YCA_PrePlant( &  
         BD          , CO2         , DLAYR       , DOY         , DUL         , LL          , NH4LEFT     , NLAYR       , &
         NO3LEFT     , RNMODE      , ST          , STGYEARDOY  , SW          , TMAX        , TMIN        , YEAR        , &
-        YEARPLTCSM  &                 ! WEATHER     ,      
+        YEARPLTCSM  , CropStatus  &                 ! WEATHER     ,      
         )
         
         USE ModuleDefs
         USE YCA_First_Trans_m
         
         IMPLICIT NONE
+        EXTERNAL WARNING
         
         !TYPE (WeatherType) WEATHER    , WEATHER
         
         CHARACTER(LEN=1) RNMODE
         
         INTEGER DOY         , NLAYR       , STGYEARDOY(0:19)            , YEAR        , YEARPLTCSM
-        
+        INTEGER CropStatus
+
         REAL    BD(NL)      , CO2         , DLAYR(NL)   , DUL(NL)     , LL(NL)      , NH4LEFT(NL) , NO3LEFT(NL) , ST(NL)    
         REAL    SW(NL)      , TMAX        , TMIN        
         
@@ -127,6 +129,7 @@
                         CFLFAIL = 'Y'
                         STGYEARDOY(PSX+2) = YEARDOY  ! Failure
                         STGYEARDOY(PSX+1) = YEARDOY  ! End Crop
+                        CropStatus = 11
                         Message(1) = 'Automatic planting failure '
                         CALL WARNING(1,'CSYCA',MESSAGE)
                     ENDIF

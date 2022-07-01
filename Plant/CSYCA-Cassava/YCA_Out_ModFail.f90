@@ -8,7 +8,7 @@
 !***************************************************************************************************************************
     
     SUBROUTINE YCA_Out_ModFail ( &
-        BRSTAGE     , LAI        , DYNAMIC     , KCAN        &
+        BRSTAGE     , LAI        , DYNAMIC     , KCAN  , CropStatus      &
         )
         
         USE ModuleDefs
@@ -18,9 +18,10 @@
         USE YCA_Control_Leaf
      
         IMPLICIT NONE 
+        EXTERNAL CSTIMDIF, CSOPLINE
      
         INTEGER :: DYNAMIC     
-        INTEGER :: CSTIMDIF                                                                      ! Integer function calls
+        INTEGER :: CSTIMDIF  , CropStatus                                                                    ! Integer function calls
 
         REAL    :: BRSTAGE     , LAI        , KCAN         
 
@@ -32,6 +33,7 @@
             hwam = -99.0
             hiam = -99.0
             sennatc = -99.0
+            CropStatus = 999
         ENDIF
         
         DAS = MAX(0,CSTIMDIF(YEARSIM,YEARDOY))
