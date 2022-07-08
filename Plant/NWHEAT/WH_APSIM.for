@@ -397,7 +397,7 @@ C----------------------------------------------------------------------
      &    vd, vd1, vd2, VSEN, XN,  YRDOY, YRSIM,                 !INPUT
      &    CUMDTT, DTT, GPP, ISDATE, ISTAGE,                      !OUTPT
      &    MDATE, nwheats_kvalue, Pgdd, STGDOY,                   !OUTPT
-     &    sumstgdtt, XNTI, TLNO, XSTAGE, YREMRG, RUE,            !OUTPT
+     &    sumstgdtt, XNTI, TLNO, XSTAGE, YREMRG,                 !OUTPT
      &    KCAN, KEP, P3, TSEN, CDAY, cumph_nw, CropStatus,       !OUTPT 
      &    SeedFrac, TEMPCR, VegFrac, VREQ, xstag_nw, zstage)     !OUTPT
 
@@ -520,7 +520,7 @@ C-----------------------------------------------------------------------
      &    vd, vd1, vd2, VSEN, XN,  YRDOY, YRSIM,                 !INPUT
      &    CUMDTT, DTT, GPP, ISDATE, ISTAGE,                      !OUTPT
      &    MDATE, nwheats_kvalue, Pgdd, STGDOY,                   !OUTPT
-     &    sumstgdtt, XNTI, TLNO, XSTAGE, YREMRG, RUE,            !OUTPT
+     &    sumstgdtt, XNTI, TLNO, XSTAGE, YREMRG,                 !OUTPT
      &    KCAN, KEP, P3, TSEN, CDAY, cumph_nw, CropStatus,       !OUTPT 
      &    SeedFrac, TEMPCR, VegFrac, VREQ, xstag_nw, zstage)     !OUTPT
 C-----------------------------------------------------------------------
@@ -689,7 +689,7 @@ C----------------------------------------------------------------------
      &    vd, vd1, vd2, VSEN, XN,  YRDOY, YRSIM,                 !INPUT
      &    CUMDTT, DTT, GPP, ISDATE, ISTAGE,                      !OUTPT
      &    MDATE, nwheats_kvalue, Pgdd, STGDOY,                   !OUTPT
-     &    sumstgdtt, XNTI, TLNO, XSTAGE, YREMRG, RUE,            !OUTPT
+     &    sumstgdtt, XNTI, TLNO, XSTAGE, YREMRG,                 !OUTPT
      &    KCAN, KEP, P3, TSEN, CDAY, cumph_nw, CropStatus,       !OUTPT 
      &    SeedFrac, TEMPCR, VegFrac, VREQ, xstag_nw, zstage)     !OUTPT
 C-----------------------------------------------------------------------
