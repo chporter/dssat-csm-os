@@ -258,79 +258,79 @@
             SOM2E(L,N) = SOM2N_DEFAULT(L) * Ratio
             SOM3E(L,N) = SOM3N_DEFAULT(L) * Ratio
 
-!           Calculate maximum and minimum SOME values based on max and min
-!             ratios in SOMFIX file.
-            MAX_SOM1E = SOM1C(L) / CES1M(SOIL,N)
-            MAX_SOM2E = SOM2C(L) / CES21M(SOIL,N)
-            MAX_SOM3E = SOM3C(L) / CES3M(SOIL,N)
-            MAX_SSOME = MAX_SOM1E + MAX_SOM2E + MAX_SOM3E
-
-            MIN_SOM1E = SOM1C(L) / CES1X(SOIL,N)
-            MIN_SOM2E = SOM2C(L) / CES21X(SOIL,N)
-            MIN_SOM3E = SOM3C(L) / CES3X(SOIL,N)
-            MIN_SSOME = MIN_SOM1E + MIN_SOM2E + MIN_SOM3E
-
-!           Check that total organic N is within limits
-            IF (SSOME(L,N) > MAX_SSOME .OR. SSOME(L,N) < MIN_SSOME) THEN
-!             Total N > Max. -- use defaults
-              UseDefaultN = .TRUE.
-              EXIT LayerLoopN1
-            ELSE
-!             Total organic N OK, check each pool separately
-              IF (SOM1E(L,N) < MIN_SOM1E) THEN    
-!               Do not let SOM1 fall below minimum
-                DIFF = SOM1E(L,N) - MIN_SOM1E
-                SOM1E(L,N) = MIN_SOM1E
-              ELSEIF (SOM1E(L,N) > MAX_SOM1E) THEN
-!               Do not let SOM1 go above maximum
-                DIFF = SOM1E(L,N) - MAX_SOM1E
-                SOM1E(L,N) = MAX_SOM1E
-              ELSE
-                DIFF = 0.0
-              ENDIF !SOM1E
-
-!             Check SOM2E next, after adjusting with SOM1E excess or deficit
-              SOM2E(L,N) = SOM2E(L,N) + DIFF
-              IF (SOM2E(L,N) < MIN_SOM2E) THEN    
-!               Do not let SOM1 fall below minimum
-                DIFF = SOM2E(L,N) - MIN_SOM2E
-                SOM2E(L,N) = MIN_SOM2E
-              ELSEIF (SOM2E(L,N) > MAX_SOM2E) THEN
-!               Do not let SOM1 go above maximum
-                DIFF = SOM2E(L,N) - MAX_SOM2E
-                SOM2E(L,N) = MAX_SOM2E
-              ELSE
-                DIFF = 0.0
-              ENDIF !SOM2E
-
-!             Check SOM3E last, after adjusting with SOM2E excess or deficit
-              SOM3E(L,N) = SOM3E(L,N) + DIFF
-              IF (SOM3E(L,N) < MIN_SOM3E) THEN    
-!               Do not let SOM1 fall below minimum
-                DIFF = SOM3E(L,N) - MIN_SOM3E
-                SOM3E(L,N) = MIN_SOM3E
-              ELSEIF (SOM3E(L,N) > MAX_SOM3E) THEN
-!               Do not let SOM1 go above maximum
-                DIFF = SOM3E(L,N) - MAX_SOM3E
-                SOM3E(L,N) = MAX_SOM3E
-              ELSE
-                DIFF = 0.0
-              ENDIF !SOM3D
-              SSOME(L,N) = SOM1E(L,N) + SOM2E(L,N) + SOM3E(L,N)
-            ENDIF   !SSOME(L,N) comparison with MAX_SSOME and MIN_SSOME
-
-!           ---------------------------------------------------------
-!           Write a warning message if total SOM N had to be adjusted
-!           from the TotOrgN value.
-            IF (ABS(DIFF) > 0.001) THEN
-              WRITE(MSG(1),100) TOTN(L), L
-              WRITE(MSG(2),101) 
-100           FORMAT("Reported initial value of total N (",F5.2,
-     &          "% in layer", I2,") was not used ")
-101           FORMAT("because resulting C:N ratios were not within",
-     &          " range of acceptable values.")
-              CALL WARNING(2, ERRKEY, MSG)
-            ENDIF
+!!           Calculate maximum and minimum SOME values based on max and min
+!!             ratios in SOMFIX file.
+!            MAX_SOM1E = SOM1C(L) / CES1M(SOIL,N)
+!            MAX_SOM2E = SOM2C(L) / CES21M(SOIL,N)
+!            MAX_SOM3E = SOM3C(L) / CES3M(SOIL,N)
+!            MAX_SSOME = MAX_SOM1E + MAX_SOM2E + MAX_SOM3E
+!
+!            MIN_SOM1E = SOM1C(L) / CES1X(SOIL,N)
+!            MIN_SOM2E = SOM2C(L) / CES21X(SOIL,N)
+!            MIN_SOM3E = SOM3C(L) / CES3X(SOIL,N)
+!            MIN_SSOME = MIN_SOM1E + MIN_SOM2E + MIN_SOM3E
+!
+!!           Check that total organic N is within limits
+!            IF (SSOME(L,N) > MAX_SSOME .OR. SSOME(L,N) < MIN_SSOME) THEN
+!!             Total N > Max. -- use defaults
+!              UseDefaultN = .TRUE.
+!              EXIT LayerLoopN1
+!            ELSE
+!!             Total organic N OK, check each pool separately
+!              IF (SOM1E(L,N) < MIN_SOM1E) THEN    
+!!               Do not let SOM1 fall below minimum
+!                DIFF = SOM1E(L,N) - MIN_SOM1E
+!                SOM1E(L,N) = MIN_SOM1E
+!              ELSEIF (SOM1E(L,N) > MAX_SOM1E) THEN
+!!               Do not let SOM1 go above maximum
+!                DIFF = SOM1E(L,N) - MAX_SOM1E
+!                SOM1E(L,N) = MAX_SOM1E
+!              ELSE
+!                DIFF = 0.0
+!              ENDIF !SOM1E
+!
+!!             Check SOM2E next, after adjusting with SOM1E excess or deficit
+!              SOM2E(L,N) = SOM2E(L,N) + DIFF
+!              IF (SOM2E(L,N) < MIN_SOM2E) THEN    
+!!               Do not let SOM1 fall below minimum
+!                DIFF = SOM2E(L,N) - MIN_SOM2E
+!                SOM2E(L,N) = MIN_SOM2E
+!              ELSEIF (SOM2E(L,N) > MAX_SOM2E) THEN
+!!               Do not let SOM1 go above maximum
+!                DIFF = SOM2E(L,N) - MAX_SOM2E
+!                SOM2E(L,N) = MAX_SOM2E
+!              ELSE
+!                DIFF = 0.0
+!              ENDIF !SOM2E
+!
+!!             Check SOM3E last, after adjusting with SOM2E excess or deficit
+!              SOM3E(L,N) = SOM3E(L,N) + DIFF
+!              IF (SOM3E(L,N) < MIN_SOM3E) THEN    
+!!               Do not let SOM1 fall below minimum
+!                DIFF = SOM3E(L,N) - MIN_SOM3E
+!                SOM3E(L,N) = MIN_SOM3E
+!              ELSEIF (SOM3E(L,N) > MAX_SOM3E) THEN
+!!               Do not let SOM1 go above maximum
+!                DIFF = SOM3E(L,N) - MAX_SOM3E
+!                SOM3E(L,N) = MAX_SOM3E
+!              ELSE
+!                DIFF = 0.0
+!              ENDIF !SOM3D
+!              SSOME(L,N) = SOM1E(L,N) + SOM2E(L,N) + SOM3E(L,N)
+!            ENDIF   !SSOME(L,N) comparison with MAX_SSOME and MIN_SSOME
+!
+!!           ---------------------------------------------------------
+!!           Write a warning message if total SOM N had to be adjusted
+!!           from the TotOrgN value.
+!            IF (ABS(DIFF) > 0.001) THEN
+!              WRITE(MSG(1),100) TOTN(L), L
+!              WRITE(MSG(2),101) 
+!100           FORMAT("Reported initial value of total N (",F5.2,
+!     &          "% in layer", I2,") was not used ")
+!101           FORMAT("because resulting C:N ratios were not within",
+!     &          " range of acceptable values.")
+!              CALL WARNING(2, ERRKEY, MSG)
+!            ENDIF
           ELSE
             UseDefaultN = .TRUE.
           ENDIF
