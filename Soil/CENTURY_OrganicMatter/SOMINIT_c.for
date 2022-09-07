@@ -54,15 +54,15 @@
       CHARACTER*6,  PARAMETER :: ERRKEY  = 'SOMINI'
       CHARACTER*17  SOILLAYERTYPE(NL)
       CHARACTER*30  FILEIO
-      CHARACTER*78 MSG(NL+4)
+      CHARACTER*78 MSG(NL*3+2)
 
       INTEGER ERRNUM, FOUND, L, MULTI,
-     &  LINC, LNUM, LUNIO, MNUM, N_ELEMS, NLAYR
+     &  LINC, LNUM, LUNIO, MNUM, N_ELEMS, NLAYR, MN2
       INTEGER, PARAMETER :: SRFC = 0, SOIL = 1
 
       REAL CO2S1I, CO2S1S, DIFF
-      REAL MAX_SOM1E, MAX_SOM2E, MAX_SOM23E, MAX_SOM3E, MAX_SSOME
-      REAL MIN_SOM1E, MIN_SOM2E, MIN_SOM23E, MIN_SOM3E, MIN_SSOME
+      REAL MAX_SOM1E, MAX_SOM23E, MAX_SSOME !, MAX_SOM2E, MAX_SOM3E
+      REAL MIN_SOM1E, MIN_SOM23E, MIN_SSOME !, MIN_SOM2E, MIN_SOM3E
       REAL NCONC, S1S3I, S1S3S, S2S3I, S2S3S
       REAL TXS1I, TXS1S
 
@@ -84,7 +84,7 @@
      &  SOM3E(NL,3), SSOME(0:NL,3)
       REAL SSOMN_DEFAULT(NL)
       REAL SOM1N_DEFAULT(NL), SOM2N_DEFAULT(NL), SOM3N_DEFAULT(NL)
-      REAL Ratio
+      REAL Ratio, ActualC2N, ActualC2P
       REAL, DIMENSION(NL,NELEM) :: CES23
       REAL, DIMENSION(0:1,NELEM) :: CES23M, CES23X
 
@@ -232,6 +232,7 @@
         ENDIF
       ENDDO LayerLoopC1
 
+      MN2 = 2
 !***********************************************************************
       IF (N_ELEMS > 0) THEN
         LayerLoopN1: DO L = 1, NLAYR
@@ -258,83 +259,120 @@
             SOM2E(L,N) = SOM2N_DEFAULT(L) * Ratio
             SOM3E(L,N) = SOM3N_DEFAULT(L) * Ratio
 
-!           Calculate maximum and minimum SOME values based on max and min
-!             ratios in SOMFIX file.
-            MAX_SOM1E = SOM1C(L) / CES1M(SOIL,N)
-            MAX_SOM2E = SOM2C(L) / CES21M(SOIL,N)
-            MAX_SOM3E = SOM3C(L) / CES3M(SOIL,N)
-            MAX_SSOME = MAX_SOM1E + MAX_SOM2E + MAX_SOM3E
-
-            MIN_SOM1E = SOM1C(L) / CES1X(SOIL,N)
-            MIN_SOM2E = SOM2C(L) / CES21X(SOIL,N)
-            MIN_SOM3E = SOM3C(L) / CES3X(SOIL,N)
-            MIN_SSOME = MIN_SOM1E + MIN_SOM2E + MIN_SOM3E
-
-!           Check that total organic N is within limits
-            IF (SSOME(L,N) > MAX_SSOME .OR. SSOME(L,N) < MIN_SSOME) THEN
-!             Total N > Max. -- use defaults
-              UseDefaultN = .TRUE.
-              EXIT LayerLoopN1
-            ELSE
-!             Total organic N OK, check each pool separately
-              IF (SOM1E(L,N) < MIN_SOM1E) THEN    
-!               Do not let SOM1 fall below minimum
-                DIFF = SOM1E(L,N) - MIN_SOM1E
-                SOM1E(L,N) = MIN_SOM1E
-              ELSEIF (SOM1E(L,N) > MAX_SOM1E) THEN
-!               Do not let SOM1 go above maximum
-                DIFF = SOM1E(L,N) - MAX_SOM1E
-                SOM1E(L,N) = MAX_SOM1E
-              ELSE
-                DIFF = 0.0
-              ENDIF !SOM1E
-
-!             Check SOM2E next, after adjusting with SOM1E excess or deficit
-              SOM2E(L,N) = SOM2E(L,N) + DIFF
-              IF (SOM2E(L,N) < MIN_SOM2E) THEN    
-!               Do not let SOM1 fall below minimum
-                DIFF = SOM2E(L,N) - MIN_SOM2E
-                SOM2E(L,N) = MIN_SOM2E
-              ELSEIF (SOM2E(L,N) > MAX_SOM2E) THEN
-!               Do not let SOM1 go above maximum
-                DIFF = SOM2E(L,N) - MAX_SOM2E
-                SOM2E(L,N) = MAX_SOM2E
-              ELSE
-                DIFF = 0.0
-              ENDIF !SOM2E
-
-!             Check SOM3E last, after adjusting with SOM2E excess or deficit
-              SOM3E(L,N) = SOM3E(L,N) + DIFF
-              IF (SOM3E(L,N) < MIN_SOM3E) THEN    
-!               Do not let SOM1 fall below minimum
-                DIFF = SOM3E(L,N) - MIN_SOM3E
-                SOM3E(L,N) = MIN_SOM3E
-              ELSEIF (SOM3E(L,N) > MAX_SOM3E) THEN
-!               Do not let SOM1 go above maximum
-                DIFF = SOM3E(L,N) - MAX_SOM3E
-                SOM3E(L,N) = MAX_SOM3E
-              ELSE
-                DIFF = 0.0
-              ENDIF !SOM3D
-              SSOME(L,N) = SOM1E(L,N) + SOM2E(L,N) + SOM3E(L,N)
-            ENDIF   !SSOME(L,N) comparison with MAX_SSOME and MIN_SSOME
-
-!           ---------------------------------------------------------
-!           Write a warning message if total SOM N had to be adjusted
-!           from the TotOrgN value.
-            IF (ABS(DIFF) > 0.001) THEN
-              WRITE(MSG(1),100) TOTN(L), L
-              WRITE(MSG(2),101) 
-100           FORMAT("Reported initial value of total N (",F5.2,
-     &          "% in layer", I2,") was not used ")
-101           FORMAT("because resulting C:N ratios were not within",
-     &          " range of acceptable values.")
-              CALL WARNING(2, ERRKEY, MSG)
+!           Check C:N ratios, but don't change the values
+!           Actual C:N ratio
+            ActualC2N = SOM1C(L) / SOM1E(L,N)
+            IF (ActualC2N .LT. CES1M(SOIL,N) .OR. 
+     &          ActualC2N .GT. CES1X(SOIL,N)) THEN  
+              MN2 = MN2 + 1
+              WRITE(MSG(MN2),'(I7, 6X, A, 3F10.3)') 
+     &          L, "SOM1", ActualC2N, CES1M(SOIL,N), CES1X(SOIL,N)
             ENDIF
+
+            ActualC2N = SOM2C(L) / SOM2E(L,N)
+            IF (ActualC2N .LT. CES21M(SOIL,N) .OR. 
+     &          ActualC2N .GT. CES21X(SOIL,N)) THEN  
+              MN2 = MN2 + 1
+              WRITE(MSG(MN2),'(I7, 6X, A, 3F10.3)') 
+     &          L, "SOM2", ActualC2N, CES21M(SOIL,N), CES21X(SOIL,N)
+            ENDIF
+
+            ActualC2N = SOM3C(L) / SOM3E(L,N)
+            IF (ActualC2N .LT. CES3M(SOIL,N) .OR. 
+     &          ActualC2N .GT. CES3X(SOIL,N)) THEN  
+              MN2 = MN2 + 1
+              WRITE(MSG(MN2),'(I7, 6X, A, 3F10.3)') 
+     &          L, "SOM3", ActualC2N, CES3M(SOIL,N), CES3X(SOIL,N)
+            ENDIF
+
+!     chp 2022-07-24 This section previously forced initial values of SON to be
+!         between ranges of C:N.
+!!           Calculate maximum and minimum SOME values based on max and min
+!!             ratios in SOMFIX file.
+!            MAX_SOM1E = SOM1C(L) / CES1M(SOIL,N)
+!            MAX_SOM2E = SOM2C(L) / CES21M(SOIL,N)
+!            MAX_SOM3E = SOM3C(L) / CES3M(SOIL,N)
+!            MAX_SSOME = MAX_SOM1E + MAX_SOM2E + MAX_SOM3E
+!
+!            MIN_SOM1E = SOM1C(L) / CES1X(SOIL,N)
+!            MIN_SOM2E = SOM2C(L) / CES21X(SOIL,N)
+!            MIN_SOM3E = SOM3C(L) / CES3X(SOIL,N)
+!            MIN_SSOME = MIN_SOM1E + MIN_SOM2E + MIN_SOM3E
+!
+!!           Check that total organic N is within limits
+!            IF (SSOME(L,N) > MAX_SSOME .OR. SSOME(L,N) < MIN_SSOME) THEN
+!!             Total N > Max. -- use defaults
+!              UseDefaultN = .TRUE.
+!              EXIT LayerLoopN1
+!            ELSE
+!!             Total organic N OK, check each pool separately
+!              IF (SOM1E(L,N) < MIN_SOM1E) THEN  
+!!               Do not let SOM1 fall below minimum
+!                DIFF = SOM1E(L,N) - MIN_SOM1E
+!                SOM1E(L,N) = MIN_SOM1E
+!              ELSEIF (SOM1E(L,N) > MAX_SOM1E) THEN
+!!               Do not let SOM1 go above maximum
+!                DIFF = SOM1E(L,N) - MAX_SOM1E
+!                SOM1E(L,N) = MAX_SOM1E
+!              ELSE
+!                DIFF = 0.0
+!              ENDIF !SOM1E
+!
+!!             Check SOM2E next, after adjusting with SOM1E excess or deficit
+!              SOM2E(L,N) = SOM2E(L,N) + DIFF
+!              IF (SOM2E(L,N) < MIN_SOM2E) THEN    
+!!               Do not let SOM1 fall below minimum
+!                DIFF = SOM2E(L,N) - MIN_SOM2E
+!                SOM2E(L,N) = MIN_SOM2E
+!              ELSEIF (SOM2E(L,N) > MAX_SOM2E) THEN
+!!               Do not let SOM1 go above maximum
+!                DIFF = SOM2E(L,N) - MAX_SOM2E
+!                SOM2E(L,N) = MAX_SOM2E
+!              ELSE
+!                DIFF = 0.0
+!              ENDIF !SOM2E
+!
+!!             Check SOM3E last, after adjusting with SOM2E excess or deficit
+!              SOM3E(L,N) = SOM3E(L,N) + DIFF
+!              IF (SOM3E(L,N) < MIN_SOM3E) THEN    
+!!               Do not let SOM1 fall below minimum
+!                DIFF = SOM3E(L,N) - MIN_SOM3E
+!                SOM3E(L,N) = MIN_SOM3E
+!              ELSEIF (SOM3E(L,N) > MAX_SOM3E) THEN
+!!               Do not let SOM1 go above maximum
+!                DIFF = SOM3E(L,N) - MAX_SOM3E
+!                SOM3E(L,N) = MAX_SOM3E
+!              ELSE
+!                DIFF = 0.0
+!              ENDIF !SOM3D
+!              SSOME(L,N) = SOM1E(L,N) + SOM2E(L,N) + SOM3E(L,N)
+!            ENDIF   !SSOME(L,N) comparison with MAX_SSOME and MIN_SSOME
+!
+!!           ---------------------------------------------------------
+!!           Write a warning message if total SOM N had to be adjusted
+!!           from the TotOrgN value.
+!            IF (ABS(DIFF) > 0.001) THEN
+!              WRITE(MSG(1),100) TOTN(L), L
+!              WRITE(MSG(2),101) 
+!100           FORMAT("Reported initial value of total N (",F5.2,
+!     &          "% in layer", I2,") was not used ")
+!101           FORMAT("because resulting C:N ratios were not within",
+!     &          " range of acceptable values.")
+!              CALL WARNING(2, ERRKEY, MSG)
+!            ENDIF
           ELSE
             UseDefaultN = .TRUE.
           ENDIF
         ENDDO LayerLoopN1
+
+!       Write a warning message if any soil layers had C:N ratios outside the norm
+        IF (MN2 .GT. 2) THEN
+          MSG(1) = 
+     &     "C:N ratio outside limits for the following soil layers:"
+          MSG(2) = "  Layer   SOMPool   InitC:N    MinC:N    MaxC:N"
+!                  I7, A, 3F10.3
+          CALL WARNING(MN2, ERRKEY, MSG)
+        ENDIF
 
         LayerLoopN2: DO L = 1, NLAYR
           IF (UseDefaultN) THEN
@@ -365,6 +403,8 @@
 !       ==============================================================
 !       Organic Phosphorus
 !       ==============================================================
+      MN2 = 2
+
       IF (N_ELEMS > 1) THEN
         LayerLoopP1: DO L = 1, NLAYR
 !         For P, maintain a different SOM pool structure than for C and N:
@@ -579,78 +619,104 @@
           MIN_SOM23E = SOM23C(L) / CES23X(SOIL,P)
           MIN_SSOME = MIN_SOM1E + MIN_SOM23E
 
-!         Check that total organic P is within limits
-          IF (SSOME(L,P) > MAX_SSOME) THEN
-!           Total P > Max. -- reset all pools to max
-            SOM1E(L,P)  = MAX_SOM1E
-            SOM23E(L,P) = MAX_SOM23E
-            DIFF = SSOME(L,P) - MAX_SSOME
-            SSOME(L,P) = MAX_SSOME
+!         Check C:P ratios, but don't change the values
+!         Actual C:P ratio
+          ActualC2P = SOM1C(L) / SOM1E(L,P)
+          IF (ActualC2P .LT. CES1M(SOIL,P) .OR. 
+     &        ActualC2P .GT. CES1X(SOIL,P)) THEN  
+            MN2 = MN2 + 1
+            WRITE(MSG(MN2),'(I7, 6X, A, 3F10.3)') 
+     &        L, "SOM1", ActualC2P, CES1M(SOIL,P), CES1X(SOIL,P)
+          ENDIF
 
-            ORGP(L) = SSOME(L,P) * KG2PPM(L)
-            MSG(MNUM+1) = "C:P ratio below acceptable range. "
-            WRITE(MSG(MNUM+2),'(A,F6.2)') "Revised Organic P: ", ORGP(L)
-            MNUM=MNUM+2
+          ActualC2P = SOM2C(L) / SOM2E(L,P)
+          IF (ActualC2P .LT. CES21M(SOIL,P) .OR. 
+     &        ActualC2P .GT. CES21X(SOIL,P)) THEN  
+            MN2 = MN2 + 1
+            WRITE(MSG(MN2),'(I7, 6X, A, 3F10.3)') 
+     &        L, "SOM2", ActualC2P, CES21M(SOIL,P), CES21X(SOIL,P)
+          ENDIF
 
-          ELSEIF (SSOME(L,P) < MIN_SSOME) THEN
-!           Total P < Min. -- reset all pools to min
-            SOM1E(L,P)  = MIN_SOM1E
-            SOM23E(L,P) = MIN_SOM23E
-            DIFF = SSOME(L,P) - MIN_SSOME
-            SSOME(L,P) = MIN_SSOME
+          ActualC2P = SOM3C(L) / SOM3E(L,P)
+          IF (ActualC2P .LT. CES3M(SOIL,P) .OR. 
+     &        ActualC2P .GT. CES3X(SOIL,P)) THEN  
+            MN2 = MN2 + 1
+            WRITE(MSG(MN2),'(I7, 6X, A, 3F10.3)') 
+     &        L, "SOM3", ActualC2P, CES3M(SOIL,P), CES3X(SOIL,P)
+          ENDIF
 
-            ORGP(L) = SSOME(L,P) * KG2PPM(L)
-            MSG(MNUM+1) = "C:P ratio above acceptable range. "
-            WRITE(MSG(MNUM+2),'(A,F6.2)') "Revised Organic P: ", ORGP(L)
-            MNUM=MNUM+2
-
-          ELSE
-!           Total organic P OK, check each pool separately
-            IF (SOM1E(L,P) < MIN_SOM1E) THEN    
-!             Do not let SOM1 fall below minimum
-              DIFF = SOM1E(L,P) - MIN_SOM1E
-              SOM1E(L,P) = MIN_SOM1E
-              MSG(MNUM+1)=
-     &          "C:P ratio for microbial SOM P above acceptable range."
-              MNUM=MNUM+1
-            ELSEIF (SOM1E(L,P) > MAX_SOM1E) THEN
-!             Do not let SOM1 go above maximum
-              DIFF = SOM1E(L,P) - MAX_SOM1E
-              SOM1E(L,P) = MAX_SOM1E
-              MSG(MNUM+1)=
-     &          "C:P ratio for microbial SOM P below acceptable range."
-              MNUM=MNUM+1
-            ELSE
-              DIFF = 0.0
-            ENDIF !SOM1E
-
-!           Check SOM23E next, after adjusting with SOM1E excess or deficit
-            SOM23E(L,P) = SOM23E(L,P) + DIFF
-            IF (SOM23E(L,P) < MIN_SOM23E) THEN    
-!             Do not let SOM23 fall below minimum
-              DIFF = SOM23E(L,P) - MIN_SOM23E
-              SOM23E(L,P) = MIN_SOM23E
-              MSG(MNUM+1) = 
-     &          "C:P ratio for stable SOM P above acceptable range. "
-              MNUM=MNUM+1
-            ELSEIF (SOM23E(L,P) > MAX_SOM23E) THEN
-!             Do not let SOM23 go above maximum
-              DIFF = SOM23E(L,P) - MAX_SOM23E
-              SOM23E(L,P) = MAX_SOM23E
-              MSG(MNUM+1) = 
-     &          "C:P ratio for stable SOM P below acceptable range. "
-              MNUM=MNUM+1
-            ELSE
-              DIFF = 0.0
-            ENDIF !SOM23E
-
-            SSOME(L,P) = SOM1E(L,P) + SOM23E(L,P)
-
-            ORGP(L) = SSOME(L,P) * KG2PPM(L)
-            WRITE(MSG(MNUM+1),'(A,F6.2)') "Organic P: ", ORGP(L)
-            MNUM=MNUM+1
-
-          ENDIF   !SSOME(L,P) comparison with MAX_SSOME and MIN_SSOME
+!!         Check that total organic P is within limits
+!          IF (SSOME(L,P) > MAX_SSOME) THEN
+!!           Total P > Max. -- reset all pools to max
+!            SOM1E(L,P)  = MAX_SOM1E
+!            SOM23E(L,P) = MAX_SOM23E
+!            DIFF = SSOME(L,P) - MAX_SSOME
+!            SSOME(L,P) = MAX_SSOME
+!
+!            ORGP(L) = SSOME(L,P) * KG2PPM(L)
+!            MSG(MNUM+1) = "C:P ratio below acceptable range. "
+!            WRITE(MSG(MNUM+2),'(A,F6.2)') "Revised Organic P: ", ORGP(L)
+!            MNUM=MNUM+2
+!
+!          ELSEIF (SSOME(L,P) < MIN_SSOME) THEN
+!!           Total P < Min. -- reset all pools to min
+!            SOM1E(L,P)  = MIN_SOM1E
+!            SOM23E(L,P) = MIN_SOM23E
+!            DIFF = SSOME(L,P) - MIN_SSOME
+!            SSOME(L,P) = MIN_SSOME
+!
+!            ORGP(L) = SSOME(L,P) * KG2PPM(L)
+!            MSG(MNUM+1) = "C:P ratio above acceptable range. "
+!            WRITE(MSG(MNUM+2),'(A,F6.2)') "Revised Organic P: ", ORGP(L)
+!            MNUM=MNUM+2
+!
+!          ELSE
+!!           Total organic P OK, check each pool separately
+!            IF (SOM1E(L,P) < MIN_SOM1E) THEN    
+!!             Do not let SOM1 fall below minimum
+!              DIFF = SOM1E(L,P) - MIN_SOM1E
+!              SOM1E(L,P) = MIN_SOM1E
+!              MSG(MNUM+1)=
+!     &          "C:P ratio for microbial SOM P above acceptable range."
+!              MNUM=MNUM+1
+!            ELSEIF (SOM1E(L,P) > MAX_SOM1E) THEN
+!!             Do not let SOM1 go above maximum
+!              DIFF = SOM1E(L,P) - MAX_SOM1E
+!              SOM1E(L,P) = MAX_SOM1E
+!              MSG(MNUM+1)=
+!     &          "C:P ratio for microbial SOM P below acceptable range."
+!              MNUM=MNUM+1
+!            ELSE
+!              DIFF = 0.0
+!            ENDIF !SOM1E
+!
+!!           Check SOM23E next, after adjusting with SOM1E excess or deficit
+!            SOM23E(L,P) = SOM23E(L,P) + DIFF
+!            IF (SOM23E(L,P) < MIN_SOM23E) THEN    
+!!             Do not let SOM23 fall below minimum
+!              DIFF = SOM23E(L,P) - MIN_SOM23E
+!              SOM23E(L,P) = MIN_SOM23E
+!              MSG(MNUM+1) = 
+!     &          "C:P ratio for stable SOM P above acceptable range. "
+!              MNUM=MNUM+1
+!            ELSEIF (SOM23E(L,P) > MAX_SOM23E) THEN
+!!             Do not let SOM23 go above maximum
+!              DIFF = SOM23E(L,P) - MAX_SOM23E
+!              SOM23E(L,P) = MAX_SOM23E
+!              MSG(MNUM+1) = 
+!     &          "C:P ratio for stable SOM P below acceptable range. "
+!              MNUM=MNUM+1
+!            ELSE
+!              DIFF = 0.0
+!            ENDIF !SOM23E
+!
+!            SSOME(L,P) = SOM1E(L,P) + SOM23E(L,P)
+!
+!            ORGP(L) = SSOME(L,P) * KG2PPM(L)
+!            WRITE(MSG(MNUM+1),'(A,F6.2)') "Organic P: ", ORGP(L)
+!            MNUM=MNUM+1
+!
+!          ENDIF   !SSOME(L,P) comparison with MAX_SSOME and MIN_SSOME
 
           CALL INFO(MNUM, ERRKEY, MSG)
 
@@ -668,7 +734,21 @@
           SSOME(L,P) = SOM1E(L,P) + SOM23E(L,P)
 
         ENDDO LayerLoopP1
+
+!       Write a warning message if any soil layers had C:N ratios outside the norm
+        IF (MN2 .GT. 2) THEN
+          MSG(1) = 
+     &     "C:P ratio outside limits for the following soil layers:"
+          MSG(2) = "  Layer   SOMPool   InitC:P    MinC:P    MaxC:P"
+!                  I7, A, 3F10.3
+          CALL WARNING(MN2, ERRKEY, MSG)
+        ENDIF
+
+
       ENDIF  !P section
+
+
+
 !***********************************************************************
 !     Transfer back into soil data revised organic P
       SOILPROP % ORGP = ORGP
