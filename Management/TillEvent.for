@@ -49,6 +49,10 @@ C=======================================================================
       REAL, DIMENSION(NAPPL, NL) :: DEP, BDP, SWCNP
       LOGICAL TILL
 
+!     TEMP CHP
+      REAL MASS1, MASS2, DEP1, DEP2
+      INTEGER NL1, NL2
+
 !     Tolerance for layer thicknesses in tillage calculations
       REAL, PARAMETER :: TOL = 0.5
 
@@ -270,12 +274,24 @@ C=======================================================================
 
         ENDDO
 
+!     TEMP CHP
+        CALL CHECK_MASS(BDTEMP, DSTEMP, NLAYR, MASS1)
+        DEP1 = DSTEMP(NLAYR)
+        NL1 = L - 1
+
         NLAYRI = L - 1
         !Convert from combined soil/tillage layers to soil layers
         CALL LMATCH(NLAYRI, DSTEMP, BDTEMP, NLAYR, XDS)
 !       CALL LMATCH(NLAYRI, DSTEMP, RGTEMP, NLAYR, XDS)
         CALL LMATCH(NLAYRI, DSTEMP, SATTEMP,NLAYR, XDS)
         CALL LMATCH(NLAYRI, DSTEMP, SCTEMP, NLAYR, XDS)
+
+!     TEMP CHP
+        CALL CHECK_MASS(BDTEMP, XDS, NLAYR, MASS2)
+        DEP2 = XDS(NLAYR)
+        NL2 = NLAYR
+        WRITE(5555,'(I10,4F10.3,2I10)') 
+     &      YRDOY, MASS1, MASS2, DEP1, DEP2, NL1, NL2
 
         !Copy modified values to array to be used if another tillage
         ! event occurs today
@@ -311,3 +327,24 @@ C=======================================================================
       END SUBROUTINE TillEvent
 
 C=======================================================================
+
+      SUBROUTINE CHECK_MASS(BD, DS, NLAYR, MASS)
+      USE ModuleDefs
+      IMPLICIT NONE
+      REAL, DIMENSION(NL) :: BD, DS, DLAYR
+      REAL MASS
+      INTEGER NLAYR, L
+
+      MASS = 0.0
+      DO L = 1, NLAYR
+        IF (L == 1) THEN
+          DLAYR(L) = DS(L)
+        ELSE
+          DLAYR(L) = DS(L) - DS(L-1)
+        ENDIF
+        MASS = MASS + BD(L) * DLAYR(L)
+      ENDDO
+
+      RETURN
+      END SUBROUTINE CHECK_MASS
+      
