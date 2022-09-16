@@ -117,15 +117,21 @@ C-----------------------------------------------------------------------
 !     ---------------------------------------------------------------
 !     Soil dynamics variables
       INTEGER NTIL, TILDATE, NMSG
-      REAL AS, CANCOV, CRAIN, CUMDEP   !, FF
+      REAL AS, CRAIN, CUMDEP   !, FF, CANCOV
       REAL LCRAIN, MCUMDEP, MIXPCT, MULCHALB, MULCHCOVER
       REAL RAIN, RSTL, SOILCOV, SRATE
+
+!     Temp chp - these are for whole soil profile. For debugging
+      REAL SOILMASS, SLMASSdiff, SLMASSinit
+
       REAL SUMKE, SUMKEL, SUMKET, TDEP, TIL_IRR, XHLAI
       REAL CN_TILLED
       REAL, DIMENSION(NL) :: CLAY_PREMIX, CLAY_MIX, SAND_PREMIX
       REAL, DIMENSION(NL) :: SAND_MIX, SILT_PREMIX, SILT_MIX
       REAL, DIMENSION(NL) :: BD_TILLED, DL_TILLED, DS_TILLED
       REAL, DIMENSION(NL) :: SAT_TILLED, SC_TILLED
+!     Soil mass added 2022-09-16 chp
+      REAL, DIMENSION(NL) :: SLMASS, SLMASS_init   
 !     REAL, DIMENSION(NL) :: RG_TILLED, RGIF_INIT
       LOGICAL TILLED, VOLCANIC
 
@@ -136,7 +142,7 @@ C-----------------------------------------------------------------------
       REAL, DIMENSION(NL) :: LL_INIT, SWCN_INIT, SAT_INIT, SW_INIT
 
 !     Base soil values modified by soil organic matter
-      REAL dBD_SOM, dDLAYR_SOM, dDUL_SOM, dLL_SOM, dSOM, dOC
+      REAL dBD_SOM, dDUL_SOM, dLL_SOM, dSOM, dOC  !, dDLAYR_SOM
       REAL, DIMENSION(NL) :: BD_SOM, DLAYR_SOM, DS_SOM, DUL_SOM, LL_SOM
       REAL, DIMENSION(NL) :: SomLit, SomLit_INIT, SOM_PCT, SOM_PCT_init
       REAL, DIMENSION(NL) :: OC_INIT, TOTN_INIT, TotOrgN_init
@@ -154,6 +160,10 @@ C-----------------------------------------------------------------------
 
       LOGICAL PRINT_TODAY, VG_ok
       REAL WCR_TEMP
+
+!     temp chp
+      INTEGER YEAR, DOY
+      CHARACTER*6 TXT
 
 !     ---------------------------------------------------------------
 !     Composite variables
@@ -903,6 +913,18 @@ C     Initialize curve number (according to J.T. Ritchie) 1-JUL-97 BDB
      &    LayerText)                                      !Output
 
 !-----------------------------------------------------------------------
+!     temp chp
+!     I think we can remove this part (including printing the SLMASSdiff
+!     in the output) when we're done debugging the DLAYR issue.
+!     2022-09-14 CHP calculate soil mass (check for imbalance with tillage)
+      SLMASSinit = 0.0
+      DO L = 1, NLAYR
+        SLMASS(L) = BD(L) * DLAYR(L) !g/cm2
+        SLMASSinit = SLMASSinit + SLMASS(L)
+      ENDDO
+      SLMASSdiff = 0.0
+
+!-----------------------------------------------------------------------
 !!     Get root growth impedance factor
 !      CALL IPSAUX(CONTROL, RGIMPF) 
 
@@ -1021,7 +1043,7 @@ C  tillage and rainfall kinetic energy
 
       CALL OPSOILDYN(CONTROL, DYNAMIC, ISWITCH, 
      &  BD, BD_SOM, CN, CRAIN, DLAYR, DUL, KECHGE, LL, PRINT_TODAY, SAT,
-     &  SOILCOV, SUMKE, SWCN, TILLED, TOTAW)
+     &  SOILCOV, SLMASSdiff, SUMKE, SWCN, TILLED, TOTAW)
 
 !     Skip initialization for sequenced runs:
       IF (INDEX('FQ',RNMODE) > 0 .AND. RUN /= 1) RETURN
@@ -1089,9 +1111,14 @@ C  tillage and rainfall kinetic energy
       IF (FIRST) THEN
 !       Save initial value of SOM
         SomLit_init = SomLit
+        SLMASS_init = SLMASS
         DO L = 1, NLAYR
-!         (See conversion explanation below)
-          SOM_PCT(L) = SomLit(L) * 1.E-5 / (BD(L) * DLAYR(L)) *100.
+          SOM_PCT(L) = SomLit(L) * 1.E-5 / (BD(L) * DLAYR(L)) * 100.
+!                       kg[OM]    g[OM]/cm2     cm3      1
+!                    = -------- * --------- * ------- * ---- * 100%
+!                         ha      kg[OM]/ha   g[soil]    cm
+!
+!                    = g[OM]/g[soil] * 100%
 
 !         This can result in negative BD_mineral for very high organic
 !           matter content.  
@@ -1099,7 +1126,7 @@ C  tillage and rainfall kinetic energy
 !          BD_Mineral(L) =(100.-SOM_PCT(L))/(100./BD(L)-SOM_PCT(L)/0.224)
 
 !         Instead, calculate a BD_calc. Use the 
-!           change to BD_calc to scale BD, which was input by user.
+!           change to BD_calc to scale the user-input value of BD.
           BD_calc(L) = 100./(SOM_PCT(L)/0.224 + (100.-SOM_PCT(L))/2.65)
         ENDDO
 
@@ -1133,11 +1160,11 @@ C  tillage and rainfall kinetic energy
 !       density and organic carbon content of soil.
 !       These equations based on Gupta & Larson 1979, Adams 1973, Izaurralde 2006
         DO L = 1, NLAYR
-!         Change to SOM since initialization
+!         dSOM = change to SOM since initialization
 !         SOM units have already been converted to OM (not C)
           dSOM = SomLit(L) - SomLit_init(L) !kg[OM]/ha
 
-          IF (dSOM < 0.01) THEN
+          IF (ABS(dSOM) < 0.01) THEN
 !           No changes to soil properties due to organic matter
             BD_SOM(L)   = BD_INIT(L)
             DLAYR_SOM(L)= DLAYR_INIT(L)
@@ -1145,47 +1172,66 @@ C  tillage and rainfall kinetic energy
             DUL_SOM(L)  = DUL_INIT(L)
             LL_SOM(L)   = LL_INIT(L)
 
+!        -------------------------------------------------------
           ELSE
-!           Need to update soil properties based on changes to SOM
+!        Update soil properties based on changes to SOM
+!        -------------------------------------------------------
+!        1. First, update soil mass in each layer
+            SLMASS(L) = SLMASS_init(L) + (dSOM * 1.E-5)   !g/cm2
+!                            g           kg[OM]   g[OM]/cm2
+!                      =    ---        + ------ * --------- 
+!                           cm2            ha     kg[OM]/ha
 
-!           First -- modify layer thickness
-!           dDlayr = change in layer thickness due to addition (or depletion)
-!             of organic matter.
-!           Mean bulk density of organic matter is 0.224 g/cm3 (from Adams,1973)
+!        -------------------------------------------------------
+!        2. Next, update BD with new SOM
 
-!                    kg[om]   10^3 g     ha        m2           cm3
-!           dDlayr = ------ * ------ * ------- * -------- * -----------  
-!                      ha       kg     10^4 m2   10^4 cm2   0.224 g[om]
-
-            dDLAYR_SOM = dSOM * 4.46E-5
-!              cm      =kg/ha * 4.46E-5
-
-!           New base layer thickness and depths
-            DLAYR_SOM(L) = DLAYR_INIT(L) + dDLAYR_SOM
-
-!           -------------------------------------------------------
 !           Change SOM from kg/ha to percent
-            SOM_PCT(L) = SomLit(L) * 1.E-5/(BD_SOM(L)*DLAYR_SOM(L))*100.
-
-!            BD_SOM(L) = 100.0 / 
-!     &        (SOM_PCT(L) / 0.224 + (100. - SOM_PCT(L)) / BD_mineral(L))
+            SOM_PCT(L) = SomLit(L) * 1.E-5 / (BD(L) * DLAYR(L)) * 100.
+!                         kg[OM]    g[OM]/cm2     cm3       1
+!                      = -------- * --------- * -------  * ---- * 100%
+!                           ha      kg[OM]/ha   g[soil]     cm
 !
+!                      = g[OM]/g[soil] * 100%
+
+!           BD of mineral portion of soil = 2.65 g/cm3
+!           BD of SOM portion of soil = 0.224 g/cm3 (from Adams,1973)
+
             BD_calc(L) = 100.0 / 
      &        (SOM_PCT(L) / 0.224 + (100. - SOM_PCT(L)) / 2.65)
 
+!           The ratio of the newly calculated BD to the initial calculated BD
+!           is used to update the BD based on additional (or decreased) SOM
             BD_SOM(L) = BD_calc(L) / BD_calc_init(L) * BD_init(L)
 
-!           Limit BD to realistic values
-!           BD_SOM(L) = MIN(BD_SOM(L), 1.8)
-!           BD_SOM(L) = MAX(BD_SOM(L), 0.25)
+!           -------------------------------------------------------
 !           Upper limit for BD_SOM
             BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2, 1.80) 
 !           Lower limit for BD_SOM
             BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8, 0.95) 
+!           Change to BD (for calculating other soil properties later)
             dBD_SOM = BD_SOM(L) - BD_INIT(L)
 
 !           -------------------------------------------------------
-!           Update DS
+!        3. The updated layer thickness is calculated from BD and SLMASS
+            DLAYR_SOM(L) = SLMASS(L) / BD_SOM(L)
+!                cm      =   g/cm2   /   g/cm3
+
+!!           -------------------------------------------------------
+!!           dDlayr = change in layer thickness due to addition (or depletion)
+!!             of organic matter.
+!
+!!                    kg[om]   10^3 g     ha        m2           cm3
+!!           dDlayr = ------ * ------ * ------- * -------- * -----------  
+!!                      ha       kg     10^4 m2   10^4 cm2   0.224 g[om]
+!
+!            dDLAYR_SOM = dSOM * 4.46E-5
+!!              cm      =kg/ha * 4.46E-5
+!
+!!           New base layer thickness and depths
+!            DLAYR_SOM(L) = DLAYR_INIT(L) + dDLAYR_SOM
+!
+!           -------------------------------------------------------
+!        4. Update DS
             IF (L == 1) THEN
               DS_SOM(1) = DLAYR_SOM(1)
             ELSE
@@ -1194,28 +1240,24 @@ C  tillage and rainfall kinetic energy
 
 !           Change SOM from kg/ha to percent
             SOM_PCT(L) = SomLit(L) * 1.E-5/(BD_SOM(L)*DLAYR_SOM(L))*100.
-!                         kg[OM]    g[OM]/cm2     cm3       1
-!                      = -------- * --------- * -------  * ---- * 100%
-!                           ha      kg[OM]/ha   g[soil]     cm
-!
-!                      = g[OM]/g[soil] * 100%
-
 !           Change in %SOM
             dOC = SOM_PCT(L) - SOM_PCT_init(L)
 
-!           Equation to modify DUL depends on soil texture (Gupta & Larson, 1979)
-            IF (COARSE(L)) THEN
-!             Coarse soils  --  use DUL10
-              dDUL_SOM = 0.004966 * dOC - 0.2423 * dBD_SOM 
-            ELSE
-!             Other soils -- use DUL33
-              dDUL_SOM = 0.002208 * dOC - 0.1434 * dBD_SOM 
+            IF (ABS(dOC) .GT. 1.E-6) THEN 
+!             Equation to modify DUL depends on soil texture (Gupta & Larson, 1979)
+              IF (COARSE(L)) THEN
+!               Coarse soils  --  use DUL10
+                dDUL_SOM = 0.004966 * dOC - 0.2423 * dBD_SOM 
+              ELSE
+!               Other soils -- use DUL33
+                dDUL_SOM = 0.002208 * dOC - 0.1434 * dBD_SOM 
+              ENDIF
+              DUL_SOM(L) = DUL_INIT(L) + dDUL_SOM
+              
+!             Lower limit
+              dLL_SOM = 0.002228 * dOC + 0.02671 * dBD_SOM
+              LL_SOM(L)  = LL_INIT(L) + dLL_SOM
             ENDIF
-            DUL_SOM(L) = DUL_INIT(L) + dDUL_SOM
-
-!           Lower limit
-            dLL_SOM = 0.002228 * dOC + 0.02671 * dBD_SOM
-            LL_SOM(L)  = LL_INIT(L) + dLL_SOM
 
 !            IF (L==1) WRITE(1000,*)dOC, dBD_SOM, dLL_SOM, LL_SOM(1)
           ENDIF
@@ -1443,6 +1485,14 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
         IF (POROS(L) < DUL(L)) POROS(L) = SAT(L)
       ENDDO
 
+!     temp chp
+!       2022-09-14 CHP calculate soil mass (check for imbalance with tillage)
+        SOILMASS = 0.0
+        DO L = 1, NLAYR
+          SOILMASS = SOILMASS + BD(L) * DLAYR(L) !g/cm2
+        ENDDO
+        SLMASSdiff = (SOILMASS - SLMASSinit) * 1000. !kg/cm2
+
       SOILPROP % BD     = BD     
       SOILPROP % CN     = CN     
       SOILPROP % DLAYR  = DLAYR  !thickness of tilled soil layers 
@@ -1466,8 +1516,26 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
       IF (ISWWAT == 'N') RETURN
 
       CALL OPSOILDYN(CONTROL, DYNAMIC, ISWITCH, 
-     &  BD, BD_SOM, CN, CRAIN, DLAYR, DUL, KECHGE, LL, PRINT_TODAY, SAT, 
-     &  SOILCOV, SUMKE, SWCN, TILLED, TOTAW)
+     &  BD, BD_SOM, CN, CRAIN, DLAYR, DUL, KECHGE, LL, PRINT_TODAY, SAT,
+     &  SOILCOV, SLMASSdiff, SUMKE, SWCN, TILLED, TOTAW)
+
+!     temp chp
+      if (dynamic .eq. output) then
+      do L = 1, nlayr
+        if (tilled) then
+          TXT = "Tilled"
+        else
+          TXT = "      "
+        endif
+
+        CALL YR_DOY(CONTROL % YRDOY, YEAR, DOY) 
+        write(8894,'(1X,I4,1X,I3.3,1X,I5,1X,A6,I6,10F8.4,3F15.2)') 
+     &    year, doy, das, TXT, L, 
+     &    BD(L),   BD_init(L),   BD_base(L),BD_SOM(L),   BD_tilled(L),
+     &    DLAYR(L),DLAYR_init(L),DL_base(L),DLAYR_SOM(L),DL_tilled(L),
+     &    SomLit(L),SomLit_init(L), SLMASS(L)
+      enddo
+      endif
 
 !***********************************************************************
 !***********************************************************************
@@ -1831,7 +1899,7 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
 !     SUBROUTINE OPSOILDYN -- output dynamic soil properties
       SUBROUTINE OPSOILDYN(CONTROL, DYNAMIC, ISWITCH, 
      &  BD, BD_SOM, CN, CRAIN, DLAYR, DUL, KECHGE, LL, PRINT_TODAY, SAT,
-     &  SOILCOV, SUMKE, SWCN, TILLED, TOTAW)
+     &  SOILCOV, SLMASSdiff, SUMKE, SWCN, TILLED, TOTAW)
 
       USE ModuleDefs
       IMPLICIT NONE
@@ -1841,10 +1909,14 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
       TYPE (SwitchType)  ISWITCH
 
       CHARACTER*11, PARAMETER :: OUTSOL = 'SoilDyn.OUT'
-      INTEGER DLUN, DOY, DYNAMIC, YEAR   
+      INTEGER DLUN, DOY, DYNAMIC, YEAR    !, L 
       LOGICAL FEXIST, PrintDyn
       LOGICAL Print_today, TILLED
       REAL CN, CRAIN, SOILCOV, SUMKE, TOTAW
+
+!     temp chp
+      REAL SLMASSdiff
+
       REAL, DIMENSION(NL) :: BD, BD_SOM, DLAYR, DUL, LL, SAT, SWCN
       REAL, DIMENSION(0:NL) :: KECHGE
 
@@ -1872,7 +1944,8 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
        IF (INDEX('FQ',CONTROL%RNMODE) > 0 .AND. CONTROL%RUN /= 1)RETURN
         CALL HEADER(SEASINIT, DLUN, CONTROL % RUN)
         WRITE(DLUN,"(/,
-     &     '@YEAR DOY   DAS   CRAIN  SOLCOV   SUMKE    ROCN   TOTAW',
+     &  '@YEAR DOY   DAS    SLMSDF',
+     &  '   CRAIN  SOLCOV   SUMKE    ROCN   TOTAW',
      &  '  KECHG1  KECHG2  KECHG3  KECHG4',
      &  '  DLAYR1  DLAYR2  DLAYR3  DLAYR4',
      &  '     BD1     BD2     BD3     BD4',
@@ -1895,11 +1968,15 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
      &   (MOD(CONTROL%DAS,CONTROL%FROP) .EQ. 0  !(Every FROP days
 !    &    .OR. TILLED                           !OR Tilled recently
      &    .OR. Print_today)) THEN    !OR back to normal after tillage)
+
+!     TEMP CHP - remove SLMASSdiff when done debugging
+
         CALL YR_DOY(CONTROL % YRDOY, YEAR, DOY) 
-        WRITE(DLUN,'(1X,I4,1X,I3.3,1X,I5,
+        WRITE(DLUN,'(1X,I4,1X,I3.3,1X,I5,F10.2,
      &    F8.1,2F8.3,F8.1,F8.2,
      &    4F8.3,4F8.2,8F8.3,4F8.3,4F8.2,8F8.5)') 
-     &    YEAR, DOY, CONTROL % DAS, CRAIN, SOILCOV, SUMKE, CN, TOTAW, 
+     &    YEAR, DOY, CONTROL % DAS, SLMASSdiff, 
+     &    CRAIN, SOILCOV, SUMKE, CN, TOTAW, 
      &    KECHGE(1),KECHGE(2),KECHGE(3),KECHGE(4),
      &    DLAYR (1), DLAYR(2), DLAYR(3), DLAYR(4),
      &    BD    (1),    BD(2),    BD(3),    BD(4),
@@ -1909,6 +1986,10 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
      &    DUL   (1),   DUL(2),   DUL(3),   DUL(4),
      &    LL    (1),    LL(2),    LL(3),    LL(4)
         Print_today =  .FALSE.
+
+!!     TEMP CHP
+!        WRITE(7777,'(I8,15F10.5,15F10.5)')
+!     &  CONTROL % YRDOY, (DLAYR(L),L=1,15), (BD(L),L=1,15)
       ENDIF
 
 !***********************************************************************
@@ -2185,7 +2266,7 @@ C=======================================================================
       CHARACTER*6 SECTION
       CHARACTER*8, PARAMETER :: ERRKEY = 'SETPM'
       CHARACTER*125 MSG(50)
-      CHARACTER*180 CHAR
+!     CHARACTER*180 CHAR
       INTEGER ERR, FOUND, LNUM, LUNIO
       REAL PMWD, ROWSPC_CM
       REAL PMALB, PMFRACTION, MSALB
@@ -2219,7 +2300,7 @@ C=======================================================================
       SECTION = '*PLANT'
       CALL FIND(LUNIO, SECTION, LNUM, FOUND) 
       IF (FOUND == 0) CALL ERROR(SECTION, 42, CONTROL%FILEIO, LNUM)
-      READ(LUNIO,'(42X,F6.0,42X,2F6.0)',IOSTAT=ERR) ROWSPC_CM !, BEDWD, BEDHT
+      READ(LUNIO,'(42X,F6.0,42X,2F6.0)',IOSTAT=ERR) ROWSPC_CM 
       LNUM = LNUM + 1
       IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,CONTROL%FILEIO,LNUM)
 
