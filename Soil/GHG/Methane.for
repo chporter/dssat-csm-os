@@ -66,6 +66,26 @@ C***********************************************************************
 C-----------------------------------------------------------------------
       FirstTime = .TRUE.
 
+      meth % Diffusion = 0.0
+      meth % Leaching = 0.0
+      meth % Production = 0.0
+      meth % Consumption = 0.0
+      meth % RootFluxIn = 0.0
+      meth % RootFluxOut = 0.0
+      meth % Ebullition = 0.0
+      meth % Storage = 0.0
+      meth % StorageFlux = 0.0
+
+      oxy % Diffusion = 0.0
+      oxy % Leaching = 0.0
+      oxy % Production = 0.0
+      oxy % Consumption = 0.0
+      oxy % RootFluxIn = 0.0
+      oxy % RootFluxOut = 0.0
+      oxy % Ebullition = 0.0
+      oxy % Storage = 0.0
+      oxy % StorageFlux = 0.0
+
       TCO2 = 0.0
       TCH4 = 0.0
       newCO2Tot = 0.0

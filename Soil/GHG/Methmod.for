@@ -42,23 +42,25 @@ C ***********************************************************************
         REAL eta(4,4),k(4,4),ebullk
         INTEGER om,o2,bb,ch4,steps,niterations
         
+!     Move all of these to SETUP because some get changed in the simulation
+!     Must initialize them for every new simulation
         DATA om,o2,bb,ch4/1,2,3,4/
         DATA steps,niterations/51,100/
-!       ebullition coefficient (1/d)
-        DATA ebullk/86400./
-!       solubility of substances in water (mol/m3 at 25°C)
-        DATA solub/0.0,1.23,0.0,1.31/
-!       solubility constants (aqueous / gaseous)
-        DATA alpha/0., 0.03, 1.e9, 0.03/ 
-!       surface gas-phase concentration (mol/m3) o2, b, ch4
-        DATA ya0/0., 7.76, -1.e-3, 7.5e-5/  
-!       gaseous diffusion constants (m2/s) o2, b, ch4
-!       (figures for O2 from Jones, 1983. Plants & Microclimate)
-        DATA Da/0., 2.02e-5, 0.0, 1.06e-5/  
-!       aqueous diffusion constants (m2/s) o2, b, ch4 
-!       (figures for O2 from Jones, 1983. Plants & Microclimate)
-        DATA Dw/0., 2.00e-9, 1.5e-9, 1.49e-9/  
-!       inhibition factor, o2 on ch4 production (see text)
+!!       ebullition coefficient (1/d)
+!        DATA ebullk/86400./
+!!       solubility of substances in water (mol/m3 at 25°C)
+!        DATA solub/0.0,1.23,0.0,1.31/
+!!       solubility constants (aqueous / gaseous)
+!        DATA alpha/0., 0.03, 1.e9, 0.03/ 
+!!       surface gas-phase concentration (mol/m3) o2, b, ch4
+!        DATA ya0/0., 7.76, -1.e-3, 7.5e-5/  
+!!       gaseous diffusion constants (m2/s) o2, b, ch4
+!!       (figures for O2 from Jones, 1983. Plants & Microclimate)
+!        DATA Da/0., 2.02e-5, 0.0, 1.06e-5/  
+!!       aqueous diffusion constants (m2/s) o2, b, ch4 
+!!       (figures for O2 from Jones, 1983. Plants & Microclimate)
+!        DATA Dw/0., 2.00e-9, 1.5e-9, 1.49e-9/  
+!!       inhibition factor, o2 on ch4 production (see text)
         DATA eta/0.,0.,0.,0.,
      &             0.,0.,0.,0.,
      &             0.,100.,0.,0.,
@@ -105,7 +107,47 @@ C ***********************************************************************
       EXTERNAL interpolate_steps
       INTEGER nlayrs,i,s
       REAL t(51)
-      
+
+!       Reset inital values at the beginning of each new simulation.
+!       Data statement in the module only sets it for the first simulation.
+!       Probably some of these can be initialized only once if they don't change
+!        but others change and affect the results.
+
+!       ebullition coefficient (1/d)
+        ebullk = 86400.
+
+!       solubility of substances in water (mol/m3 at 25°C)
+        solub(1) = 0.0
+        solub(2) = 1.23
+        solub(3) = 0.0
+        solub(4) = 1.31
+        
+!       solubility constants (aqueous / gaseous)
+        alpha(1) = 0.
+        alpha(2) = 0.03
+        alpha(3) = 1.e9
+        alpha(4) = 0.03
+
+!       surface gas-phase concentration (mol/m3) o2, b, ch4
+        ya0(1) = 0.
+        ya0(2) = 7.76
+        ya0(3) = -1.e-3
+        ya0(4) = 7.5e-5
+
+!       gaseous diffusion constants (m2/s) o2, b, ch4
+!       (figures for O2 from Jones, 1983. Plants & Microclimate)
+        Da(1) = 0.
+        Da(2) = 2.02e-5
+        Da(3) = 0.0
+        Da(4) = 1.06e-5
+
+!       aqueous diffusion constants (m2/s) o2, b, ch4 
+!       (figures for O2 from Jones, 1983. Plants & Microclimate)
+        Dw(1) = 0.
+        Dw(2) = 2.00e-9
+        Dw(3) = 1.5e-9
+        Dw(4) = 1.49e-9
+
       DO s=o2,ch4
         IF(ya0(s).GT.0.) THEN
           ys0(s) = alpha(s) * ya0(s)
