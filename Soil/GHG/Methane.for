@@ -302,9 +302,11 @@ C-----------------------------------------------------------------------
       if (FLOOD.gt.0.0) then
         CH4Stored = meth%Storage !chp * 12. * 10.	! kgC/ha
       else
-        x = CH4Stored * 0.5
+!       x = CH4Stored * 0.5
+        x = meth%Storage * 0.5
         CH4Emission = CH4Emission + x
-        CH4Stored =	CH4Stored - x
+        CH4Stored   = CH4Stored   - x
+        meth%Storage = CH4Stored
       endif
 
       StorageFlux = CH4Stored - CH4Stored_Y
