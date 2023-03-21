@@ -235,7 +235,8 @@ C-----------------------------------------------------------------------
       ENDIF
 
       CALL SOILT (
-     &    ALBEDO, B, CUMDPT, DOY, DP, HDAY, NLAYR,    !Input
+     &    ALBEDO, B, CUMDPT, DOY, DP, HDAY,               !Input
+     &    METMP, NLAYR,                                   !Input
      &    PESW, SRAD, TAMP, TAV, TAVG, TMAX, WW, DSMID,!Input
      &    ATOT, TMA, SRFTEMP, ST)                     !Output
 
