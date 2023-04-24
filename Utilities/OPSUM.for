@@ -26,6 +26,7 @@ C                   HIAM, EPCM, ESCM
 !  03/27/2012 CHP Fixed format bug for very large HWUM
 !  07/19/2016 CHP Add cumulative N2O emissions in Nitrogen section
 !  09/09/2016 CHP Add cumulative CO2 emissions from OC decomposition
+!  04/24/2023 CHP Additional N loss variables output for Yujing project
 C=======================================================================
 
       MODULE SumModule
@@ -79,6 +80,10 @@ C=======================================================================
 !       Added 2021-20-04 LPM Fresh weight variables
         INTEGER FCWAM, FHWAM, FPWAM
         REAL HWAHF, FBWAH
+
+!       Added 2023-04-23 for Yujing (temporary?)
+!       N losses
+        REAL AMLCH, N2EH, NOEH, RNROH
 
       End Type SummaryType
 
@@ -169,6 +174,10 @@ C-----------------------------------------------------------------------
       INTEGER FCWAM, FHWAM, FPWAM
       REAL HWAHF, FBWAH
 
+!     Added 2023-04-23 for Yujing (temporary?)
+!     N losses
+      REAL AMLCH, N2EH, NOEH, RNROH
+
       LOGICAL FEXIST
 
 !     Text values for some variables that get overflow with "-99" values
@@ -217,6 +226,7 @@ C-----------------------------------------------------------------------
       IDETO   = ISWITCH % IDETO
       IDETL   = ISWITCH % IDETL
       FMOPT   = ISWITCH % FMOPT   ! VSH
+
 C***********************************************************************
 C***********************************************************************
 C     Run initialization - run once per simulation
@@ -407,6 +417,11 @@ C     Initialize OPSUM variables.
 
       SUMDAT % CRST   = -99   !End of season crop status code
 
+      SUMDAT % AMLCH   = -99.9 !Cumul NH3 vol, planting to harvest
+      SUMDAT % N2EH    = -99.9 !Cumul N2 emit (k/h), planting to harvest
+      SUMDAT % NOEH    = -99.9 !Cumul NO emit (k/h), planting to harvest
+      SUMDAT % RNROH   = -99.9 !Cumul transp (k/h), planting to harvest
+
       CALL GET('WEATHER','WSTA',WSTAT)
 !      IF (LenString(WSTAT) < 1) THEN
 !        WSTAT = WSTATION
@@ -506,6 +521,11 @@ C     Initialize OPSUM variables.
       EPCP   = SUMDAT % EPCP  !Cumul transp (mm), planting to harvest
 
       CRST   = SUMDAT % CRST  !End of season crop status code
+
+      AMLCH  = SUMDAT % AMLCH !Cumul NH3 vol, planting to harvest
+      N2EH   = SUMDAT % N2EH  !Cumul N2 emit (k/h), planting to harvest
+      NOEH   = SUMDAT % NOEH  !Cumul NO emit (k/h), planting to harvest
+      RNROH  = SUMDAT % RNROH !Cumul transp (k/h), planting to harvest
 
       CALL GET('WEATHER','WYEAR',WYEAR)
       CALL GET('FIELD','CYCRD',LATI)
@@ -628,7 +648,8 @@ C-------------------------------------------------------------------
      &   '    DPNAM    DPNUM    YPNAM    YPNUM',
      &   '  NDCH TMAXA TMINA SRADA DAYLA   CO2A   PRCP   ETCP',
      &   '   ESCP   EPCP',
-     &   '  CRST')
+     &   '  CRST     AMLCH      N2EH      NOEH     RNROH')
+
           END SELECT
         ENDIF
 
@@ -735,8 +756,8 @@ C-------------------------------------------------------------------
      &                 YPPM_TXT, YPEM_TXT, YPTM_TXT, YPIM_TXT,
      &    DPNAM_TXT, DPNUM_TXT, YPNAM_TXT, YPNUM_TXT,
      &    NDCH, TMAXA_TXT, TMINA_TXT, SRADA_TXT, DAYLA_TXT, 
-     &                 CO2A_TXT, PRCP_TXT, ETCP_TXT, ESCP_TXT, EPCP_TXT,
-     &    CRST
+     &    CO2A_TXT, PRCP_TXT, ETCP_TXT, ESCP_TXT, EPCP_TXT,
+     &    CRST, AMLCH, N2EH, NOEH, RNROH
 
   503   FORMAT(     
                                               
@@ -775,7 +796,10 @@ C-------------------------------------------------------------------
      &  I6,9A,
 
 !       CRST
-     &  I6)
+     &  I6,
+
+!       Additional N loss variables
+     &  4F10.3)
 
         CLOSE (NOUTDS)
         END IF   ! VSH
@@ -796,7 +820,7 @@ C-------------------------------------------------------------------
      &KICM, KUPC, SKAM, RECM, ONTAM, ONAM, OPTAM, OPAM, OCTAM, OCAM, 
      &CO2EM, CH4EM, DMPPM, DMPEM, DMPTM, DMPIM, YPPM, YPEM, YPTM, YPIM, 
      &DPNAM, DPNUM, YPNAM, YPNUM, NDCH, TMAXA, TMINA, SRADA, DAYLA, 
-     &CO2A, PRCP, ETCP, ESCP, EPCP, CRST,   
+     &CO2A, PRCP, ETCP, ESCP, EPCP, CRST, AMLCH, N2EH, NOEH, RNROH,   
      &vCsvlineSumOpsum, vpCsvlineSumOpsum, vlngthSumOpsum) 
 
             CALL LinklstSumOpsum(vCsvlineSumOpsum) 
@@ -1172,7 +1196,7 @@ C-------------------------------------------------------------------
         CASE ('N2OEM');SUMDAT % N2OEM  = VALUE(I)
         CASE ('CO2EM');SUMDAT % CO2EM  = VALUE(I)
         CASE ('CH4EM');SUMDAT % CH4EM  = VALUE(I)
-               
+
         !From Ipexp or Ipwth:
         CASE ('YCRD'); SUMDAT % YCRD  = VALUE(I)
         CASE ('XCRD'); SUMDAT % XCRD  = VALUE(I)
@@ -1180,6 +1204,12 @@ C-------------------------------------------------------------------
 
 !       Crop status
         CASE ('CRST') ;SUMDAT % CRST   = VALUE(I)
+
+!       Additional N loss variables
+        CASE ('AMLCH');SUMDAT % AMLCH  = VALUE(I)
+        CASE ('N2EH'); SUMDAT % N2EH   = VALUE(I)
+        CASE ('NOEH'); SUMDAT % NOEH   = VALUE(I)
+        CASE ('RNROH');SUMDAT % RNROH  = VALUE(I)
 
         END SELECT
       ENDDO

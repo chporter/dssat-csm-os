@@ -279,7 +279,7 @@ C  05/01/2022 FO  Added N2O.csv output
       LOGICAL FEXIST
 
 !     Arrays which contain data for printing in SUMMARY.OUT file
-      INTEGER, PARAMETER :: SUMNUM = 2
+      INTEGER, PARAMETER :: SUMNUM = 3
       CHARACTER*5, DIMENSION(SUMNUM) :: LABEL
       REAL, DIMENSION(SUMNUM) :: VALUE
 
@@ -555,7 +555,9 @@ C-----------------------------------------------------------------------
 !     Store Summary.out labels and values in arrays to send to
 !     OPSUM routines for printing.  Integers are temporarily 
 !     saved as real numbers for placement in real array.
-      LABEL(1)  = 'N2OEM'; VALUE(1)  = CN2O_emitted  !kg/ha
+      LABEL(1)  = 'N2OEM'; VALUE(1) = CN2O_emitted  !kg/ha
+      LABEL(2)  = 'N2EH' ; VALUE(2) = CN2_emitted
+      LABEL(3)  = 'NOEH' ; VALUE(3) = CNO_emitted
 
 !     Send labels and values to OPSUM
       CALL SUMVALS (SUMNUM, LABEL, VALUE) 

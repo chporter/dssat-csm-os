@@ -986,7 +986,7 @@ C=======================================================================
 
         CALL OpSoilNi(CONTROL, ISWITCH, SoilProp, 
      &    CIMMOBN, CMINERN, CNETMINRN, CNITRIFY, CNUPTAKE, 
-     &    FertData, NH4, NO3, 
+     &    FertData, NH4, NO3, CUMFNRO,
      &    CLeach, CNTILEDR, TNH4, TNH4NO3, TNO3, TUREA, CNOX, TOTAML)
       ENDIF
 
@@ -1005,7 +1005,7 @@ C-----------------------------------------------------------------------
 C     Write daily output
       CALL OpSoilNi(CONTROL, ISWITCH, SoilProp, 
      &    CIMMOBN, CMINERN, CNETMINRN, CNITRIFY, CNUPTAKE, 
-     &    FertData, NH4, NO3, 
+     &    FertData, NH4, NO3, CUMFNRO,
      &    CLeach, CNTILEDR, TNH4, TNH4NO3, TNO3, TUREA, CNOX, TOTAML)
 
       IF (NBUND > 0) THEN

@@ -21,7 +21,7 @@ C  08/20/2002 GH  Modified for Y2K
 !     HJ added CNTILEDR
       SUBROUTINE OpSoilNi(CONTROL, ISWITCH, SoilProp, 
      &    CIMMOBN, CMINERN, CNETMINRN, CNITRIFY, CNUPTAKE, 
-     &    FertData, NH4, NO3,
+     &    FertData, NH4, NO3, CUMFNRO,
      &    CLeach, CNTILEDR, TNH4, TNH4NO3, TNO3, TUREA, CNOX, TOTAML)
 !-----------------------------------------------------------------------
       USE ModuleDefs
@@ -47,7 +47,7 @@ C  08/20/2002 GH  Modified for Y2K
       LOGICAL FEXIST
 
 !     Arrays which contain data for printing in SUMMARY.OUT file
-      INTEGER, PARAMETER :: SUMNUM = 5
+      INTEGER, PARAMETER :: SUMNUM = 7
       CHARACTER*5, DIMENSION(SUMNUM) :: LABEL
       CHARACTER*50 FRMT1, FRMT2
       REAL, DIMENSION(SUMNUM) :: VALUE
@@ -62,6 +62,7 @@ C  08/20/2002 GH  Modified for Y2K
       REAL TOTAML         !ammonia volatilization
       REAL CNETMINRN      !net mineralization (mineralized-immobilized)
       REAL CNUPTAKE       !N uptake
+      REAL CUMFNRO        !N in runoff over bund
 !-----------------------------------------------------------------------
       TYPE (ControlType) CONTROL
       TYPE (SwitchType)  ISWITCH
@@ -244,6 +245,8 @@ C-----------------------------------------------------------------------
           LABEL(3)  = 'NLCM'; VALUE(3)  = CLeach
           LABEL(4)  = 'NIAM'; VALUE(4)  = TNH4NO3
           LABEL(5)  = 'NMINC';VALUE(5)  = CNETMINRN
+          LABEL(6)  = 'RNROH';VALUE(6)  = CUMFNRO
+          LABEL(7)  = 'AMLCH';VALUE(7)  = TOTAML
 
           !Send labels and values to OPSUM
           CALL SUMVALS (SUMNUM, LABEL, VALUE) 
