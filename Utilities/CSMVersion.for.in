@@ -17,7 +17,8 @@
         INTEGER :: Build = @BUILD@
       END TYPE VersionType
       TYPE (VersionType) Version
-      CHARACTER(len=*), PARAMETER :: VBranch = '-@BRANCH@'
+!     CHARACTER(len=*), PARAMETER :: VBranch = '-@BRANCH@'
+      CHARACTER(len=*), PARAMETER :: VBranch = '-NlossSum'
 
 !     Version history:
 !       4.8.1.7   FO 2023-04-21 Added Multi-Harvest for CROPGRO (commit 469fcc2)
