@@ -62,7 +62,7 @@
       USE ModuleDefs
       IMPLICIT  NONE
       EXTERNAL P_IPPLNT, P_Demand, P_Uptake, OPPlantP, P_Partition, 
-     &  PValue
+     &  PValue, PConc
       SAVE
 !     ------------------------------------------------------------------
 !     Interface variables
@@ -146,7 +146,7 @@
       REAL SRATPHOTO, SRATPART
       REAL FracPMobil, FracPUptake
 
-      Real PValue !Function
+      Real PValue, PConc !Functions
 
 !***********************************************************************
 !***********************************************************************
@@ -349,6 +349,15 @@
       N2P_max =  PValue(PhFrac1, PhFrac2, N2Pmax)
       N2P_min =  PValue(PhFrac1, PhFrac2, N2Pmin)
 
+!------------------------------------------------------------------------
+!     Update plant P concentrations to drive demand
+      PConc_Seed = PConc(Seed_kg, PSeed_kg)
+      PConc_Shel = PConc(Shel_kg, PShel_kg)
+C MA problem of transfer of shoot ( stems) to panicle at grain filling      
+      PConc_Shut = PConc(Shut_kg, PShut_kg)
+      PConc_Root = PConc(Root_kg, PRoot_kg)
+      PConc_Plant = PConc(Plant_kg, PPlant_kg)
+
 !-----------------------------------------------------------------------
 !     CALCULATE DEMANDS in kg/ha
       Call P_Demand(DYNAMIC,
@@ -386,37 +395,13 @@
       PPlant_kg = PPlant_kg + PUptakeProf
       
 !------------------------------------------------------------------------
-
-C     CALCULATE P CONCENTRATIONS (fractions)
-      IF (Seed_kg > 0.) THEN      
-        PConc_Seed = PSeed_kg / Seed_kg 
-      ELSE
-        PConc_Seed = 0.
-      ENDIF
-
-      IF (Shel_kg > 0.) THEN
-        PConc_Shel = PShel_kg / Shel_kg
-      ELSE
-        PConc_Shel = 0.
-      ENDIF
+!     Update P concentrations after uptake
+      PConc_Seed = PConc(Seed_kg, PSeed_kg)
+      PConc_Shel = PConc(Shel_kg, PShel_kg)
 C MA problem of transfer of shoot ( stems) to panicle at grain filling      
-      IF (Shut_kg > 0.) THEN      
-        PConc_Shut = PShut_kg / Shut_kg 
-      ELSE
-        PConc_Shut = 0.
-      ENDIF
-
-      IF (Root_kg > 0.) THEN
-        PConc_Root = PRoot_kg / Root_kg
-      ELSE
-        PConc_Root = 0.
-      ENDIF
-      
-      IF (Plant_kg > 0.) THEN
-        PConc_Plant = PPlant_kg / Plant_kg
-      ELSE
-        PConc_Plant = 0.0
-      ENDIF
+      PConc_Shut = PConc(Shut_kg, PShut_kg)
+      PConc_Root = PConc(Root_kg, PRoot_kg)
+      PConc_Plant = PConc(Plant_kg, PPlant_kg)
 
 !     Vegetative P concentration for N:P ratio
       IF (Shut_kg + Root_kg > 1.E-6) THEN

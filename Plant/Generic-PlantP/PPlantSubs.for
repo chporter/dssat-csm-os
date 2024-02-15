@@ -57,6 +57,32 @@
 !=======================================================================
 
 !=======================================================================
+!  PCanc, Calculates P concentration
+!-----------------------------------------------------------------------
+!  REVISION HISTORY
+!  02/15/2024 CHP Written.
+!-----------------------------------------------------------------------
+!  Called by: P_PLANT
+!=======================================================================
+      Function PConc(PlantWt, PWt)
+
+!     ------------------------------------------------------------------
+      Real PConc                    !P concentration returned
+      Real, Intent(IN) :: PlantWt   !Plant part mass
+      Real, Intent(IN) :: PWt       !P mass in plant part
+
+C     CALCULATE P CONCENTRATIONS (fractions)
+      IF (PlantWt > 0.) THEN      
+        PConc = PWt / PlantWt 
+      ELSE
+        PConc = 0.
+      ENDIF
+
+      RETURN
+      End Function PConc
+!=======================================================================!=======================================================================
+
+!=======================================================================!=======================================================================
 !  P_Demand
 !     CALCULATE DEMANDS in kg/ha
 !     and reduction in demands due to mobilized tissue.
