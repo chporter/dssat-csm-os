@@ -20,12 +20,12 @@ C=======================================================================
       USE MethaneConstants
       USE MethaneVariables
       IMPLICIT NONE
-      EXTERNAL OpMethane, SteadyState, setup
+      EXTERNAL OpMethane, SteadyState, setup, Read_methane
       SAVE
 
       INTEGER n1,NLAYR,i,j, DYNAMIC
       REAL dlayr(NL),SW(NL),DLL(NL),RLV(NL),CSubstrate(NL),BD(NL),
-     &     Buffer(NL,2),afp(NL), SAEA(NL), SAT(NL), DUL(NL)
+     &     Buffer(NL,2),afp(NL), SAEA(NL)  !, SAT(NL), DUL(NL)
       REAL, DIMENSION(0:NL) :: newCO2
       REAL drain,flood,x,CH4Emission,buffconc,rCO2,
      &     rCH4,TCH4Substrate,rbuff,afpmax,
@@ -37,12 +37,11 @@ C=======================================================================
       REAL CumCH4Emission, CumCO2Emission, CO2emission, CumNewCO2
       REAL StorageFlux, Cum_CH4_bal, CH4Stored_Y
 !     REAL CH4_correction !, ReductFact
-      REAL BRAD, WFPS_methane, frac_afpmax !Parameters were created by EHFMS 
+
+!     Parameters were created by EHFMS 
+      REAL BRAD, WFPS_methane, frac_afpmax 
       REAL :: BufferRegenRate
-      CHARACTER(LEN=256) :: FilePath, Line, Exper
-      CHARACTER*12 FILEX
-      INTEGER :: UnitNum
-      LOGICAL :: FoundEXPER      
+
       REAL TCO2, TCH4, FloodCH4
       TYPE (ControlType) CONTROL
       TYPE (SwitchType)  ISWITCH
@@ -65,8 +64,7 @@ C=======================================================================
       DLL   = SOILPROP % LL
       BD    = SOILPROP % BD
       NLAYR = SOILPROP % NLAYR
-      FILEX = CONTROL % FILEX
-      
+
 C***********************************************************************
 C***********************************************************************
 C    Input and Initialization 
@@ -131,43 +129,11 @@ C-----------------------------------------------------------------------
      &  CumNewCO2, CumCO2Emission, CumCH4Emission, CumCH4Consumpt, 
      &  CumCH4Leaching, Cum_CH4_bal)
 
-! Initialize BRAD and WFPS_methane with default values
-      
-      FilePath = 'C:\\DSSAT48\\StandardData\\METHA048.SDA'
-      UnitNum = 10
-      FoundEXPER = .FALSE.
-      BRAD = 0.0
-      WFPS_methane = 0.0
+      CALL Read_methane(CONTROL, BRAD, WFPS_methane)
 
-! Open the file
-      OPEN(UNIT=UnitNum, FILE=FilePath, STATUS='OLD', ACTION='READ')
-
-! Read the file to find experiment and variables
-      DO
-          READ(UnitNum, '(A)', END=999) Line
-         IF (INDEX(Line, '@EXPER') > 0) EXIT  ! Found the table header
-      END DO
-
-      DO
-      READ(UnitNum, '(A)', END=999) Line
-    ! Check for the FILEX experiment
-      IF (INDEX(Line, 'FILEX') > 0) THEN
-          FoundEXPER = .TRUE.
-          READ(Line, '(A20, F10.2, F10.2)') Exper, BRAD, WFPS_methane
-          EXIT
-      END IF
-    ! Read default values if FILEX is not found
-      IF (INDEX(Line, 'DEFAULT') > 0 .AND. .NOT. FoundEXPER) THEN
-          READ(Line, '(A20, F10.2, F10.2)') Exper, BRAD, WFPS_methane
-      END IF
-      END DO
-
-999    CONTINUE
-      
       ! Assign the read values to parameters
       BufferRegenRate = BRAD
       frac_afpmax = 1.0 - WFPS_methane
-      
 
 C***********************************************************************
 C***********************************************************************
@@ -240,7 +206,8 @@ C-----------------------------------------------------------------------
 !         IF (afp(i).GT.0.0) THEN !     
 ! EHFMS: Methane Prod. under conditions of partially saturated soil
 !      IF (afp(i).GT.frac_afpmax*afpmax) THEN
-      IF (afp(i) > frac_afpmax * afpmax .AND. afp(i) /= 0.0) THEN ! EHFMS:condition updated, value must be non-zero
+!     EHFMS:condition updated, value must be non-zero
+      IF (afp(i) > frac_afpmax * afpmax .AND. afp(i) /= 0.0) THEN 
          rCH4 = 0.0              ! no CH4 production
          rCO2 = CSubstrate(i)    ! aerobic respiration
          rbuff = -MIN(BufferRegenRate * afp(i) / afpmax * Buffer(i,2),

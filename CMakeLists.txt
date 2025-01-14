@@ -590,6 +590,7 @@ set(
         "Soil/GHG/nox_pulse.f90"
         "Soil/GHG/Methane.for"
         "Soil/GHG/Methmod.for"
+        "Soil/GHG/Read_methane.for"
         "Soil/Inorganic_K/OpSoilKi.for"
         "Soil/Inorganic_K/SoilKi.for"
         "Soil/Inorganic_K/SoilK_init.for"
