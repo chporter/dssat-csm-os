@@ -9,6 +9,7 @@ C  1. Written     R.B.M. March 1998.
 ! 2021-06-30 CHP and US adapt for DSSAT-CSM v4.8
 ! 2023-01-24 chp added SAEA to soil analysis in FileX
 ! 2023-05-14 EHFMS changed the starting condition for methane production
+! 2025-01-10 EHFMS externalized soil parameters as defined in the publication: https://doi.org/10.1016/j.agwat.2024.109234       
 C=======================================================================
       SUBROUTINE MethaneDynamics(CONTROL, ISWITCH, SOILPROP,  !Input
      &    FERTDATA, FLOODWAT, SW, RLV, newCO2, DRAIN,         !Input
@@ -36,9 +37,13 @@ C=======================================================================
       REAL CumCH4Emission, CumCO2Emission, CO2emission, CumNewCO2
       REAL StorageFlux, Cum_CH4_bal, CH4Stored_Y
 !     REAL CH4_correction !, ReductFact
-
+      REAL BRAD, WFPS_methane, frac_afpmax !Parameters were created by EHFMS 
+      REAL :: BufferRegenRate
+      CHARACTER(LEN=256) :: FilePath, Line, Exper
+      CHARACTER*12 FILEX
+      INTEGER :: UnitNum
+      LOGICAL :: FoundEXPER      
       REAL TCO2, TCH4, FloodCH4
-
       TYPE (ControlType) CONTROL
       TYPE (SwitchType)  ISWITCH
       TYPE (SoilType)    SOILPROP
@@ -51,14 +56,16 @@ C=======================================================================
 !     Reference height for the Arah model to be the top of the bund
       REAL, PARAMETER :: RefHeight = 100. ! mm
       !1/d EHFMS changed, before was 0.06
-      REAL, PARAMETER :: BufferRegenRate = 0.070
+!      REAL, PARAMETER :: BufferRegenRate = 0.070
       !EHFMS created this parameter 
-      REAL, PARAMETER :: frac_afpmax = 0.30
+!      REAL, PARAMETER :: frac_afpmax = 0.30
+      
       DYNAMIC = CONTROL % DYNAMIC
       DLAYR = SOILPROP % DLAYR
       DLL   = SOILPROP % LL
       BD    = SOILPROP % BD
       NLAYR = SOILPROP % NLAYR
+      FILEX = CONTROL % FILEX
       
 C***********************************************************************
 C***********************************************************************
@@ -123,6 +130,44 @@ C-----------------------------------------------------------------------
      &  CH4PlantFlux, CH4Ebullition, CH4Diffusion, CH4_balance, 
      &  CumNewCO2, CumCO2Emission, CumCH4Emission, CumCH4Consumpt, 
      &  CumCH4Leaching, Cum_CH4_bal)
+
+! Initialize BRAD and WFPS_methane with default values
+      
+      FilePath = 'C:\\DSSAT48\\StandardData\\METHA048.SDA'
+      UnitNum = 10
+      FoundEXPER = .FALSE.
+      BRAD = 0.0
+      WFPS_methane = 0.0
+
+! Open the file
+      OPEN(UNIT=UnitNum, FILE=FilePath, STATUS='OLD', ACTION='READ')
+
+! Read the file to find experiment and variables
+      DO
+          READ(UnitNum, '(A)', END=999) Line
+         IF (INDEX(Line, '@EXPER') > 0) EXIT  ! Found the table header
+      END DO
+
+      DO
+      READ(UnitNum, '(A)', END=999) Line
+    ! Check for the FILEX experiment
+      IF (INDEX(Line, 'FILEX') > 0) THEN
+          FoundEXPER = .TRUE.
+          READ(Line, '(A20, F10.2, F10.2)') Exper, BRAD, WFPS_methane
+          EXIT
+      END IF
+    ! Read default values if FILEX is not found
+      IF (INDEX(Line, 'DEFAULT') > 0 .AND. .NOT. FoundEXPER) THEN
+          READ(Line, '(A20, F10.2, F10.2)') Exper, BRAD, WFPS_methane
+      END IF
+      END DO
+
+999    CONTINUE
+      
+      ! Assign the read values to parameters
+      BufferRegenRate = BRAD
+      frac_afpmax = 1.0 - WFPS_methane
+      
 
 C***********************************************************************
 C***********************************************************************
@@ -194,7 +239,8 @@ C-----------------------------------------------------------------------
 !       calculate reoxidisation of buffer if soil is aerated
 !         IF (afp(i).GT.0.0) THEN !     
 ! EHFMS: Methane Prod. under conditions of partially saturated soil
-      IF (afp(i).GT.frac_afpmax*afpmax) THEN 
+!      IF (afp(i).GT.frac_afpmax*afpmax) THEN
+      IF (afp(i) > frac_afpmax * afpmax .AND. afp(i) /= 0.0) THEN ! EHFMS:condition updated, value must be non-zero
          rCH4 = 0.0              ! no CH4 production
          rCO2 = CSubstrate(i)    ! aerobic respiration
          rbuff = -MIN(BufferRegenRate * afp(i) / afpmax * Buffer(i,2),
