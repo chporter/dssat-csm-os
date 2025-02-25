@@ -16,9 +16,9 @@ C  08/29/2001 CHP Written for modular pototo model to be incorporated
 C                   into CROPGRO.
 C  03/12/2003 CHP Changed senescence variable to composite (SENESCE)
 C                   as defined in ModuleDefs.for
-C  12/17/2004 CHP Modified HRESCeres call for harvest residue
-C  08/17/2005 CHP Renamed to PT_SUBSTOR to accomodate TN, TR SUBSTOR
-C                 routines.
+!  12/17/2004 CHP Modified HRESCeres call for harvest residue
+!  08/17/2005 CHP Renamed to PT_SUBSTOR to accomodate TN, TR SUBSTOR
+!                 routines.
 C  08/23/2011 GH Added CO2 response for tuber growth
 !  01/26/2023 CHP Reduce compile warnings: add EXTERNAL stmts, remove 
 !                 unused variables, shorten lines. 
