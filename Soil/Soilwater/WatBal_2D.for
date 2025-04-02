@@ -113,6 +113,8 @@
       REAL, DIMENSION(MaxRows,MaxCols) :: SWFh_ts, RWUP_2D, Se
       REAL, DIMENSION(MaxRows,MaxCols) :: Thick, Width, Kunsat, Diffus
       REAL, DIMENSION(MaxRows,MaxCols) :: EvapFlow
+!     Change in soil water due to water table
+      REAL, DIMENSION(MaxRows,MaxCols) :: SWVDELTW, SWVdeltW_ts
       REAL, ALLOCATABLE :: IrrigSched(:,:,:), DripRate(:,:),DripInt(:,:)
 !     REAL, ALLOCATABLE :: DripDep(:,:), DripStart(:,:), DripDur(:,:)
 
@@ -229,9 +231,19 @@
 !     Set new water table level for today. This redefines Limit_2D,
 !       the soil layer below which 1D saturated conditions exist.
       CALL WaterTable_2D(DYNAMIC, 
-     &  CELLS, SOILPROP,                        !Input
-     &  SW, SWV,                                !Input/Output
-     &  ActWTD, netLatFlow, MgmtWTD, LIMIT_2D)  !Output
+     &  CELLS, SOILPROP, SW,                    !Input
+     &  ActWTD, netLatFlow, MgmtWTD, LIMIT_2D,  !Output
+     &  SWVDeltW)                               !Output
+
+!     Set SWV based on initial water table  
+      DO i = 1, SOILPROP % NLAYR
+        DO j = 1, NColsTot
+          SELECT CASE(Cell_Type(i,j))
+          CASE (3,4,5)
+            SWV(i,j) = SWV(i,j) + SWVDeltW(i,j)
+          END SELECT
+        ENDDO
+      ENDDO
 
 !     convert to double precision for time step loops
       SWV_D = DBLE(SWV)
@@ -382,9 +394,9 @@
 !     Set new water table level for today. This redefines Limit_2D,
 !       the soil layer below which 1D saturated conditions exist.
       CALL WaterTable_2D(DYNAMIC, 
-     &  CELLS, SOILPROP,                        !Input
-     &  SW, SWV,                                !Input/Output
-     &  ActWTD, netLatFlow, MgmtWTD, LIMIT_2D)  !Output
+     &  CELLS, SOILPROP, SW,                    !Input
+     &  ActWTD, netLatFlow, MgmtWTD, LIMIT_2D,  !Output
+     &  SWVDeltW)                               !Output
 
       SWV_avail = DBLE(SWV)
       SWV_D= SWV_avail
@@ -739,6 +751,19 @@
         LatFlow_ts = netLatFlow * DayIncr  !mm
         SumLatFlow = SumLatFlow + LatFlow_ts
 
+!       Update soil water content for lateral flow due to maintenance of
+!       a water table. Daily values are distributed over the 24 hours.
+        SWVdeltW_ts = SWVDeltW * DayIncr
+        DO j = 1, NColsTot
+          DO i = 1, NRowsTot
+            SELECT CASE (Cell_Type(i,j))
+            CASE (3,4,5)
+              SWV_avail(i,j) = SWV_avail(i,j) + SWVdeltW_ts(i,j)
+            CASE DEFAULT; CYCLE
+            END SELECT
+          ENDDO
+        ENDDO
+
 !       ===============================================================
 !       Estimate cumulative fraction of daily solar radiation that will 
 !         be reached by end of this time step.  
@@ -842,7 +867,6 @@
      &    SOILPROP, SWV_avail, TimeIncr, WCr,         !Input
      &    SWV_ts, SWFh_ts, SWFv_ts)                   !Output
 
-!       Here LatFlow_ts is due to the drainage of layer LIMIT_2D 
 !       Drainage is from first layer to LIMIT_2D
         DRAIN_ts = 0.0
         DRAIN_col = 0.0
@@ -1450,9 +1474,9 @@ C=====================================================================
 !-----------------------------------------------------------------------
 
       Subroutine WaterTable_2D(DYNAMIC, 
-     &  CELLS, SOILPROP,                        !Input
-     &  SW, SWV,                                !Input/Output
-     &  ActWTD, netLatFlow, MgmtWTD, LIMIT_2D)  !Output
+     &  CELLS, SOILPROP, SW,                    !Input
+     &  ActWTD, netLatFlow, MgmtWTD, LIMIT_2D,  !Output
+     &  SWVDeltW)                               !Output
 
       USE CELLS_2D
       Implicit none
@@ -1462,13 +1486,13 @@ C=====================================================================
       Type (CellType), INTENT(IN) :: Cells(MaxRows,MaxCols)
       TYPE (SoilType), INTENT(IN) :: SOILPROP
       REAL, DIMENSION(NL), INTENT(INOUT) :: SW
-      REAL, DIMENSION(MaxRows,MaxCols), INTENT(INOUT) :: SWV
+      REAL, DIMENSION(MaxRows,MaxCols), INTENT(OUT) :: SWVDELTW
       REAL, INTENT(OUT) :: ActWTD, netLatFlow, MgmtWTD
       INTEGER, INTENT(OUT) :: LIMIT_2D
 
       REAL MaxDepth
       REAL, DIMENSION(NL) :: SWDELTW
-      REAL, DIMENSION(MaxRows,MaxCols) :: SWVDeltW, Thick, Colfrac
+      REAL, DIMENSION(MaxRows,MaxCols) :: Thick, Colfrac
       INTEGER i,j
 
 !-----------------------------------------------------------------------
@@ -1502,18 +1526,17 @@ C=====================================================================
         ENDDO
       ENDIF
 
-!     This should be distributed over a day!!
-!     Set SWV based on today's water table  
-      DO i = 1, SOILPROP % NLAYR
-        SW(i) = SW(i) + SWDELTW(i)
-        DO j = 1, NColsTot
-          SELECT CASE(CELLS(i,j) % STRUC % Cell_Type)
-          CASE (3,4,5)
-            SWV(i,j) = SWV(i,j) + SWVDeltW(i,j)
-          END SELECT
-        ENDDO
-      ENDDO
-
+!!     This should be distributed over a day!!
+!!     Set SWV based on today's water table  
+!      DO i = 1, SOILPROP % NLAYR
+!        SW(i) = SW(i) + SWDELTW(i)
+!        DO j = 1, NColsTot
+!          SELECT CASE(CELLS(i,j) % STRUC % Cell_Type)
+!          CASE (3,4,5)
+!            SWV(i,j) = SWV(i,j) + SWVDeltW(i,j)
+!          END SELECT
+!        ENDDO
+!      ENDDO
 
 !     The 2D model is not needed in the vicinity of the water table.
 !     Calculate the limits of the 2D model. 
