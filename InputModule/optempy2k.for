@@ -206,8 +206,9 @@ C-----------------------------------------------------------------------
 C
 C-----------------------------------------------------------------------
       LINIO = LINIO + 1
-      WRITE (LUNIO,915,IOSTAT=ERRNUM) MEWTH,MESIC,MELI,MEEVP,
-     & MEINF,MEPHO,MEHYD,NSWITCH,MESOM, MESEV, MESOL, METMP, MEGHG
+      WRITE (LUNIO,'(14X,7(5X,A1),5X,I1,6(5X,A1))',IOSTAT=ERRNUM) 
+     & MEWTH,MESIC,MELI,MEEVP,MEINF,MEPHO,MEHYD,
+     & NSWITCH,MESOM, MESEV, MESOL, METMP, MEGHG, MSDYN
       IF (ERRNUM .NE. 0) CALL ERROR (ERRKEY,ERRNUM,FILEIO,LINIO)
 C-----------------------------------------------------------------------
 C
@@ -799,7 +800,6 @@ C-----------------------------------------------------------------------
   100 FORMAT (3X,I7,3(1X,A5),2(1X,F5.0))
   900 FORMAT (14X,I6,1X,I5,5X,A1,1X,I7,1X,I5,1X,A25)
   910 FORMAT (14X,9(5X,A1),2I6)
-  915 FORMAT (14X,7(5X,A1),5X,I1,5(5X,A1))
   920 FORMAT (14X,3(5X,A1),4X,I2,9(5X,A1))
   930 FORMAT (14X,2(1X,I7),5(1X,F5.0))
   940 FORMAT (14X,3(1X,F5.0),2(1X,A5),1X,F5.1,1X,F5.3)
