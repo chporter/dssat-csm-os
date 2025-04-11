@@ -57,7 +57,7 @@ C-----------------------------------------------------------------------
       CHARACTER*1  ISWWAT, ISWNIT, ISWCHE, ISWTIL, ICO2
       CHARACTER*1  ISWSYM, ISWPHO, ISWPOT, ISWDIS
       CHARACTER*1  MEEVP, MEHYD, MEINF, MEPHO, MESIC
-      CHARACTER*1  MESOL, MESOM, MESEV, METMP, MEGHG
+      CHARACTER*1  MESOL, MESOM, MESEV, METMP, MEGHG, MSDYN
       CHARACTER*1  UPCASE, RNMODE
       CHARACTER*2  CROP
       CHARACTER*6  ERRKEY, SECTION
@@ -144,8 +144,8 @@ C-----------------------------------------------------------------------
           ICO2   = UPCASE(ICO2)
 
           READ (LUNIO,200, IOSTAT=ERRNUM) MESIC, MEEVP, MEINF, MEPHO, 
-     &        MEHYD, NSWI, MESOM, MESEV, MESOL, METMP, MEGHG
-  200     FORMAT(25X,A1,11X,A1,3(5X,A1),5X,I1,5(5X,A1))
+     &        MEHYD, NSWI, MESOM, MESEV, MESOL, METMP, MEGHG, MSDYN
+  200     FORMAT(25X,A1,11X,A1,3(5X,A1),5X,I1,6(5X,A1))
           LNUM = LNUM + 1 
           IF (ERRNUM .NE. 0) CALL ERROR(ERRKEY,ERRNUM,FILEIO,LNUM)
 
@@ -283,6 +283,7 @@ C-----------------------------------------------------------------------
         ISWITCH % METMP  = METMP
         ISWITCH % MESEV  = MESEV
         ISWITCH % MEGHG  = MEGHG
+        ISWITCH % MSDYN  = MSDYN
 
         ISWITCH % IPLTI  = IPLTI
         ISWITCH % IIRRI  = IIRRI

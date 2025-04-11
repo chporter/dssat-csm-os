@@ -179,6 +179,10 @@ C-----------------------------------------------------------------------
       TYPE (CellType)   , INTENT(OUT):: CELLS(MaxRows,MaxCols)
       TYPE (SoilType) SoilProp_Bed, SoilProp_Furrow, SOILPROP_profile
 
+!     TEMP CHP
+!     Temporary warning for alternate soil dynamics algorithm until it is implemented.
+      LOGICAL WARNED
+
       DAS     = CONTROL % DAS
       DYNAMIC = CONTROL % DYNAMIC
       FILEIO  = CONTROL % FILEIO
@@ -204,6 +208,11 @@ C-----------------------------------------------------------------------
 !-----------------------------------------------------------------------
 !     Skip initialization for sequenced runs:
       IF (INDEX('FQ',RNMODE) > 0 .AND. RUN /= 1) RETURN
+
+!     TEMP CHP
+!     Temporary warning for alternate soil dynamics algorithm until it is implemented.
+!     Issue warning only once per simulation.
+      WARNED = .FALSE.
 
 !     Initialize soils variables
       NLAYR  = 0
@@ -1115,100 +1124,127 @@ C  tillage and rainfall kinetic energy
 
 !       ---------------------------------------------------
 !       Update BD, DLAYR, DUL, LL based on changes to soil organic matter 
-!       CHP 4/11/2006
-!       These SOM-revised values will be the new "base" values to which
-!       tilled soil properties will return.
-!       Update soil water holding capacity daily due to changes in bulk
-!       density and organic carbon content of soil.
-!       These equations based on Gupta & Larson 1979, Adams 1973, Izaurralde 2006
-        DO L = 1, NLAYR
-!         Change to SOM since initialization
-!         SOM units have already been converted to OM (not C)
-          dSOM = SomLit(L) - SomLit_init(L) !kg[OM]/ha
+!       CHP 2025-04-11
+!       Add switch for new method to modify soil properties based on 
+!         organic matter additions.
+
+        SELECT CASE (ISWITCH % MSDYN)
+        CASE ('D') !original method
+!         CHP 4/11/2006
+!         These SOM-revised values will be the new "base" values to which
+!         tilled soil properties will return.
+!         Update soil water holding capacity daily due to changes in bulk
+!         density and organic carbon content of soil.
+!         These equations based on Gupta & Larson 1979, Adams 1973, Izaurralde 2006
+          DO L = 1, NLAYR
+!           Change to SOM since initialization
+!           SOM units have already been converted to OM (not C)
+            dSOM = SomLit(L) - SomLit_init(L) !kg[OM]/ha
+            
+            IF (dSOM < 0.01) THEN
+!             No changes to soil properties due to organic matter
+              BD_SOM(L)   = BD_INIT(L)
+              DLAYR_SOM(L)= DLAYR_INIT(L)
+              DS_SOM(L)   = DS_INIT(L)
+              DUL_SOM(L)  = DUL_INIT(L)
+              LL_SOM(L)   = LL_INIT(L)
           
-          IF (dSOM < 0.01) THEN
-!           No changes to soil properties due to organic matter
-            BD_SOM(L)   = BD_INIT(L)
-            DLAYR_SOM(L)= DLAYR_INIT(L)
-            DS_SOM(L)   = DS_INIT(L)
-            DUL_SOM(L)  = DUL_INIT(L)
-            LL_SOM(L)   = LL_INIT(L)
-
-          ELSE
-!           Need to update soil properties based on changes to SOM
-
-!           First -- modify layer thickness
-!           dDlayr = change in layer thickness due to addition (or depletion)
-!             of organic matter.
-!           Mean bulk density of organic matter is 0.224 g/cm3 (from Adams,1973)
-
-!                    kg[om]   10^3 g     ha        m2           cm3
-!           dDlayr = ------ * ------ * ------- * -------- * -----------  
-!                      ha       kg     10^4 m2   10^4 cm2   0.224 g[om]
-
-            dDLAYR_SOM = dSOM * 4.46E-5
-!              cm      =kg/ha * 4.46E-5
-
-!           New base layer thickness and depths
-            DLAYR_SOM(L) = DLAYR_INIT(L) + dDLAYR_SOM
-
-!           -------------------------------------------------------
-!           Change SOM from kg/ha to percent
-            SOM_PCT(L) = SomLit(L) * 1.E-5/(BD_SOM(L)*DLAYR_SOM(L))*100.
-
-!            BD_SOM(L) = 100.0 / 
-!     &        (SOM_PCT(L) / 0.224 + (100. - SOM_PCT(L)) / BD_mineral(L))
-!
-            BD_calc(L) = 100.0 / 
-     &        (SOM_PCT(L) / 0.224 + (100. - SOM_PCT(L)) / 2.65)
-
-            BD_SOM(L) = BD_calc(L) / BD_calc_init(L) * BD_init(L)
-
-!           Limit BD to realistic values
-!           BD_SOM(L) = MIN(BD_SOM(L), 1.8)
-!           BD_SOM(L) = MAX(BD_SOM(L), 0.25)
-!           Upper limit for BD_SOM
-            BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2, 1.80) 
-!           Lower limit for BD_SOM
-            BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8, 0.95) 
-            dBD_SOM = BD_SOM(L) - BD_INIT(L)
-
-!           -------------------------------------------------------
-!           Update DS
-            IF (L == 1) THEN
-              DS_SOM(1) = DLAYR_SOM(1)
             ELSE
-              DS_SOM(L) = DS(L-1) + DLAYR_SOM(L)
+!             Need to update soil properties based on changes to SOM
+          
+!             First -- modify layer thickness
+!             dDlayr = change in layer thickness due to addition (or depletion)
+!               of organic matter.
+!             Mean bulk density of organic matter is 0.224 g/cm3 (from Adams,1973)
+          
+!                      kg[om]   10^3 g     ha        m2           cm3
+!             dDlayr = ------ * ------ * ------- * -------- * -----------  
+!                        ha       kg     10^4 m2   10^4 cm2   0.224 g[om]
+          
+              dDLAYR_SOM = dSOM * 4.46E-5
+!                cm      =kg/ha * 4.46E-5
+          
+!             New base layer thickness and depths
+              DLAYR_SOM(L) = DLAYR_INIT(L) + dDLAYR_SOM
+          
+!             -------------------------------------------------------
+!             Change SOM from kg/ha to percent
+              SOM_PCT(L) = SomLit(L)*1.E-5/(BD_SOM(L)*DLAYR_SOM(L))*100.
+          
+!              BD_SOM(L) = 100.0 / 
+!     &          (SOM_PCT(L) / 0.224 + (100. - SOM_PCT(L)) / BD_mineral(L))
+!         
+              BD_calc(L) = 100.0 / 
+     &          (SOM_PCT(L) / 0.224 + (100. - SOM_PCT(L)) / 2.65)
+          
+              BD_SOM(L) = BD_calc(L) / BD_calc_init(L) * BD_init(L)
+          
+!             Limit BD to realistic values
+!             BD_SOM(L) = MIN(BD_SOM(L), 1.8)
+!             BD_SOM(L) = MAX(BD_SOM(L), 0.25)
+!             Upper limit for BD_SOM
+              BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2, 1.80) 
+!             Lower limit for BD_SOM
+              BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8, 0.95) 
+              dBD_SOM = BD_SOM(L) - BD_INIT(L)
+          
+!             -------------------------------------------------------
+!             Update DS
+              IF (L == 1) THEN
+                DS_SOM(1) = DLAYR_SOM(1)
+              ELSE
+                DS_SOM(L) = DS(L-1) + DLAYR_SOM(L)
+              ENDIF
+          
+!             Change SOM from kg/ha to percent
+              SOM_PCT(L) = SomLit(L) * 1.E-5/(BD_SOM(L)*DLAYR_SOM(L))*100.
+!                           kg[OM]    g[OM]/cm2     cm3       1
+!                        = -------- * --------- * -------  * ---- * 100%
+!                             ha      kg[OM]/ha   g[soil]     cm
+!         
+!                        = g[OM]/g[soil] * 100%
+          
+!             Change in %SOM
+              dOC = SOM_PCT(L) - SOM_PCT_init(L)
+          
+!             Equation to modify DUL depends on soil texture (Gupta & Larson, 1979)
+              IF (COARSE(L)) THEN
+!               Coarse soils  --  use DUL10
+                dDUL_SOM = 0.004966 * dOC - 0.2423 * dBD_SOM 
+              ELSE
+!               Other soils -- use DUL33
+                dDUL_SOM = 0.002208 * dOC - 0.1434 * dBD_SOM 
+              ENDIF
+              DUL_SOM(L) = DUL_INIT(L) + dDUL_SOM
+          
+!             Lower limit
+              dLL_SOM = 0.002228 * dOC + 0.02671 * dBD_SOM
+              LL_SOM(L)  = LL_INIT(L) + dLL_SOM
+          
+!              IF (L==1) WRITE(1000,*)dOC, dBD_SOM, dLL_SOM, LL_SOM(1)
             ENDIF
+          ENDDO
 
-!           Change SOM from kg/ha to percent
-            SOM_PCT(L) = SomLit(L) * 1.E-5/(BD_SOM(L)*DLAYR_SOM(L))*100.
-!                         kg[OM]    g[OM]/cm2     cm3       1
-!                      = -------- * --------- * -------  * ---- * 100%
-!                           ha      kg[OM]/ha   g[soil]     cm
-!
-!                      = g[OM]/g[soil] * 100%
+!         TEMP CHP
+          PRINT_TODAY = .TRUE.
 
-!           Change in %SOM
-            dOC = SOM_PCT(L) - SOM_PCT_init(L)
+!       ---------------------------------------------------------------
+        CASE ('A')
+!         New soil dynamics algorithm goes here
 
-!           Equation to modify DUL depends on soil texture (Gupta & Larson, 1979)
-            IF (COARSE(L)) THEN
-!             Coarse soils  --  use DUL10
-              dDUL_SOM = 0.004966 * dOC - 0.2423 * dBD_SOM 
-            ELSE
-!             Other soils -- use DUL33
-              dDUL_SOM = 0.002208 * dOC - 0.1434 * dBD_SOM 
-            ENDIF
-            DUL_SOM(L) = DUL_INIT(L) + dDUL_SOM
-
-!           Lower limit
-            dLL_SOM = 0.002228 * dOC + 0.02671 * dBD_SOM
-            LL_SOM(L)  = LL_INIT(L) + dLL_SOM
-
-!            IF (L==1) WRITE(1000,*)dOC, dBD_SOM, dLL_SOM, LL_SOM(1)
+!         TEMP CHP
+          PRINT_TODAY = .TRUE.
+!         Temporary warning for alternate soil dynamics algorithm until it is implemented.
+!         Issue warning only once per simulation.
+          IF (.NOT. WARNED) THEN
+            PRINT *, 'New soil dynamics algorithm not yet implemented'
+            MSG(1) = 'New soil dynamics algorithm not yet implemented'
+            CALL WARNING(1,ERRKEY,MSG)
+            WARNED = .TRUE.
           ENDIF
-        ENDDO
+        END SELECT
+!       ---------------------------------------------------------------
+
       ENDIF
 
 !     Tillage effects applied to SOM modified values
@@ -1490,7 +1526,7 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
       IF (ISWWAT == 'N') RETURN
 
       CALL OPSOILDYN(CONTROL, DYNAMIC, ISWITCH, 
-     &  BD, BD_SOM, CN, CRAIN, DLAYR, DUL, KECHGE, LL, PRINT_TODAY, SAT, 
+     &  BD, BD_SOM, CN, CRAIN, DLAYR, DUL, KECHGE, LL, PRINT_TODAY, SAT,
      &  SOILCOV, SUMKE, SWCN, TOTAW)
 
 !***********************************************************************
@@ -1877,14 +1913,20 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
       REAL, DIMENSION(NL) :: BD, BD_SOM, DLAYR, DUL, LL, SAT, SWCN
       REAL, DIMENSION(0:NL) :: KECHGE
 
+
+!     TEMP CHP - FORCE PRINTING EVERY DAY
+      PrintDyn = .TRUE.
+      Print_today = .TRUE.
 !***********************************************************************
 !***********************************************************************
 !     Seasonal initialization
 !***********************************************************************
       IF (DYNAMIC .EQ. SEASINIT) THEN
 !-----------------------------------------------------------------------
-      IF (INDEX('AD',ISWITCH % IDETL) > 0 .AND. ISWITCH % IDETW == 'Y' 
-     &   .AND.  INDEX('YR',ISWITCH % ISWTIL) > 0) THEN
+!     TEMP CHP
+
+!      IF (INDEX('AD',ISWITCH % IDETL) > 0 .AND. ISWITCH % IDETW == 'Y' 
+!     &   .AND.  INDEX('YR',ISWITCH % ISWTIL) > 0) THEN
         PrintDyn = .TRUE. 
         CALL GETLUN('OUTSOL',DLUN)
 !       Temporary output file for debugging:
@@ -1910,9 +1952,9 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
      &  '    SAT1    SAT2    SAT3    SAT4',
      &  '    DUL1    DUL2    DUL3    DUL4',
      &  '     LL1     LL2     LL3     LL4')")
-      ELSE
-        PrintDyn = .FALSE.
-      ENDIF
+ !     ELSE
+ !       PrintDyn = .FALSE.
+ !     ENDIF
 
 !***********************************************************************
 !***********************************************************************
