@@ -1145,7 +1145,7 @@ C  tillage and rainfall kinetic energy
               ENDIF
           
 !             Change SOM from kg/ha to percent
-              SOM_PCT(L) = SomLit(L) * 1.E-5/(BD_SOM(L)*DLAYR_SOM(L))*100.
+              SOM_PCT(L) = SomLit(L)*1.E-5/(BD_SOM(L)*DLAYR_SOM(L))*100.
 !                           kg[OM]    g[OM]/cm2     cm3       1
 !                        = -------- * --------- * -------  * ---- * 100%
 !                             ha      kg[OM]/ha   g[soil]     cm
