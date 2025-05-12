@@ -49,6 +49,11 @@ C-----------------------------------------------------------------------
 !     Plastic Mulch
       REAL PMFRACTION
 
+!     temp chp
+      real swabi1, swabi2
+      type (controltype) control
+      call get (control)
+
 !!     Temporary for printing
 !      INTEGER DOY, YEAR, LUN
 !      REAL CUMRO
@@ -81,9 +86,15 @@ C-----------------------------------------------------------------------
 !     Initial abstraction ratio
 !     Runoff is related to the average soil water content of the top
 !     two layers of soil
-      SWABI = 0.15 * ((SAT(1) - SW(1)) / (SAT(1) - LL(1) * 0.5) +
-     &              (SAT(2) - SW(2)) / (SAT(2) - LL(2) * 0.5))
-      SWABI = MAX(0.0, SWABI)
+!     chp 2025-05-08 investigating possible error in this equation
+      SWABI1 = 0.15 * ((SAT(1) - SW(1)) / (SAT(1) - LL(1) * 0.5) +
+     &                 (SAT(2) - SW(2)) / (SAT(2) - LL(2) * 0.5))
+      SWABI2 = 0.15 * 0.5 * ((SAT(1) - SW(1)) / (SAT(1) - LL(1)) +
+     &                       (SAT(2) - SW(2)) / (SAT(2) - LL(2)))
+      SWABI = MAX(0.0, SWABI2)
+
+!     temp chp
+!     write(5555,'(i8,2f10.4)') control % yrdoy, swabi1, swabi2
 
 !     05/08/2006 CHP increase initial abstraction if surface mulch is
 !     present. Initial abstraction ratio increases from SWABI
