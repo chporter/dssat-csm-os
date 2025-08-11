@@ -241,7 +241,7 @@
      &    SOILPROP, SWV_D, TimeIncr, WCr,             !Input
      &    SWV_ts, SWFh_ts, SWFv_ts)                   !Output
 
-      CALL ROOTWU_2D(SEASINIT, TimeIncr, 
+      CALL RWUts_2D(SEASINIT, TimeIncr, 
      &    Cells, EOP_ts, SWV_avail,                       !Input 
      &    RWU_2D_ts, RWUP_2D_ts, TRWU_ts, TRWUP_ts)       !Output
      
@@ -791,7 +791,7 @@
 !       - To get the total uptake across a row, column weights are used. 
         EOP_ts = TSRadFrac * EOP
 
-        CALL ROOTWU_2D(RATE, TimeIncr, 
+        CALL RWUts_2D(RATE, TimeIncr, 
      &    Cells, EOP_ts, SWV_avail,                       !Input 
      &    RWU_2D_ts, RWUP_2D_ts, TRWU_ts, TRWUP_ts)       !Output
 

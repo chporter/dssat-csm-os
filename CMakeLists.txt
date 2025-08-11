@@ -660,7 +660,7 @@ set(
         "SPAM/OpStemp.for"
         "SPAM/PET.for"
         "SPAM/ROOTWU.for"
-        "SPAM/ROOTWU_2D.for"
+        "SPAM/RootWUts_2D.for"
         "SPAM/SAL_Stemp.for"
         "SPAM/SOILEV.for"
         "SPAM/SPAM.for"

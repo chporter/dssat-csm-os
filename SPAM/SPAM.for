@@ -52,7 +52,7 @@ C=======================================================================
       EXTERNAL ETPHOT, STEMP_EPIC, STEMP, ROOTWU, SOILEV
       EXTERNAL MULCH_EVAP, OPSPAM, PET, PSE, FLOOD_EVAP, ESR_SOILEVAP
       EXTERNAL XTRACT, WATERSTRESS
-      EXTERNAL TRANS
+      EXTERNAL TRANS, ROOTWU_2D
       SAVE
 
 !     Subroutine interface variables
@@ -192,9 +192,15 @@ C=======================================================================
       ENDIF
 !     ---------------------------------------------------------
       IF (MEEVP .NE. 'Z') THEN
-        CALL ROOTWU(SEASINIT,
+        IF (SIM2D) THEN
+          CALL ROOTWU_2D(SEASINIT,
      &      DLAYR, LL, NLAYR, PORMIN, RLV, RWUMX, SAT, SW,!Input
      &      RWU, TRWUP)                           !Output
+        ELSE
+          CALL ROOTWU(SEASINIT,
+     &      DLAYR, LL, NLAYR, PORMIN, RLV, RWUMX, SAT, SW,!Input
+     &      RWU, TRWUP)                           !Output
+        ENDIF
 
 !       Initialize soil evaporation variables
         SELECT CASE (MESEV)
@@ -299,9 +305,15 @@ C=======================================================================
 !         Calculate potential root water uptake rate for each soil layer
 !         and total potential water uptake rate.
           IF (XHLAI .GT. 0.0) THEN
-            CALL ROOTWU(RATE,
+            IF (SIM2D) THEN
+              CALL ROOTWU_2D(SEASINIT,
      &          DLAYR, LL, NLAYR, PORMIN, RLV, RWUMX, SAT, SW,!Input
      &          RWU, TRWUP)                                   !Output
+            ELSE
+              CALL ROOTWU(RATE,
+     &          DLAYR, LL, NLAYR, PORMIN, RLV, RWUMX, SAT, SW,!Input
+     &          RWU, TRWUP)                                   !Output
+            ENDIF
           ELSE
             RWU   = 0.0
             TRWUP = 0.0
@@ -505,7 +517,9 @@ C=======================================================================
       ELSEIF (DYNAMIC .EQ. INTEGR) THEN
 !-----------------------------------------------------------------------
       IF (CONTROL % Sim2D) THEN
-        CALL GET('SPAM','EP',EP)
+!       Aggregate and retrieve 2D sub-daily root water uptake
+        CALL ROOTWU_2DA()
+!        CALL GET('SPAM','EP',EP)
       ENDIF
 
       IF (ISWWAT .EQ. 'Y') THEN
