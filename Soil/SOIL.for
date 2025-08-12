@@ -44,7 +44,7 @@ C=====================================================================
      &    NH4_plant, NO3_plant, SKi_AVAIL, SNOW,          !Output
      &    SPi_AVAIL, SOILPROP, SOMLIT, SomLitC, SomLitE,  !Output
      &    SOILPROP_furrow, SW, SWDELTS, SWDELTU, UPPM,    !Output
-     &    TRWU, TRWUP, WINF, Cells, YREND)                !Output
+     &    WINF, Cells, YREND)                             !Output
 !-----------------------------------------------------------------------
 !     USE ModuleDefs !already USED by Cells_2D
       USE Cells_2D
@@ -98,7 +98,6 @@ C=====================================================================
       REAL, DIMENSION(NL), INTENT(OUT) :: SWDELTS
       REAL, DIMENSION(NL), INTENT(OUT) :: SWDELTU
       REAL               , INTENT(OUT) :: WINF
-      REAL               , INTENT(OUT) :: TRWU, TRWUP
       REAL, DIMENSION(NL), INTENT(OUT) :: UPPM
       INTEGER            , INTENT(OUT) :: YREND
 
@@ -152,7 +151,7 @@ C=====================================================================
           CALL WatBal2D(CONTROL, ISWITCH,
      &    EOP, IRRAMT, SOILPROP, SOILPROP_FURROW, !Input 
      &    WEATHER,                                !Input
-     &    Cells, SW, SWDELTS, TRWU, TRWUP)        !Output
+     &    Cells, SW, SWDELTS)                     !Output
         ELSE
           CALL WATBAL(CONTROL, ISWITCH, 
      &    CELLS, ES, IRRAMT, SOILPROP, SWDELTX,           !Input
@@ -208,7 +207,7 @@ C=====================================================================
           CALL WatBal2D(CONTROL, ISWITCH,
      &    EOP, IRRAMT, SOILPROP, SOILPROP_FURROW, !Input 
      &    WEATHER,                                !Input
-     &    Cells, SW, SWDELTS, TRWU, TRWUP)        !Output
+     &    Cells, SW, SWDELTS)                     !Output
 
           SNOW = 0.0; TDFC = 0.0; TDLNO = 0 
           WINF = 0.0; SWDELTU = 0.0

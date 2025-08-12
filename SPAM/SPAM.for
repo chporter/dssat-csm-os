@@ -47,12 +47,13 @@ C=======================================================================
       USE Cells_2D
       USE ModuleData
       USE FloodModule
+      USE RootWU_2D_mod
 
       IMPLICIT NONE
       EXTERNAL ETPHOT, STEMP_EPIC, STEMP, ROOTWU, SOILEV
       EXTERNAL MULCH_EVAP, OPSPAM, PET, PSE, FLOOD_EVAP, ESR_SOILEVAP
       EXTERNAL XTRACT, WATERSTRESS
-      EXTERNAL TRANS, ROOTWU_2D
+      EXTERNAL TRANS
       SAVE
 
 !     Subroutine interface variables
@@ -87,7 +88,7 @@ C=======================================================================
       REAL EF, EM, ET, EVAP
       REAL U
       REAL MSALB, ET_ALB
-      REAL XLAT, TAV, TAMP
+      REAL XLAT, TAV, TAMP, DAYL
 
       REAL DLAYR(NL), DUL(NL), LL(NL),RWU(NL),
      &    SAT(NL), SW_AVAIL(NL) !SWAD(NL),
@@ -128,6 +129,7 @@ C=======================================================================
       FLOOD  = FLOODWAT % FLOOD
 
       CO2    = WEATHER % CO2
+      DAYL   = WEATHER % DAYL
       SRAD   = WEATHER % SRAD
       TAMP   = WEATHER % TAMP
       TAV    = WEATHER % TAV
@@ -193,9 +195,10 @@ C=======================================================================
 !     ---------------------------------------------------------
       IF (MEEVP .NE. 'Z') THEN
         IF (SIM2D) THEN
-          CALL ROOTWU_2D(SEASINIT,
-     &      DLAYR, LL, NLAYR, PORMIN, RLV, RWUMX, SAT, SW,!Input
-     &      RWU, TRWUP)                           !Output
+          CALL ROOTWU_2DA(SEASINIT, CELLS,
+     &      DAYL, NLAYR, PORMIN, RWUMX,           !Input
+     &      RWU, TRWU, TRWUP)                     !Output
+
         ELSE
           CALL ROOTWU(SEASINIT,
      &      DLAYR, LL, NLAYR, PORMIN, RLV, RWUMX, SAT, SW,!Input
@@ -306,9 +309,9 @@ C=======================================================================
 !         and total potential water uptake rate.
           IF (XHLAI .GT. 0.0) THEN
             IF (SIM2D) THEN
-              CALL ROOTWU_2D(SEASINIT,
-     &          DLAYR, LL, NLAYR, PORMIN, RLV, RWUMX, SAT, SW,!Input
-     &          RWU, TRWUP)                                   !Output
+              CALL ROOTWU_2DA(RATE, CELLS,
+     &          DAYL, NLAYR, PORMIN, RWUMX,           !Input
+     &          RWU, TRWU, TRWUP)                     !Output
             ELSE
               CALL ROOTWU(RATE,
      &          DLAYR, LL, NLAYR, PORMIN, RLV, RWUMX, SAT, SW,!Input
@@ -505,6 +508,7 @@ C=======================================================================
       CALL PUT('SPAM', 'ES',  ES)
       CALL PUT('SPAM', 'EOP', EOP)
       CALL PUT('SPAM', 'EVAP',EVAP)
+
       IF (.NOT. CONTROL % Sim2D) THEN
         CALL PUT('SPAM', 'EP',  EP)
         CALL PUT('SPAM', 'UH2O',RWU, NL)
@@ -518,8 +522,9 @@ C=======================================================================
 !-----------------------------------------------------------------------
       IF (CONTROL % Sim2D) THEN
 !       Aggregate and retrieve 2D sub-daily root water uptake
-        CALL ROOTWU_2DA()
-!        CALL GET('SPAM','EP',EP)
+        CALL ROOTWU_2DA(INTEGR, CELLS,
+     &    DAYL, NLAYR, PORMIN, RWUMX,           !Input
+     &    RWU, TRWU, TRWUP)                     !Output
       ENDIF
 
       IF (ISWWAT .EQ. 'Y') THEN

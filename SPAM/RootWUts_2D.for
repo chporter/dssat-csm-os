@@ -4,7 +4,7 @@
 !  Purpose: Determines root uptake at sub-daily time steps for 2D model. 
 !  Two subroutines are used with some shared variables.
 !  - ROOTWU_2D is called daily from SPAM.for and sends back the daily
-!       accumulated values of TRWU, RWU_2D .
+!       accumulated values of RWU (1D), TRWU, TRWUP.
 !  - RWUts_2D is called from WatBal_2D on a sub-daily time step. At each
 !       time step, root water uptake is calculated for that time step. 
 
@@ -19,27 +19,22 @@
 
 !     These variables are shared between ROOTWU_2D (called daily by SPAM) 
 !       and RWUts_2D (called sub-daily by WatBal_2D)
-!      REAL, PROTECTED :: 
-!      REAL, DIMENSION(NL), PROTECTED :: 
-      REAL, DIMENSION(MaxRows,MaxCols) :: CellArea, ColFrac
-      REAL, DIMENSION(MaxRows,MaxCols) :: RootWU_2D
-      INTEGER, DIMENSION(MaxRows,MaxCols) :: Cell_Type
+      REAL, DIMENSION(MaxRows,MaxCols) :: RLVcell, RWUcell
       LOGICAL, PROTECTED :: First_ts
-
-      REAL, DIMENSION(MaxRows,MaxCols) :: LL, RLV_2D
-      REAL, DIMENSION(MaxRows,MaxCols) :: SAT, SWCON2, Thick
+      REAL, DIMENSION(MaxRows,MaxCols) :: LLcell, SATcell
+      REAL, DIMENSION(MaxRows,MaxCols) :: SWCON2, ThickCell, ColumnFrac
       REAL, DIMENSION(MaxRows,MaxCols) :: TSS, TSS_last
-      REAL PORMIN, RWUMX
-      REAL Scale2Hour
+      REAL PORMINts, RWUMXts
+      REAL Scale2Hour, TRWU_day, TRWUP_day
 
       contains
 
 !==========================================================================
 !     DAILY ROUTINE CALLED FROM SPAM
 !==========================================================================
-      SUBROUTINE ROOTWU_2DA (DYNAMIC, CELLS,
-     &      WEATHER, 
-     &      RWU, TRWUP)                           !Output
+      SUBROUTINE ROOTWU_2DA (DYNAMIC, CELLS, 
+     &      DAYL, NLAYR, PORMIN, RWUMX,           !Input
+     &      RWU, TRWU, TRWUP)                     !Output
 
 !     ------------------------------------------------------------------
       USE ModuleData
@@ -47,11 +42,12 @@
       SAVE
 !     ------------------------------------------------------------------
 
-      INTEGER, INTENT(IN) :: DYNAMIC
-      TYPE (CellType), INTENT(IN) :: CELLS(MaxRows,MaxCols)
-      TYPE (WeatherType), INTENT(IN) :: WEATHER
+      INTEGER, INTENT(IN) :: DYNAMIC, NLAYR
+      REAL, INTENT(IN) :: DAYL, PORMIN, RWUMX
+      TYPE (CellType), INTENT(INOUT) :: CELLS(MaxRows,MaxCols)
+      REAL, INTENT(OUT) :: TRWU, TRWUP
+      REAL, DIMENSION(NL), INTENT(OUT) :: RWU
       INTEGER i,j
-      REAL RWU, TRWUP
 
 !***********************************************************************
 !***********************************************************************
@@ -59,13 +55,11 @@
 !***********************************************************************
       IF (DYNAMIC .EQ. SEASINIT) THEN
 !-----------------------------------------------------------------------
-      LL        = CELLS % STATE % LL
-      RLV_2D    = CELLS % STATE % RLV
-      SAT       = CELLS % STATE % SAT
-      CellArea  = CELLS % STRUC % CellArea
-      Cell_TYPE = CELLS % STRUC % Cell_Type
-      Thick     = CELLS % Struc % Thick
-      ColFrac   = BedDimension % ColFrac
+      LLcell        = CELLS % STATE % LL
+      RLVcell    = CELLS % STATE % RLV
+      SATcell       = CELLS % STATE % SAT
+      ThickCell     = CELLS % Struc % Thick
+      ColumnFrac = BedDimension % ColFrac
 
       TSS       = 0.0
       TSS_LAST  = 0.0
@@ -77,16 +71,16 @@
       SWCON2    = 0.0
       DO i = 1, NRowsTot
         DO j = 1, NColsTot
-          SWCON2(i,j) = 120. - 250. * LL(i,j)
-          IF (LL(i,j) > 0.30) SWCON2(i,j) = 45.0
+          SWCON2(i,j) = 120. - 250. * LLcell(i,j)
+          IF (LLcell(i,j) > 0.30) SWCON2(i,j) = 45.0
         ENDDO  
       ENDDO
 
       RWU   = 0.0
       TRWUP = 0.0
 
-      CALL GET('PLANT', 'PORMIN', PORMIN)
-      CALL GET('PLANT', 'RWUMX',  RWUMX)
+      PORMINts = PORMIN
+      RWUMXts  = RWUMX
 
 !***********************************************************************
 !***********************************************************************
@@ -97,8 +91,9 @@
 !     This call from SPAM is done before WatBal_2D has called RWUts_2D
 !       at a sub-daily time step. 
 
-      RLV_2D = Cells % State % RLV
-      Scale2Hour = 24. / WEATHER % DAYL
+      RLVcell = Cells % State % RLV
+      Scale2Hour = 24. / DAYL
+      RWUcell = 0.0
 
 !***********************************************************************
 !***********************************************************************
@@ -109,7 +104,20 @@
 !     This call from SPAM is done after WatBal_2D has called RWUts_2D
 !       at a sub-daily time step. 
 
-        RWU_2D = SumRWU_2D
+!     Store 2D RWU in CELLS variable
+      CELLS % Rate % EP_rate = RWUcell
+
+!     Convert 2D RWU to 1D 
+      CALL Cell2Layer_2D(
+     &  RWUcell, CELLS%Struc, NLAYR,  !Input
+     &  RWU)                           !Output
+
+!     Convert units from mm to cm for DSSAT plant routines.
+      TRWU = TRWU_day / 10.             !cm
+      TRWUP = TRWUP_day / 10.           !cm
+
+      CALL PUT('SPAM','TRWUP', TRWUP)
+      CALL PUT('SPAM','TRWU',  TRWU)
 
 !     ------------------------------------------------------------------
 !     End of DYNAMIC IF block
@@ -144,7 +152,6 @@
       SAVE
 !-----------------------------------------------------------------------
       INTEGER i, j
-      INTEGER, DIMENSION(MaxRows,MaxCols) :: Cell_type
       Double Precision, DIMENSION(MaxRows,MaxCols) :: RWU_2D_ts
       Double Precision, DIMENSION(MaxRows,MaxCols) :: RWUP_2D_ts
 
@@ -173,25 +180,25 @@
       DO i = 1, NRowsTot
         DO j = 1, NColsTot
 
-          SELECT CASE (Cell_type(i,j))
+          SELECT CASE (CELLS(i,j) % Struc % Cell_Type)
           CASE(3,4,5); CONTINUE
           CASE DEFAULT; CYCLE
           END SELECT
 
-          IF (RLV_2D(i,j) < 1.E-5 .OR. SWV_D(i,j) <= LL(i,j)) THEN
+          IF (RLVcell(i,j) < 1.E-5 .OR. SWV_D(i,j) <= LLcell(i,j)) THEN
             RWUP_2D_ts(i,j) = 0.
           ELSE
 !           ------------------------------------------------------------
 !           Soil limitation
-            EXPFAC = MIN((SWCON2(i,j) * (SWV_D(i,j) - LL(i,j))), 40.)
+            EXPFAC = MIN((SWCON2(i,j) * (SWV_D(i,j) -LLcell(i,j))), 40.)
             RWUP_2D_ts(i,j) = SWCON1 * 
-     &                        EXP(EXPFAC) / (SWCON3 - ALOG(RLV_2D(i,j)))
+     &                      EXP(EXPFAC) / (SWCON3 - ALOG(RLVcell(i,j)))
 !           RWUP_2D_ts in cm3[water]/cm[root]-d
 
 !           ------------------------------------------------------------
 !           Root limitation
 !           Effects of saturated soil
-            IF ((SAT(i,j) - SWV_D(i,j)) >= PORMIN) THEN
+            IF ((SATcell(i,j) - SWV_D(i,j)) >= PORMINts) THEN
                TSS(i,j) = 0.
             ELSE
                TSS(i,j) = TSS(i,j) + TimeIncr   !minutes
@@ -199,7 +206,7 @@
 !           Delay of 2 days after soil layer is saturated before root
 !           water uptake is affected
             IF (TSS(i,j) .GT. 2880.) THEN   !2880 minutes = 2 days
-               SWEXF = (SAT(i,j) - SWV_D(i,j)) / PORMIN
+               SWEXF = (SATcell(i,j) - SWV_D(i,j)) / PORMINts
                SWEXF = MAX(SWEXF,0.0)
             ELSE
                SWEXF = 1.0
@@ -209,7 +216,7 @@
 !           Root limitation should be scaled up based on max that can
 !               be extracted by roots in an hour.  Daily value underestimates
 !               hourly limit.  Soil water supply limitation is OK as-is.
-            RootLimit = RWUMX * SWEXF * Scale2Hour
+            RootLimit = RWUMXts * SWEXF * Scale2Hour
 
 !           ------------------------------------------------------------
 !           Actual potential root uptake is minimum of root limited rate
@@ -218,14 +225,14 @@
 !           RWUP_2D_ts in cm3[water]/cm[root]-d
 
 !           Convert to volumetric fraction 
-            RWUP_vf(i,j) = RWUP_2D_ts(i,j) * RLV_2D(i,j)
+            RWUP_vf(i,j) = RWUP_2D_ts(i,j) * RLVcell(i,j)
 !           cm3[water]     cm3[water]   cm[root] 
 !           -----------  = ---------- * --------- 
 !           cm3[soil]-d    cm[root]-d   cm3[soil] 
 
 !           With this formula, the RWUP can be added in a soil column to get the total for that column.
 !           Aggregating across a row requires multiplying by ColFrac
-            RWUP_2D_ts(i,j) = RWUP_vf(i,j) *Thick(i,j)
+            RWUP_2D_ts(i,j) = RWUP_vf(i,j) *ThickCell(i,j)
 !               cm[water]     cm3[water]                          1 cm2[soil cell width x row length]
 !               ---------   = -----------  * cm[soil thickness] * -----------------------------------
 !                   d         cm3[soil]-d                         1 cm2[watercell width x row length]
@@ -236,7 +243,8 @@
 !              mm[water]    =  ---------      * -- * -- * hr
 !                                  d            cm   hr
 
-            TRWUP_ts = TRWUP_ts + RWUP_2D_ts(i,j) *ColFrac(i,j)      !mm
+            TRWUP_ts = TRWUP_ts 
+     &             + RWUP_2D_ts(i,j) * ColumnFrac(i,j)   !mm
           ENDIF
         ENDDO
       ENDDO
@@ -255,10 +263,14 @@
           RWU_2D_ts(i,j) = RWUP_2D_ts(i,j) * WUF
           SELECT CASE (Cells(i,j)%Struc%Cell_Type)
           CASE (3,4,5)
-            TRWU_ts = TRWU_ts + RWU_2D_ts(i,j) * ColFrac(i,j)
+            TRWU_ts = TRWU_ts + RWU_2D_ts(i,j) * ColumnFrac(i,j)
           END SELECT
         ENDDO
       ENDDO
+
+      TRWU_day  = TRWU_day  + TRWU_ts
+      TRWUP_day = TRWUP_day + TRWUP_ts
+      RWUcell = RWUcell + RWU_2D_ts
 
       RETURN
       END SUBROUTINE RWUts_2D
@@ -267,16 +279,16 @@
 !     RWUts_2D VARIABLE DEFINITIONS:
 !-----------------------------------------------------------------------
 ! DLAYR(i,j)  Soil thickness in layer L (cm)
-! LL(i,j)     Volumetric soil water content in soil layer L at lower limit
+! LLcell(i,j) Volumetric soil water content in soil cell i,j at lower limit
 !             (cm3/cm3)
 ! NL        Maximum number of soil layers = 20 
 ! PORMIN    Minimum pore space required for supplying oxygen to roots for 
 !             optimal growth and function (cm3/cm3)
-! RLV_2D(i,j)    Root length density for soil layer L ((cm root / cm3 soil))
-! RWUP_2D_ts(i,j)    Root water uptake from soil layer L in current time step(cm/d)
+! RLVcell(i,j) Root length density for soil layer L ((cm root / cm3 soil))
+! RWUP_2D_ts(i,j) Root water uptake from soil layer L in current time step(cm/d)
 ! RWUMX     Maximum water uptake per unit root length, constrained by soil 
 !             water (cm3[water] / cm [root])
-! SAT(i,j)    Volumetric soil water content in layer L at saturation
+! SATcell(i,j) Volumetric soil water content in cell i,j at saturation
 !             (cm3 [water] / cm3 [soil])
 ! SWV_D(i,j)  Volumetric soil water content in layer L
 !             (cm3 [water] / cm3 [soil])

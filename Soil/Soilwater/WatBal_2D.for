@@ -38,7 +38,7 @@
       SUBROUTINE WatBal2D(CONTROL, ISWITCH, 
      &    EOP, IRRAMT, SOILPROP, SOILPROP_FURROW,   !Input
      &    WEATHER,                                  !Input
-     &    Cells, SW, SWDELTS, TRWU, TRWUP)          !Output
+     &    Cells, SW, SWDELTS)                       !Output
 
 !-----------------------------------------------------------------------
       USE Cells_2D
@@ -46,6 +46,7 @@
       USE FloodModule 
       USE Interface_OPWBAL
       USE NFLUXts
+      USE RootWU_2D_mod
 
       IMPLICIT NONE
       EXTERNAL WaterTable_2D, DRAINAGE_2D, ROOTWU_2D, 
@@ -61,7 +62,7 @@
       TYPE (SoilType)   , INTENT(INOUT) :: SOILPROP, SOILPROP_furrow
       TYPE (WeatherType), INTENT(IN) :: WEATHER
       REAL, DIMENSION(NL),INTENT(OUT):: SW, SWDELTS
-      REAL              , INTENT(OUT):: TRWU, TRWUP
+!     REAL              , INTENT(OUT):: TRWU, TRWUP
       Type (CellType) Cells(MaxRows,MaxCols)
 
       TYPE (DripIrrType) :: DripIrrig(NDrpLn)
@@ -88,10 +89,8 @@
 
       REAL TimeIncr, MinTimeIncr, ROWSPC_cm, DayIncr
       REAL StartTime, EndTime, DeltaT
-      REAL CumRad, LastCumRad, TSRadFrac, SUM_TSRF
+      REAL CumRad, LastCumRad, TSRadFrac
 
-      REAL SWFAC,  SWFAC_ts,  SWFAC_day
-      REAL TURFAC, TURFAC_ts, TURFAC_day
       REAL ActWTD, MgmtWTD, netLatFlow, DayLatFlow 
       REAL StdIrrig, WidTot, DepTot, SurfaceVal 
       REAL Excess_vf, Excess_mm
@@ -241,10 +240,6 @@
      &    SOILPROP, SWV_D, TimeIncr, WCr,             !Input
      &    SWV_ts, SWFh_ts, SWFv_ts)                   !Output
 
-      CALL RWUts_2D(SEASINIT, TimeIncr, 
-     &    Cells, EOP_ts, SWV_avail,                       !Input 
-     &    RWU_2D_ts, RWUP_2D_ts, TRWU_ts, TRWUP_ts)       !Output
-     
 !     Initialize summary variables
       CALL WBSUM_2D(SEASINIT,
      &    CELLS, DRAIN_2D, HalfRow, RAIN, RUNOFF, SWV,    !Input
@@ -333,12 +328,9 @@
       SWFlux_R = 0.0
       SWFlux_D = 0.0
       SWFlux_U = 0.0
-      TRWU = 0.0
-      TRWUP = 0.0
+!     TRWU = 0.0
+!     TRWUP = 0.0
 
-      SWFAC  = 0.0
-      TURFAC = 0.0
-      SUM_TSRF = 0.0
       CellInf = 0.0
       CellDrip = 0.0
 
@@ -791,16 +783,16 @@
 !       - To get the total uptake across a row, column weights are used. 
         EOP_ts = TSRadFrac * EOP
 
-        CALL RWUts_2D(RATE, TimeIncr, 
+        CALL RWUts_2D(TimeIncr, 
      &    Cells, EOP_ts, SWV_avail,                       !Input 
      &    RWU_2D_ts, RWUP_2D_ts, TRWU_ts, TRWUP_ts)       !Output
 
-        CALL WaterStress(SNGL(EOP_ts), RWUEP1, SNGL(TRWUP_ts)/10., 
-     &      SWFAC_ts, TURFAC_ts)
-
-        SWFAC  = SWFAC  + SWFAC_ts  * TSRadFrac
-        TURFAC = TURFAC + TURFAC_ts * TSRadFrac
-        SUM_TSRF = SUM_TSRF + TSRadFrac
+!        CALL WaterStress(SNGL(EOP_ts), RWUEP1, SNGL(TRWUP_ts)/10., 
+!     &      SWFAC_ts, TURFAC_ts)
+!
+!        SWFAC  = SWFAC  + SWFAC_ts  * TSRadFrac
+!        TURFAC = TURFAC + TURFAC_ts * TSRadFrac
+!        SUM_TSRF = SUM_TSRF + TSRadFrac
 
 !       Calculate SW available for drainage -- reduce by 
 !       root water uptake.
@@ -825,11 +817,11 @@
           ENDDO
         ENDDO
 
-        TRWU = TRWU + TRWU_ts
-        IF (EOP_ts > 1.E-7) THEN
-          TRWUP = TRWUP + TRWUP_ts
-        ENDIF
-        CELLS%Rate%EP_rate = RWU_2D
+!       TRWU = TRWU + TRWU_ts
+!       IF (EOP_ts > 1.E-7) THEN
+!         TRWUP = TRWUP + TRWUP_ts
+!       ENDIF
+!       CELLS%Rate%EP_rate = RWU_2D
 
 !       ---------------------------------------------------------------
 !       HORIZONTAL AND VERTICAL WATER MOVEMENT
@@ -922,11 +914,11 @@
 !        NetLatFlow = NetLatFlow - DRAIN_2D
 !      ENDIF
 
-!     Convert units from mm to cm for DSSAT plant routines.
-      TRWUP = TRWUP / 10.           !cm
-      TRWU  = TRWU  / 10.           !cm
-      CALL PUT('SPAM','TRWUP', TRWUP)
-      CALL PUT('SPAM','TRWU',  TRWU)
+!!     Convert units from mm to cm for DSSAT plant routines.
+!      TRWUP = TRWUP / 10.           !cm
+!      TRWU  = TRWU  / 10.           !cm
+!      CALL PUT('SPAM','TRWUP', TRWUP)
+!      CALL PUT('SPAM','TRWU',  TRWU)
 
       DO i = 1, NRowsTot
         DO j = 1, NColsTot
@@ -939,11 +931,11 @@
      &  RWU, SurfaceVal)                           !Output
       CALL PUT('SPAM','UH2O', RWU, NL)
 
-!     Compare daily average with accumulated values. Should be the 
-!       same for SWFAC.  Should be different for TURFAC
-      SWFAC  = SWFAC  / SUM_TSRF
-      TURFAC = TURFAC / SUM_TSRF
-      CALL WaterStress(EOP, RWUEP1, TRWUP, SWFAC_day, TURFAC_day)
+!!     Compare daily average with accumulated values. Should be the 
+!!       same for SWFAC.  Should be different for TURFAC
+!      SWFAC  = SWFAC  / SUM_TSRF
+!      TURFAC = TURFAC / SUM_TSRF
+!      CALL WaterStress(EOP, RWUEP1, TRWUP, SWFAC_day, TURFAC_day)
 
       IF (Allocated(IrrigSched)) DEALLOCATE (IrrigSched)
       IF (Allocated(DripInt)) DEALLOCATE (DripInt)
@@ -1051,10 +1043,10 @@ C-----------------------------------------------------------------------
 !***********************************************************************
       ENDIF
 !-----------------------------------------------------------------------
-!     Store root water uptake and potential root water uptake in global
-!     variables.  
-      CALL PUT('SPAM','TRWUP',TRWUP)
-      CALL PUT('SPAM','TRWU',TRWU)
+!!     Store root water uptake and potential root water uptake in global
+!!     variables.  
+!      CALL PUT('SPAM','TRWUP',TRWUP)
+!      CALL PUT('SPAM','TRWU',TRWU)
 
       RETURN
       END SUBROUTINE WatBal2D
