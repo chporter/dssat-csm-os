@@ -35,9 +35,9 @@
 !     ****************************************************************
 !     Change this value to get printout in different time intervals
 !     Use 60 minutes or smaller
-      INTEGER, PARAMETER :: INTERVAL = 15  !minutes
+!     INTEGER, PARAMETER :: INTERVAL = 15  !minutes
 !     INTEGER, PARAMETER :: INTERVAL = 30  !minutes
-!     INTEGER, PARAMETER :: INTERVAL = 60  !minutes
+      INTEGER, PARAMETER :: INTERVAL = 60  !minutes
 !     ****************************************************************
 
       CHARACTER*13 SWVXFile
