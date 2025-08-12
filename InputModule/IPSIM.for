@@ -968,9 +968,28 @@ C  FO - 05/07/2020 Add new Y4K subroutine call to convert YRDOY
         END SELECT
       ENDIF
 
+!     --------------------------------------------------------------------
+!     Check for 2D model compatible with crop model
+!     These crop models calculate root water uptake (UH2O) and would require some
+!         code changes to work with the sub-daily 2D soil water model.
+      IF (CONTROL % SIM2D) THEN
+        SELECT CASE(MODEL(1:5))
+          CASE('CSCER','CSCRP','TFAPS','WHAPS')
+          MSG(1) = '2D model cannot be run with model' // MODEL(1:5)
+          MSG(2)="Please contact the CSM development team if you " //
+     &          "wish to contribute to "
+          WRITE(MSG(3),'("development of a 2D model for ",A5,".")')
+     &        MODEL(1:5)
+          CALL WARNING(3,ERRKEY,MSG)
+          CALL ERROR('IPSIM', 12, "", 0)
+        END SELECT
+      ENDIF
+
+!     --------------------------------------------------------------------
       CALL FILL_ISWITCH(
      &      CONTROL, ISWITCH, FROP, MODEL, NYRS, RNMODE)
 
+!     --------------------------------------------------------------------
       RETURN
 
 C-----------------------------------------------------------------------
