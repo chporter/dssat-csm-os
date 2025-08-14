@@ -41,7 +41,7 @@ C=======================================================================
      &    SWDELTS, UH2O, WEATHER, XHLAI, XLAI,            !Input
      &    FLOODWAT, SWDELTU,                              !I/O
      &    EO, EOP, EOS, EP, ES, RWU, SRFTEMP, ST,         !Output
-     &    SWDELTX, TRWU, TRWUP, UPFLOW)                   !Output
+     &    SWDELTX, TRWUP, UPFLOW)                         !Output
 
 !-----------------------------------------------------------------------
       USE Cells_2D
@@ -71,7 +71,7 @@ C=======================================================================
       TYPE (FloodWatType), INTENT(INOUT) :: FLOODWAT
       REAL, DIMENSION(NL), INTENT(INOUT) :: SWDELTU
 
-      REAL, INTENT(OUT) :: EO, EOP, EOS, EP, ES, SRFTEMP, TRWU, TRWUP
+      REAL, INTENT(OUT) :: EO, EOP, EOS, EP, ES, SRFTEMP, TRWUP
       REAL, DIMENSION(NL), INTENT(OUT) :: ST, SWDELTX, UPFLOW
 
       CHARACTER*1  IDETW, ISWWAT
@@ -82,7 +82,7 @@ C=======================================================================
 
       INTEGER DYNAMIC, L, NLAYR, Col, StartRow
 
-      REAL CO2, SRAD, TAVG,
+      REAL CO2, SRAD, TAVG, TRWU,
      &    TMAX, TMIN, WINDSP
       REAL CEF, CEM, CEO, CEP, CES, CET, CEVAP
       REAL EF, EM, ET, EVAP
