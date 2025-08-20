@@ -80,7 +80,7 @@ C=======================================================================
       CHARACTER*6, PARAMETER :: ERRKEY = "SPAM  "
 !      CHARACTER*78 MSG(2)
 
-      INTEGER DYNAMIC, L, NLAYR, Col, StartRow
+      INTEGER DYNAMIC, L, NLAYR, Col, StartRow, YRDOY
 
       REAL CO2, SRAD, TAVG, TRWU,
      &    TMAX, TMIN, WINDSP
@@ -109,6 +109,7 @@ C=======================================================================
 !     Transfer values from constructed data types into local variables.
       CROP    = CONTROL % CROP
       DYNAMIC = CONTROL % DYNAMIC
+      YRDOY   = CONTROL % YRDOY
 
       DLAYR  = SOILPROP % DLAYR
       DUL    = SOILPROP % DUL
@@ -197,7 +198,7 @@ C=======================================================================
         IF (SIM2D) THEN
           CALL ROOTWU_2DA(SEASINIT, CELLS,
      &      DAYL, NLAYR, PORMIN, RWUMX,           !Input
-     &      RWU, TRWU, TRWUP)                     !Output
+     &      EP, RWU, TRWU, TRWUP)                 !Output
 
         ELSE
           CALL ROOTWU(SEASINIT,
@@ -274,6 +275,11 @@ C=======================================================================
       ELSEIF (DYNAMIC .EQ. RATE) THEN
 !-----------------------------------------------------------------------
       SWDELTX = 0.0
+      EOP   = 0.0
+      EP    = 0.0
+      TRWU  = 0.0
+      TRWUP = 0.0
+
 !     ---------------------------------------------------------
       IF (MEEVP .NE.'Z') THEN  !LPM 02dec14 use values from ETPHOT
         SELECT CASE (METMP)
@@ -311,7 +317,7 @@ C=======================================================================
             IF (SIM2D) THEN
               CALL ROOTWU_2DA(RATE, CELLS,
      &          DAYL, NLAYR, PORMIN, RWUMX,           !Input
-     &          RWU, TRWU, TRWUP)                     !Output
+     &          EP, RWU, TRWU, TRWUP)                 !Output
             ELSE
               CALL ROOTWU(RATE,
      &          DLAYR, LL, NLAYR, PORMIN, RLV, RWUMX, SAT, SW,!Input
@@ -524,7 +530,10 @@ C=======================================================================
 !       Aggregate and retrieve 2D sub-daily root water uptake
         CALL ROOTWU_2DA(INTEGR, CELLS,
      &    DAYL, NLAYR, PORMIN, RWUMX,           !Input
-     &    RWU, TRWU, TRWUP)                     !Output
+     &    EP, RWU, TRWU, TRWUP)                 !Output
+
+          CALL PUT('SPAM', 'EP', EP)
+          CALL PUT('SPAM', 'UH2O', RWU, NL)
       ENDIF
 
       IF (ISWWAT .EQ. 'Y') THEN

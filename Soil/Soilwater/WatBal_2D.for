@@ -135,6 +135,9 @@
       TYPE (Mulchtype) MULCH
       REAL SNOW, TDFC, TDFD
 
+!     TEMP CHP
+      REAL EOP_DAYSUM
+
 !     Default time steps durring irrigation and drying !minutes
       REAL, PARAMETER :: TSI = 5.0, TSN = 30.0, Max_Time_Step=60.
 !                         irrig        rain        default  
@@ -482,9 +485,13 @@
       NextUPdate = 0
       Count = 0
       ES_day = 0.0
+      EOP_day = 0.0
       LastCumRad = 0.0
       MinTimeIncr = 60.
       Runoff_day = 0.0
+
+!     TEMP CHP
+      EOP_DAYSUM = 0.0
 
       TimeLoop: DO WHILE (StartTime < 24.0)
         Count = Count + 1
@@ -786,6 +793,13 @@
         CALL RWUts_2D(TimeIncr, 
      &    Cells, EOP_ts, SWV_avail,                       !Input 
      &    RWU_2D_ts, RWUP_2D_ts, TRWU_ts, TRWUP_ts)       !Output
+
+!       TEMP CHP
+        EOP_DAYSUM = EOP_DAYSUM + EOP_ts
+        IF (EOP_TS >= 1.E-9) THEN 
+          WRITE(5555,'(I8,F10.3,4F12.8)') 
+     &      CONTROL % YRDOY, ENDTIME, EOP, EOP_TS, TRWU_TS, TRWUP_TS
+        ENDIF
 
 !        CALL WaterStress(SNGL(EOP_ts), RWUEP1, SNGL(TRWUP_ts)/10., 
 !     &      SWFAC_ts, TURFAC_ts)

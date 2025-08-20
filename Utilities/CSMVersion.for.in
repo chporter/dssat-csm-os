@@ -18,7 +18,7 @@
       END TYPE VersionType
       TYPE (VersionType) Version
 !     CHARACTER(len=*), PARAMETER :: VBranch = '-@BRANCH@'
-      CHARACTER(len=*), PARAMETER :: VBranch = '-2D_integrate'
+      CHARACTER(len=*), PARAMETER :: VBranch = '-RootWUts'
 
 !     Version history:
 !       4.8.5.27  FO 2025-08-04 v4.8.5.27 PR 518 Commit SHA: 8e1667b

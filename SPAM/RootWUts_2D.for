@@ -20,12 +20,11 @@
 !     These variables are shared between ROOTWU_2D (called daily by SPAM) 
 !       and RWUts_2D (called sub-daily by WatBal_2D)
       REAL, DIMENSION(MaxRows,MaxCols) :: RLVcell, RWUcell
-      LOGICAL, PROTECTED :: First_ts
       REAL, DIMENSION(MaxRows,MaxCols) :: LLcell, SATcell
       REAL, DIMENSION(MaxRows,MaxCols) :: SWCON2, ThickCell, ColumnFrac
       REAL, DIMENSION(MaxRows,MaxCols) :: TSS, TSS_last
       REAL PORMINts, RWUMXts
-      REAL Scale2Hour, TRWU_day, TRWUP_day
+      REAL Scale2Hour, TRWU_day, TRWUP_day, EOP_day
 
       contains
 
@@ -34,7 +33,7 @@
 !==========================================================================
       SUBROUTINE ROOTWU_2DA (DYNAMIC, CELLS, 
      &      DAYL, NLAYR, PORMIN, RWUMX,           !Input
-     &      RWU, TRWU, TRWUP)                     !Output
+     &      EP, RWU, TRWU, TRWUP)                 !Output
 
 !     ------------------------------------------------------------------
       USE ModuleData
@@ -45,7 +44,7 @@
       INTEGER, INTENT(IN) :: DYNAMIC, NLAYR
       REAL, INTENT(IN) :: DAYL, PORMIN, RWUMX
       TYPE (CellType), INTENT(INOUT) :: CELLS(MaxRows,MaxCols)
-      REAL, INTENT(OUT) :: TRWU, TRWUP
+      REAL, INTENT(OUT) :: EP, TRWU, TRWUP
       REAL, DIMENSION(NL), INTENT(OUT) :: RWU
       INTEGER i,j
 
@@ -76,7 +75,10 @@
         ENDDO  
       ENDDO
 
+      EOP_day = 0.0
+      EP    = 0.0
       RWU   = 0.0
+      TRWU  = 0.0
       TRWUP = 0.0
 
       PORMINts = PORMIN
@@ -94,6 +96,12 @@
       RLVcell = Cells % State % RLV
       Scale2Hour = 24. / DAYL
       RWUcell = 0.0
+
+      EOP_day = 0.0
+      EP    = 0.0
+      RWU   = 0.0
+      TRWU  = 0.0
+      TRWUP = 0.0
 
 !***********************************************************************
 !***********************************************************************
@@ -115,6 +123,7 @@
 !     Convert units from mm to cm for DSSAT plant routines.
       TRWU = TRWU_day / 10.             !cm
       TRWUP = TRWUP_day / 10.           !cm
+      EP = TRWU_day                     !mm
 
       CALL PUT('SPAM','TRWUP', TRWUP)
       CALL PUT('SPAM','TRWU',  TRWU)
@@ -268,9 +277,14 @@
         ENDDO
       ENDDO
 
+      EOP_day = EOP_day + EOP_ts
       TRWU_day  = TRWU_day  + TRWU_ts
       TRWUP_day = TRWUP_day + TRWUP_ts
       RWUcell = RWUcell + RWU_2D_ts
+
+!     temp chp
+      write(5556,'(5F12.8)')
+     &   timeincr, EOP_ts, TRWU_ts, TRWUP_ts, WUF
 
       RETURN
       END SUBROUTINE RWUts_2D
