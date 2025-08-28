@@ -44,6 +44,7 @@
       INTEGER, INTENT(IN) :: DYNAMIC, NLAYR
       REAL, INTENT(IN) :: DAYL, PORMIN, RWUMX
       TYPE (CellType), INTENT(INOUT) :: CELLS(MaxRows,MaxCols)
+      REAL, DIMENSION(MaxRows,MaxCols) :: RWU_2D_frac
       REAL, INTENT(OUT) :: EP, TRWU, TRWUP
       REAL, DIMENSION(NL), INTENT(OUT) :: RWU
       INTEGER i,j
@@ -54,10 +55,10 @@
 !***********************************************************************
       IF (DYNAMIC .EQ. SEASINIT) THEN
 !-----------------------------------------------------------------------
-      LLcell        = CELLS % STATE % LL
+      LLcell     = CELLS % STATE % LL
       RLVcell    = CELLS % STATE % RLV
-      SATcell       = CELLS % STATE % SAT
-      ThickCell     = CELLS % Struc % Thick
+      SATcell    = CELLS % STATE % SAT
+      ThickCell  = CELLS % Struc % Thick
       ColumnFrac = BedDimension % ColFrac
 
       TSS       = 0.0
@@ -115,9 +116,11 @@
 !     Store 2D RWU in CELLS variable
       CELLS % Rate % EP_rate = RWUcell
 
+      RWU_2D_frac = RWUcell * ColumnFrac
+
 !     Convert 2D RWU to 1D 
       CALL Cell2Layer_2D(
-     &  RWUcell, CELLS%Struc, NLAYR,  !Input
+     &  RWU_2D_frac, CELLS%Struc, NLAYR,  !Input
      &  RWU)                           !Output
 
 !     Convert units from mm to cm for DSSAT plant routines.
