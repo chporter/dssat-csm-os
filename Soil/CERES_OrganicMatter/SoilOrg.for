@@ -147,7 +147,9 @@
       REAL RLV(NL), DRAIN
       TYPE (CH4_type) CH4_data
 
+!     Fraction of C in fresh organic matter
       REAL, PARAMETER :: FOMCFrac = 0.4
+!     Fraction of C in humus
       REAL, PARAMETER :: HumusCFrac = 0.526 !(=1/1.9)
       REAL, PARAMETER :: HumusCNRatio = 10.0
 
