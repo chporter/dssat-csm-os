@@ -1051,6 +1051,7 @@ C  tillage and rainfall kinetic energy
 !     ------------------------------------------------------------------
       CALL ALBEDO_avg(KTRANS, MEINF, MULCH, SOILPROP, SW(1), XHLAI)
 
+!=====================================================================================
 !     IF (INDEX('RSN',MEINF) .LE. 0) THEN
       IF (INDEX('RSM',MEINF) > 0) THEN 
 
@@ -1060,7 +1061,6 @@ C  tillage and rainfall kinetic energy
         MULCHCOVER = MULCH % MULCHCOVER
         MULCHALB   = MULCH % MULCHALB
 
-!       ---------------------------------------------------
 !       Update BD, DLAYR, DUL, LL based on changes to soil organic matter 
 !       CHP 4/11/2006
 !       These SOM-revised values will be the new "base" values to which
@@ -1139,35 +1139,56 @@ C  tillage and rainfall kinetic energy
 !           Change in %SOM
             dOC = SOM_PCT(L) - SOM_PCT_init(L)
 
-!!           Equation to modify DUL depends on soil texture (Gupta & Larson, 1979)
-!            IF (COARSE(L)) THEN
-!!             Coarse soils  --  use DUL10
-!              dDUL_SOM = 0.004966 * dOC - 0.2423 * dBD_SOM 
-!            ELSE
-!!             Other soils -- use DUL33
-!              dDUL_SOM = 0.002208 * dOC - 0.1434 * dBD_SOM 
-!            ENDIF
-!            DUL_SOM(L) = DUL_INIT(L) + dDUL_SOM
-!
-!!           Lower limit
-!            dLL_SOM = 0.002228 * dOC + 0.02671 * dBD_SOM
-!            LL_SOM(L)  = LL_INIT(L) + dLL_SOM
-!
-!!            IF (L==1) WRITE(1000,*)dOC, dBD_SOM, dLL_SOM, LL_SOM(1)
-!           2024-11-05 FO: Added new computation for DUL and LL 
-!                          by A. Suleiman.
-            dDUL_SOM= (-0.222 * dOC + 0.051 * 
-     &               (SOILPROP % SAND(L) * dOC) + 0.085 * 
-     &               (SOILPROP % CLAY(L) * dOC)) / 100
+
+!           ---------------------------------------------------------------------------
+!           Method of changing DUL and LL depend on MSDYN switch in Simulation Controls
+            SELECT CASE(ISWITCH % MSDYN)
+
+!           ---------------------------------------------------------------------------
+            CASE ('B') !Bagnall et al. 2022 method
+              SELECT CASE(SOILLAYERTYPE(L))
+              CASE ('CALCAREOUS')
+!               2024-11-05 FO: Added new computation for DUL and LL by A. Suleiman
+                dDUL_SOM = (0.441 * dOC) / 100. 
+                
+                dLL_SOM = (1.398 * dOC 
+     &                  + 0.052 * SOILPROP % SAND(L) * dOC 
+     &                  - 0.077 * SOILPROP % CLAY(L) * dOC) / 100.
+
+              CASE DEFAULT  !non-calcareous soils
+                dDUL_SOM = (-0.222 * dOC 
+     &                   + 0.051 * SOILPROP % SAND(L) * dOC 
+     &                   + 0.085 * SOILPROP % CLAY(L) * dOC) / 100.
+                
+                dLL_SOM = (-0.309 * dOC 
+     &                  + 0.022 * SOILPROP % SAND(L) * dOC 
+     &                  + 0.022 * SOILPROP % CLAY(L) * dOC) / 100.
+              END SELECT
+!           ---------------------------------------------------------------------------
+!           CASE ('G') !Gupta and Larson 1979 method
+            CASE DEFAULT
+!             Equation to modify DUL depends on soil texture (Gupta & Larson, 1979)
+              IF (COARSE(L)) THEN
+!               Coarse soils  --  use DUL10
+                dDUL_SOM = 0.004966 * dOC - 0.2423 * dBD_SOM 
+              ELSE
+!               Other soils -- use DUL33
+                dDUL_SOM = 0.002208 * dOC - 0.1434 * dBD_SOM 
+              ENDIF
+              
+!             Lower limit
+              dLL_SOM = 0.002228 * dOC + 0.02671 * dBD_SOM
+
+            END SELECT
+
             DUL_SOM(L) = DUL_INIT(L) + dDUL_SOM
-            
-            dLL_SOM = (-0.309 * dOC + 0.022 * 
-     &                (SOILPROP % SAND(L) * dOC) + 0.022 * 
-     &                (SOILPROP % CLAY(L) * dOC)) / 100
             LL_SOM(L)  = LL_INIT(L) + dLL_SOM
+!           ---------------------------------------------------------------------------
+
           ENDIF
         ENDDO
       ENDIF
+!=====================================================================================
 
 !     Tillage effects applied to SOM modified values
       IF (INDEX('YR',ISWTIL) > 0 .AND. NTIL .GT. 0 .AND.

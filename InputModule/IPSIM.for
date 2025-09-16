@@ -148,6 +148,9 @@ C=======================================================================
 !                   0  => DSSAT original denitrification routine
 !                   1  => DayCent N2O calculation
 
+!        Soil dynamics (modification of soil water holding capacity with changes to organic matter)
+         MSDYN   = 'G' !=> Gupta and Larson method (default for now)
+!                  'B' !=> Bagnall et al. method
          IPLTI   = 'R'
          IIRRI   = 'R'
          IFERI   = 'R'
@@ -234,7 +237,7 @@ C
          CALL IGNORE(LUNEXP,LINEXP,ISECT,CHARTEST)
          READ (CHARTEST,61,IOSTAT=ERRNUM) LN,MEWTH,MESIC,
      &        MELI,MEEVP,MEINF,MEPHO,MEHYD,NSWITCH, 
-     &        MESOM, MESEV, MESOL, METMP, MEGHG
+     &        MESOM, MESEV, MESOL, METMP, MEGHG, MSDYN
          !IF (ERRNUM .NE. 0) CALL ERROR(ERRKEY,ERRNUM,FILEX,LINEXP)
          MEWTH = UPCASE(MEWTH)
          MESIC = UPCASE(MESIC)
@@ -247,6 +250,7 @@ C
          MESEV = UPCASE(MESEV)
          METMP = UPCASE(METMP)
          MEGHG = UPCASE(MEGHG)
+         MSDYN = UPCASE(MSDYN)
 
 !     ==============================================================
 C        Read FOURTH line of simulation control - MANAGEMENT
@@ -512,6 +516,7 @@ C  FO - 05/07/2020 Add new Y4K subroutine call to convert YRDOY
         MESOL   = ISWITCH % MESOL 
         METMP   = ISWITCH % METMP 
         MEGHG   = ISWITCH % MEGHG 
+        MSDYN   = ISWITCH % MSDYN 
         IPLTI   = ISWITCH % IPLTI 
         IIRRI   = ISWITCH % IIRRI 
         IFERI   = ISWITCH % IFERI 
@@ -677,6 +682,13 @@ C-----------------------------------------------------------------------
 
 !     Default greenhouse gas method is DSSAT
       IF (INDEX('01',MEGHG) < 1) MEGHG = '0'
+
+!     Soil dynamics method 
+      SELECT CASE(MSDYN)
+        CASE('G', 'g'); MSDYN = 'G'
+        CASE('B', 'b'); MSDYN = 'B'
+        CASE DEFAULT;   MSDYN = 'G'
+      END SELECT
 
       SELECT CASE(MESEV)
          CASE('R','r'); MESEV = 'R'
@@ -966,7 +978,7 @@ C-----------------------------------------------------------------------
 
   55  FORMAT (I3,11X,2(1X,I5),5X,A1,1X,I5,1X,I5,1X,A25,1X,A8)
   60  FORMAT (I3,11X,9(5X,A1))
-  61  FORMAT (I3,11X,7(5X,A1),5X,I1,5(5X,A1))
+  61  FORMAT (I3,11X,7(5X,A1),5X,I1,6(5X,A1))
   65  FORMAT (I3,11X,3(5X,A1),4X,I2,9(5X,A1),
      &5X, A1)   ! VSH
   66  FORMAT (I3,11X,2(1X,I5),5(1X,F5.0))
@@ -1025,6 +1037,7 @@ C-----------------------------------------------------------------------
         ISWITCH % MESOL  = MESOL   !soil layer distribution
         ISWITCH % METMP  = METMP   !soil temperature method
         ISWITCH % MEGHG  = MEGHG   !greenhouse gas calculations
+        ISWITCH % MSDYN  = MSDYN   !soil dynamics
         ISWITCH % IDETO  = IDETO   !overview file
         ISWITCH % IDETS  = IDETS   !summary file
         ISWITCH % IDETG  = IDETG   !growth output files
@@ -1104,6 +1117,7 @@ C-----------------------------------------------------------------------
       CHARACTER*1 ICO2
       CHARACTER*1 MELI,MEEVP,MEINF,MEPHO,IPLTI,IIRRI,IFERI,IRESI,IHARI
       CHARACTER*1 ISWCHE,ISWTIL,MEHYD,MESOM, MESOL, MESEV, METMP, MEGHG
+      CHARACTER*1 MSDYN
       CHARACTER*1 IDETO,IDETS,IDETG,IDETC,IDETW,IDETN,IDETP,IDETD,IOX
       CHARACTER*1 IDETH,IDETL, IDETR
       CHARACTER*1 FMOPT
@@ -1261,6 +1275,7 @@ C-----------------------------------------------------------------------
         MESOM   = ' '
         METMP   = ' '
         MEGHG   = ' '
+        MSDYN   = ' '
         MESOL   = ' '
         MESEV   = ' '
         IPLTI   = ' '
@@ -1441,6 +1456,9 @@ C-----------------------------------------------------------------------
             READ (CHARTEST,'(91X,A1)',IOSTAT=ERRNUM) MEGHG
             CALL CHECK_A('MEGHG', MEGHG, ERRNUM, MSG, NMSG)
 
+            READ (CHARTEST,'(91X,A1)',IOSTAT=ERRNUM) MSDYN
+            CALL CHECK_A('MSDYN', MSDYN, ERRNUM, MSG, NMSG)
+
             MEWTH = UPCASE(MEWTH)
             MESIC = UPCASE(MESIC)
             MELI  = UPCASE(MELI)
@@ -1452,6 +1470,7 @@ C-----------------------------------------------------------------------
             MESEV = UPCASE(MESEV)
             METMP = UPCASE(METMP)
             MEGHG = UPCASE(MEGHG)
+            MSDYN = UPCASE(MSDYN)
 
 !         Fourth line of simulation controls
           CASE('@N MAN')
@@ -1599,6 +1618,7 @@ C-----------------------------------------------------------------------
       IF (MESOL  /= ' ' .AND. MESOL  /= '.') ISWITCH % MESOL  = MESOL
       IF (METMP  /= ' ' .AND. METMP  /= '.') ISWITCH % METMP  = METMP
       IF (MEGHG  /= ' ' .AND. MEGHG  /= '.') ISWITCH % MEGHG  = MEGHG
+      IF (MSDYN  /= ' ' .AND. MSDYN  /= '.') ISWITCH % MSDYN  = MSDYN
       IF (IPLTI  /= ' ' .AND. IPLTI  /= '.') ISWITCH % IPLTI  = IPLTI
       IF (IIRRI  /= ' ' .AND. IIRRI  /= '.') ISWITCH % IIRRI  = IIRRI
       IF (IFERI  /= ' ' .AND. IFERI  /= '.') ISWITCH % IFERI  = IFERI
@@ -1750,6 +1770,7 @@ C-----------------------------------------------------------------------
       CASE('MESOL');  MSG_TEXT="Soil input and partitioning   "
       CASE('METMP');  MSG_TEXT="Soil temperature method       "
       CASE('MEGHG');  MSG_TEXT="Greenhouse gas calc method    "
+      CASE('MSDYN');  MSG_TEXT="Soil dynamics method          "
       CASE('IPLTI');  MSG_TEXT="Planting method switch        "
       CASE('IIRRI');  MSG_TEXT="Irrigation method switch      "
       CASE('IFERI');  MSG_TEXT="Fertilizer switch             "
