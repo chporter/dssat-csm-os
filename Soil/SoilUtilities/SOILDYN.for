@@ -1074,7 +1074,7 @@ C  tillage and rainfall kinetic energy
 !         SOM units have already been converted to OM (not C)
           dSOM = SomLit(L) - SomLit_init(L) !kg[OM]/ha
           
-          IF (dSOM < 0.01) THEN
+          IF (ABS(dSOM) < 0.01) THEN
 !           No changes to soil properties due to organic matter
             BD_SOM(L)   = BD_INIT(L)
             DLAYR_SOM(L)= DLAYR_INIT(L)
