@@ -148,6 +148,7 @@ C-----------------------------------------------------------------------
       REAL, DIMENSION(NL) :: SomLit, SomLit_INIT, SOM_PCT, SOM_PCT_init
       REAL, DIMENSION(NL) :: OC_INIT, TOTN_INIT, TotOrgN_init
       REAL, DIMENSION(0:NL) :: SomLitC, KECHGE
+      REAL, DIMENSION(NL) :: SOM_PCT_yest
 
 !     Izaurralde method
       INTEGER, PARAMETER :: METHOD = 2
@@ -1043,6 +1044,8 @@ C  tillage and rainfall kinetic energy
         SOM_PCT_init = SOM_PCT
         BD_calc_init = BD_calc
 
+        SOM_PCT_yest = SOM_PCT
+
 !       Print initial values
         Print_today = .TRUE.
         FIRST = .FALSE.
@@ -1072,7 +1075,15 @@ C  tillage and rainfall kinetic energy
 !         Change to SOM since initialization
 !         SOM units have already been converted to OM (not C)
           dSOM = SomLit(L) - SomLit_init(L) !kg[OM]/ha
-          
+
+!         Change SOM from kg/ha to percent
+          SOM_PCT(L) = SomLit(L) * 1.E-5/(BD_SOM(L)*DLAYR_SOM(L))*100.
+!                       kg[OM]    g[OM]/cm2     cm3       1
+!                    = -------- * --------- * -------  * ---- * 100%
+!                         ha      kg[OM]/ha   g[soil]     cm
+!
+!                    = g[OM]/g[soil] * 100%
+
           IF (ABS(dSOM) < 0.01) THEN
 !           No changes to soil properties due to organic matter
             BD_SOM(L)   = BD_INIT(L)
@@ -1100,9 +1111,6 @@ C  tillage and rainfall kinetic energy
             DLAYR_SOM(L) = DLAYR_INIT(L) + dDLAYR_SOM
 
 !           -------------------------------------------------------
-!           Change SOM from kg/ha to percent
-            SOM_PCT(L) = SomLit(L) * 1.E-5/(BD_SOM(L)*DLAYR_SOM(L))*100.
-
 !            BD_SOM(L) = 100.0 / 
 !     &        (SOM_PCT(L) / 0.224 + (100. - SOM_PCT(L)) / BD_mineral(L))
 !
@@ -1128,17 +1136,10 @@ C  tillage and rainfall kinetic energy
               DS_SOM(L) = DS(L-1) + DLAYR_SOM(L)
             ENDIF
 
-!           Change SOM from kg/ha to percent
-            SOM_PCT(L) = SomLit(L) * 1.E-5/(BD_SOM(L)*DLAYR_SOM(L))*100.
-!                         kg[OM]    g[OM]/cm2     cm3       1
-!                      = -------- * --------- * -------  * ---- * 100%
-!                           ha      kg[OM]/ha   g[soil]     cm
-!
-!                      = g[OM]/g[soil] * 100%
-
 !           Change in %SOM
-            dOC = SOM_PCT(L) - SOM_PCT_init(L)
-
+!           2025-09-30 Look at incremental daily change instead of cumulative
+!           dOC = SOM_PCT(L) - SOM_PCT_init(L)
+            dOC = SOM_PCT(L) - SOM_PCT_yest(L)
 
 !           ---------------------------------------------------------------------------
 !           Method of changing DUL and LL depend on MSDYN switch in Simulation Controls
@@ -1181,13 +1182,18 @@ C  tillage and rainfall kinetic energy
 
             END SELECT
 
-            DUL_SOM(L) = DUL_INIT(L) + dDUL_SOM
-            LL_SOM(L)  = LL_INIT(L) + dLL_SOM
+!           2025-09-30 Look at incremental daily change instead of cumulative
+!           DUL_SOM(L) = DUL_INIT(L) + dDUL_SOM
+!           LL_SOM(L)  = LL_INIT(L) + dLL_SOM
+            DUL_SOM(L) = DUL_SOM(L) + dDUL_SOM
+            LL_SOM(L)  = LL_SOM(L) + dLL_SOM
 !           ---------------------------------------------------------------------------
 
           ENDIF
         ENDDO
       ENDIF
+
+      SOM_PCT_yest = SOM_PCT
 !=====================================================================================
 
 !     Tillage effects applied to SOM modified values
