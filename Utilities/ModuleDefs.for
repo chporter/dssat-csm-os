@@ -486,6 +486,7 @@ C             CHP Added TRTNUM to CONTROL variable.
         REAL TOMINSOM3, TNIMBSOM
         REAL MULCHMASS
         REAL TSOMC
+        REAL, DIMENSION(NL) :: SOMLIT, SOMLIT_init
       End Type OrgCType
 
 !     Data from weather
@@ -539,7 +540,7 @@ C             CHP Added TRTNUM to CONTROL variable.
 
 !======================================================================
 !     GET and PUT routines are differentiated by argument type.  All of 
-!       these procedures can be accessed with a CALL GET(...)
+!       these procedures can be accessed with a CALL GET(...) or CALL PUT(...)
       INTERFACE GET
          MODULE PROCEDURE GET_Control
      &                  , GET_ISWITCH 
@@ -956,6 +957,13 @@ C             CHP Added TRTNUM to CONTROL variable.
           CASE DEFAULT; ERR = .TRUE.
         END SELECT
 
+      CASE ('ORGC')
+        SELECT CASE (VarName)
+        CASE ('SOMLIT'); Value = SAVE_data % ORGC % SOMLIT
+        CASE ('SOMLIT_init'); Value = SAVE_data % ORGC % SOMLIT_init
+        Case DEFAULT; ERR = .TRUE.
+        END SELECT
+
         CASE DEFAULT; ERR = .TRUE.
       END SELECT
 
@@ -985,6 +993,13 @@ C             CHP Added TRTNUM to CONTROL variable.
       Case ('SPAM')
         SELECT CASE (VarName)
         Case ('UH2O'); SAVE_data % SPAM % UH2O = Value
+        Case DEFAULT; ERR = .TRUE.
+        END SELECT
+
+      Case ('ORGC')
+        SELECT CASE (VarName)
+        CASE ('SOMLIT'); SAVE_data % ORGC % SOMLIT = Value
+        CASE ('SOMLIT_init'); SAVE_data % ORGC % SOMLIT_init = Value
         Case DEFAULT; ERR = .TRUE.
         END SELECT
 

@@ -51,6 +51,7 @@
 
 !     ------------------------------------------------------------------
       USE ModuleDefs
+      USE ModuleData
       USE FloodModule             
       USE ModSoilMix
       USE GHG_mod
@@ -289,6 +290,8 @@
      &  TMETABC, TMETABE, SomLit, SomLitC, SomLitE,       !Output
      &  TSOM1C, TSOM1E, TSOM2C, TSOM2E, TSOM23E, TSOM3C,  !Output
      &  TSOM3E, TSOMC, TSOME, TSTRUCC, TSTRUCE)           !Output
+
+      CALL PUT('ORGC', 'SOMLIT_init', SOMLIT)
 
 !     Get detailed SOM and litter output for checking the SOM
 !     initialization (litter has not yet been set and will be printed

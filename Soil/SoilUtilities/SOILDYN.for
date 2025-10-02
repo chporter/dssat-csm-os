@@ -143,12 +143,12 @@ C-----------------------------------------------------------------------
       REAL, DIMENSION(NL) :: LL_INIT, SWCN_INIT, SAT_INIT, SW_INIT
 
 !     Base soil values modified by soil organic matter
-      REAL dBD_SOM, dDLAYR_SOM, dDUL_SOM, dLL_SOM, dSOM, dOC
+      REAL dBD_SOM, dDLAYR_SOM, dDUL_SOM, dLL_SOM, dSOM, dOC, dSOM_tot
       REAL, DIMENSION(NL) :: BD_SOM, DLAYR_SOM, DS_SOM, DUL_SOM, LL_SOM
       REAL, DIMENSION(NL) :: SomLit, SomLit_INIT, SOM_PCT, SOM_PCT_init
       REAL, DIMENSION(NL) :: OC_INIT, TOTN_INIT, TotOrgN_init
       REAL, DIMENSION(0:NL) :: SomLitC, KECHGE
-      REAL, DIMENSION(NL) :: SOM_PCT_yest
+      REAL, DIMENSION(NL) :: SOM_PCT_yest, SomLit_yest, BD_SOM_yest
 
 !     Izaurralde method
       INTEGER, PARAMETER :: METHOD = 2
@@ -711,6 +711,7 @@ C     Initialize curve number (according to J.T. Ritchie) 1-JUL-97 BDB
      &              L, NINT(DS(L)), CLAY(L), SILT(L), OC(L)
         ENDIF
       ENDDO
+
       IF (NO_OC) THEN
         CALL WARNING(NMSG,ERRKEY,MSG)
       ENDIF
@@ -720,22 +721,31 @@ C     Initialize curve number (according to J.T. Ritchie) 1-JUL-97 BDB
      &    MULTI, DS, NLAYR, SLDESC, TAXON,                !Input
      &    CaCO3, PH, CEC, Clay, SOILLAYERTYPE)            !Output 
 
-!     Warning message for Century
-!      (non-sequenced runs or any first run)
-      IF (MESOM == 'P' .AND. 
+!     Warning message for no soil texture when using 
+!       Bagnall soil dynamics equations
+!       or CENTURY soil organic matter module
+      IF (NOTEXTURE .AND.
+!        (non-sequenced runs or any first run)
      &   (INDEX('QFNY',RNMODE) .LE. 0 .OR. 
      &            (RUN .EQ. 1 .AND. REPNO .EQ. 1))) THEN
-!       Texture data missing - write message to WARNING.OUT file.
-        IF (NOTEXTURE) THEN
-            MSG(1)='The CENTURY-based soil-organic-matter module needs'
-            MSG(2)='soil texture data, but the specified soil profile '
-            MSG(3)='does not have those for some layers. The model will'
-            MSG(4)='run with the default 30% clay, 30% silt, 40% sand. '
-            MSG(5)='This may give incorrect results.'
-        CALL WARNING(5, ERRKEY, MSG)
+        NMSG = 0
+        IF (MESOM == 'P') THEN
+          MSG(1)='The CENTURY-based soil-organic-matter module needs'
+          NMSG = 1
+        ELSEIF (ISWITCH % MSDYN == 'B') THEN
+!         Texture data missing - write message to WARNING.OUT file.
+          MSG(1)='The Bagnall pedotransfer functions require'
+          NMSG = 1
         ENDIF
+        IF (NMSG > 0) THEN
+          MSG(2)='soil texture data, but the specified soil profile '
+          MSG(3)='does not have those for some layers. The model will'
+          MSG(4)='run with the default 30% clay, 30% silt, 40% sand. '
+          MSG(5)='This may give incorrect results.'
+          CALL WARNING(5, ERRKEY, MSG)
+        ENDIF
+      ENDIF     !End of IF block on soil texture
 
-      ENDIF     !End of IF block on MESOM & RNMODE
 !-----------------------------------------------------------------------
       DO L = 1, NLAYR
 !       Conversion from kg/ha to ppm (or mg/l).  Recalculate daily.
@@ -1025,7 +1035,9 @@ C  tillage and rainfall kinetic energy
 !     remember initial values here.  Units are kg[Organic matter]/ha
       IF (FIRST) THEN
 !       Save initial value of SOM
-        SomLit_init = SomLit
+        CALL GET ('ORGC', 'SOMLIT_init', SomLit_init)
+        SomLit_yest = SomLit_init
+
         DO L = 1, NLAYR
 !         (See conversion explanation below)
           SOM_PCT(L) = SomLit(L) * 1.E-5 / (BD(L) * DLAYR(L)) *100.
@@ -1074,7 +1086,8 @@ C  tillage and rainfall kinetic energy
         DO L = 1, NLAYR
 !         Change to SOM since initialization
 !         SOM units have already been converted to OM (not C)
-          dSOM = SomLit(L) - SomLit_init(L) !kg[OM]/ha
+          dSOM_tot = SomLit(L) - SomLit_init(L) !kg[OM]/ha
+          dSOM     = SomLit(L) - SomLit_yest(L) !kg[OM]/ha
 
 !         Change SOM from kg/ha to percent
           SOM_PCT(L) = SomLit(L) * 1.E-5/(BD_SOM(L)*DLAYR_SOM(L))*100.
@@ -1084,7 +1097,8 @@ C  tillage and rainfall kinetic energy
 !
 !                    = g[OM]/g[soil] * 100%
 
-          IF (ABS(dSOM) < 0.01) THEN
+!         If the total cumulative change is small, use initial values.
+          IF (ABS(dSOM_tot) < 0.01) THEN
 !           No changes to soil properties due to organic matter
             BD_SOM(L)   = BD_INIT(L)
             DLAYR_SOM(L)= DLAYR_INIT(L)
@@ -1108,7 +1122,9 @@ C  tillage and rainfall kinetic energy
 !              cm      =kg/ha * 4.46E-5
 
 !           New base layer thickness and depths
-            DLAYR_SOM(L) = DLAYR_INIT(L) + dDLAYR_SOM
+!           2025-09-30 Look at incremental daily change instead of cumulative
+!           DLAYR_SOM(L) = DLAYR_INIT(L) + dDLAYR_SOM
+            DLAYR_SOM(L) = DLAYR_SOM(L) + dDLAYR_SOM
 
 !           -------------------------------------------------------
 !            BD_SOM(L) = 100.0 / 
@@ -1120,13 +1136,13 @@ C  tillage and rainfall kinetic energy
             BD_SOM(L) = BD_calc(L) / BD_calc_init(L) * BD_init(L)
 
 !           Limit BD to realistic values
-!           BD_SOM(L) = MIN(BD_SOM(L), 1.8)
-!           BD_SOM(L) = MAX(BD_SOM(L), 0.25)
 !           Upper limit for BD_SOM
             BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2, 1.80) 
 !           Lower limit for BD_SOM
-            BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8, 0.95) 
-            dBD_SOM = BD_SOM(L) - BD_INIT(L)
+            BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8, 0.90) !was 0.95
+
+!           Calculate the difference
+            dBD_SOM = BD_SOM(L) - BD_SOM_yest(L)
 
 !           -------------------------------------------------------
 !           Update DS
@@ -1187,13 +1203,28 @@ C  tillage and rainfall kinetic energy
 !           LL_SOM(L)  = LL_INIT(L) + dLL_SOM
             DUL_SOM(L) = DUL_SOM(L) + dDUL_SOM
             LL_SOM(L)  = LL_SOM(L) + dLL_SOM
+
 !           ---------------------------------------------------------------------------
 
           ENDIF
+
+!         TEMP CHP
+          IF (L == 2) THEN
+            write(5678,'(I8, I5, I3, F10.4,
+     &      F10.1,F10.3,F10.3,F10.5,F10.4,F10.6,
+     &      F10.4,F10.6,F10.4,F10.6)') 
+     &      YRDOY, DAS, L, DLAYR_SOM(L), 
+     &      SomLit(L), dSOM, SOM_PCT(L), dOC, BD_SOM(L), dBD_SOM, 
+     &      DUL_SOM(L), dDUL_SOM, LL_SOM(L), dLL_SOM
+          ENDIF
+
         ENDDO
       ENDIF
 
       SOM_PCT_yest = SOM_PCT
+      SomLit_yest = SomLit
+      BD_SOM_yest = BD_SOM
+
 !=====================================================================================
 
 !     Tillage effects applied to SOM modified values

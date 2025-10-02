@@ -147,7 +147,7 @@
       REAL RLV(NL), DRAIN
       TYPE (CH4_type) CH4_data
 
-      REAL, PARAMETER :: FOMCFrac = 0.4
+      REAL, PARAMETER :: FOMCFrac = 0.4     !(=1/2.5)
       REAL, PARAMETER :: HumusCFrac = 0.526 !(=1/1.9)
       REAL, PARAMETER :: HumusCNRatio = 10.0
 
@@ -868,6 +868,11 @@ C         recruit (NREQ-N CONC) g of N
         CALL MethaneDynamics(CONTROL, ISWITCH, SOILPROP,      !Input
      &    FERTDATA, FLOODWAT, SW, RLV, newCO2, DRAIN,         !Input
      &    CH4_data)                                           !Output
+      ENDIF
+
+      CALL PUT('ORGC', 'SOMLIT', SOMLIT)
+      IF (DYNAMIC .EQ. SEASINIT) THEN
+        CALL PUT('ORGC', 'SOMLIT_init', SOMLIT)
       ENDIF
 
 C***********************************************************************
