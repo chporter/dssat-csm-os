@@ -1456,7 +1456,7 @@ C-----------------------------------------------------------------------
             READ (CHARTEST,'(91X,A1)',IOSTAT=ERRNUM) MEGHG
             CALL CHECK_A('MEGHG', MEGHG, ERRNUM, MSG, NMSG)
 
-            READ (CHARTEST,'(91X,A1)',IOSTAT=ERRNUM) MSDYN
+            READ (CHARTEST,'(97X,A1)',IOSTAT=ERRNUM) MSDYN
             CALL CHECK_A('MSDYN', MSDYN, ERRNUM, MSG, NMSG)
 
             MEWTH = UPCASE(MEWTH)

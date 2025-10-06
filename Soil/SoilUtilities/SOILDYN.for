@@ -1876,7 +1876,8 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
       IF (DYNAMIC .EQ. SEASINIT) THEN
 !-----------------------------------------------------------------------
       IF (INDEX('AD',ISWITCH % IDETL) > 0 .AND. ISWITCH % IDETW == 'Y' 
-     &   .AND.  INDEX('YR',ISWITCH % ISWTIL) > 0) THEN
+!    &   .AND.  INDEX('YR',ISWITCH % ISWTIL) > 0) THEN
+     &   ) THEN
         PrintDyn = .TRUE. 
         CALL GETLUN('OUTSOL',DLUN)
 !       Temporary output file for debugging:
