@@ -143,16 +143,20 @@ C-----------------------------------------------------------------------
       REAL, DIMENSION(NL) :: LL_INIT, SWCN_INIT, SAT_INIT, SW_INIT
 
 !     Base soil values modified by soil organic matter
-      REAL dBD_SOM, dDLAYR_SOM, dDUL_SOM, dLL_SOM, dSOM, dOC, dSOM_tot
+      REAL dBD_SOM, dDLAYR_SOM, dDUL_SOM, dLL_SOM, dSOM, 
+     &    dOC, dOM, dSOM_tot
       REAL, DIMENSION(NL) :: BD_SOM, DLAYR_SOM, DS_SOM, DUL_SOM, LL_SOM
       REAL, DIMENSION(NL) :: SomLit, SomLit_INIT, SOM_PCT, SOM_PCT_init
       REAL, DIMENSION(NL) :: OC_INIT, TOTN_INIT, TotOrgN_init
       REAL, DIMENSION(0:NL) :: SomLitC, KECHGE
       REAL, DIMENSION(NL) :: SOM_PCT_yest, SomLit_yest, BD_SOM_yest
+      REAL, DIMENSION(NL) :: SOC_PCT_yest
 
-!     Izaurralde method
+!     Izaurralde method and Bagnall percent approach
       INTEGER, PARAMETER :: METHOD = 2
       REAL, DIMENSION(NL) :: BD_calc, BD_calc_init  !, BD_mineral
+      REAL, DIMENSION(NL) :: DUL_calc, DUL_calc_init  
+      REAL, DIMENSION(NL) :: LL_calc, LL_calc_init  
 
       REAL CN_BASE
       REAL, DIMENSION(NL) :: BD_BASE, DL_BASE, DS_BASE, SAT_BASE,SC_BASE
@@ -1031,8 +1035,10 @@ C  tillage and rainfall kinetic energy
 !-----------------------------------------------------------------------
       IF (ISWWAT == 'N') RETURN
 
+!=======================================================================
+!     INITIALIZATION FOR SOM VARIABLES GOES HERE
 !     Initial SOM not established until end of SEASINIT section so 
-!     remember initial values here.  Units are kg[Organic matter]/ha
+!     remember initial values here. Units are kg[Organic matter]/ha
       IF (FIRST) THEN
 !       Save initial value of SOM
         CALL GET ('ORGC', 'SOMLIT_init', SomLit_init)
@@ -1050,23 +1056,93 @@ C  tillage and rainfall kinetic energy
 !         Instead, calculate a BD_calc. Use the 
 !           change to BD_calc to scale BD, which was input by user.
           BD_calc(L) = 100./(SOM_PCT(L)/0.224 + (100.-SOM_PCT(L))/2.65)
+
         ENDDO
 
-!       Set initial array
-        SOM_PCT_init = SOM_PCT
-        BD_calc_init = BD_calc
+
+!!     DO WE NEED THIS HERE (done in integration)?
+!      DO L = 1, NLAYR
+!        OC(L) = SomLitC(L) * 1.E-5 / (BD(L) * DLAYR(L)) * 100.
+!!                  kg[C]     g/cm2     cm3       1
+!!             =  --------  * ----- * ------- * ----- * 100%
+!!                   ha       kg/ha   g[soil]     cm
+!!
+!!             = g[C]/g[soil] * 100%
+!      ENDDO
+
+
+!       ---------------------------------------------------------------------------
+!       Method of changing DUL and LL depend on MSDYN switch in Simulation Controls
+        SELECT CASE(ISWITCH % MSDYN)
+
+!       ---------------------------------------------------------------------------
+        CASE ('P') !Bagnall et al. 2022 percent change method
+!         DSSAT units are g/100g, same as Bagnall equations
+          DO L = 1, NLAYR
+            SELECT CASE(SOILLAYERTYPE(L))
+            CASE ('CALCAREOUS')
+              DUL_calc(L) = 33.351 
+     &                 + 0.020 * CLAY(L)
+     &                 - 0.446 * SAND(L)
+     &                 + 1.398 * OC(L)
+     &                 + 0.052 * SAND(L) * OC(L) 
+     &                 - 0.077 * CLAY(L) * OC(L)
+     &                 + 0.011 * CLAY(L) * SAND(L)
+
+              LL_calc(L) = 7.907 
+     &                 + 0.236 * CLAY(L) 
+     &                 - 0.082 * SAND(L) 
+     &                 + 0.441 * OC(L) 
+     &                 + 0.002 * CLAY(L) * SAND(L)
+
+            CASE DEFAULT  !non-calcareous soils
+              DUL_calc(L) = 37.217 
+     &                 - 0.140 * CLAY(L)
+     &                 - 0.304 * SAND(L)
+     &                 - 0.222 * OC(L)
+     &                 + 0.051 * SAND(L) * OC(L) 
+     &                 + 0.085 * CLAY(L) * OC(L)
+     &                 + 0.002 * CLAY(L) * SAND(L)
+
+              LL_calc(L) = 7.222 
+     &                 + 0.296 * CLAY(L) 
+     &                 - 0.074 * SAND(L) 
+     &                 - 0.309 * OC(L) 
+     &                 + 0.022 * SAND(L) * OC(L) 
+     &                 + 0.022 * CLAY(L) * OC(L) 
+            END SELECT
+          ENDDO
+!       ---------------------------------------------------------------------------
+        CASE DEFAULT ! Do nothing here
+        END SELECT
+
+!       Set initial arrays
+        SOM_PCT_init  = SOM_PCT   !initial SOM in g/100g
+        BD_calc_init  = BD_calc   !initial BD
+        DUL_calc_init = DUL_calc  !initial DUL calculated from Bagnall
+        LL_calc_init  = LL_calc   !initial LL calculated from Bagnall
+        OC_init       = OC        !initial OC in g[C]/100g[soil]
 
         SOM_PCT_yest = SOM_PCT
+        SOC_PCT_yest = OC
 
 !       Print initial values
         Print_today = .TRUE.
         FIRST = .FALSE.
       ENDIF
+!     END OF INITIALIZATION
+!=======================================================================
 
-!     ------------------------------------------------------------------
+!     MSDYN switch values. Three soil dynamics methods (temporarily):
+!     - "G" = Gupta and Larson (original DSSAT)
+!     - "B" = Bagnall incremental approach (daily diff in OC used to calculate
+!             daily diff in LL and DUL)
+!     - "P" = Bagnall percent approach (calculated LL and DUL using Bagnall 
+!             equations used to update daily LL and DUL as percent change 
+!             to of inital value.
+
       CALL ALBEDO_avg(KTRANS, MEINF, MULCH, SOILPROP, SW(1), XHLAI)
 
-!=====================================================================================
 !     IF (INDEX('RSN',MEINF) .LE. 0) THEN
       IF (INDEX('RSM',MEINF) > 0) THEN 
 
@@ -1127,6 +1203,8 @@ C  tillage and rainfall kinetic energy
             DLAYR_SOM(L) = DLAYR_SOM(L) + dDLAYR_SOM
 
 !           -------------------------------------------------------
+!           Bulk density changes are based on percent difference to the
+!             calculated BD, applied to user-input BD.
 !            BD_SOM(L) = 100.0 / 
 !     &        (SOM_PCT(L) / 0.224 + (100. - SOM_PCT(L)) / BD_mineral(L))
 !
@@ -1153,60 +1231,126 @@ C  tillage and rainfall kinetic energy
             ENDIF
 
 !           Change in %SOM
-!           2025-09-30 Look at incremental daily change instead of cumulative
-!           dOC = SOM_PCT(L) - SOM_PCT_init(L)
-            dOC = SOM_PCT(L) - SOM_PCT_yest(L)
+!           Gupta uses SOM, cumulative method
+!           dOC = SOM_PCT(L) - SOM_PCT_init(L) 
+            dOM = SOM_PCT(L) - SOM_PCT_init(L)
+
+!           Bagnall uses SOC, incremental method
+            dOC = OC(L) - SOC_PCT_yest(L)
 
 !           ---------------------------------------------------------------------------
 !           Method of changing DUL and LL depend on MSDYN switch in Simulation Controls
             SELECT CASE(ISWITCH % MSDYN)
 
 !           ---------------------------------------------------------------------------
-            CASE ('B') !Bagnall et al. 2022 method
+            CASE ('B') !Bagnall et al. 2022 daily incremental method
               SELECT CASE(SOILLAYERTYPE(L))
               CASE ('CALCAREOUS')
 !               2024-11-05 FO: Added new computation for DUL and LL by A. Suleiman
-                dDUL_SOM = (0.441 * dOC) / 100. 
+                dDUL_SOM = (0.441 * dOC)
                 
                 dLL_SOM = (1.398 * dOC 
      &                  + 0.052 * SOILPROP % SAND(L) * dOC 
-     &                  - 0.077 * SOILPROP % CLAY(L) * dOC) / 100.
+     &                  - 0.077 * SOILPROP % CLAY(L) * dOC)
 
               CASE DEFAULT  !non-calcareous soils
                 dDUL_SOM = (-0.222 * dOC 
      &                   + 0.051 * SOILPROP % SAND(L) * dOC 
-     &                   + 0.085 * SOILPROP % CLAY(L) * dOC) / 100.
+     &                   + 0.085 * SOILPROP % CLAY(L) * dOC)
                 
                 dLL_SOM = (-0.309 * dOC 
      &                  + 0.022 * SOILPROP % SAND(L) * dOC 
-     &                  + 0.022 * SOILPROP % CLAY(L) * dOC) / 100.
+     &                  + 0.022 * SOILPROP % CLAY(L) * dOC)
               END SELECT
+
+!             update yesterday's values
+              DUL_SOM(L) = DUL_SOM(L) + dDUL_SOM
+              LL_SOM(L)  = LL_SOM(L) + dLL_SOM
+
+!           ---------------------------------------------------------------------------
+            CASE ('P') !Bagnall et al. 2022 percent change method
+            SELECT CASE(SOILLAYERTYPE(L))
+            CASE ('CALCAREOUS')
+              DUL_calc(L) = 33.351                    !Eq(4)
+     &                 + 0.020 * CLAY(L)
+     &                 - 0.446 * SAND(L)
+     &                 + 1.398 * OC(L)
+     &                 + 0.052 * SAND(L) * OC(L) 
+     &                 - 0.077 * CLAY(L) * OC(L)
+     &                 + 0.011 * CLAY(L) * SAND(L)
+
+              LL_calc(L) = 7.907                      !Eq(3)
+     &                 + 0.236 * CLAY(L) 
+     &                 - 0.082 * SAND(L) 
+     &                 + 0.441 * OC(L) 
+     &                 + 0.002 * CLAY(L) * SAND(L)
+
+            CASE DEFAULT  !non-calcareous soils
+              DUL_calc(L) = 37.217                    !Eq(2)
+     &                 - 0.140 * CLAY(L)
+     &                 - 0.304 * SAND(L)
+     &                 - 0.222 * OC(L)
+     &                 + 0.051 * SAND(L) * OC(L) 
+     &                 + 0.085 * CLAY(L) * OC(L)
+     &                 + 0.002 * CLAY(L) * SAND(L)
+
+              LL_calc(L) = 7.222                      !Eq(1)
+     &                 + 0.296 * CLAY(L) 
+     &                 - 0.074 * SAND(L) 
+     &                 - 0.309 * OC(L) 
+     &                 + 0.022 * SAND(L) * OC(L) 
+     &                 + 0.022 * CLAY(L) * OC(L) 
+            END SELECT
+
+!           update based on ratio of calculated values to initial calculated values
+            DUL_SOM(L) = DUL_calc(L) / DUL_calc_init(L) * DUL_init(L)
+            LL_SOM(L)  = LL_calc(L) / LL_calc_init(L) * LL_init(L)
+
+!         TEMP CHP
+          IF (L == 2) THEN
+            write(1678,'(I8, I5, I3, 
+     &      3F10.4, 2F10.5, 
+     &      2F10.4,2F10.5)') 
+     &      YRDOY, DAS, L, 
+     &      OC(L), CLAY(L), SAND(L), DUL_calc(L), LL_calc(L),
+     &      DUL_calc(L) / DUL_calc_init(L),
+     &      LL_calc(L) / LL_calc_init(L),
+     &      DUL_SOM(L), LL_SOM(L)
+          ENDIF
+
 !           ---------------------------------------------------------------------------
 !           CASE ('G') !Gupta and Larson 1979 method
             CASE DEFAULT
 !             Equation to modify DUL depends on soil texture (Gupta & Larson, 1979)
               IF (COARSE(L)) THEN
 !               Coarse soils  --  use DUL10
-                dDUL_SOM = 0.004966 * dOC - 0.2423 * dBD_SOM 
+                dDUL_SOM = 0.004966 * dOM - 0.2423 * dBD_SOM 
               ELSE
 !               Other soils -- use DUL33
-                dDUL_SOM = 0.002208 * dOC - 0.1434 * dBD_SOM 
+                dDUL_SOM = 0.002208 * dOM - 0.1434 * dBD_SOM 
               ENDIF
               
 !             Lower limit
-              dLL_SOM = 0.002228 * dOC + 0.02671 * dBD_SOM
+              dLL_SOM = 0.002228 * dOM + 0.02671 * dBD_SOM
 
+!             update initial values
+              DUL_SOM(L) = DUL_INIT(L) + dDUL_SOM
+              LL_SOM(L)  = LL_INIT(L) + dLL_SOM
             END SELECT
-
-!           2025-09-30 Look at incremental daily change instead of cumulative
-!           DUL_SOM(L) = DUL_INIT(L) + dDUL_SOM
-!           LL_SOM(L)  = LL_INIT(L) + dLL_SOM
-            DUL_SOM(L) = DUL_SOM(L) + dDUL_SOM
-            LL_SOM(L)  = LL_SOM(L) + dLL_SOM
-
 !           ---------------------------------------------------------------------------
-
           ENDIF
+
+!         Limit LL to realistic values
+!         Upper limit for LL_SOM
+          LL_SOM(L) = MIN(LL_SOM(L), LL_INIT(L)*1.2)
+!         Lower limit for LL_SOM
+          LL_SOM(L) = MAX(LL_SOM(L), LL_INIT(L)*0.8)
+
+!         Limit DUL to realistic values
+!         Upper limit for DUL_SOM
+          DUL_SOM(L) = MIN(DUL_SOM(L), DUL_INIT(L)*1.2, SAT(L) - 0.01)
+!         Lower limit for DUL_SOM
+          DUL_SOM(L) = MAX(DUL_SOM(L), DUL_INIT(L)*0.8, SAT(L) - 0.30)
 
 !         TEMP CHP
           IF (L == 2) THEN
@@ -1539,7 +1683,7 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
 ! NLAYR     Actual number of soil layers 
 ! NOTEXTURE Logical variable which indicates whether soil texture data is 
 !             available 
-! OC(L)     Organic carbon content of layer (%)
+! OC(L)     Organic carbon content of layer (g[C]/100 g soil)
 ! PH(L)     pH in soil layer L 
 ! PHKCL(L)  pH in buffer, soil layer L 
 ! SALB      Bare soil albedo (fraction)
