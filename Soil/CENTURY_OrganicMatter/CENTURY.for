@@ -146,6 +146,10 @@
 !     Added for tillage
       REAL MIXPCT
 
+!     2025-10-09 CHP
+!     Need initial values for only the soil (not surface) part of SOMLITC
+      REAL, DIMENSION(NL) :: SOC_SOIL
+
 !     Methane variables:
 !     REAL CH4Consumption, CH4Emission, CH4Leaching, CH4Stored,
 !    &    CO2emission, CumCH4Consumpt, CumCH4Emission, 
@@ -291,8 +295,6 @@
      &  TSOM1C, TSOM1E, TSOM2C, TSOM2E, TSOM23E, TSOM3C,  !Output
      &  TSOM3E, TSOMC, TSOME, TSTRUCC, TSTRUCE)           !Output
 
-      CALL PUT('ORGC', 'SOMLIT_init', SOMLIT)
-
 !     Get detailed SOM and litter output for checking the SOM
 !     initialization (litter has not yet been set and will be printed
 !     from CENTURY section SEASINIT). Use RUN to prevent it from printing
@@ -399,6 +401,12 @@
      &  TMETABC, TMETABE, SomLit, SomLitC, SomLitE,       !Output
      &  TSOM1C, TSOM1E, TSOM2C, TSOM2E, TSOM23E, TSOM3C,  !Output
      &  TSOM3E, TSOMC, TSOME, TSTRUCC, TSTRUCE)           !Output
+
+      CALL PUT('ORGC', 'SOMinit', SOMLIT)
+      DO L = 1, NLAYR
+        SOC_SOIL(L) = SOMLITC(L)
+      ENDDO
+      CALL PUT('ORGC', 'SOCinit', SOC_SOIL)
 
 !       Get detailed SOM and litter output for checking the litter
 !     initialization (SOM initialization was printed from SoilCNPinit_C

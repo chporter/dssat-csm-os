@@ -151,6 +151,10 @@
       REAL, PARAMETER :: HumusCFrac = 0.526 !(=1/1.9)
       REAL, PARAMETER :: HumusCNRatio = 10.0
 
+!     2025-10-09 CHP
+!     Need initial values for only the soil (not surface) part of SOMLITC
+      REAL, DIMENSION(NL) :: SOC_SOIL
+
 !-----------------------------------------------------------------------
 !     Constructed variables are defined in ModuleDefs.
       TYPE (ControlType) CONTROL
@@ -870,9 +874,12 @@ C         recruit (NREQ-N CONC) g of N
      &    CH4_data)                                           !Output
       ENDIF
 
-      CALL PUT('ORGC', 'SOMLIT', SOMLIT)
       IF (DYNAMIC .EQ. SEASINIT) THEN
-        CALL PUT('ORGC', 'SOMLIT_init', SOMLIT)
+        CALL PUT('ORGC', 'SOMinit', SOMLIT)
+        DO L = 1, NLAYR
+          SOC_SOIL(L) = SOMLITC(L)
+        ENDDO
+        CALL PUT('ORCG', 'SOCinit', SOC_SOIL)
       ENDIF
 
 C***********************************************************************

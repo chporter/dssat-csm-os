@@ -144,7 +144,6 @@
       CALL MULCHLAYER (MULCH) 
 
       CALL PUT('ORGC','TSOMC', TSOMC)
-      CALL PUT('ORGC', 'SOMLIT', SOMLIT)
 
 !     ------------------------------------------------------------------
       RETURN
