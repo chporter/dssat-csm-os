@@ -1050,9 +1050,10 @@ C  tillage and rainfall kinetic energy
 !     -  soil organic matter or soil organic C; 
 !     - units of mass kg/ha or concentration g/100g.
 !     Here's what we are calling these combinations in this code:
-
-
-
+!     dSOMLIT_tot - cumulative change to SOM (kg/ha)
+!     dSOMLIT_day - daily change to SOM (kg/ha)
+!     dSOM_tot    - cumulative change to SOM (g/100g)
+!     dOC_day     - daily change to OC (g/100g)
 
 !=======================================================================
 !     INITIALIZATION FOR SOM VARIABLES GOES HERE
@@ -1369,7 +1370,7 @@ C  tillage and rainfall kinetic energy
       ENDIF
 
       SOM_PCT_yest = SOM_PCT    !SOM in g/100g
-      SOC_PCT_yest = OC_init    !SOC in g/100g
+      SOC_PCT_yest = OC         !SOC in g/100g
       SomLit_yest = SomLit      !SOM in kg/ha
       BD_SOM_yest = BD_SOM
 
