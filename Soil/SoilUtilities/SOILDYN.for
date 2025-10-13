@@ -1068,7 +1068,7 @@ C  tillage and rainfall kinetic energy
 
         DO L = 1, NLAYR
 !         (See conversion explanation below)
-          SOM_PCT_init(L) = SomLit_init(L) * 1.E-5 / (BD(L) * DLAYR(L)) 
+          SOM_PCT(L) = SomLit_init(L) * 1.E-5 / (BD(L) * DLAYR(L)) 
      &                                                            * 100.
           SOC_PCT_init(L) = SOC_init(L) * 1.E-5 / (BD(L) * DLAYR(L))
      &                                                            * 100.
@@ -1085,9 +1085,10 @@ C  tillage and rainfall kinetic energy
         ENDDO
 
 !       Set initial arrays
-        SOM_PCT_yest = SOM_PCT_init   !SOM in g/100g
+        SOM_PCT_init = SOM_PCT
+        SOM_PCT_yest = SOM_PCT        !SOM in g/100g
         SOC_PCT_yest = SOC_PCT_init   !SOC in g/100g
-        BD_calc_init = BD_calc   !initial BD
+        BD_calc_init = BD_calc        !initial BD
 
 !       ---------------------------------------------------------------------------
 !       Method of changing DUL and LL depend on MSDYN switch in Simulation Controls
@@ -1356,15 +1357,15 @@ C  tillage and rainfall kinetic energy
 !         Lower limit for DUL_SOM
           DUL_SOM(L) = MAX(DUL_SOM(L), DUL_INIT(L)*0.8, SAT(L) - 0.30)
 
-!!         TEMP CHP
-!          IF (L == 2) THEN
-!            write(5678,'(I8, I5, I3, F10.4,
-!     &      F10.1,F10.3,F10.3,F10.5,F10.4,F10.6,
-!     &      F10.4,F10.6,F10.4,F10.6)') 
-!     &      YRDOY, DAS, L, DLAYR_SOM(L), 
-!     &      SomLit(L), dSOM, SOM_PCT(L), dOC, BD_SOM(L), dBD_SOM, 
-!     &      DUL_SOM(L), dDUL_SOM, LL_SOM(L), dLL_SOM
-!          ENDIF
+!         TEMP CHP
+          IF (L == 2) THEN
+            write(5678,'(I3, I8, I5, I3, F10.4,
+     &      F10.1,F10.3,F10.3,F10.5,F10.4,F10.6,
+     &      F10.4,F10.6,F10.4,F10.6)') 
+     &      CONTROL%TRTNUM, YRDOY, DAS, L, DLAYR_SOM(L), 
+     &      SomLit(L), SOMLITC(L), SOM_PCT(L), OC(L), BD_SOM(L), 
+     &      DUL_SOM(L), LL_SOM(L)
+          ENDIF
 
         ENDDO
       ENDIF
