@@ -307,11 +307,11 @@ C=======================================================================
         ESW(L) = DUL(L) - LL(L)
       ENDDO
 
-      IF (DLAYR(1) .GE. 5.0) THEN
+!      IF (DLAYR(1) .GE. 5.0) THEN
         IST = 1
-      ELSE
-        IST = 2
-      ENDIF
+!      ELSE
+!        IST = 2
+!      ENDIF
 
 !     Subtract evaporation from top soil layer.
 !     This has already been done in integration section yesterday.
