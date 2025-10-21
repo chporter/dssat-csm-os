@@ -146,9 +146,9 @@
 
         dD0_DayCent(L) = MAX(0.0, (TP8/1.E7 + TP7 * TP6))
 
-!*****************************************************************************
-!       compare with Shcherbak method
-        ratio(L) = dD0_DayCent(L) / dD0_fc(L)
+!!*****************************************************************************
+!!       compare with Shcherbak method
+!        ratio(L) = dD0_DayCent(L) / dD0_fc(L)
       enddo
 
       dD0 = dD0_DayCent
