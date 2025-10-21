@@ -1113,12 +1113,13 @@ C  tillage and rainfall kinetic energy
             BD_SOM(L) = BD_calc(L) / BD_calc_init(L) * BD_init(L)
 
 !           Limit BD to realistic values
-!           BD_SOM(L) = MIN(BD_SOM(L), 1.8)
-!           BD_SOM(L) = MAX(BD_SOM(L), 0.25)
+!           2025-10-21 CHP remove upper and lower bounds on BD 
 !           Upper limit for BD_SOM
-            BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2, 1.80) 
+!           BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2, 1.80) 
+            BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2) 
 !           Lower limit for BD_SOM
-            BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8, 0.95) 
+!           BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8, 0.95) 
+            BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8) 
             dBD_SOM = BD_SOM(L) - BD_INIT(L)
 
 !           -------------------------------------------------------
