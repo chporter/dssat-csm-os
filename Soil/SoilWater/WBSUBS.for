@@ -307,11 +307,14 @@ C=======================================================================
         ESW(L) = DUL(L) - LL(L)
       ENDDO
 
-!      IF (DLAYR(1) .GE. 5.0) THEN
+!     2025-10-28 CHP Allow top layer to go below 5 cm to account for small changes in 
+!       layer thickness due to decreases in organic matter. 
+!      Set limit to 2 cm for soil evaporation water extraction. 
+      IF (DLAYR(1) .GE. 2.0) THEN !was 5.0
         IST = 1
-!      ELSE
-!        IST = 2
-!      ENDIF
+      ELSE
+        IST = 2
+      ENDIF
 
 !     Subtract evaporation from top soil layer.
 !     This has already been done in integration section yesterday.
