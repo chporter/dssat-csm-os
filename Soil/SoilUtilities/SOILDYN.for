@@ -1157,6 +1157,7 @@ C  tillage and rainfall kinetic energy
         MULCHCOVER = MULCH % MULCHCOVER
         MULCHALB   = MULCH % MULCHALB
 
+!       ---------------------------------------------------
 !       Update BD, DLAYR, DUL, LL based on changes to soil organic matter 
 !       CHP 4/11/2006
 !       These SOM-revised values will be the new "base" values to which
@@ -1219,13 +1220,15 @@ C  tillage and rainfall kinetic energy
             BD_SOM(L) = BD_calc(L) / BD_calc_init(L) * BD_init(L)
 
 !           Limit BD to realistic values
+!           2025-10-21 CHP remove upper and lower bounds on BD 
 !           Upper limit for BD_SOM
-            BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2, 1.80) 
+!           BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2, 1.80) 
+            BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2) 
 !           Lower limit for BD_SOM
-            BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8, 0.90) !was 0.95
-
+!           BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8, 0.95) 
+            BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8) 
 !           Calculate the difference
-            dBD_SOM = BD_SOM(L) - BD_init(L)
+            dBD_SOM = BD_SOM(L) - BD_INIT(L)
 
 !           -------------------------------------------------------
 !           Update DS
