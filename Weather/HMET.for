@@ -60,7 +60,7 @@ C=======================================================================
      &  HS,ISINB,PAR,REFHT,S0N,SRAD,SNDN,SNUP,
      &  TAVG,TDAY,TDEW,TGROAV,TGRODY,TINCR,TMAX,TMIN,
      &  RH,VPSAT,WINDAV,WINDHT,WINDSP,
-     &  XLAT
+     &  XLAT, PARCALC
       PARAMETER (TINCR=24./TS)
 
 !-----------------------------------------------------------------------
@@ -69,6 +69,11 @@ C     Initialize
       TDAY = 0.0
       NDAY = 0
       WINDAV = WINDSP / 86.4 * (REFHT/WINDHT)**0.2
+
+!     If PAR is missing, set it equal to the sum of calculated PARHR
+      IF (PAR .LE. 0) THEN
+        PARCALC = 0.0
+      ENDIF
 
 C     Loop to compute hourly weather data.
       DO H = 1,TS
@@ -102,7 +107,7 @@ C       Calculate sun angles and hourly weather variables.
 
         CALL HPAR(
      &    HS, PAR, RADHR(H), SNDN, SNUP, SRAD,            !Input
-     &    PARHR(H))                                       !Output
+     &    PARHR(H), PARCALC)                              !Output
 
         TAVG = TAVG + TAIRHR(H)
 
@@ -123,7 +128,8 @@ C       Calculate sun angles and hourly weather variables.
       ENDDO
 
       IF (PAR .LE. 0.) THEN
-        PAR = 2.0 * SRAD
+!       PAR = 2.0 * SRAD
+        PAR = PARCALC * 0.0036
       ENDIF
 
       RETURN
@@ -515,11 +521,11 @@ C=======================================================================
 
       SUBROUTINE HPAR(
      &    HS, PAR, RADHR, SNDN, SNUP, SRAD,               !Input
-     &    PARHR)                                          !Output
+     &    PARHR, PARCALC)                                 !Output
 
 !-----------------------------------------------------------------------
       IMPLICIT NONE
-      REAL HS,PAR,PARFAC,PARHR,PARQC,RADHR,SNDN,SNUP,SRAD
+      REAL HS,PAR,PARFAC,PARHR,PARQC,RADHR,SNDN,SNUP,SRAD, PARCALC
       PARAMETER (PARQC=4.6)
 !-----------------------------------------------------------------------
 C     Daylight hour calculations
@@ -544,6 +550,11 @@ C          PARFAC = 2.0
 C  10/02/2007 JIL   According to Lizaso et al. (2003)
           PARFAC = (0.43 + 0.12*EXP(-SRAD/2.8)) * PARQC
           PARHR = RADHR * PARFAC
+
+!         chp 2025-10-29
+!         To ensure that PAR = sum(PARHR)
+          PARCALC = PARCALC + PARHR
+!         PARCALC in mol-hr/m2-d (because summed over each hourly increment)
         ENDIF
 
 C     Night time.
@@ -561,6 +572,7 @@ C=======================================================================
 ! PAR       Daily photosynthetically active radiation or photon flux 
 !           density, calculated as half the solar radiation 
 !           (moles[quanta]/m2-d)
+! PARCALC   Sum of PARHRs mol-hr/m2-d
 ! PARFAC    Factor used to compute hourly PAR from hourly solar radiation
 ! PARHR(TS) hourly PAR (J / m2 - s) Units should be umol/m2 s ....JIL
 ! RADHR(TS) Total hourly solar radiation (J/m2-s)
