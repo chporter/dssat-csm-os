@@ -242,7 +242,7 @@ C  05/01/2022 FO  Added N2O.csv output
       TYPE (SoilType)    SOILPROP
       TYPE (N2O_type)    N2O_DATA
 
-      CHARACTER*1  IDETN, ISWNIT, ISWWAT, RNMODE
+      CHARACTER*1  IDETL, IDETN, ISWNIT, ISWWAT, RNMODE
       CHARACTER*10, PARAMETER :: OUTGHG = 'N2O.OUT'
       CHARACTER*500 FRMT, FRMT2
 
@@ -283,15 +283,15 @@ C  05/01/2022 FO  Added N2O.csv output
       CHARACTER*5, DIMENSION(SUMNUM) :: LABEL
       REAL, DIMENSION(SUMNUM) :: VALUE
 
-      FMOPT  = ISWITCH % FMOPT
-
 !-----------------------------------------------------------------------
 !     Transfer values from constructed data types into local variables.
       DYNAMIC = CONTROL % DYNAMIC
 
+      IDETL  = ISWITCH % IDETL
       IDETN  = ISWITCH % IDETN
       ISWWAT = ISWITCH % ISWWAT
       ISWNIT = ISWITCH % ISWNIT
+      FMOPT  = ISWITCH % FMOPT
 
       IF (ISWWAT == 'N' .OR. ISWNIT == 'N') RETURN
 
@@ -324,6 +324,7 @@ C  05/01/2022 FO  Added N2O.csv output
       N2ONitrif  = N2O_data % N2ONitrif
       
       N_LYR = MIN(10, MAX(4,SOILPROP%NLAYR))
+
 !***********************************************************************
 !***********************************************************************
 !***********************************************************************
@@ -355,11 +356,8 @@ C-----------------------------------------------------------------------
       TN2ONITRIFD= -99.0
       N2ONitrif  = -99.0
 
-!     chp 10/20/2017. At FAO request. Temporarily hide N2O output
-!     No output unless detail switch is on.
-!For N2O_out branch, switch output back on.
-!      IDETL = ISWITCH % IDETL
-!      IF (INDEX('AD',IDETL) == 0) RETURN
+!     IDETL = 'N' or '0' (zero) -- supress output
+      IF (INDEX('N0',ISWITCH % IDETL) > 0) RETURN
 
       FROP    = CONTROL % FROP
 
@@ -466,7 +464,6 @@ C-----------------------------------------------------------------------
 !***********************************************************************
       ELSE IF (DYNAMIC .EQ. OUTPUT) THEN
 C-----------------------------------------------------------------------
-!      IF (INDEX('AD',IDETL) == 0) RETURN
 
 !     TOTCO2 = SUM(newCO2)
 !     CumTotCO2 = CumTotCO2 + TOTCO2
@@ -478,8 +475,10 @@ C-----------------------------------------------------------------------
       CN2_emitted  = N2O_data % CN2_emitted  
       CNO_emitted  = N2O_data % CNO_emitted  
 
-!     IF (IDETN == 'N') RETURN
-!     IF (MOD(DAS, FROP) .NE. 0) RETURN
+!     IDETL = 'N' or '0' (zero) -- supress output
+      IF (INDEX('N0',ISWITCH % IDETL) > 0) RETURN
+      IF (IDETN == 'N') RETURN
+      IF (MOD(DAS, FROP) .NE. 0) RETURN
 
       CALL YR_DOY(YRDOY, YEAR, DOY) 
 
@@ -544,8 +543,11 @@ C     05/01/2022 FO Added csv output for N2O.csv
 !***********************************************************************
       ELSE IF (DYNAMIC .EQ. SEASEND) THEN
 C-----------------------------------------------------------------------
-!      IF (INDEX('AD',IDETL) == 0) RETURN
-      !Close daily output files.
+!     IDETL = 'N' or '0' (zero) -- supress output
+      IF (INDEX('N0',ISWITCH % IDETL) > 0) RETURN
+      IF (IDETN == 'N') RETURN
+
+!     Close daily output files.
       CLOSE(GHGLUN)
 
 !     Store Summary.out labels and values in arrays to send to
