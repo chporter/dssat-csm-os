@@ -112,8 +112,19 @@
       TYPE (ControlType) CONTROL
 
 !=========================================================================
-!     TEMP CHP
+!     TEMP CHP Add printout for DEMAND variables
+
+      CHARACTER*8 OUTPD  !PODS.OUT
+      INTEGER NOUTDG, ERRNUM, YEAR, DOY, DAP
+      LOGICAL FEXIST
+
       YRDOY = CONTROL % YRDOY
+      DAS   = CONTROL % DAS
+
+      DAP = MAX(0,TIMDIF(YRPLT,YRDOY))
+      IF (DAP > DAS) DAP = 0
+      CALL YR_DOY(YRDOY, YEAR, DOY) 
+
 !     end temp chp
 !=========================================================================
 
@@ -314,14 +325,14 @@
        SHVAR = WTPSD * SDPDVR * ((100.-THRESH)/THRESH)/
      &         ((LNGSH-.85*LNGPEG)*((1.-PROSHI)/(1.-PROSHF)))
 
-!!=========================================================================
-!!     TEMP CHP Add printout for PODS variables
-!
-!          OUTPD  = 'PODS.OUT'
-!          CALL GETLUN('OUTPD',  NOUTDG)
-!
-!!     end temp chp
-!!=========================================================================
+!=========================================================================
+!     TEMP CHP Add printout for PODS variables
+
+          OUTPD  = 'PODS.OUT'
+          CALL GETLUN('OUTPD',  NOUTDG)
+
+!     end temp chp
+!=========================================================================
 
 !***********************************************************************
 !***********************************************************************
@@ -357,29 +368,29 @@
      &        WTSD,SDNO,WTSHE,SHELN,                            !Input 
      &        HPODWT,HSDWT,HSHELWT)                             !Output
 
-!!=========================================================================
-!!     TEMP CHP Add printout for PODS variables
-!
-!!       Initialize daily root growth output file      
-!        INQUIRE (FILE = OUTPD, EXIST = FEXIST)
-!        IF (FEXIST) THEN
-!          OPEN (UNIT = NOUTDG, FILE = OUTPD, STATUS = 'OLD',
-!     &      IOSTAT = ERRNUM, POSITION = 'APPEND')
-!        ELSE
-!          OPEN (UNIT = NOUTDG, FILE = OUTPD, STATUS = 'NEW',
-!     &      IOSTAT = ERRNUM)
-!          WRITE(NOUTDG,'("*PODS OUTPUT FILE")')
-!        ENDIF
-!
-!        !Write headers
-!        CALL HEADER(SEASINIT, NOUTDG, CONTROL % RUN)
-!        WRITE(NOUTDG,'("! DEBUG",/)') 
-!
-!        WRITE (NOUTDG,200)
-!  200   FORMAT('@YEAR DOY   DAS   DAP')
-!
-!!     end temp chp
-!!=========================================================================
+!=========================================================================
+!     TEMP CHP Add printout for PODS variables
+
+!       Initialize daily root growth output file      
+        INQUIRE (FILE = OUTPD, EXIST = FEXIST)
+        IF (FEXIST) THEN
+          OPEN (UNIT = NOUTDG, FILE = OUTPD, STATUS = 'OLD',
+     &      IOSTAT = ERRNUM, POSITION = 'APPEND')
+        ELSE
+          OPEN (UNIT = NOUTDG, FILE = OUTPD, STATUS = 'NEW',
+     &      IOSTAT = ERRNUM)
+          WRITE(NOUTDG,'("*PODS OUTPUT FILE")')
+        ENDIF
+
+        !Write headers
+        CALL HEADER(SEASINIT, NOUTDG, CONTROL % RUN)
+        WRITE(NOUTDG,'("! DEBUG",/)') 
+
+        WRITE (NOUTDG,200)
+  200   FORMAT('@YEAR DOY   DAS   DAP')
+
+!     end temp chp
+!=========================================================================
 
 !***********************************************************************
 !***********************************************************************
@@ -629,14 +640,14 @@ C 24 changed to TS on 3Jul17 by Bruce Kimball
 !     This section calculates shell growth after first pod (NR2)
 !-----------------------------------------------------------------------
 
-!!======================================================
-!!     TEMP CHP
-!      IF (YRDOY > 2005184) THEN
-!        WRITE(5678,'(A10,3I8,8F12.6)') 'PODS 0    ',
-!     &    YRDOY, YRNR2, NR2TIM, LNGSH
-!      ENDIF
-!!     END TEMP CHP
-!!======================================================
+!======================================================
+!     TEMP CHP
+      IF (YRDOY > 2005184) THEN
+        WRITE(5678,'(A10,3I8,8F12.6)') 'PODS 0    ',
+     &    YRDOY, YRNR2, NR2TIM, LNGSH
+      ENDIF
+!     END TEMP CHP
+!======================================================
 
         IF (YRDOY .GT. YRNR2 .AND. YRNR2 .GT. 0) THEN
           DO 2100 NPP = 1, NR2TIM
@@ -645,14 +656,14 @@ C 24 changed to TS on 3Jul17 by Bruce Kimball
             ADDSHL = 0.0
             SUPDAY = 1.0
 
-!!======================================================
-!!     TEMP CHP
-!      IF (YRDOY > 2005184) THEN
-!        WRITE(5678,'(A10,3I8,8F12.6)') 'PODS 1    ',
-!     &    YRDOY, NPP, NAGE, PAGE, LNGSH, LNGPEG
-!      ENDIF
-!!     END TEMP CHP
-!!======================================================
+!======================================================
+!     TEMP CHP
+      IF (YRDOY > 2005184) THEN
+        WRITE(5678,'(A10,3I8,8F12.6)') 'PODS 1    ',
+     &    YRDOY, NPP, NAGE, PAGE, LNGSH, LNGPEG
+      ENDIF
+!     END TEMP CHP
+!======================================================
 
             IF (PAGE .LE. LNGSH) THEN
 C-GH          IF (SHELN(NPP) .GE. 0.001 .AND. GRRAT1 .GE. 0.001) THEN
@@ -661,15 +672,15 @@ C-GH          IF (SHELN(NPP) .GE. 0.001 .AND. GRRAT1 .GE. 0.001) THEN
                   ADDSHL = MIN(PGLEFT/AGRSH1,GRRAT1 * SHELN(NPP),
      &              NLEFT/(FNINSH*CNSTRES**0.5))
 
-!!======================================================
-!!     TEMP CHP
-!      IF (YRDOY > 2005184) THEN
-!        WRITE(5678,'(A10,2I8,10F12.6)') 'PODS 2    ',
-!     &    YRDOY, NPP, ADDSHL, GRRAT1, SHELN(NPP), PGLEFT, 
-!     &    AGRSH1, NLEFT, FNINSH, CNSTRES
-!      ENDIF
-!!     END TEMP CHP
-!!======================================================
+!======================================================
+!     TEMP CHP
+      IF (YRDOY > 2005184) THEN
+        WRITE(5678,'(A10,2I8,10F12.6)') 'PODS 2    ',
+     &    YRDOY, NPP, ADDSHL, GRRAT1, SHELN(NPP), PGLEFT, 
+     &    AGRSH1, NLEFT, FNINSH, CNSTRES
+      ENDIF
+!     END TEMP CHP
+!======================================================
 
                   SUPDAY = MIN((PGLEFT/AGRSH1)/(GRRAT1*SHELN(NPP)),
      &              (NLEFT/(FNINSH*CNSTRES**0.5))/(GRRAT1 * SHELN(NPP)),
@@ -680,15 +691,15 @@ C-GH          IF (SHELN(NPP) .GE. 0.001 .AND. GRRAT1 .GE. 0.001) THEN
                   ADDSHL = MIN(PGLEFT/AGRSH1 ,GRRAT1*SHELN(NPP)*SHLAG,
      &                     NLEFT/(FNINSH*CNSTRES**0.5))
 
-!!======================================================
-!!     TEMP CHP
-!      IF (YRDOY > 2005184) THEN
-!        WRITE(5678,'(A10,2I8,10F12.6)') 'PODS 3    ',
-!     &    YRDOY, NPP, ADDSHL, GRRAT1, SHELN(NPP), PGLEFT, 
-!     &    AGRSH1, NLEFT, FNINSH, CNSTRES, SHLAG
-!      ENDIF
-!!     END TEMP CHP
-!!======================================================
+!======================================================
+!     TEMP CHP
+      IF (YRDOY > 2005184) THEN
+        WRITE(5678,'(A10,2I8,10F12.6)') 'PODS 3    ',
+     &    YRDOY, NPP, ADDSHL, GRRAT1, SHELN(NPP), PGLEFT, 
+     &    AGRSH1, NLEFT, FNINSH, CNSTRES, SHLAG
+      ENDIF
+!     END TEMP CHP
+!======================================================
 
                   SUPDAY = MIN(
      &                     (PGLEFT/AGRSH1)/(GRRAT1*SHELN(NPP)*SHLAG),
@@ -765,14 +776,14 @@ C-GH          IF (SHELN(NPP) .GE. 0.001 .AND. GRRAT1 .GE. 0.001) THEN
           DO 2200 NPP = 1, NR2TIM
             PAGE = PHTIM(NR2TIM + 1) - PHTIM(NPP)
 
-!!======================================================
-!!     TEMP CHP
-!      IF (YRDOY > 2005184) THEN
-!        WRITE(5679,'(A10,2I8,10F12.6)') 'PODS 4    ',
-!     &    YRDOY, NPP, PAGE, LAGSD, TDUMX, SDNO(NPP)
-!      ENDIF
-!!     END TEMP CHP
-!!======================================================
+!======================================================
+!     TEMP CHP
+      IF (YRDOY > 2005184) THEN
+        WRITE(5679,'(A10,2I8,10F12.6)') 'PODS 4    ',
+     &    YRDOY, NPP, PAGE, LAGSD, TDUMX, SDNO(NPP)
+      ENDIF
+!     END TEMP CHP
+!======================================================
 
             IF (PAGE .GE. LAGSD .AND. PAGE .LT. LAGSD + TDUMX
      &           .AND. SDNO(NPP) .LE. 0.0) THEN
@@ -794,15 +805,15 @@ C-GH          IF (SHELN(NPP) .GE. 0.001 .AND. GRRAT1 .GE. 0.001) THEN
               SHELN(NPP) = SHELN(NPP)*MIN(SHRAT, AVTEM(NPP)*(DRPP**1.0))
 
 
-!!======================================================
-!!     TEMP CHP
-!      IF (YRDOY > 2005184) THEN
-!        WRITE(5679,'(A10,2I8,10F12.6)') 'PODS 5    ',
-!     &    YRDOY, NPP, SUPDE(NPP), SETMAX, SHRAT, SDNO(NPP), 
-!     &    AVTEM(NPP), DRPP, SHELN(NPP), SDPDVR
-!      ENDIF
-!!     END TEMP CHP
-!!======================================================
+!======================================================
+!     TEMP CHP
+      IF (YRDOY > 2005184) THEN
+        WRITE(5679,'(A10,2I8,10F12.6)') 'PODS 5    ',
+     &    YRDOY, NPP, SUPDE(NPP), SETMAX, SHRAT, SDNO(NPP), 
+     &    AVTEM(NPP), DRPP, SHELN(NPP), SDPDVR
+      ENDIF
+!     END TEMP CHP
+!======================================================
 
 
 
@@ -865,15 +876,15 @@ C-GH          IF (SHELN(NPP) .GE. 0.001 .AND. GRRAT1 .GE. 0.001) THEN
      &      FLADD, NAVPOD/(SHMAXG*(FNINSH*CNSTRES**0.5)))
 
 
-!!======================================================
-!!     TEMP CHP
-!      IF (YRDOY > 2005184) THEN
-!        WRITE(5679,'(A10,3I8,10F12.6)') 'PODS 6    ',
-!     &    YRDOY, YRNR2, NR2TIM+1, SHELN(NR2TIM+1), PODADD, PGNPOD, 
-!     &    SHMAXG, AGRSH1, FLADD, NAVPOD, FNINSH, CNSTRES
-!      ENDIF
-!!     END TEMP CHP
-!!======================================================
+!======================================================
+!     TEMP CHP
+      IF (YRDOY > 2005184) THEN
+        WRITE(5679,'(A10,3I8,10F12.6)') 'PODS 6    ',
+     &    YRDOY, YRNR2, NR2TIM+1, SHELN(NR2TIM+1), PODADD, PGNPOD, 
+     &    SHMAXG, AGRSH1, FLADD, NAVPOD, FNINSH, CNSTRES
+      ENDIF
+!     END TEMP CHP
+!======================================================
 
 
 !-----------------------------------------------------------------------
@@ -891,14 +902,14 @@ C-GH          IF (SHELN(NPP) .GE. 0.001 .AND. GRRAT1 .GE. 0.001) THEN
           IF (DAS .GE. NDSET .AND. TRIGGR .EQ. 1) THEN
             SHELN(NR2TIM + 1) = 0.0
 
-!!======================================================
-!!     TEMP CHP
-!      IF (YRDOY > 2005184) THEN
-!        WRITE(5679,'(A10,5I8,10F12.6)') 'PODS 7    ',
-!     &    YRDOY, DAS, NR2TIM+1, NDSET, TRIGGR, SHELN(NR2TIM+1)
-!      ENDIF
-!!     END TEMP CHP
-!!======================================================
+!======================================================
+!     TEMP CHP
+      IF (YRDOY > 2005184) THEN
+        WRITE(5679,'(A10,5I8,10F12.6)') 'PODS 7    ',
+     &    YRDOY, DAS, NR2TIM+1, NDSET, TRIGGR, SHELN(NR2TIM+1)
+      ENDIF
+!     END TEMP CHP
+!======================================================
 
 
           ENDIF
@@ -982,28 +993,28 @@ C-GH          IF (SHELN(NPP) .GE. 0.001 .AND. GRRAT1 .GE. 0.001) THEN
      &        HPODWT,HSDWT,HSHELWT)                             !Output
       ENDIF
 
-!!=========================================================================
-!!     TEMP CHP Add printout for roots variables
-!
-!      IF (DYNAMIC .EQ. OUTPUT) THEN
-!
-!        WRITE (NOUTDG,300)
-!     &   YEAR, DOY, DAS, DAP
-!
-!  300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
-!     &    21F12.6)
-!
-!      ENDIF
-!
-!
-!!     still temp chp...
-!
-!      IF (DYNAMIC .EQ. SEASEND) THEN
-!          CLOSE (NOUTDG)
-!      ENDIF
-!
-!!     end temp chp
-!!=========================================================================
+!=========================================================================
+!     TEMP CHP Add printout for roots variables
+
+      IF (DYNAMIC .EQ. OUTPUT) THEN
+
+        WRITE (NOUTDG,300)
+     &   YEAR, DOY, DAS, DAP
+
+  300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
+     &    21F12.6)
+
+      ENDIF
+
+
+!     still temp chp...
+
+      IF (DYNAMIC .EQ. SEASEND) THEN
+          CLOSE (NOUTDG)
+      ENDIF
+
+!     end temp chp
+!=========================================================================
 
 !***********************************************************************
 !***********************************************************************
