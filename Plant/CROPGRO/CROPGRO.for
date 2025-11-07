@@ -1172,6 +1172,11 @@ C-----------------------------------------------------------------------
       NAVL = NAVL - (NGRLF + NGRST + NGRRT)
       NAVL = NAVL - (NADLF + NADST + NADRT)
       PGAVL = PGAVL - (CADST + CADLF) * PCH2O
+
+!     TEMP CHP
+      PGAVL = MAX(0.0, PGAVL)
+!     END TEMP CHP
+
 C-----------------------------------------------------------------------
 C     Call leaf senescence routine to compute leaf loss variables
 C-----------------------------------------------------------------------

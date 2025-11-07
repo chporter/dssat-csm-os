@@ -308,6 +308,13 @@ C-----------------------------------------------------------------------
 
       NRATIO = 1.0
       IF (NAVL .LT. NGRVGG) THEN
+
+!     2025-11-07
+!     This solves the debug vs release issue with RDPD !
+        IF (NAVL < 1.E-6) THEN
+          NAVL = 0.0
+        ENDIF
+
 C-----------------------------------------------------------------------
 C     Compute ratio for reducing leaf growth to prevent N conc of
 C       new tissue from being below the minimum for growth
