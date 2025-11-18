@@ -9,15 +9,15 @@ C  11/--/2025 GH, CHP  Revised.
 C=======================================================================
 
       SUBROUTINE COHORTS(DYNAMIC, 
-     & FILECC, YRDOY,F,WLDOTN,NGRLF,SWFAC, !INPUT
-     & PAR,DTX,DXR57,NMINEA,NMINEP,NMOBR,VSTAGE,WLIDOT,TMIN, !INPUT
-     & FREEZ1,CMOBMX,CMINEA,CMINEP,CADLF,KCAN,               !INPUT
-     & WTLF,WTNLF,XLAI,WNRLF,WCRLF)                          !OUTPUT
-  
-      USE ModuleDefs
+     &  CADLF, CMINEA, CMINEP, CMOBMX, DTX, DXR57, F,       !Input
+     &  FILECC, FREEZ1, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
+     &  NMOBR, PAR, SWFAC, TMIN, VSTAGE, WLIDOT, WLDOTN,    !Input
+     &  WTLF, WTNLF, XLAI, WNRLF, WCRLF)                    !OUTPUT
+
+      USE ModuleData
       IMPLICIT NONE
       SAVE
-      EXTERNAL YR_DOY, GETLUN, IPCOHO, HEADER, GET
+      EXTERNAL YR_DOY, GETLUN, IPCOHO, HEADER
 
       CHARACTER*11 COHORTOUT
       character*12 COHORTOUT1, COHORTOUT2
@@ -68,6 +68,7 @@ C-GH 08/19/2025
       TYPE (ControlType) CONTROL
       CALL GET (CONTROL)
       YRDOY = CONTROL % YRDOY
+      CALL YR_DOY(YRDOY, YEAR, DOY) 
 
 !***********************************************************************
 !***********************************************************************
@@ -98,14 +99,13 @@ C-GH 08/19/2025
         LFNSC(I)=0
         LFAGE(I)=0
       END DO
-   
+
       CUMLFDM=0
 
       DO I=1,NSWAB
         SWFCAB(I)=1
       END DO
-      
-      
+
 C-GH 08/19/2025
       WTLF_C = 0.0
       WNRLF_C = 0.0
@@ -133,8 +133,8 @@ C-GH 08/19/2025
 !     Write headers
 !     CALL HEADER(SEASINIT, CHRTOUT, CONTROL % RUN)
       WRITE (CHRTOUT,200)
-  200 FORMAT('@YEAR DOY   DAS   DAP',
-     &  '  LWAD   LAID  LN%D O_LWAD   LAID   LN%D')
+  200 FORMAT('@YEAR DOY   DAS',
+     &  '     LWADC   LAIDC   LN%DC     LWADO   LAIDO   LN%DO')
 
 !     Initialize 2nd cohort output file
       INQUIRE (FILE = COHORTOUT1, EXIST = FEXIST)
@@ -144,7 +144,7 @@ C-GH 08/19/2025
       ELSE
         OPEN (UNIT = CHRTOUT1, FILE = COHORTOUT1, STATUS = 'NEW',
      &    IOSTAT = ERRNUM)
-        WRITE(CHRTOUT,'("*COHORT OUTPUT FILE1")') 
+        WRITE(CHRTOUT1,'("*COHORT OUTPUT FILE1")') 
       ENDIF
 
 !     Initialize 3RD cohort output file
@@ -193,13 +193,8 @@ C-GH 08/19/2025
       CUMLFDM=CUMLFDM+LFDM(1)
       PLEAFN=WTNLF_C/WTLF_C*100
   
-      CALL YR_DOY(YRDOY, YEAR, DOY) 
-
-      OPEN(UNIT=CHRTOUT,FILE=COHORTOUT,POSITION='APPEND')
-
-      WRITE (CHRTOUT,310) YEAR, DOY, NINT(WTLF_C*10),XLAI_C,PLEAFN
-
-      CLOSE(CHRTOUT)
+      WRITE (CHRTOUT,310) YEAR, DOY, CONTROL % DAS,
+     &       NINT(WTLF_C*10),XLAI_C,PLEAFN
 
 !***********************************************************************
 !***********************************************************************
@@ -516,19 +511,21 @@ C-GH 08/19/2025
       SUMLFPST=SUM(LFPST(1:199))
       SUMLFNMNSN=SUM(LFNMNSN(1:199))
   
-!***********************************************************************
-!***********************************************************************
-!     OUTPUT section
-!***********************************************************************
-!-----------------------------------------------------------------------
-      ELSE IF (DYNAMIC .EQ. OUTPUT .OR. DYNAMIC .EQ. SEASEND) THEN
-!-----------------------------------------------------------------------
+!!***********************************************************************
+!!***********************************************************************
+!!     OUTPUT section
+!!***********************************************************************
+!!-----------------------------------------------------------------------
+ !     ELSE IF (DYNAMIC .EQ. OUTPUT) THEN
+!!-----------------------------------------------------------------------
       CALL YR_DOY(YRDOY, YEAR, DOY) 
 
-      WRITE (CHRTOUT,310) YEAR, DOY, WTLF_C,XLAI_C,PLEAFN_C,
+      WRITE (CHRTOUT,310) YEAR, DOY, CONTROL % DAS, 
+     &       WTLF_C,XLAI_C,PLEAFN_C,
      &       WTLF,XLAI,PLEAFN
-310   FORMAT (1X,I4,1X,I3,F10.4,F6.3,F6.3,F10.4, 2F6.3)
-      
+310   FORMAT (1X,I4,1X,I3,I6,
+     &     F10.4, F8.3, F8.3, F10.4, 2F8.3)
+
       write (CHRTOUT1,320) YEAR,DOY,LFAGE(1:50)
 320   format (1X,I4,1X,I3,50F6.1)
 

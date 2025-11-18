@@ -60,7 +60,7 @@ C=======================================================================
       EXTERNAL DEMAND, FREEZE, GROW, HRES_CGRO, INCOMP, IPPLNT, MOBIL,
      &  NFIX, NUPTAK, OPGROW, OPHARV, P_CGRO, PEST, PHENOL,
      &  PHOTO, PLANTNBAL, PODDET, PODS, RESPIR, ROOTS, SENES,
-     &  VEGGR
+     &  VEGGR, COHORTS
       SAVE
 !-----------------------------------------------------------------------
       CHARACTER*1 DETACH, IDETO, ISWNIT, ISWSYM,
@@ -409,6 +409,12 @@ C-----------------------------------------------------------------------
      &  ShutMob, RootMob, ShelMob,                        !Output
      &  TOSHMINE,TOCHMINE,HPODWT,HSDWT,HSHELWT)           !Output
       
+      CALL COHORTS(DYNAMIC, 
+     &  CADLF, CMINEA, CMINEP, CMOBMX, DTX, DXR57, F,       !Input
+     &  FILECC, FREEZ1, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
+     &  NMOBR, PAR, SWFAC, TMIN, VSTAGE, WLIDOT, WLDOTN,    !Input
+     &  WTLF, WTNLF, XLAI, WNRLF, WCRLF)                    !OUTPUT
+
       CALL OPGROW(CONTROL, ISWITCH, SoilProp, 
      &    CADLF, CADST, CANHT, CANWH, CMINEA, DWNOD, GROWTH,  
      &    GRWRES, KSTRES, MAINR, MDATE, NFIXN, NLAYR, NSTRES, 
@@ -651,10 +657,11 @@ C-----------------------------------------------------------------------
 C     Call to root growth and rooting depth routine
 C-----------------------------------------------------------------------
 C-GH Add leaf Cohorts
-      CALL COHORTS(SEASINIT,YRDOY,F,WLDOTN,NGRLF,SWFAC,      !INPUT
-     & PAR,DTX,DXR57,NMINEA,NMINEP,NMOBR,VSTAGE,WLIDOT,TMIN, !INPUT
-     & FREEZ1,CMOBMX,CMINEA,CMINEP,CADLF,KCAN,               !INPUT
-     & WTLF,WTNLF,XLAI,WNRLF,WCRLF)                          !OUTPUT
+      CALL COHORTS(DYNAMIC, 
+     &  CADLF, CMINEA, CMINEP, CMOBMX, DTX, DXR57, F,       !Input
+     &  FILECC, FREEZ1, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
+     &  NMOBR, PAR, SWFAC, TMIN, VSTAGE, WLIDOT, WLDOTN,    !Input
+     &  WTLF, WTNLF, XLAI, WNRLF, WCRLF)                    !OUTPUT
 
 !-----------------------------------------------------------------------
 !     Write headings to output file GROWTH.OUT
@@ -870,10 +877,11 @@ C-GH
 	 NGRLF=WTNLF
 !       write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
       
-       CALL COHORTS(EMERG,YRDOY,F,WLDOTN,NGRLF,SWFAC,        !INPUT
-     & PAR,DTX,DXR57,NMINEA,NMINEP,NMOBR,VSTAGE,WLIDOT,TMIN, !INPUT
-     & FREEZ1,CMOBMX,CMINEA,CMINEP,CADLF,KCAN,               !INPUT
-     & WTLF,WTNLF,XLAI,WNRLF,WCRLF)                          !OUTPUT
+      CALL COHORTS(EMERG, 
+     &  CADLF, CMINEA, CMINEP, CMOBMX, DTX, DXR57, F,       !Input
+     &  FILECC, FREEZ1, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
+     &  NMOBR, PAR, SWFAC, TMIN, VSTAGE, WLIDOT, WLDOTN,    !Input
+     &  WTLF, WTNLF, XLAI, WNRLF, WCRLF)                    !OUTPUT
        
 !       write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF
 !       pause
@@ -1289,10 +1297,11 @@ C----------------------------------
 C     CALL COHORT MODEL
 C----------------------------------
 !      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
-      CALL COHORTS(INTEGR,YRDOY,F,WLDOTN,NGRLF,SWFAC,        !INPUT
-     & PAR,DTX,DXR57,NMINEA,NMINEP,NMOBR,VSTAGE,WLIDOT,TMIN, !INPUT
-     & FREEZ1,CMOBMX,CMINEA,CMINEP,CADLF,KCAN,               !INPUT
-     & WTLF,WTNLF,XLAI,WNRLF,WCRLF)                          !OUTPUT
+      CALL COHORTS(DYNAMIC, 
+     &  CADLF, CMINEA, CMINEP, CMOBMX, DTX, DXR57, F,       !Input
+     &  FILECC, FREEZ1, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
+     &  NMOBR, PAR, SWFAC, TMIN, VSTAGE, WLIDOT, WLDOTN,    !Input
+     &  WTLF, WTNLF, XLAI, WNRLF, WCRLF)                    !OUTPUT
            
 !      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
 !      pause
@@ -1346,6 +1355,12 @@ C----------------------------------
      &    SHELN, SHVAR, WSDDTN, WSHDTN, WTABRT, WTSD,     !Output
      &    WTSHE, WTSHMT, FLWN,                            !Output 
      &    TOSHMINE,TOCHMINE,HPODWT,HSDWT,HSHELWT)         !Output
+
+        CALL COHORTS(DYNAMIC, 
+     &  CADLF, CMINEA, CMINEP, CMOBMX, DTX, DXR57, F,       !Input
+     &  FILECC, FREEZ1, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
+     &  NMOBR, PAR, SWFAC, TMIN, VSTAGE, WLIDOT, WLDOTN,    !Input
+     &  WTLF, WTNLF, XLAI, WNRLF, WCRLF)                    !OUTPUT
 
         CALL OPGROW(CONTROL, ISWITCH, SoilProp, 
      &    CADLF, CADST, CANHT, CANWH, CMINEA, DWNOD, GROWTH,  
