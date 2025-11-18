@@ -1,26 +1,34 @@
-      SUBROUTINE COHORTS(DYNAMIC,YRDOY,F,WLDOTN,NGRLF,SWFAC, !INPUT
+C=======================================================================
+C  COHORTS, Subroutine, K.J. Boote, P. Alderman
+C-----------------------------------------------------------------------
+C  Daily leaf cohorts
+C-----------------------------------------------------------------------
+C  REVISION       HISTORY
+C  01/01/1853 (?) KJB, PA Written
+C  11/--/2025 GH, CHP  Revised.
+C=======================================================================
+
+      SUBROUTINE COHORTS(DYNAMIC, 
+     & FILECC, YRDOY,F,WLDOTN,NGRLF,SWFAC, !INPUT
      & PAR,DTX,DXR57,NMINEA,NMINEP,NMOBR,VSTAGE,WLIDOT,TMIN, !INPUT
      & FREEZ1,CMOBMX,CMINEA,CMINEP,CADLF,KCAN,               !INPUT
      & WTLF,WTNLF,XLAI,WNRLF,WCRLF)                          !OUTPUT
   
       USE ModuleDefs
-!     USE DFPORT
-
       IMPLICIT NONE
-      
-      external YR_DOY
-      save
+      SAVE
+      EXTERNAL YR_DOY, GETLUN, IPCOHO, HEADER, GET
 
-      CHARACTER*11 COHORTOUT,COHORTIN
-C-GH
-      character*12 COHORTOUT1,COHORTOUT2
+      CHARACTER*11 COHORTOUT
+      character*12 COHORTOUT1, COHORTOUT2
       CHARACTER*60 HEADER
-  
+      CHARACTER*92, INTENT(IN) :: FILECC
+
       INTEGER DYNAMIC
       INTEGER YRDOY,YEAR,DOY
-      INTEGER I
+      INTEGER I, ERRNUM
       INTEGER,PARAMETER::NSWAB = 5
-      INTEGER CHRTOUT,CHRTIN
+      INTEGER CHRTOUT
 C-GH
       integer CHRTOUT1, CHRTOUT2
 
@@ -57,21 +65,31 @@ C-GH 08/19/2025
 
       LOGICAL FEXIST
 
+      TYPE (ControlType) CONTROL
+      CALL GET (CONTROL)
+      YRDOY = CONTROL % YRDOY
+
+!***********************************************************************
+!***********************************************************************
+!     Run initialization - run once per simulation
+!***********************************************************************
+      IF (DYNAMIC .EQ. RUNINIT) THEN
+!-----------------------------------------------------------------------
       COHORTOUT = 'COHORTS.OUT'
-      CHRTOUT=10
-      COHORTIN = 'COHORTS.INP'
-      CHRTIN=20
-C-GH
+      CALL GETLUN('COHORTOUT',  CHRTOUT)
+          
       COHORTOUT1 = "COHORTS1.OUT"
+      CALL GETLUN('COHORTOUT1', CHRTOUT1)
+          
       COHORTOUT2 = "COHORTS2.OUT"
-      CHRTOUT1=111
-      CHRTOUT2=222
+      CALL GETLUN('COHORTOUT2', CHRTOUT2)
 
-!****************************
-!Initialization
-!****************************
-      IF (DYNAMIC .EQ. SEASINIT) THEN
-
+!***********************************************************************
+!***********************************************************************
+!     Seasonal initialization - run once per season
+!***********************************************************************
+      ELSEIF (DYNAMIC .EQ. SEASINIT) THEN
+!-----------------------------------------------------------------------
       DO I=1,199
         LFDM(I)=0
         LFAREA(I)=0
@@ -94,103 +112,60 @@ C-GH 08/19/2025
       WCRLF_C = 0.0
       XLAI_C = 0.0
       WTNLF_C = 0.0
-      
-      CHRTIN=303
-      COHORTIN="COHORTS.INP"
 
-      OPEN (UNIT = CHRTIN, FILE = COHORTIN, STATUS = 'OLD')
-      READ (CHRTIN,'(A60)') HEADER
-      READ (CHRTIN,'(15(F7.0))') PROLFF,NMOBMX,NVSMOB,
-     &  ALPHL,ICMP,TCMP,SENDAY,XSENMX(1:4),SENMAX(1:4)
-      MAXNMINE = 0.060
-          
-      CLOSE (CHRTIN)
+!     Read parameters from species file
+      CALL IPCOHO(
+     &  FILECC,                                 !Input
+     &  ALPHL, ICMP, NMOBMX, NVSMOB, PROLFF,    !Output
+     &  SENDAY, SENMAX, TCMP, XSENMX)           !Output
 
-
-
+!     Initialize COHORT.OUT file
       INQUIRE (FILE = COHORTOUT, EXIST = FEXIST)
       IF (FEXIST) THEN
-        I=SYSTEM("DEL COHORTS.OUT")
-        OPEN (UNIT = CHRTOUT, FILE = COHORTOUT, STATUS = 'NEW')
-        WRITE(CHRTOUT,'(A19)') "*COHORT OUTPUT FILE"
-        WRITE(CHRTOUT,'(A28)')
-     &    "@YEAR DOY  LWAD   LAID  LN%D O_LWAD   LAID   LN%D"
+        OPEN (UNIT = CHRTOUT, FILE = COHORTOUT, STATUS = 'OLD',
+     &    IOSTAT = ERRNUM, POSITION = 'APPEND')
       ELSE
-        OPEN (UNIT = CHRTOUT, FILE = COHORTOUT, STATUS = 'NEW')
-        WRITE(CHRTOUT,'(A19)') "*COHORT OUTPUT FILE"
-        WRITE(CHRTOUT,'(A28)')
-     &    "@YEAR DOY  LWAD   LAID  LN%D O_LWAD   LAID   LN%D"
+        OPEN (UNIT = CHRTOUT, FILE = COHORTOUT, STATUS = 'NEW',
+     &    IOSTAT = ERRNUM)
+        WRITE(CHRTOUT,'("*Leaf cohort output file")')
       ENDIF
 
+!     Write headers
+!     CALL HEADER(SEASINIT, CHRTOUT, CONTROL % RUN)
+      WRITE (CHRTOUT,200)
+  200 FORMAT('@YEAR DOY   DAS   DAP',
+     &  '  LWAD   LAID  LN%D O_LWAD   LAID   LN%D')
 
-
-!=================from opgrow====================================
-!         Initialize daily growth output file      
-          INQUIRE (FILE = OUTG, EXIST = FEXIST)
-          IF (FEXIST) THEN
-            OPEN (UNIT = NOUTDG, FILE = OUTG, STATUS = 'OLD',
-     &        IOSTAT = ERRNUM, POSITION = 'APPEND')
-            FIRST = .FALSE.
-          ELSE
-            OPEN (UNIT = NOUTDG, FILE = OUTG, STATUS = 'NEW',
-     &        IOSTAT = ERRNUM)
-            WRITE(NOUTDG,'("*GROWTH ASPECTS OUTPUT FILE")')
-            FIRST = .TRUE.
-          ENDIF
-
-          !Write headers
-          CALL HEADER(SEASINIT, NOUTDG, RUN)
-        ENDIF    ! VSH
-
-        N_LYR = MIN(10, MAX(4,SOILPROP%NLAYR))
-
-        IF (FMOPT == 'A' .OR. FMOPT == ' ') THEN    ! VSH
-          WRITE (NOUTDG, 100) "Root Dens. (cm/cm3) by soil ",
-     &      "depth (cm):",(SoilProp%LayerText(L), L=1,N_LYR)
-  100     FORMAT("!",251X,A,A,/,"!",246X,10A8) 
-
-          WRITE (NOUTDG,200, ADVANCE='NO')
-  200     FORMAT('@YEAR DOY   DAS   DAP',
-     &         '   L#SD   GSTD   LAID   LWAD   SWAD   GWAD')
-!=================from opgrow====================================
-
-
-      CLOSE(CHRTOUT)
-C-GH     
+!     Initialize 2nd cohort output file
       INQUIRE (FILE = COHORTOUT1, EXIST = FEXIST)
       IF (FEXIST) THEN
-        I=SYSTEM("DEL COHORTS1.OUT")
-        OPEN (UNIT = CHRTOUT, FILE = COHORTOUT1, STATUS = 'NEW')
-        WRITE(CHRTOUT,'(A19)') "*COHORT OUTPUT FILE"
-        WRITE(CHRTOUT,'(A28)')
-     &    "@YEAR DOY   LFAGE           "
+        OPEN (UNIT = CHRTOUT1, FILE = COHORTOUT1, STATUS = 'OLD',
+     &    IOSTAT = ERRNUM, POSITION = 'APPEND')
       ELSE
-        OPEN (UNIT = CHRTOUT1, FILE = COHORTOUT1, STATUS = 'NEW')
-        WRITE(CHRTOUT,'(A19)') "*COHORT OUTPUT FILE"
-        WRITE(CHRTOUT,'(A28)')
-     &    "@YEAR DOY   LFAGE           "
+        OPEN (UNIT = CHRTOUT1, FILE = COHORTOUT1, STATUS = 'NEW',
+     &    IOSTAT = ERRNUM)
+        WRITE(CHRTOUT,'("*COHORT OUTPUT FILE1")') 
       ENDIF
 
+!     Initialize 3RD cohort output file
       INQUIRE (FILE = COHORTOUT2, EXIST = FEXIST)
       IF (FEXIST) THEN
-        I=SYSTEM("DEL COHORTS2.OUT")
-        OPEN (UNIT = CHRTOUT2, FILE = COHORTOUT2, STATUS = 'NEW')
-        WRITE(CHRTOUT,'(A19)') "*COHORT OUTPUT FILE"
-        WRITE(CHRTOUT,'(A28)')
-     &    "@YEAR DOY   LFWT            "
+        OPEN (UNIT = CHRTOUT2, FILE = COHORTOUT2, STATUS = 'OLD',
+     &    IOSTAT = ERRNUM, POSITION = 'APPEND')
       ELSE
-        OPEN (UNIT = CHRTOUT2, FILE = COHORTOUT2, STATUS = 'NEW')
-        WRITE(CHRTOUT,'(A19)') "*COHORT OUTPUT FILE"
-        WRITE(CHRTOUT,'(A28)')
-     &    "@YEAR DOY   LFWT            "
+        OPEN (UNIT = CHRTOUT2, FILE = COHORTOUT2, STATUS = 'NEW',
+     &    IOSTAT = ERRNUM)
+        WRITE(CHRTOUT2,'(A19)') "*COHORT OUTPUT FILE2"
       ENDIF
+      WRITE(CHRTOUT2,'("@YEAR DOY   LFWT            ")')
 
-!***********************
-! EMERGENCE CALCULATIONS
-!***********************
-      ELSEIF (DYNAMIC .EQ. EMERG)THEN
-
-!-------------------------------------
+!***********************************************************************
+!***********************************************************************
+!     EMERGENCE CALCULATIONS - Performed once per season upon emergence
+!         or transplanting of plants
+!***********************************************************************
+      ELSEIF (DYNAMIC .EQ. EMERG) THEN
+!-----------------------------------------------------------------------
 ! COHORT VARIABLES FOR NEW LEAF TISSUE
 !-------------------------------------
       LFDM(1)=WLDOTN
@@ -226,11 +201,12 @@ C-GH
 
       CLOSE(CHRTOUT)
 
-!********************
-! DAILY INTEGRATION
-!********************
-      ELSEIF (DYNAMIC .EQ. INTEGR)THEN
-!---------------------------
+!***********************************************************************
+!***********************************************************************
+!     DAILY RATE/INTEGRATION
+!***********************************************************************
+      ELSEIF (DYNAMIC .EQ. INTEGR) THEN
+!-----------------------------------------------------------------------
 ! NON-STRUCTURAL CH2O MINING
 !---------------------------
       DO  I=1,199
@@ -540,31 +516,45 @@ C-GH
       SUMLFPST=SUM(LFPST(1:199))
       SUMLFNMNSN=SUM(LFNMNSN(1:199))
   
+!***********************************************************************
+!***********************************************************************
+!     OUTPUT section
+!***********************************************************************
+!-----------------------------------------------------------------------
+      ELSE IF (DYNAMIC .EQ. OUTPUT .OR. DYNAMIC .EQ. SEASEND) THEN
+!-----------------------------------------------------------------------
       CALL YR_DOY(YRDOY, YEAR, DOY) 
-
-      OPEN(UNIT=CHRTOUT,FILE=COHORTOUT,POSITION='APPEND')
 
       WRITE (CHRTOUT,310) YEAR, DOY, WTLF_C,XLAI_C,PLEAFN_C,
      &       WTLF,XLAI,PLEAFN
 310   FORMAT (1X,I4,1X,I3,F10.4,F6.3,F6.3,F10.4, 2F6.3)
       
-      
-C-GH  
-      OPEN(UNIT=CHRTOUT1,FILE=COHORTOUT1,POSITION='APPEND')
       write (CHRTOUT1,320) YEAR,DOY,LFAGE(1:50)
 320   format (1X,I4,1X,I3,50F6.1)
-      OPEN(UNIT=CHRTOUT2,FILE=COHORTOUT2,POSITION='APPEND')
+
       write (CHRTOUT2,330) YEAR,DOY,LFDM(1:50)
 330   format (1X,I4,1X,I3,50F6.1)
 
+!***********************************************************************
+!***********************************************************************
+!     SEASON END section
+!***********************************************************************
+!-----------------------------------------------------------------------
+      ELSE IF (DYNAMIC .EQ. SEASEND) THEN
+!-----------------------------------------------------------------------
       CLOSE(CHRTOUT)
-C-GH
       close(CHRTOUT1)
       close(CHRTOUT2)
       
-      END IF
-      END
-
+!***********************************************************************
+!***********************************************************************
+!     END OF DYNAMIC IF CONSTRUCT
+!***********************************************************************
+      ENDIF
+!-----------------------------------------------------------------------
+      RETURN
+      END SUBROUTINE COHORTS
+!=======================================================================
 
 
 !=======================================================================
