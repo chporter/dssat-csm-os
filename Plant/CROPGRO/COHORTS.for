@@ -576,53 +576,26 @@ C-GH
 !  11/18/2025 CHP Adapted from IPDMND.
 !=======================================================================
       SUBROUTINE IPCOHO(
-     &  FILECC,                             !Input
-     &  CARMIN, FINREF, FNSDT, FRLFF, FRLFMX,             !Output
-     &  FRSTMF, LIPOPT, LIPTB, LNGSH, NMOBMX,             !Output
-     &  NRCVR, NVSMOB, PLIGSD, PMINSD, POASD,             !Output
-     &  PROLFF, PROLFI, PRORTF, PRORTI, PROSTF, PROSTI,   !Output
-     &  RCH2O, RLIG, RLIP, RMIN, RNO3C, ROA,              !Output
-     &  RPRO, SDLIP, SDPRO, SHLAG, SLAMAX, SLAMIN,        !Output
-     &  SLAPAR, SLAREF, SLAVAR, SLOSUM, SIZELF, SIZREF,   !Output
-     &  SRMAX, THRESH, TURSLA, TYPSDT, VSSINK, XFRMAX,    !Output
-     &  XFRUIT, XLEAF, XSLATM, XTRFAC, XVGROW, XXFTEM,    !Output
-     &  YLEAF, YSLATM, YSTEM, YTRFAC, YVREF, YXFTEM,      !Output
-     &  XFPHT, XFINT, NSLA)                               !Output
+     &  FILECC,                                 !Input
+     &  ALPHL, ICMP, NMOBMX, NVSMOB, PROLFF,    !Output
+     &  SENDAY, SENMAX, TCMP, XSENMX)           !Output
 
 !-----------------------------------------------------------------------
       IMPLICIT NONE
       EXTERNAL GETLUN, ERROR, FIND, IGNORE, WARNING
 !-----------------------------------------------------------------------
-      CHARACTER*3   TYPSDT
+      CHARACTER*92, INTENT(IN) :: FILECC
+      REAL, INTENT(OUT) :: ALPHL, ICMP, NMOBMX, NVSMOB, PROLFF, 
+     &     SENDAY, TCMP
+      REAL, INTENT(OUT) :: SENMAX(4), XSENMX(4)
+
       CHARACTER*6   ERRKEY
-      PARAMETER (ERRKEY = 'IPDMND')
+      PARAMETER (ERRKEY = 'IPCOHO')
       CHARACTER*6   SECTION
-      CHARACTER*6   ECOTYP, ECONO
-      CHARACTER*30  FILEIO
-      CHARACTER*78  MSG(4)
       CHARACTER*80  C80
-      CHARACTER*92  FILECC, FILEGC
-      CHARACTER*255 C255
 
-      INTEGER LUNCRP, LUNIO, LUNECO, ERR, LINC, LNUM, FOUND, ISECT
-      INTEGER I, II
-
-      REAL CARMIN, FINREF, FRLFF, FRLFMX, FRSTMF,
-     &  LIPOPT, LIPTB, NMOBMX, NRCVR, NVSMOB,
-     &  PLIGSD, PMINSD, POASD, PROLFF,
-     &  PROLFI, PRORTF, PRORTI, PROSTF, PROSTI,
-     &  RCH2O, RLIG, RLIP, RMIN, RNO3C, ROA,
-     &  RPRO, SHLAG, SLAMAX, SLAMIN, SLAPAR,
-     &  SLAREF, SLAVAR, SLOSUM, SIZELF, SIZREF,
-     &  SRMAX, TURSLA, VSSINK, XFRMAX, XFRUIT
-        REAL LNGSH, THRESH, SDPRO, SDLIP, XFPHT, XFINT
-        REAL NSLA
-
-        REAL FNSDT(4)
-        REAL XVGROW(6), YVREF(6)
-        REAL XSLATM(10), YSLATM(10), XTRFAC(10), YTRFAC(10),
-     &                  XXFTEM(10), YXFTEM(10)
-        REAL XLEAF(25), YLEAF(25), YSTEM(25)
+      INTEGER LUNCRP,  ERR, LINC, LNUM, FOUND, ISECT
+      INTEGER II
 
 !-----------------------------------------------------------------------
 !     Read in values from species file
@@ -675,26 +648,26 @@ C-GH
       IF (FOUND .EQ. 0) THEN
         CALL ERROR(SECTION, 42, FILECC, LNUM)
       ELSE
-        CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)  
-        READ(CHAR,'(12X,F6.0)',IOSTAT=ERR) SENDAY
+        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)  
+        READ(C80,'(12X,F6.0)',IOSTAT=ERR) SENDAY
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
 
-        CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)
-        READ(CHAR,'(2F6.0)',IOSTAT=ERR) ICMP, TCMP
+        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+        READ(C80,'(2F6.0)',IOSTAT=ERR) ICMP, TCMP
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
 
-        CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)
-        READ(CHAR,'(24X,4F6.0)',IOSTAT=ERR)
+        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+        READ(C80,'(24X,4F6.0)',IOSTAT=ERR)
      &      (XSENMX(II),II=1,4)
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
 
-        CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)
-        READ(CHAR,'(24X,4F6.0)',IOSTAT=ERR)
+        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+        READ(C80,'(24X,4F6.0)',IOSTAT=ERR)
      &      (SENMAX(II),II=1,4)
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
 
-        CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)  
-        READ(CHAR,'(F6.0)',IOSTAT=ERR) ALPHL
+        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)  
+        READ(C80,'(F6.0)',IOSTAT=ERR) ALPHL
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
 
       ENDIF
