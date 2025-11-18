@@ -41,6 +41,7 @@ C  07/08/2003 CHP Added KSEVAP for export to soil evaporation routines.
 !  11/08/2023  FO Added parameters for lint growth rate in GROW.
 !  21/06/2024  FO Added Lint Yield to OPHARV. 
 !  27/06/2024  FO Added Percent Lint to OPHARV. 
+!  08/08/2025  GH Added leaf cohorts
 C=======================================================================
 
       SUBROUTINE CROPGRO(CONTROL, ISWITCH, 
@@ -646,6 +647,15 @@ C-----------------------------------------------------------------------
      &    SAT, SW, SWFAC, VSTAGE, WR, WRDOTN, WTNEW,      !Input
      &    RLV, RTDEP, SATFAC, SENRT, SRDOT, TRLV)         !Output
 
+C-----------------------------------------------------------------------
+C     Call to root growth and rooting depth routine
+C-----------------------------------------------------------------------
+C-GH Add leaf Cohorts
+      CALL COHORTS(SEASINIT,YRDOY,F,WLDOTN,NGRLF,SWFAC,      !INPUT
+     & PAR,DTX,DXR57,NMINEA,NMINEP,NMOBR,VSTAGE,WLIDOT,TMIN, !INPUT
+     & FREEZ1,CMOBMX,CMINEA,CMINEP,CADLF,KCAN,               !INPUT
+     & WTLF,WTNLF,XLAI,WNRLF,WCRLF)                          !OUTPUT
+
 !-----------------------------------------------------------------------
 !     Write headings to output file GROWTH.OUT
 !-----------------------------------------------------------------------
@@ -853,7 +863,26 @@ C-----------------------------------------------------------------------
      &    CRUSRT, CRUSSH, CRUSST, EXCESS, NADLF, NADRT,   !Output
      &    NADST, NGRLF, NGRRT, NGRST, NSTRES,             !Output
      &    TNLEAK, WLDOTN, WRDOTN, WSDOTN)                 !Output
+        
+!-----------------------------------------------------------------------     
+C-GH
+       WLDOTN=WTLF
+	 NGRLF=WTNLF
+!       write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
+      
+       CALL COHORTS(EMERG,YRDOY,F,WLDOTN,NGRLF,SWFAC,        !INPUT
+     & PAR,DTX,DXR57,NMINEA,NMINEP,NMOBR,VSTAGE,WLIDOT,TMIN, !INPUT
+     & FREEZ1,CMOBMX,CMINEA,CMINEP,CADLF,KCAN,               !INPUT
+     & WTLF,WTNLF,XLAI,WNRLF,WCRLF)                          !OUTPUT
+       
+!       write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF
+!       pause
+       
+       WLDOTN=0
+	 NGRLF=0
 
+!-----------------------------------------------------------------------
+       
         IF (ISWPHO .EQ. 'Y' .OR. ISWPHO .EQ. 'H') THEN
 !       Plant phosphorus module initialization at plant emergence
           CALL P_CGRO (EMERG, ISWITCH, 
@@ -1256,6 +1285,17 @@ C-----------------------------------------------------------------------
      &  ShutMob, RootMob, ShelMob,                        !Output
      &  TOSHMINE,TOCHMINE,HPODWT,HSDWT,HSHELWT)           !Output
       
+C----------------------------------
+C     CALL COHORT MODEL
+C----------------------------------
+!      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
+      CALL COHORTS(INTEGR,YRDOY,F,WLDOTN,NGRLF,SWFAC,        !INPUT
+     & PAR,DTX,DXR57,NMINEA,NMINEP,NMOBR,VSTAGE,WLIDOT,TMIN, !INPUT
+     & FREEZ1,CMOBMX,CMINEA,CMINEP,CADLF,KCAN,               !INPUT
+     & WTLF,WTNLF,XLAI,WNRLF,WCRLF)                          !OUTPUT
+           
+!      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
+!      pause
       IF ((WTLF+STMWT).GT. 0.0001) THEN
         PCNVEG = (WTNLF+WTNST)/(WTLF+STMWT)*100.
       ELSE
