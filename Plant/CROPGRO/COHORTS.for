@@ -3,63 +3,64 @@
      & FREEZ1,CMOBMX,CMINEA,CMINEP,CADLF,KCAN,               !INPUT
      & WTLF,WTNLF,XLAI,WNRLF,WCRLF)                          !OUTPUT
   
-	USE ModuleDefs
-	USE DFPORT
+      USE ModuleDefs
+!     USE DFPORT
 
-	IMPLICIT NONE
+      IMPLICIT NONE
       
       external YR_DOY
       save
 
-	CHARACTER*11 COHORTOUT,COHORTIN,DMOUT,NNSOUT,AREAOUT
+      CHARACTER*11 COHORTOUT,COHORTIN
 C-GH
       character*12 COHORTOUT1,COHORTOUT2
-	CHARACTER*60 HEADER
-	
-	INTEGER DYNAMIC
-	INTEGER YRDOY,YEAR,DOY
-	INTEGER I,Z
-	INTEGER,PARAMETER::NSWAB = 5
-	INTEGER CHRTOUT,CHRTIN
+      CHARACTER*60 HEADER
+  
+      INTEGER DYNAMIC
+      INTEGER YRDOY,YEAR,DOY
+      INTEGER I
+      INTEGER,PARAMETER::NSWAB = 5
+      INTEGER CHRTOUT,CHRTIN
 C-GH
       integer CHRTOUT1, CHRTOUT2
 
-      REAL WCRLF,CRUSLF
-	REAL NMINEA,NMINEP,NMOBR
-	REAL CMINEA,CMINEP
-	REAL NRUSLF,SLDOT,SLNDOT
+      REAL WCRLF  !,CRUSLF
+      REAL NMINEA,NMINEP,NMOBR
+      REAL CMINEA,CMINEP
+!     REAL NRUSLF,SLDOT,SLNDOT
       REAL DTX,DXR57
-	REAL PAR,CHECK
+      REAL PAR  !,CHECK
       REAL WTLF,RATTP,XLAI,WTNLF
-      REAL LCMP,WNRLF,LEAFN
+      REAL LCMP,WNRLF !,LEAFN
       REAL SWFCAB(NSWAB),SWFAC
-	REAL CMOBMX,NMOBMX,NMINER,ALPHL
-	REAL TMIN,FREEZ1,WLIDOT,CADLF,NLOFF,NLPEST
+      REAL CMOBMX,NMOBMX,NMINER,ALPHL
+      REAL TMIN,FREEZ1,WLIDOT,CADLF,NLOFF,NLPEST
       REAL NGRLF,WLDOTN,F
       REAL PROLFF,MAXNMINE,KCAN,ICMP,TCMP,SENDAY
       REAL LFDM(199),LFNSN(199),LFSN(199),LFAREA(199)
-	REAL LFNSC(199),LFAGE(199)
+      REAL LFNSC(199),LFAGE(199)
       REAL LFCMN(199),LFCAD(199)
-	REAL LFNMN(199),LFNAD(199)
-	REAL LFNMNSN(199),LFWSSN(199),LFFRZ(199),LFPST(199)
-      REAL SUMLFDM,SUMLFNSN,SUMLFAREA,SUMLFN,PLEAFN
-	REAL SUMLFWSSN,SUMLFFRZ,SUMLFPST,SUMLFNMNSN
+      REAL LFNMN(199),LFNAD(199)
+      REAL LFNMNSN(199),LFWSSN(199),LFFRZ(199),LFPST(199)
+!     REAL SUMLFDM,SUMLFNSN,SUMLFAREA,SUMLFN,PLEAFN
+      REAL PLEAFN
+      REAL SUMLFWSSN,SUMLFFRZ,SUMLFPST,SUMLFNMNSN
 
-	REAL WSLOSS,NVSMOB
-	REAL CUMLFDM,CUMAREA
-	REAL SHADEFAC(199)
-	REAL PORLFT,VSTAGE
-	REAL XSENMX(4),SENMAX(4)
+      REAL WSLOSS,NVSMOB
+      REAL CUMLFDM,CUMAREA
+      REAL SHADEFAC(199)
+      REAL PORLFT,VSTAGE
+      REAL XSENMX(4),SENMAX(4)
       
 C-GH 08/19/2025
       REAL WTLF_C, WNRLF_C, WCRLF_C, XLAI_C, WTNLF_C, PLEAFN_C
 
-	LOGICAL FEXIST
+      LOGICAL FEXIST
 
-	COHORTOUT = 'COHORTS.OUT'
-	CHRTOUT=10
-	COHORTIN = 'COHORTS.INP'
-	CHRTIN=20
+      COHORTOUT = 'COHORTS.OUT'
+      CHRTOUT=10
+      COHORTIN = 'COHORTS.INP'
+      CHRTIN=20
 C-GH
       COHORTOUT1 = "COHORTS1.OUT"
       COHORTOUT2 = "COHORTS2.OUT"
@@ -80,7 +81,7 @@ C-GH
         LFAGE(I)=0
       END DO
    
-	CUMLFDM=0
+      CUMLFDM=0
 
       DO I=1,NSWAB
         SWFCAB(I)=1
@@ -184,87 +185,85 @@ C-GH
       WTNLF_C =SUM(LFNSN(1:199))+SUM(LFSN(1:199))
 
       CUMLFDM=CUMLFDM+LFDM(1)
-	PLEAFN=WTNLF_C/WTLF_C*100
-	
-	CALL YR_DOY(YRDOY, YEAR, DOY) 
+      PLEAFN=WTNLF_C/WTLF_C*100
+  
+      CALL YR_DOY(YRDOY, YEAR, DOY) 
 
       OPEN(UNIT=CHRTOUT,FILE=COHORTOUT,POSITION='APPEND')
 
-	WRITE (CHRTOUT,310) YEAR, DOY, NINT(WTLF_C*10),XLAI_C,PLEAFN
+      WRITE (CHRTOUT,310) YEAR, DOY, NINT(WTLF_C*10),XLAI_C,PLEAFN
 
-	CLOSE(CHRTOUT)
+      CLOSE(CHRTOUT)
 
 !********************
 ! DAILY INTEGRATION
 !********************
-	ELSEIF (DYNAMIC .EQ. INTEGR)THEN
+      ELSEIF (DYNAMIC .EQ. INTEGR)THEN
 !---------------------------
 ! NON-STRUCTURAL CH2O MINING
 !---------------------------
-	DO  I=1,199
-		IF (LFNSC(I).LE.0.OR.CMOBMX.LE.0)THEN
-			LFCMN(I)=0
-		ELSE
-              LFCMN(I)=LFNSC(I)*CMINEA / CMINEP * CMOBMX * (DTX + DXR57)
-			LFCMN(I)=MIN(LFCMN(I),LFNSC(I))
-			IF ((LFNSC(I)-LFCMN(I)).LE.0.00001)THEN
-				LFCMN(I)=LFNSC(I)
-			ENDIF
-		ENDIF
-	END DO
+      DO  I=1,199
+        IF (LFNSC(I).LE.0.OR.CMOBMX.LE.0)THEN
+          LFCMN(I)=0
+        ELSE
+          LFCMN(I)=LFNSC(I)*CMINEA / CMINEP * CMOBMX * (DTX + DXR57)
+          LFCMN(I)=MIN(LFCMN(I),LFNSC(I))
+          IF ((LFNSC(I)-LFCMN(I)).LE.0.00001)THEN
+            LFCMN(I)=LFNSC(I)
+          ENDIF
+        ENDIF
+      END DO
 
 !-------------------------------------------
 ! INCREASED N MINING FROM SHADING (SHADEFAC)
 !-------------------------------------------
-	
+  
       IF (PAR .GT. 0.) THEN
         LCMP = -(1. / KCAN) * ALOG(ICMP / PAR)
-	ENDIF
+      ENDIF
 
-	CUMAREA=0.0
-	DO I=1,199
-		CUMAREA=CUMAREA+LFAREA(I)/10000
-		IF (CUMAREA/LCMP.GE.1)THEN
-			SHADEFAC(I)=CUMAREA/LCMP
-		ELSE
-			SHADEFAC(I)=1
-		ENDIF
+      CUMAREA=0.0
+      DO I=1,199
+        CUMAREA=CUMAREA+LFAREA(I)/10000
+        IF (CUMAREA/LCMP.GE.1)THEN
+          SHADEFAC(I)=CUMAREA/LCMP
+        ELSE
+          SHADEFAC(I)=1
+        ENDIF
       ENDDO
 
 !--------------------------------
 ! NON-STRUCTURAL N MINING (LFNMN)
 !--------------------------------
-!      write(*,*) NMINEP, YRDOY
-!      pause
-      
       if (NMINEP .GT. 0.0) then
          NMINER=NMOBR*NMINEA/NMINEP
       else
          NMINER = 0.0
       endif
       
-	DO  I=1,199
-		IF (LFNSN(I).LE.0.OR.MAXNMINE.LE.0.OR.NMOBMX.LE.0)THEN
-			LFNMN(I)=0
-		ELSE
-              LFNMN(I)=SHADEFAC(I)*(NMINER/NMOBMX)*MAXNMINE*LFNSN(I)
-			LFNMN(I)=MIN(LFNMN(I),LFNSN(I))
-			IF ((LFNSN(I)-LFNMN(I)).LE.0.00001)THEN
-				LFNMN(I)=LFNSN(I)
-			ENDIF
-		ENDIF
-	END DO
+      DO  I=1,199
+        IF (LFNSN(I).LE.0.OR.MAXNMINE.LE.0.OR.NMOBMX.LE.0)THEN
+          LFNMN(I)=0
+        ELSE
+          LFNMN(I)=SHADEFAC(I)*(NMINER/NMOBMX)*MAXNMINE*LFNSN(I)
+          LFNMN(I)=MIN(LFNMN(I),LFNSN(I))
+          IF ((LFNSN(I)-LFNMN(I)).LE.0.00001)THEN
+            LFNMN(I)=LFNSN(I)
+          ENDIF
+        ENDIF
+      END DO
+
 !------------------------------
 ! N MINING SENESCENCE (LFNMNSN)
 !------------------------------
-	
-	DO I=1,199
-		IF (LFNMN(I).GE.LFNSN(I))THEN
-			LFNMNSN(I)=LFDM(I)-(LFNMN(I)/0.16)
-		ELSE
-			LFNMNSN(I)=0
-		ENDIF
-	ENDDO
+  
+      DO I=1,199
+        IF (LFNMN(I).GE.LFNSN(I))THEN
+          LFNMNSN(I)=LFDM(I)-(LFNMN(I)/0.16)
+        ELSE
+          LFNMNSN(I)=0
+        ENDIF
+      ENDDO
 
 !---------------------------------
 ! WATER STRESS SENESCENCE (LFWSSN)
@@ -280,48 +279,50 @@ C-GH
         SWFCAB(1) = SWFAC
         RATTP = SWFCAB(NSWAB)
         WSLOSS = SENDAY * (1. - RATTP) * WTLF
-	  LFWSSN(1:199)=0
-	          
+        LFWSSN(1:199)=0
+            
         IF (WSLOSS .GT. 0.0) THEN
-		DO I=1,4
-		  IF (VSTAGE.GT.XSENMX(I))THEN
-              PORLFT = 1.0 - SENMAX(I)
-		  ENDIF
+          DO I=1,4
+            IF (VSTAGE.GT.XSENMX(I))THEN
+                PORLFT = 1.0 - SENMAX(I)
+            ENDIF
           ENDDO
+          
           WSLOSS = MIN(WSLOSS, WTLF - CUMLFDM * PORLFT)
           WSLOSS = MAX(WSLOSS, 0.0)
           WSLOSS=WSLOSS-SUM(LFNMNSN(1:199))-SUM(LFNMN(1:199))/0.16
-	    DO I=199,1,-1
-	      IF (LFDM(I).GT.(LFNMNSN(I)+LFNMN(I)/0.16).AND.
-     &                                        WSLOSS.GT.0) THEN
-		    LFWSSN(I)=MIN((LFDM(I)-LFNMNSN(I)-LFNMN(I)/0.16),WSLOSS)
-		    LFWSSN(I)=MAX(LFWSSN(I),0.0)
-		    WSLOSS=WSLOSS-LFWSSN(I)
-	      ENDIF
-	    ENDDO
-	  ENDIF
-	ELSE
-		LFWSSN(1:199)=0
-	ENDIF
+          
+          DO I=199,1,-1
+            IF (LFDM(I).GT.(LFNMNSN(I)+LFNMN(I)/0.16).AND.
+     &                                          WSLOSS.GT.0) THEN
+              LFWSSN(I)=MIN((LFDM(I)-LFNMNSN(I)-LFNMN(I)/0.16),WSLOSS)
+              LFWSSN(I)=MAX(LFWSSN(I),0.0)
+              WSLOSS=WSLOSS-LFWSSN(I)
+            ENDIF
+          ENDDO
+        ENDIF
+      ELSE
+        LFWSSN(1:199)=0
+      ENDIF
 
 !----------------------------
 ! FREEZING SENESCENCE (LFFRZ)
 !----------------------------
       IF(TMIN.LT.FREEZ1)THEN
         DO I=1,199
-	    LFFRZ(I)=LFDM(I)-LFNMN(I)/0.16-LFNMNSN(I)-LFWSSN(I)
-		LFFRZ(I)=MAX(LFFRZ(I),0.0)
+          LFFRZ(I)=LFDM(I)-LFNMN(I)/0.16-LFNMNSN(I)-LFWSSN(I)
+          LFFRZ(I)=MAX(LFFRZ(I),0.0)
         ENDDO
-	ENDIF
+      ENDIF
 
-	DO I=1,199
-       IF ((LFDM(I)-LFFRZ(I)).LE.0)THEN
-	  LFNMNSN(I)=0
-	  LFWSSN(I)=0
-	 ELSE
-	  LFNMNSN(I)=LFNMNSN(I)*(LFDM(I)-LFFRZ(I))/LFDM(I)
-	  LFWSSN(I)=LFWSSN(I)*(LFDM(I)-LFFRZ(I))/LFDM(I)
-	 ENDIF
+      DO I=1,199
+        IF ((LFDM(I)-LFFRZ(I)).LE.0)THEN
+          LFNMNSN(I)=0
+          LFWSSN(I)=0
+        ELSE
+          LFNMNSN(I)=LFNMNSN(I)*(LFDM(I)-LFFRZ(I))/LFDM(I)
+          LFWSSN(I)=LFWSSN(I)*(LFDM(I)-LFFRZ(I))/LFDM(I)
+        ENDIF
       ENDDO
 
 !--------------------
@@ -329,13 +330,13 @@ C-GH
 !--------------------
       IF(WLIDOT.GT.0)THEN
 ! FOR PROPORTIONAL DISTRIBUTION OF PEST DAMAGE:
-	  DO I=1,199
-	    IF(LFDM(I).GT.0)THEN
-	      LFPST(I)=LFDM(I)/WTLF*WLIDOT
-	    ELSE
-	      LFPST(I)=0
-	    ENDIF
-	  ENDDO
+        DO I=1,199
+          IF(LFDM(I).GT.0)THEN
+            LFPST(I)=LFDM(I)/WTLF*WLIDOT
+          ELSE
+            LFPST(I)=0
+          ENDIF
+        ENDDO
 
 ! FOR PEST DAMAGE TO AFFECT OLD TISSUE FIRST:
 !        LFPSTDM=WLIDOT
@@ -357,35 +358,35 @@ C-GH
 !          ENDIF
 !        ENDDO
       ELSE
-	  LFPST(1:199)=0
-	ENDIF
+        LFPST(1:199)=0
+      ENDIF
 
       DO I=1,199
-       IF ((LFDM(I)-LFPST(I)).LE.0)THEN
-	  LFNMNSN(I)=0
-	  LFFRZ(I)=0
-	  LFWSSN(I)=0
-	 ELSE
-	  LFNMNSN(I)=LFNMNSN(I)*(LFDM(I)-LFPST(I))/LFDM(I)
-	  LFFRZ(I)=LFFRZ(I)*(LFDM(I)-LFPST(I))/LFDM(I)
-	  LFWSSN(I)=LFWSSN(I)*(LFDM(I)-LFPST(I))/LFDM(I)
-	 ENDIF
-	ENDDO
+        IF ((LFDM(I)-LFPST(I)).LE.0)THEN
+          LFNMNSN(I)=0
+          LFFRZ(I)=0
+          LFWSSN(I)=0
+        ELSE
+          LFNMNSN(I)=LFNMNSN(I)*(LFDM(I)-LFPST(I))/LFDM(I)
+          LFFRZ(I)=LFFRZ(I)*(LFDM(I)-LFPST(I))/LFDM(I)
+          LFWSSN(I)=LFWSSN(I)*(LFDM(I)-LFPST(I))/LFDM(I)
+        ENDIF
+      ENDDO
 
 !----------------------------
 ! NON-STRUCTURAL CH2O STORING
 !----------------------------
       IF(CADLF.GT.0)THEN
-       DO I=1,199
-	  IF (LFDM(I).GT.0)THEN
-	    LFCAD(I)=((LFDM(I)-LFNSC(I))/(WTLF-WCRLF))*CADLF *
-     &    (1.-MIN(1.0,(LFPST(I)+LFFRZ(I)+LFWSSN(I)+LFNMNSN(I))/LFDM(I)))
-	  ELSE
-          LFCAD(I)=0
-	  ENDIF
-	 ENDDO
-	ELSE
-	  LFCAD(1:199)=0
+        DO I=1,199
+          IF (LFDM(I).GT.0)THEN
+            LFCAD(I)=((LFDM(I)-LFNSC(I))/(WTLF-WCRLF))*CADLF *
+     &  (1.-MIN(1.0,(LFPST(I)+LFFRZ(I)+LFWSSN(I)+LFNMNSN(I))/LFDM(I)))
+          ELSE
+            LFCAD(I)=0
+          ENDIF
+        ENDDO
+      ELSE
+        LFCAD(1:199)=0
       ENDIF
 
 !-------------------------
@@ -401,19 +402,19 @@ C-GH
 !	  ENDIF
 !	 ENDDO
 !	ELSE
-	  LFNAD(1:199)=0
+      LFNAD(1:199)=0
  !     ENDIF
 
 
 !------------------
 ! TOTAL LEAF N LOSS
 !------------------      
-	NLOFF=0
+      NLOFF=0
       DO I=1,199
         IF (LFDM(I).GT.0)THEN
-	  NLOFF=NLOFF+(LFWSSN(I)+LFPST(I)+LFFRZ(I))*
+          NLOFF=NLOFF+(LFWSSN(I)+LFPST(I)+LFFRZ(I))*
      &        ((LFNSN(I)+LFSN(I))/LFDM(I))+LFNMNSN(I)*(LFSN(I)/LFDM(I))
-	  ENDIF
+        ENDIF
       ENDDO
 
 !-----------------------------
@@ -421,9 +422,9 @@ C-GH
 !-----------------------------
       NLPEST=0
       DO I=1,199
-	  IF (LFDM(I).GT.0)THEN
+        IF (LFDM(I).GT.0)THEN
           NLPEST=NLPEST+LFPST(I)*((LFNSN(I)+LFSN(I))/LFDM(I))
-	  ENDIF
+        ENDIF
       ENDDO
 
 !---------------------------------------------
@@ -432,45 +433,46 @@ C-GH
 
       DO I=1,199
         IF(LFDM(I).GT.0)THEN
-! LEAF AREA
+!         LEAF AREA
           LFAREA(I)=LFAREA(I)-
      &      (LFPST(I)+LFFRZ(I)+LFWSSN(I)+LFNMNSN(I))*(LFAREA(I)/LFDM(I))
-! STRUCTURAL N
+!         STRUCTURAL N
           LFSN(I)=LFSN(I)-
      &       (LFPST(I)+LFFRZ(I)+LFWSSN(I)+LFNMNSN(I))*(LFSN(I)/LFDM(I))
-! NON-STRUCTURAL N
-	    LFNSN(I)=LFNSN(I)+LFNAD(I)-LFNMN(I)-
+!         NON-STRUCTURAL N
+          LFNSN(I)=LFNSN(I)+LFNAD(I)-LFNMN(I)-
      &       (LFPST(I)+LFFRZ(I)+LFWSSN(I)+LFNMNSN(I))*(LFNSN(I)/LFDM(I))
-! NON-STRUCTURAL CH2O
-	    LFNSC(I)=LFNSC(I)+LFCAD(I)-LFCMN(I)-
+!         NON-STRUCTURAL CH2O
+          LFNSC(I)=LFNSC(I)+LFCAD(I)-LFCMN(I)-
      &       (LFPST(I)+LFFRZ(I)+LFWSSN(I)+LFNMNSN(I))*(LFNSC(I)/LFDM(I))
-! DRY MATTER
+!         DRY MATTER
           LFDM(I)=LFDM(I)+LFCAD(I)+LFNAD(I)/0.16-LFNMN(I)/0.16-LFCMN(I)-
      &            LFPST(I)-LFFRZ(I)-LFNMNSN(I)-LFWSSN(I)
-	  ENDIF
+        ENDIF
       ENDDO
+
 !--------------
 ! SHIFT COHORTS
 !--------------
       DO  I=199,2,-1
-		IF (LFDM(I-1).GT.0.AND.
+        IF (LFDM(I-1).GT.0.AND.
      &      LFAREA(I-1).GT.0.AND.
      &      LFSN(I-1).GT.0.AND.
      &      LFNSN(I-1).GT.0) THEN
-			LFDM(I)=LFDM(I-1)
-			LFAREA(I)=LFAREA(I-1)
-			LFNSN(I)=LFNSN(I-1)
-			LFSN(I)=LFSN(I-1)
-	        LFNSC(I)=LFNSC(I-1)
-			LFAGE(I)=LFAGE(I-1)+DTX			
-		ELSE
-			LFDM(I)=0
-			LFAREA(I)=0
-			LFSN(I)=0
-	        LFNSN(I)=0
-	        LFNSC(I)=0
-			LFAGE(I)=0
-		ENDIF
+          LFDM(I)   = LFDM(I-1)
+          LFAREA(I) = LFAREA(I-1)
+          LFNSN(I)  = LFNSN(I-1)
+          LFSN(I)   = LFSN(I-1)
+          LFNSC(I)  = LFNSC(I-1)
+          LFAGE(I)  = LFAGE(I-1) + DTX
+        ELSE
+          LFDM(I)=0.
+          LFAREA(I)=0.
+          LFSN(I)=0.
+          LFNSN(I)=0.
+          LFNSC(I)=0.
+          LFAGE(I)=0.
+        ENDIF
       END DO
 
 !-------------------------------------
@@ -500,18 +502,18 @@ C-GH
       WTNLF_C =SUM(LFNSN(1:199))+SUM(LFSN(1:199))
       CUMLFDM=CUMLFDM+LFDM(1)
 
-	PLEAFN_C=WTNLF_C/WTLF_C*100
-	
-	SUMLFWSSN=SUM(LFWSSN(1:199))
+      PLEAFN_C=WTNLF_C/WTLF_C*100
+  
+      SUMLFWSSN=SUM(LFWSSN(1:199))
       SUMLFFRZ=SUM(LFFRZ(1:199))
-	SUMLFPST=SUM(LFPST(1:199))
-	SUMLFNMNSN=SUM(LFNMNSN(1:199))
-	
-	CALL YR_DOY(YRDOY, YEAR, DOY) 
+      SUMLFPST=SUM(LFPST(1:199))
+      SUMLFNMNSN=SUM(LFNMNSN(1:199))
+  
+      CALL YR_DOY(YRDOY, YEAR, DOY) 
 
       OPEN(UNIT=CHRTOUT,FILE=COHORTOUT,POSITION='APPEND')
 
-	WRITE (CHRTOUT,310) YEAR, DOY, WTLF_C,XLAI_C,PLEAFN_C,
+      WRITE (CHRTOUT,310) YEAR, DOY, WTLF_C,XLAI_C,PLEAFN_C,
      &       WTLF,XLAI,PLEAFN
 310   FORMAT (1X,I4,1X,I3,F10.4,F6.3,F6.3,F10.4, 2F6.3)
       
@@ -524,7 +526,7 @@ C-GH
       write (CHRTOUT2,330) YEAR,DOY,LFDM(1:50)
 330   format (1X,I4,1X,I3,50F6.1)
 
-	CLOSE(CHRTOUT)
+      CLOSE(CHRTOUT)
 C-GH
       close(CHRTOUT1)
       close(CHRTOUT2)
@@ -592,7 +594,7 @@ C-GH
 !                if no water stress has occurred prior to this V-stage 
 ! PROLFF       Final protein concentration of leaf tissue
 ! RATTP        Factor used in determining senescence due to water 
-!			   stress
+!               stress
 ! SENDAY       Maximum rate of leaf abscission due to water stress
 !                (fraction/day)
 ! SENMAX(I)    Maximum proportion of total leaf weight as a function of 
