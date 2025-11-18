@@ -80,6 +80,9 @@
 ! .......SENPOR.........  .......SENMAX.........
    0.0   0.0  0.12  0.12   0.0   0.2   0.6   0.6
 
+  0.04                                ALPHL !2025-11-18 CHP added for COHORTS
+  
+  
 !*ROOT PARAMETERS
   20.0 7500. 0.020   0.1  .015  1.50  0.04  RTDEPI,RFAC1,RTSEN,RLDSM,RTSDF,RWUEP1,RWUMX
    0.0  2.50   3.0  2.50   6.0  2.60  30.0  2.60   XRTFAC,YRTFAC
