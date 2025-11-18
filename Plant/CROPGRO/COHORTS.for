@@ -95,69 +95,100 @@ C-GH 08/19/2025
       XLAI_C = 0.0
       WTNLF_C = 0.0
       
-	CHRTIN=303
-	COHORTIN="COHORTS.INP"
+      CHRTIN=303
+      COHORTIN="COHORTS.INP"
 
-          OPEN (UNIT = CHRTIN, FILE = COHORTIN, STATUS = 'OLD')
-		READ (CHRTIN,'(A60)') HEADER
-C		READ (CHRTIN,'(17(F6.0))') PROLFF,NMOBMX,MAXNMINE,NVSMOB,
-C     &		KCAN,ALPHL,ICMP,TCMP,SENDAY,XSENMX(1:4),SENMAX(1:4)
-          READ (CHRTIN,'(15(F7.0))') PROLFF,NMOBMX,NVSMOB,
-     &		ALPHL,ICMP,TCMP,SENDAY,XSENMX(1:4),SENMAX(1:4)
-C          WRITE (*,*) PROLFF,NMOBMX,NVSMOB,
-C    &		ALPHL,ICMP,TCMP,SENDAY,XSENMX(1:4),SENMAX(1:4)
-C         pause
-          MAXNMINE = 0.060
+      OPEN (UNIT = CHRTIN, FILE = COHORTIN, STATUS = 'OLD')
+      READ (CHRTIN,'(A60)') HEADER
+      READ (CHRTIN,'(15(F7.0))') PROLFF,NMOBMX,NVSMOB,
+     &  ALPHL,ICMP,TCMP,SENDAY,XSENMX(1:4),SENMAX(1:4)
+      MAXNMINE = 0.060
           
-		CLOSE (CHRTIN)
+      CLOSE (CHRTIN)
 
-        INQUIRE (FILE = COHORTOUT, EXIST = FEXIST)
-        IF (FEXIST) THEN
-          I=SYSTEM("DEL COHORTS.OUT")
-          OPEN (UNIT = CHRTOUT, FILE = COHORTOUT, STATUS = 'NEW')
-          WRITE(CHRTOUT,'(A19)') "*COHORT OUTPUT FILE"
-		WRITE(CHRTOUT,'(A28)')
-     &"@YEAR DOY  LWAD   LAID  LN%D O_LWAD   LAID   LN%D"
-	  ELSE
-          OPEN (UNIT = CHRTOUT, FILE = COHORTOUT, STATUS = 'NEW')
-          WRITE(CHRTOUT,'(A19)') "*COHORT OUTPUT FILE"
-		WRITE(CHRTOUT,'(A28)')
-     &"@YEAR DOY  LWAD   LAID  LN%D O_LWAD   LAID   LN%D"
-        ENDIF
 
-	CLOSE(CHRTOUT)
+
+      INQUIRE (FILE = COHORTOUT, EXIST = FEXIST)
+      IF (FEXIST) THEN
+        I=SYSTEM("DEL COHORTS.OUT")
+        OPEN (UNIT = CHRTOUT, FILE = COHORTOUT, STATUS = 'NEW')
+        WRITE(CHRTOUT,'(A19)') "*COHORT OUTPUT FILE"
+        WRITE(CHRTOUT,'(A28)')
+     &    "@YEAR DOY  LWAD   LAID  LN%D O_LWAD   LAID   LN%D"
+      ELSE
+        OPEN (UNIT = CHRTOUT, FILE = COHORTOUT, STATUS = 'NEW')
+        WRITE(CHRTOUT,'(A19)') "*COHORT OUTPUT FILE"
+        WRITE(CHRTOUT,'(A28)')
+     &    "@YEAR DOY  LWAD   LAID  LN%D O_LWAD   LAID   LN%D"
+      ENDIF
+
+
+
+!=================from opgrow====================================
+!         Initialize daily growth output file      
+          INQUIRE (FILE = OUTG, EXIST = FEXIST)
+          IF (FEXIST) THEN
+            OPEN (UNIT = NOUTDG, FILE = OUTG, STATUS = 'OLD',
+     &        IOSTAT = ERRNUM, POSITION = 'APPEND')
+            FIRST = .FALSE.
+          ELSE
+            OPEN (UNIT = NOUTDG, FILE = OUTG, STATUS = 'NEW',
+     &        IOSTAT = ERRNUM)
+            WRITE(NOUTDG,'("*GROWTH ASPECTS OUTPUT FILE")')
+            FIRST = .TRUE.
+          ENDIF
+
+          !Write headers
+          CALL HEADER(SEASINIT, NOUTDG, RUN)
+        ENDIF    ! VSH
+
+        N_LYR = MIN(10, MAX(4,SOILPROP%NLAYR))
+
+        IF (FMOPT == 'A' .OR. FMOPT == ' ') THEN    ! VSH
+          WRITE (NOUTDG, 100) "Root Dens. (cm/cm3) by soil ",
+     &      "depth (cm):",(SoilProp%LayerText(L), L=1,N_LYR)
+  100     FORMAT("!",251X,A,A,/,"!",246X,10A8) 
+
+          WRITE (NOUTDG,200, ADVANCE='NO')
+  200     FORMAT('@YEAR DOY   DAS   DAP',
+     &         '   L#SD   GSTD   LAID   LWAD   SWAD   GWAD')
+!=================from opgrow====================================
+
+
+      CLOSE(CHRTOUT)
 C-GH     
       INQUIRE (FILE = COHORTOUT1, EXIST = FEXIST)
-        IF (FEXIST) THEN
-          I=SYSTEM("DEL COHORTS1.OUT")
-          OPEN (UNIT = CHRTOUT, FILE = COHORTOUT1, STATUS = 'NEW')
-          WRITE(CHRTOUT,'(A19)') "*COHORT OUTPUT FILE"
-		WRITE(CHRTOUT,'(A28)')
-     &"@YEAR DOY   LFAGE           "
-	  ELSE
-          OPEN (UNIT = CHRTOUT1, FILE = COHORTOUT1, STATUS = 'NEW')
-          WRITE(CHRTOUT,'(A19)') "*COHORT OUTPUT FILE"
-		WRITE(CHRTOUT,'(A28)')
-     &"@YEAR DOY   LFAGE           "
-        ENDIF
+      IF (FEXIST) THEN
+        I=SYSTEM("DEL COHORTS1.OUT")
+        OPEN (UNIT = CHRTOUT, FILE = COHORTOUT1, STATUS = 'NEW')
+        WRITE(CHRTOUT,'(A19)') "*COHORT OUTPUT FILE"
+        WRITE(CHRTOUT,'(A28)')
+     &    "@YEAR DOY   LFAGE           "
+      ELSE
+        OPEN (UNIT = CHRTOUT1, FILE = COHORTOUT1, STATUS = 'NEW')
+        WRITE(CHRTOUT,'(A19)') "*COHORT OUTPUT FILE"
+        WRITE(CHRTOUT,'(A28)')
+     &    "@YEAR DOY   LFAGE           "
+      ENDIF
+
       INQUIRE (FILE = COHORTOUT2, EXIST = FEXIST)
-        IF (FEXIST) THEN
-          I=SYSTEM("DEL COHORTS2.OUT")
-          OPEN (UNIT = CHRTOUT2, FILE = COHORTOUT2, STATUS = 'NEW')
-          WRITE(CHRTOUT,'(A19)') "*COHORT OUTPUT FILE"
-		WRITE(CHRTOUT,'(A28)')
-     &"@YEAR DOY   LFWT            "
-	  ELSE
-          OPEN (UNIT = CHRTOUT2, FILE = COHORTOUT2, STATUS = 'NEW')
-          WRITE(CHRTOUT,'(A19)') "*COHORT OUTPUT FILE"
-		WRITE(CHRTOUT,'(A28)')
-     &"@YEAR DOY   LFWT            "
-        ENDIF
+      IF (FEXIST) THEN
+        I=SYSTEM("DEL COHORTS2.OUT")
+        OPEN (UNIT = CHRTOUT2, FILE = COHORTOUT2, STATUS = 'NEW')
+        WRITE(CHRTOUT,'(A19)') "*COHORT OUTPUT FILE"
+        WRITE(CHRTOUT,'(A28)')
+     &    "@YEAR DOY   LFWT            "
+      ELSE
+        OPEN (UNIT = CHRTOUT2, FILE = COHORTOUT2, STATUS = 'NEW')
+        WRITE(CHRTOUT,'(A19)') "*COHORT OUTPUT FILE"
+        WRITE(CHRTOUT,'(A28)')
+     &    "@YEAR DOY   LFWT            "
+      ENDIF
 
 !***********************
 ! EMERGENCE CALCULATIONS
 !***********************
-	ELSEIF (DYNAMIC .EQ. EMERG)THEN
+      ELSEIF (DYNAMIC .EQ. EMERG)THEN
 
 !-------------------------------------
 ! COHORT VARIABLES FOR NEW LEAF TISSUE
