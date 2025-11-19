@@ -645,7 +645,17 @@ C-GH 08/19/2025
 !       READ(C80,'(18X,3F6.0)',IOSTAT=ERR) NMOBMX, NVSMOB, NRCVR
         READ(C80,'(18X,2F6.0)',IOSTAT=ERR) NMOBMX, NVSMOB
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+
+        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)  !Skip the next line
+        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+        READ(C80,'(F6.0)',IOSTAT=ERR) ALPHL
+        IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+
+        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)  
+        READ(C80,'(F6.0)',IOSTAT=ERR) MAXNMINE
+        IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
       ENDIF
+
 
 !-----------------------------------------------------------------------
 !    Find and Read Senescence Section
@@ -679,12 +689,6 @@ C-GH 08/19/2025
         READ(C80,'(24X,4F6.0)',IOSTAT=ERR)
      &      (SENMAX(II),II=1,4)
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
-
-        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)  
-        READ(C80,'(2F6.0)',IOSTAT=ERR) ALPHL, MAXNMINE
-        IF (ERR .NE. 0) THEN
-          CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
-        ENDIF
 
       ENDIF
 
