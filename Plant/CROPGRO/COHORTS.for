@@ -119,6 +119,10 @@ C-GH 08/19/2025
      &  ALPHL, ICMP, NMOBMX, NVSMOB, PROLFF,    !Output
      &  SENDAY, SENMAX, TCMP, XSENMX)           !Output
 
+
+!     CHP Should this also be a species parameter???
+      MAXNMINE = 0.060
+
 !     Initialize COHORT.OUT file
       INQUIRE (FILE = COHORTOUT, EXIST = FEXIST)
       IF (FEXIST) THEN
