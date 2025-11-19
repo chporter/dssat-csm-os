@@ -21,14 +21,16 @@ C=======================================================================
 
       CHARACTER*11 COHORTOUT
       character*12 COHORTOUT1, COHORTOUT2
-      CHARACTER*60 HEADER
       CHARACTER*92, INTENT(IN) :: FILECC
 
+      INTEGER, PARAMETER :: LCMax = 200 !maximum number of leaf cohorts
+
       INTEGER DYNAMIC
-      INTEGER YRDOY,YEAR,DOY
-      INTEGER I, ERRNUM
+      INTEGER YRDOY,YEAR,DOY, DAS
+      INTEGER I, ERRNUM, FirstDAS, NLC
       INTEGER,PARAMETER::NSWAB = 5
       INTEGER CHRTOUT
+      INTEGER, DIMENSION(LCMax) :: LCAge
 C-GH
       integer CHRTOUT1, CHRTOUT2
 
@@ -45,20 +47,21 @@ C-GH
       REAL TMIN,FREEZ1,WLIDOT,CADLF,NLOFF,NLPEST
       REAL NGRLF,WLDOTN,F
       REAL PROLFF,MAXNMINE,KCAN,ICMP,TCMP,SENDAY
-      REAL LFDM(199),LFNSN(199),LFSN(199),LFAREA(199)
-      REAL LFNSC(199),LFAGE(199)
-      REAL LFCMN(199),LFCAD(199)
-      REAL LFNMN(199),LFNAD(199)
-      REAL LFNMNSN(199),LFWSSN(199),LFFRZ(199),LFPST(199)
+      REAL LFDM(LCMax),LFNSN(LCMax),LFSN(LCMax),LFAREA(LCMax)
+      REAL LFNSC(LCMax),LFAGE(LCMax)
+      REAL LFCMN(LCMax),LFCAD(LCMax)
+      REAL LFNMN(LCMax),LFNAD(LCMax)
+      REAL LFNMNSN(LCMax),LFWSSN(LCMax),LFFRZ(LCMax),LFPST(LCMax)
 !     REAL SUMLFDM,SUMLFNSN,SUMLFAREA,SUMLFN,PLEAFN
       REAL PLEAFN
       REAL SUMLFWSSN,SUMLFFRZ,SUMLFPST,SUMLFNMNSN
 
       REAL WSLOSS,NVSMOB
       REAL CUMLFDM,CUMAREA
-      REAL SHADEFAC(199)
+      REAL SHADEFAC(LCMax)
       REAL PORLFT,VSTAGE
       REAL XSENMX(4),SENMAX(4)
+      REAL, DIMENSION(LCMax) :: LFAGE2
       
 C-GH 08/19/2025
       REAL WTLF_C, WNRLF_C, WCRLF_C, XLAI_C, WTNLF_C, PLEAFN_C
@@ -67,6 +70,7 @@ C-GH 08/19/2025
 
       TYPE (ControlType) CONTROL
       CALL GET (CONTROL)
+      DAS   = CONTROL % DAS
       YRDOY = CONTROL % YRDOY
       CALL YR_DOY(YRDOY, YEAR, DOY) 
 
@@ -91,20 +95,15 @@ C-GH 08/19/2025
 !***********************************************************************
       ELSEIF (DYNAMIC .EQ. SEASINIT) THEN
 !-----------------------------------------------------------------------
-      DO I=1,199
-        LFDM(I)=0
-        LFAREA(I)=0
-        LFNSN(I)=0
-        LFSN(I)=0
-        LFNSC(I)=0
-        LFAGE(I)=0
-      END DO
+      LFDM   = 0.0
+      LFAREA = 0.0
+      LFNSN  = 0.0
+      LFSN   = 0.0
+      LFNSC  = 0.0
+      LFAGE  = 0.0
 
-      CUMLFDM=0
-
-      DO I=1,NSWAB
-        SWFCAB(I)=1
-      END DO
+      CUMLFDM = 0.0
+      SWFCAB = 1
 
 C-GH 08/19/2025
       WTLF_C = 0.0
@@ -118,7 +117,6 @@ C-GH 08/19/2025
      &  FILECC,                                 !Input
      &  ALPHL, ICMP, MAXNMINE, NMOBMX, NVSMOB,  !Output
      &  PROLFF, SENDAY, SENMAX, TCMP, XSENMX)   !Output
-
 
 !     Added MAXNMINE to the species file.
 !     MAXNMINE = 0.060
@@ -135,7 +133,7 @@ C-GH 08/19/2025
       ENDIF
 
 !     Write headers
-!     CALL HEADER(SEASINIT, CHRTOUT, CONTROL % RUN)
+      CALL HEADER(SEASINIT, CHRTOUT, CONTROL % RUN)
       WRITE (CHRTOUT,200)
   200 FORMAT('@YEAR DOY   DAS',
      &  '     LWADC   LAIDC   LN%DC     LWADO   LAIDO   LN%DO')
@@ -163,6 +161,11 @@ C-GH 08/19/2025
       ENDIF
       WRITE(CHRTOUT2,'("@YEAR DOY   LFWT            ")')
 
+      FirstDAS = 0
+      LCAge = 0       !Array of cohort ages - actual integer days
+      LFAGE2 = 0.0    !Array of cohort ages - photothermal time (ptd)
+      NLC = 0         !Number of leaf cohorts
+
 !***********************************************************************
 !***********************************************************************
 !     EMERGENCE CALCULATIONS - Performed once per season upon emergence
@@ -170,6 +173,12 @@ C-GH 08/19/2025
 !***********************************************************************
       ELSEIF (DYNAMIC .EQ. EMERG) THEN
 !-----------------------------------------------------------------------
+      FirstDAS = DAS  !DAS at emergence, start of first leaf cohort
+      LCAge(1) = 1    !Age of cohort 1 at emergence (physical days)
+      NLC = 1         !Number of leaf cohorts 
+      LFAGE2(1) = DTX !Photothermal age of cohort (ptd)
+
+!-------------------------------------
 ! COHORT VARIABLES FOR NEW LEAF TISSUE
 !-------------------------------------
       LFDM(1)=WLDOTN
@@ -188,16 +197,16 @@ C-GH 08/19/2025
 !      XLAI=SUM(LFAREA(1:199))/10000
 !      WTNLF=SUM(LFNSN(1:199))+SUM(LFSN(1:199))
       
-      WTLF_C =SUM(LFDM(1:199))
-      WNRLF_C =SUM(LFNSN(1:199))
-      WCRLF_C =SUM(LFNSC(1:199))
-      XLAI_C =SUM(LFAREA(1:199))/10000
-      WTNLF_C =SUM(LFNSN(1:199))+SUM(LFSN(1:199))
+      WTLF_C =SUM(LFDM(1:LCMax))
+      WNRLF_C =SUM(LFNSN(1:LCMax))
+      WCRLF_C =SUM(LFNSC(1:LCMax))
+      XLAI_C =SUM(LFAREA(1:LCMax))/10000
+      WTNLF_C =SUM(LFNSN(1:LCMax))+SUM(LFSN(1:LCMax))
 
       CUMLFDM=CUMLFDM+LFDM(1)
       PLEAFN=WTNLF_C/WTLF_C*100
   
-      WRITE (CHRTOUT,310) YEAR, DOY, CONTROL % DAS,
+      WRITE (CHRTOUT,310) YEAR, DOY, DAS,
      &       NINT(WTLF_C*10),XLAI_C,PLEAFN
 
 !***********************************************************************
@@ -206,11 +215,26 @@ C-GH 08/19/2025
 !***********************************************************************
       ELSEIF (DYNAMIC .EQ. INTEGR) THEN
 !-----------------------------------------------------------------------
+      NLC = NLC + 1  !today's new cohort
+      DO I = 1, NLC
+        LCAge(I) = LCAge(I) + 1  !Cohort age in physical days (integer)
+        LFAGE2(I) = LFAGE2(I) + DTX  !cohort age in p-t-d
+      ENDDO
+
+!     New growth for today's cohort
+      LFDM(NLC)  = WLDOTN
+      LFAREA(NLC)= LFDM(1) * F
+      LFSN(NLC)  = PROLFF * 0.16 * LFDM(1)
+      LFNSN(NLC) = NGRLF - LFSN(1)
+      LFNSC(NLC) = WLDOTN * ALPHL
+      LFAGE(NLC) = DTX
+
+!---------------------------
 ! NON-STRUCTURAL CH2O MINING
 !---------------------------
-      DO  I=1,199
+      DO  I=1,NLC-1
         IF (LFNSC(I).LE.0.OR.CMOBMX.LE.0)THEN
-          LFCMN(I)=0
+          LFCMN(I)=0.0
         ELSE
           LFCMN(I)=LFNSC(I)*CMINEA / CMINEP * CMOBMX * (DTX + DXR57)
           LFCMN(I)=MIN(LFCMN(I),LFNSC(I))
@@ -223,13 +247,12 @@ C-GH 08/19/2025
 !-------------------------------------------
 ! INCREASED N MINING FROM SHADING (SHADEFAC)
 !-------------------------------------------
-  
       IF (PAR .GT. 0.) THEN
         LCMP = -(1. / KCAN) * ALOG(ICMP / PAR)
       ENDIF
 
       CUMAREA=0.0
-      DO I=1,199
+      DO I=1,LCMax
         CUMAREA=CUMAREA+LFAREA(I)/10000
         IF (CUMAREA/LCMP.GE.1)THEN
           SHADEFAC(I)=CUMAREA/LCMP
@@ -247,9 +270,10 @@ C-GH 08/19/2025
          NMINER = 0.0
       endif
       
-      DO  I=1,199
-        IF (LFNSN(I).LE.0.OR.MAXNMINE.LE.0.OR.NMOBMX.LE.0)THEN
-          LFNMN(I)=0
+      DO  I=1,NLC-1
+        IF (LFNSN(I) .LE. 0.0 .OR. MAXNMINE .LE. 0.0 
+     &                        .OR. NMOBMX .LE. 0.0) THEN
+          LFNMN(I)=0.0
         ELSE
           LFNMN(I)=SHADEFAC(I)*(NMINER/NMOBMX)*MAXNMINE*LFNSN(I)
           LFNMN(I)=MIN(LFNMN(I),LFNSN(I))
@@ -262,8 +286,7 @@ C-GH 08/19/2025
 !------------------------------
 ! N MINING SENESCENCE (LFNMNSN)
 !------------------------------
-  
-      DO I=1,199
+      DO I=1,NLC-1
         IF (LFNMN(I).GE.LFNSN(I))THEN
           LFNMNSN(I)=LFDM(I)-(LFNMN(I)/0.16)
         ELSE
@@ -285,7 +308,7 @@ C-GH 08/19/2025
         SWFCAB(1) = SWFAC
         RATTP = SWFCAB(NSWAB)
         WSLOSS = SENDAY * (1. - RATTP) * WTLF
-        LFWSSN(1:199)=0
+        LFWSSN(1:LCMax)=0
             
         IF (WSLOSS .GT. 0.0) THEN
           DO I=1,4
@@ -293,12 +316,12 @@ C-GH 08/19/2025
                 PORLFT = 1.0 - SENMAX(I)
             ENDIF
           ENDDO
-          
+
           WSLOSS = MIN(WSLOSS, WTLF - CUMLFDM * PORLFT)
           WSLOSS = MAX(WSLOSS, 0.0)
-          WSLOSS=WSLOSS-SUM(LFNMNSN(1:199))-SUM(LFNMN(1:199))/0.16
+          WSLOSS=WSLOSS-SUM(LFNMNSN(1:LCMax))-SUM(LFNMN(1:LCMax))/0.16
           
-          DO I=199,1,-1
+          DO I=NLC-1,1,-1
             IF (LFDM(I).GT.(LFNMNSN(I)+LFNMN(I)/0.16).AND.
      &                                          WSLOSS.GT.0) THEN
               LFWSSN(I)=MIN((LFDM(I)-LFNMNSN(I)-LFNMN(I)/0.16),WSLOSS)
@@ -308,23 +331,23 @@ C-GH 08/19/2025
           ENDDO
         ENDIF
       ELSE
-        LFWSSN(1:199)=0
+        LFWSSN(1:LCMax)=0
       ENDIF
 
 !----------------------------
 ! FREEZING SENESCENCE (LFFRZ)
 !----------------------------
       IF(TMIN.LT.FREEZ1)THEN
-        DO I=1,199
+        DO I=1,NLC-1
           LFFRZ(I)=LFDM(I)-LFNMN(I)/0.16-LFNMNSN(I)-LFWSSN(I)
           LFFRZ(I)=MAX(LFFRZ(I),0.0)
         ENDDO
       ENDIF
 
-      DO I=1,199
+      DO I=1,NLC-1
         IF ((LFDM(I)-LFFRZ(I)).LE.0)THEN
-          LFNMNSN(I)=0
-          LFWSSN(I)=0
+          LFNMNSN(I)=0.0
+          LFWSSN(I)=0.0
         ELSE
           LFNMNSN(I)=LFNMNSN(I)*(LFDM(I)-LFFRZ(I))/LFDM(I)
           LFWSSN(I)=LFWSSN(I)*(LFDM(I)-LFFRZ(I))/LFDM(I)
@@ -336,7 +359,7 @@ C-GH 08/19/2025
 !--------------------
       IF(WLIDOT.GT.0)THEN
 ! FOR PROPORTIONAL DISTRIBUTION OF PEST DAMAGE:
-        DO I=1,199
+        DO I=1,NLC-1
           IF(LFDM(I).GT.0)THEN
             LFPST(I)=LFDM(I)/WTLF*WLIDOT
           ELSE
@@ -364,14 +387,14 @@ C-GH 08/19/2025
 !          ENDIF
 !        ENDDO
       ELSE
-        LFPST(1:199)=0
+        LFPST(1:NLC-1)=0
       ENDIF
 
-      DO I=1,199
+      DO I=1,NLC-1
         IF ((LFDM(I)-LFPST(I)).LE.0)THEN
-          LFNMNSN(I)=0
-          LFFRZ(I)=0
-          LFWSSN(I)=0
+          LFNMNSN(I)=0.0
+          LFFRZ(I)=0.0
+          LFWSSN(I)=0.0
         ELSE
           LFNMNSN(I)=LFNMNSN(I)*(LFDM(I)-LFPST(I))/LFDM(I)
           LFFRZ(I)=LFFRZ(I)*(LFDM(I)-LFPST(I))/LFDM(I)
@@ -383,16 +406,16 @@ C-GH 08/19/2025
 ! NON-STRUCTURAL CH2O STORING
 !----------------------------
       IF(CADLF.GT.0)THEN
-        DO I=1,199
+        DO I=1,NLC-1
           IF (LFDM(I).GT.0)THEN
             LFCAD(I)=((LFDM(I)-LFNSC(I))/(WTLF-WCRLF))*CADLF *
      &  (1.-MIN(1.0,(LFPST(I)+LFFRZ(I)+LFWSSN(I)+LFNMNSN(I))/LFDM(I)))
           ELSE
-            LFCAD(I)=0
+            LFCAD(I)=0.0
           ENDIF
         ENDDO
       ELSE
-        LFCAD(1:199)=0
+        LFCAD(1:LCMax)=0.0
       ENDIF
 
 !-------------------------
@@ -408,7 +431,7 @@ C-GH 08/19/2025
 !	  ENDIF
 !	 ENDDO
 !	ELSE
-      LFNAD(1:199)=0
+      LFNAD(1:LCMax)=0.0
  !     ENDIF
 
 
@@ -416,8 +439,8 @@ C-GH 08/19/2025
 ! TOTAL LEAF N LOSS
 !------------------      
       NLOFF=0
-      DO I=1,199
-        IF (LFDM(I).GT.0)THEN
+      DO I=1,NLC-1
+        IF (LFDM(I).GT.0.0)THEN
           NLOFF=NLOFF+(LFWSSN(I)+LFPST(I)+LFFRZ(I))*
      &        ((LFNSN(I)+LFSN(I))/LFDM(I))+LFNMNSN(I)*(LFSN(I)/LFDM(I))
         ENDIF
@@ -427,8 +450,8 @@ C-GH 08/19/2025
 ! LEAF N LOSS FROM PEST DAMAGE
 !-----------------------------
       NLPEST=0
-      DO I=1,199
-        IF (LFDM(I).GT.0)THEN
+      DO I=1,NLC-1
+        IF (LFDM(I).GT.0.0)THEN
           NLPEST=NLPEST+LFPST(I)*((LFNSN(I)+LFSN(I))/LFDM(I))
         ENDIF
       ENDDO
@@ -437,8 +460,8 @@ C-GH 08/19/2025
 ! INTEGRATION OF N AND CH2O MINING AND SENESCENCE
 !---------------------------------------------
 
-      DO I=1,199
-        IF(LFDM(I).GT.0)THEN
+      DO I=1,NLC-1
+        IF(LFDM(I).GT.0.0)THEN
 !         LEAF AREA
           LFAREA(I)=LFAREA(I)-
      &      (LFPST(I)+LFFRZ(I)+LFWSSN(I)+LFNMNSN(I))*(LFAREA(I)/LFDM(I))
@@ -457,39 +480,39 @@ C-GH 08/19/2025
         ENDIF
       ENDDO
 
-!--------------
-! SHIFT COHORTS
-!--------------
-      DO  I=199,2,-1
-        IF (LFDM(I-1).GT.0.AND.
-     &      LFAREA(I-1).GT.0.AND.
-     &      LFSN(I-1).GT.0.AND.
-     &      LFNSN(I-1).GT.0) THEN
-          LFDM(I)   = LFDM(I-1)
-          LFAREA(I) = LFAREA(I-1)
-          LFNSN(I)  = LFNSN(I-1)
-          LFSN(I)   = LFSN(I-1)
-          LFNSC(I)  = LFNSC(I-1)
-          LFAGE(I)  = LFAGE(I-1) + DTX
-        ELSE
-          LFDM(I)=0.
-          LFAREA(I)=0.
-          LFSN(I)=0.
-          LFNSN(I)=0.
-          LFNSC(I)=0.
-          LFAGE(I)=0.
-        ENDIF
-      END DO
+!!--------------
+!! SHIFT COHORTS
+!!--------------
+!      DO  I=LCMax,2,-1
+!        IF (LFDM(I-1)  .GT. 0.0 .AND.
+!     &      LFAREA(I-1).GT. 0.0 .AND.
+!     &      LFSN(I-1)  .GT. 0.0 .AND.
+!     &      LFNSN(I-1) .GT. 0.0) THEN
+!          LFDM(I)   = LFDM(I-1)
+!          LFAREA(I) = LFAREA(I-1)
+!          LFNSN(I)  = LFNSN(I-1)
+!          LFSN(I)   = LFSN(I-1)
+!          LFNSC(I)  = LFNSC(I-1)
+!          LFAGE(I)  = LFAGE(I-1) + DTX
+!        ELSE
+!          LFDM(I)=0.
+!          LFAREA(I)=0.
+!          LFSN(I)=0.
+!          LFNSN(I)=0.
+!          LFNSC(I)=0.
+!          LFAGE(I)=0.
+!        ENDIF
+!      END DO
 
-!-------------------------------------
-! COHORT VARIABLES FOR NEW LEAF TISSUE
-!-------------------------------------
-      LFDM(1)=WLDOTN
-      LFAREA(1)=LFDM(1)*F
-      LFSN(1)=PROLFF*0.16*LFDM(1)
-      LFNSN(1)=NGRLF-LFSN(1)
-      LFNSC(1)=WLDOTN*ALPHL
-      LFAGE(1)=DTX
+!!-------------------------------------
+!! COHORT VARIABLES FOR NEW LEAF TISSUE
+!!-------------------------------------
+!      LFDM(1)=WLDOTN
+!      LFAREA(1)=LFDM(1)*F
+!      LFSN(1)=PROLFF*0.16*LFDM(1)
+!      LFNSN(1)=NGRLF-LFSN(1)
+!      LFNSC(1)=WLDOTN*ALPHL
+!      LFAGE(1)=DTX
 
 !------------------------------------
 ! UPDATING TOTAL LEAF STATE VARIABLES
@@ -501,19 +524,19 @@ C-GH 08/19/2025
 !       XLAI  =SUM(LFAREA(1:199))/10000
 !       WTNLF =SUM(LFNSN(1:199))+SUM(LFSN(1:199))
       
-      WTLF_C =SUM(LFDM(1:199))
-      WNRLF_C =SUM(LFNSN(1:199))
-      WCRLF_C =SUM(LFNSC(1:199))
-      XLAI_C =SUM(LFAREA(1:199))/10000
-      WTNLF_C =SUM(LFNSN(1:199))+SUM(LFSN(1:199))
+      WTLF_C =SUM(LFDM(1:LCMax))
+      WNRLF_C =SUM(LFNSN(1:LCMax))
+      WCRLF_C =SUM(LFNSC(1:LCMax))
+      XLAI_C =SUM(LFAREA(1:LCMax))/10000
+      WTNLF_C =SUM(LFNSN(1:LCMax))+SUM(LFSN(1:LCMax))
       CUMLFDM=CUMLFDM+LFDM(1)
 
       PLEAFN_C=WTNLF_C/WTLF_C*100
   
-      SUMLFWSSN=SUM(LFWSSN(1:199))
-      SUMLFFRZ=SUM(LFFRZ(1:199))
-      SUMLFPST=SUM(LFPST(1:199))
-      SUMLFNMNSN=SUM(LFNMNSN(1:199))
+      SUMLFWSSN=SUM(LFWSSN(1:LCMax))
+      SUMLFFRZ=SUM(LFFRZ(1:LCMax))
+      SUMLFPST=SUM(LFPST(1:LCMax))
+      SUMLFNMNSN=SUM(LFNMNSN(1:LCMax))
   
 !!***********************************************************************
 !!***********************************************************************
@@ -524,7 +547,7 @@ C-GH 08/19/2025
 !!-----------------------------------------------------------------------
       CALL YR_DOY(YRDOY, YEAR, DOY) 
 
-      WRITE (CHRTOUT,310) YEAR, DOY, CONTROL % DAS, 
+      WRITE (CHRTOUT,310) YEAR, DOY, DAS, 
      &       WTLF_C,XLAI_C,PLEAFN_C,
      &       WTLF,XLAI,PLEAFN
 310   FORMAT (1X,I4,1X,I3,I6,
@@ -659,7 +682,9 @@ C-GH 08/19/2025
 
         CALL IGNORE(LUNCRP,LNUM,ISECT,C80)  
         READ(C80,'(2F6.0)',IOSTAT=ERR) ALPHL, MAXNMINE
-        IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+        IF (ERR .NE. 0) THEN
+          CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+        ENDIF
 
       ENDIF
 
