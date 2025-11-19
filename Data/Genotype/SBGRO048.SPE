@@ -78,10 +78,10 @@
 ! .......XSTAGE.........  .......XSENMX.........
    0.0   5.0  14.0  30.0   3.0   5.0  10.0  30.0
 ! .......SENPOR.........  .......SENMAX.........
-!  0.0   0.0  0.12  0.12   0.0   0.2   0.6   0.6
-   0.0   0.0  0.12  0.12   0.0   0.0   0.2   0.6
+   0.0   0.0  0.12  0.12   0.0   0.2   0.6   0.6
+!  0.0   0.0  0.12  0.12   0.0   0.0   0.2   0.6  !this matches COHORT.INP file, but I think it's wrong.
 
-  0.04                                ALPHL !2025-11-18 CHP added for COHORTS
+  0.04 0.060                           ALPHL, MAXNMINE !2025-11-18 CHP added for COHORTS
   
   
 !*ROOT PARAMETERS

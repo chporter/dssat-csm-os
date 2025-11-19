@@ -116,12 +116,12 @@ C-GH 08/19/2025
 !     Read parameters from species file
       CALL IPCOHO(
      &  FILECC,                                 !Input
-     &  ALPHL, ICMP, NMOBMX, NVSMOB, PROLFF,    !Output
-     &  SENDAY, SENMAX, TCMP, XSENMX)           !Output
+     &  ALPHL, ICMP, MAXNMINE, NMOBMX, NVSMOB,  !Output
+     &  PROLFF, SENDAY, SENMAX, TCMP, XSENMX)   !Output
 
 
-!     CHP Should this also be a species parameter???
-      MAXNMINE = 0.060
+!     Added MAXNMINE to the species file.
+!     MAXNMINE = 0.060
 
 !     Initialize COHORT.OUT file
       INQUIRE (FILE = COHORTOUT, EXIST = FEXIST)
@@ -568,16 +568,16 @@ C-GH 08/19/2025
 !=======================================================================
       SUBROUTINE IPCOHO(
      &  FILECC,                                 !Input
-     &  ALPHL, ICMP, NMOBMX, NVSMOB, PROLFF,    !Output
-     &  SENDAY, SENMAX, TCMP, XSENMX)           !Output
+     &  ALPHL, ICMP, MAXNMINE, NMOBMX, NVSMOB,  !Output
+     &  PROLFF, SENDAY, SENMAX, TCMP, XSENMX)   !Output
 
 !-----------------------------------------------------------------------
       IMPLICIT NONE
       EXTERNAL GETLUN, ERROR, FIND, IGNORE, WARNING
 !-----------------------------------------------------------------------
       CHARACTER*92, INTENT(IN) :: FILECC
-      REAL, INTENT(OUT) :: ALPHL, ICMP, NMOBMX, NVSMOB, PROLFF, 
-     &     SENDAY, TCMP
+      REAL, INTENT(OUT) :: ALPHL, ICMP, MAXNMINE, NMOBMX, 
+     &     NVSMOB, PROLFF, SENDAY, TCMP
       REAL, INTENT(OUT) :: SENMAX(4), XSENMX(4)
 
       CHARACTER*6   ERRKEY
@@ -658,7 +658,7 @@ C-GH 08/19/2025
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
 
         CALL IGNORE(LUNCRP,LNUM,ISECT,C80)  
-        READ(C80,'(F6.0)',IOSTAT=ERR) ALPHL
+        READ(C80,'(2F6.0)',IOSTAT=ERR) ALPHL, MAXNMINE
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
 
       ENDIF
