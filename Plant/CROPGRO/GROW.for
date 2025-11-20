@@ -66,6 +66,11 @@ C=======================================================================
       
       IMPLICIT NONE
       EXTERNAL IPGROW, ERROR, STRESS, LTGROW
+
+!     TEMP CHP
+      EXTERNAL TIMDIF, YR_DOY, GETLUN, HEADER
+!     END TEMP CHP
+
       SAVE
 !-----------------------------------------------------------------------
 
@@ -168,6 +173,23 @@ C=======================================================================
       TYPE (SoilType)    SOILPROP
       TYPE (ResidueType) SENESCE
 
+
+!=========================================================================
+!     TEMP CHP Add printout for GROW variables
+
+      CHARACTER*10 OUTGR  !GROW.OUT
+      INTEGER NOUTDG, ERRNUM, YEAR, DOY, DAS, DAP, TIMDIF
+      LOGICAL FEXIST
+
+      DAS   = CONTROL % DAS
+      DAP = MAX(0,TIMDIF(YRPLT,YRDOY))
+      IF (DAP > DAS) DAP = 0
+      CALL YR_DOY(YRDOY, YEAR, DOY) 
+
+!     end temp chp
+!=========================================================================
+
+
 !     Transfer values from constructed data types into local variables.
       !Don't get DYNAMIC from CONTROL variable because it will not
       ! have EMERG value (set only in CROPGRO).
@@ -241,6 +263,16 @@ C-----------------------------------------------------------------------
      &    WSDDOT, TAVG, TURFAC, NSTRES,                          !Input
      &    LTDOT)                                                 !Output
       ENDIF
+
+!=========================================================================
+!     TEMP CHP Add printout for GROW variables
+
+          OUTGR  = 'GROW.OUT'
+          CALL GETLUN('OUTGR',  NOUTDG)
+
+!     end temp chp
+!=========================================================================
+
 !***********************************************************************
 !***********************************************************************
 !     Seasonal initialization - run once per season
@@ -375,6 +407,35 @@ C-----------------------------------------------------------------------
      &    WSDDOT, TAVG, TURFAC, NSTRES,                          !Input
      &    LTDOT)                                                 !Output
       ENDIF
+
+
+!=========================================================================
+!     TEMP CHP Add printout for GROW variables
+
+!       Initialize daily GROW output file      
+        INQUIRE (FILE = OUTGR, EXIST = FEXIST)
+        IF (FEXIST) THEN
+          OPEN (UNIT = NOUTDG, FILE = OUTGR, STATUS = 'OLD',
+     &      IOSTAT = ERRNUM, POSITION = 'APPEND')
+        ELSE
+          OPEN (UNIT = NOUTDG, FILE = OUTGR, STATUS = 'NEW',
+     &      IOSTAT = ERRNUM)
+          WRITE(NOUTDG,'("*GROW OUTPUT FILE")')
+        ENDIF
+
+        !Write headers
+        CALL HEADER(SEASINIT, NOUTDG, CONTROL % RUN)
+
+        WRITE (NOUTDG,200)
+  200   FORMAT('@YEAR DOY   DAS   DAP'
+     &  ,'       WLDOT      WLDOTN       SLDOT',
+     &   '      WLIDOT      WLFDOT      NRUSLF      CRUSLF')
+
+!     WLDOT = WLDOTN - SLDOT - WLIDOT - WLFDOT - NRUSLF/0.16 - CRUSLF
+
+!     end temp chp
+!=========================================================================
+
 !***********************************************************************
 !***********************************************************************
 !     EMERGENCE CALCULATIONS - Performed once per season upon emergence
@@ -1165,6 +1226,35 @@ C-----------------------------------------------------------------------
 !        Do this in P module:
 !        SENESCE % CumResE(P) = SENESCE % CumResE(P) + SenE(L,P)
       ENDDO
+
+!=========================================================================
+!     TEMP CHP Add printout for GROW variables
+
+!***********************************************************************
+!***********************************************************************
+!     Daily output
+!***********************************************************************
+      ELSEIF (DYNAMIC .EQ. OUTPUT) THEN
+
+        WRITE (NOUTDG,300)
+     &   YEAR, DOY, DAS, DAP
+     & , WLDOT, WLDOTN, SLDOT, WLIDOT, WLFDOT, NRUSLF/0.16, CRUSLF
+
+  300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
+     &    21F12.6)
+
+!     still temp chp...
+
+!***********************************************************************
+!***********************************************************************
+!     Seasonal Output 
+!***********************************************************************
+      ELSE IF (DYNAMIC .EQ. SEASEND) THEN
+C-----------------------------------------------------------------------
+          CLOSE (NOUTDG)
+
+!     end temp chp
+!=========================================================================
 
 C***********************************************************************
 C***********************************************************************

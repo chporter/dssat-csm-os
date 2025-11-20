@@ -1421,6 +1421,41 @@ C----------------------------------
         SENESCE % ResE   = 0.0
       ENDIF
 
+!=========================================================================
+!     TEMP CHP
+      CALL GROW(CONTROL, ISWITCH, DYNAMIC, SOILPROP, 
+     &  AGEFAC, CADLF, CADST, CRUSLF, CRUSRT, CRUSSH,     !Input
+     &  CRUSST, DISLA, F, FILECC, FILEGC, FRLF, FRSTM,    !Input
+     &  NADLF, NADRT, NADST, NDTH, NFIXN, NGRLF, NGRRT,   !Input
+     &  NGRSD, NGRSH, NGRST, NMINEA, NODGR, NOUTDO,       !Input
+     &  NPLTD, NRUSLF, NRUSRT, NRUSSH, NRUSST, ECONO,     !Input
+     &  POTCAR, POTLIP, PPLTD, SDIDOT, SDPROR,            !Input
+     &  SENNOD, SENRT, SLDOT, SLNDOT, SRDOT, SSDOT,       !Input
+     &  SSNDOT, TRNH4U, TRNO3U, TRNU, TAVG, NSTRES,       !Input
+     &  TURFAC, WLDOTN, WLIDOT, WRDOTN, WRIDOT, WSDDTN,   !Input
+     &  WSDOTN, WSHDTN, WSIDOT, WTABRT, WTSHMT, YRNR1,    !Input
+     &  MDATE, YRPLT,                                     !Input
+     &  SWIDOT, WLFDOT, WSHIDT, WTNFX, XHLAI,             !Input/Output
+     &  AREALF, BETN, CANNAA, CANWAA, CLW, CropStatus,    !Output
+     &  CSW, DWNOD, DWNODA, GROWTH, GRWRES, LAIMX, PCCSD, !Output
+     &  PCLSD, PCNL, PCNRT, PCNSD, PCNSH, PCNST, PLTPOP,  !Output
+     &  PLIGLF, PLIGNO, PLIGRT, PLIGSD, PLIGSH, PLIGST,   !Output
+     &  PODWT, PUNCSD, PUNCTR, RHOL, RHOS, RNITP,         !Output
+     &  ROWSPC, RTWT, SDNPL, SDRATE, SDWT, LINTW,         !Output
+     &  SEEDNI, SEEDNO, SENESCE, SHELWT, SLA,             !Output
+     &  SLAAD, STMWT, TOPWT, TOTWT, WCRLF, WCRRT, WCRSH,  !Output
+     &  WCRST, WNRLF, WNRRT, WNRSH, WNRST, WTCO,          !Output
+     &  WTLF, WTLO, WTMAIN, WTNCAN, WTNEW, WTNLA, WTNLF,  !Output
+     &  WTNLO, WTNNA, WTNNAG, WTNNO, WTNNOD, WTNOO,       !Output
+     &  WTNRA, WTNRO, WTNRT, WTNSA, WTNSD, WTNSDA,        !Output
+     &  WTNSDO, WTNSH, WTNSHA, WTNSHO, WTNSO, WTNST,      !Output
+     &  WTNUP, WTRO, WTSDO, WTSHO, WTSO, XLAI, XPOD,      !Output
+     &  ShutMob, RootMob, ShelMob,                        !Output
+     &  TOSHMINE,TOCHMINE,HPODWT,HSDWT,HSHELWT)           !Output
+
+!     END TEMP CHP
+!=========================================================================
+
 !***********************************************************************
 !     END OF DYNAMIC IF CONSTRUCT
 !***********************************************************************
