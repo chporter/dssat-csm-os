@@ -65,6 +65,9 @@ C-GH
       
 C-GH 08/19/2025
       REAL WTLF_C, WNRLF_C, WCRLF_C, XLAI_C, WTNLF_C, PLEAFN_C
+CHP 2025-11-20
+      REAL WLDOT_calc, SLDOT_calc, WLFDOT_calc, NRUSLF_calc, 
+     &  CRUSLF_calc, WLIDOT_calc
 
       LOGICAL FEXIST
 
@@ -136,7 +139,9 @@ C-GH 08/19/2025
       CALL HEADER(SEASINIT, CHRTOUT, CONTROL % RUN)
       WRITE (CHRTOUT,200)
   200 FORMAT('@YEAR DOY   DAS',
-     &  '     LWADC   LAIDC   LN%DC     LWADO   LAIDO   LN%DO')
+     &  '     LWADC   LAIDC   LN%DC     LWADO   LAIDO   LN%DO'
+     &  ,'       WLDOT      WLDOTN       SLDOT',
+     &   '      WLIDOT      WLFDOT      NRUSLF      CRUSLF')
 
 !     Initialize 2nd cohort output file
       INQUIRE (FILE = COHORTOUT1, EXIST = FEXIST)
@@ -181,12 +186,12 @@ C-GH 08/19/2025
 !-------------------------------------
 ! COHORT VARIABLES FOR NEW LEAF TISSUE
 !-------------------------------------
-      LFDM(1)=WLDOTN
-      LFAREA(1)=LFDM(1)*F
-      LFSN(1)=PROLFF*0.16*LFDM(1)
-      LFNSN(1)=NGRLF-LFSN(1)
-      LFNSC(1)=WLDOTN*ALPHL
-      LFAGE(1)=DTX
+      LFDM(1)  = WLDOTN
+      LFAREA(1)= LFDM(1) * F
+      LFSN(1)  = PROLFF * 0.16 * LFDM(1)
+      LFNSN(1) = NGRLF - LFSN(1)
+      LFNSC(1) = WLDOTN * ALPHL
+      LFAGE(1) = DTX
 
 !------------------------------------
 ! UPDATING TOTAL LEAF STATE VARIABLES
@@ -217,31 +222,36 @@ C-GH 08/19/2025
 !-----------------------------------------------------------------------
       NLC = NLC + 1  !today's new cohort
       DO I = 1, NLC
-        LCAge(I) = LCAge(I) + 1  !Cohort age in physical days (integer)
-        LFAGE2(I) = LFAGE2(I) + DTX  !cohort age in p-t-d
+        LCAge(I) = LCAge(I) + 1    !Cohort age in physical days
+        LFAGE(I) = LFAGE(I) + DTX  !cohort age in p-t-d
       ENDDO
 
 !     New growth for today's cohort
-      LFDM(NLC)  = WLDOTN
-      LFAREA(NLC)= LFDM(1) * F
-      LFSN(NLC)  = PROLFF * 0.16 * LFDM(1)
-      LFNSN(NLC) = NGRLF - LFSN(1)
-      LFNSC(NLC) = WLDOTN * ALPHL
-      LFAGE(NLC) = DTX
+      LFDM(NLC)  = WLDOTN                   !leaf dry mass
+      LFAREA(NLC)= LFDM(1) * F              !leaf area
+      LFSN(NLC)  = PROLFF * 0.16 * LFDM(1)  !struct N (non-mobile)
+      LFNSN(NLC) = NGRLF - LFSN(1)          !non-struct N (mobile)
+      LFNSC(NLC) = WLDOTN * ALPHL           !non-struct CH2O
+      LFAGE(NLC) = DTX                      !age ptd
 
 !---------------------------
 ! NON-STRUCTURAL CH2O MINING
 !---------------------------
+!     LFCMN(I) = leaf non-structural CH2O mined today in cohort I
+      CRUSLF_calc = 0.0
+      LFCMN = 0.0
+
       DO  I=1,NLC-1
-        IF (LFNSC(I).LE.0.OR.CMOBMX.LE.0)THEN
+        IF (LFNSC(I) .LE. 0.0 .OR. CMOBMX .LE. 0.0)THEN
           LFCMN(I)=0.0
         ELSE
-          LFCMN(I)=LFNSC(I)*CMINEA / CMINEP * CMOBMX * (DTX + DXR57)
-          LFCMN(I)=MIN(LFCMN(I),LFNSC(I))
-          IF ((LFNSC(I)-LFCMN(I)).LE.0.00001)THEN
-            LFCMN(I)=LFNSC(I)
+          LFCMN(I) = LFNSC(I) * CMINEA / CMINEP * CMOBMX * (DTX + DXR57)
+          LFCMN(I) = MIN(LFCMN(I), LFNSC(I))
+          IF ((LFNSC(I) - LFCMN(I)) .LE. 0.00001) THEN
+            LFCMN(I) = LFNSC(I)
           ENDIF
         ENDIF
+        CRUSLF_calc = CRUSLF_calc + LFCMN(I)
       END DO
 
 !-------------------------------------------
@@ -269,6 +279,8 @@ C-GH 08/19/2025
       else
          NMINER = 0.0
       endif
+
+      LFNSN = 0.0
       
       DO  I=1,NLC-1
         IF (LFNSN(I) .LE. 0.0 .OR. MAXNMINE .LE. 0.0 
@@ -286,12 +298,16 @@ C-GH 08/19/2025
 !------------------------------
 ! N MINING SENESCENCE (LFNMNSN)
 !------------------------------
+      LFNMNSN = 0.0
+      NRUSLF_calc = 0.0
+
       DO I=1,NLC-1
         IF (LFNMN(I).GE.LFNSN(I))THEN
           LFNMNSN(I)=LFDM(I)-(LFNMN(I)/0.16)
         ELSE
           LFNMNSN(I)=0
         ENDIF
+        NRUSLF_calc = NRUSLF_calc + LFNMN(I)
       ENDDO
 
 !---------------------------------
@@ -460,7 +476,7 @@ C-GH 08/19/2025
 ! INTEGRATION OF N AND CH2O MINING AND SENESCENCE
 !---------------------------------------------
 
-      DO I=1,NLC-1
+      DO I=1,NLC
         IF(LFDM(I).GT.0.0)THEN
 !         LEAF AREA
           LFAREA(I)=LFAREA(I)-
@@ -529,7 +545,9 @@ C-GH 08/19/2025
       WCRLF_C =SUM(LFNSC(1:LCMax))
       XLAI_C =SUM(LFAREA(1:LCMax))/10000
       WTNLF_C =SUM(LFNSN(1:LCMax))+SUM(LFSN(1:LCMax))
-      CUMLFDM=CUMLFDM+LFDM(1)
+!     CUMLFDM=CUMLFDM+LFDM(1)
+      CUMLFDM = CUMLFDM + WLDOTN
+
 
       PLEAFN_C=WTNLF_C/WTLF_C*100
   
@@ -550,8 +568,11 @@ C-GH 08/19/2025
       WRITE (CHRTOUT,310) YEAR, DOY, DAS, 
      &       WTLF_C,XLAI_C,PLEAFN_C,
      &       WTLF,XLAI,PLEAFN
+     &  ,WLDOT_calc, WLDOTN, SLDOT_calc, WLIDOT_calc, WLFDOT_calc, 
+     &  NRUSLF_calc, CRUSLF_calc
+
 310   FORMAT (1X,I4,1X,I3,I6,
-     &     F10.4, F8.3, F8.3, F10.4, 2F8.3)
+     &     F10.4, F8.3, F8.3, F10.4, 2F8.3,7F12.6)
 
       write (CHRTOUT1,320) YEAR,DOY,LFAGE(1:50)
 320   format (1X,I4,1X,I3,50F6.1)
