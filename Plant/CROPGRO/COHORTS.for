@@ -67,7 +67,7 @@ C-GH 08/19/2025
       REAL WTLF_C, WNRLF_C, WCRLF_C, XLAI_C, WTNLF_C, PLEAFN_C
 CHP 2025-11-20
       REAL WLDOT_calc, SLDOT_calc, WLFDOT_calc, NRUSLF_calc, 
-     &  CRUSLF_calc, WLIDOT_calc
+     &  CRUSLF_calc, WLIDOT_calc, WLDOTN_calc
 
       LOGICAL FEXIST
 
@@ -139,9 +139,10 @@ C-GH 08/19/2025
       CALL HEADER(SEASINIT, CHRTOUT, CONTROL % RUN)
       WRITE (CHRTOUT,200)
   200 FORMAT('@YEAR DOY   DAS',
-     &  '     LWADC   LAIDC   LN%DC     LWADO   LAIDO   LN%DO'
-     &  ,'       WLDOT      WLDOTN       SLDOT',
-     &   '      WLIDOT      WLFDOT      NRUSLF      CRUSLF')
+     &  '     LWADC   LAIDC   LN%DC     LWADO   LAIDO   LN%DO',
+     &  '      WLDOTN',
+     &  '      WLDOTc     WLDOTNc      SLDOTc',
+     &  '     WLIDOTc     WLFDOTc     NRUSLFc     CRUSLFc')
 
 !     Initialize 2nd cohort output file
       INQUIRE (FILE = COHORTOUT1, EXIST = FEXIST)
@@ -281,6 +282,8 @@ C-GH 08/19/2025
       endif
 
       LFNSN = 0.0
+      NRUSLF_calc = 0.0
+      LFNMN = 0.0
       
       DO  I=1,NLC-1
         IF (LFNSN(I) .LE. 0.0 .OR. MAXNMINE .LE. 0.0 
@@ -291,6 +294,7 @@ C-GH 08/19/2025
           LFNMN(I)=MIN(LFNMN(I),LFNSN(I))
           IF ((LFNSN(I)-LFNMN(I)).LE.0.00001)THEN
             LFNMN(I)=LFNSN(I)
+            NRUSLF_calc = NRUSLF_calc + LFNMN(I)
           ENDIF
         ENDIF
       END DO
@@ -304,10 +308,11 @@ C-GH 08/19/2025
       DO I=1,NLC-1
         IF (LFNMN(I).GE.LFNSN(I))THEN
           LFNMNSN(I)=LFDM(I)-(LFNMN(I)/0.16)
+
+          NRUSLF_calc = NRUSLF_calc + LFNMN(I) / 0.16
         ELSE
           LFNMNSN(I)=0
         ENDIF
-        NRUSLF_calc = NRUSLF_calc + LFNMN(I)
       ENDDO
 
 !---------------------------------
@@ -353,12 +358,16 @@ C-GH 08/19/2025
 !----------------------------
 ! FREEZING SENESCENCE (LFFRZ)
 !----------------------------
+      LFFRZ = 0.0
+
       IF(TMIN.LT.FREEZ1)THEN
         DO I=1,NLC-1
           LFFRZ(I)=LFDM(I)-LFNMN(I)/0.16-LFNMNSN(I)-LFWSSN(I)
           LFFRZ(I)=MAX(LFFRZ(I),0.0)
         ENDDO
       ENDIF
+
+      SLDOT_calc = 0.0
 
       DO I=1,NLC-1
         IF ((LFDM(I)-LFFRZ(I)).LE.0)THEN
@@ -367,17 +376,23 @@ C-GH 08/19/2025
         ELSE
           LFNMNSN(I)=LFNMNSN(I)*(LFDM(I)-LFFRZ(I))/LFDM(I)
           LFWSSN(I)=LFWSSN(I)*(LFDM(I)-LFFRZ(I))/LFDM(I)
+
+          SLDOT_calc = SLDOT_calc + LFNMNSN(I) + LFWSSN(I)
         ENDIF
       ENDDO
 
 !--------------------
 ! PEST DAMAGE (LFPST)
 !--------------------
+      WLIDOT_calc = 0.0
+      LFPST = 0.0
+
       IF(WLIDOT.GT.0)THEN
 ! FOR PROPORTIONAL DISTRIBUTION OF PEST DAMAGE:
         DO I=1,NLC-1
           IF(LFDM(I).GT.0)THEN
             LFPST(I)=LFDM(I)/WTLF*WLIDOT
+            WLIDOT_calc = WLIDOT_calc + LFPST(I)
           ELSE
             LFPST(I)=0
           ENDIF
@@ -403,8 +418,10 @@ C-GH 08/19/2025
 !          ENDIF
 !        ENDDO
       ELSE
-        LFPST(1:NLC-1)=0
+        LFPST(1:NLC-1)=0.
       ENDIF
+
+      WLFDOT_calc = 0.0
 
       DO I=1,NLC-1
         IF ((LFDM(I)-LFPST(I)).LE.0)THEN
@@ -416,6 +433,9 @@ C-GH 08/19/2025
           LFFRZ(I)=LFFRZ(I)*(LFDM(I)-LFPST(I))/LFDM(I)
           LFWSSN(I)=LFWSSN(I)*(LFDM(I)-LFPST(I))/LFDM(I)
         ENDIF
+
+        WLFDOT_calc = WLFDOT_calc + LFFRZ(I)
+
       ENDDO
 
 !----------------------------
@@ -475,6 +495,7 @@ C-GH 08/19/2025
 !---------------------------------------------
 ! INTEGRATION OF N AND CH2O MINING AND SENESCENCE
 !---------------------------------------------
+      WLDOT_calc = 0.0
 
       DO I=1,NLC
         IF(LFDM(I).GT.0.0)THEN
@@ -493,6 +514,11 @@ C-GH 08/19/2025
 !         DRY MATTER
           LFDM(I)=LFDM(I)+LFCAD(I)+LFNAD(I)/0.16-LFNMN(I)/0.16-LFCMN(I)-
      &            LFPST(I)-LFFRZ(I)-LFNMNSN(I)-LFWSSN(I)
+
+          WLDOT_calc = WLDOT_calc 
+     &          - LFCAD(I) - LFNAD(I)/0.16 + LFNMN(I)/0.16 + LFCMN(I) +
+     &            LFPST(I) + LFFRZ(I) + LFNMNSN(I) + LFWSSN(I)
+
         ENDIF
       ENDDO
 
@@ -567,12 +593,12 @@ C-GH 08/19/2025
 
       WRITE (CHRTOUT,310) YEAR, DOY, DAS, 
      &       WTLF_C,XLAI_C,PLEAFN_C,
-     &       WTLF,XLAI,PLEAFN
-     &  ,WLDOT_calc, WLDOTN, SLDOT_calc, WLIDOT_calc, WLFDOT_calc, 
+     &       WTLF,XLAI,PLEAFN, WLDOTN,
+     &  WLDOT_calc, WLDOTN_calc, SLDOT_calc, WLIDOT_calc, WLFDOT_calc, 
      &  NRUSLF_calc, CRUSLF_calc
 
 310   FORMAT (1X,I4,1X,I3,I6,
-     &     F10.4, F8.3, F8.3, F10.4, 2F8.3,7F12.6)
+     &     F10.4, F8.3, F8.3, F10.4, 2F8.3, 10F12.6)
 
       write (CHRTOUT1,320) YEAR,DOY,LFAGE(1:50)
 320   format (1X,I4,1X,I3,50F6.1)
