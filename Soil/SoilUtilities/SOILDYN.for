@@ -1139,6 +1139,10 @@ C  tillage and rainfall kinetic energy
         CASE DEFAULT ! Do nothing here
         END SELECT
 
+!       TEMP CHP
+        WRITE(5454,'(A,A)') "MSDYN = ", ISWITCH % MSDYN
+!       END TEMP CHP
+
 !       Print initial values
         Print_today = .TRUE.
         FIRST = .FALSE.
