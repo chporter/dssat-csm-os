@@ -67,7 +67,7 @@ C-GH 08/19/2025
       REAL WTLF_C, WNRLF_C, WCRLF_C, XLAI_C, WTNLF_C, PLEAFN_C
 CHP 2025-11-20
       REAL WLDOT_calc, SLDOT_calc, WLFDOT_calc, NRUSLF_calc, 
-     &  CRUSLF_calc, WLIDOT_calc, WLDOTN_calc
+     &  CRUSLF_calc, WLIDOT_calc
 
       LOGICAL FEXIST
 
@@ -140,8 +140,7 @@ C-GH 08/19/2025
       WRITE (CHRTOUT,200)
   200 FORMAT('@YEAR DOY   DAS',
      &  '     LWADC   LAIDC   LN%DC     LWADO   LAIDO   LN%DO',
-     &  '      WLDOTN',
-     &  '      WLDOTc     WLDOTNc      SLDOTc',
+     &  '      WLDOTN      WLDOTc      SLDOTc',
      &  '     WLIDOTc     WLFDOTc     NRUSLFc     CRUSLFc')
 
 !     Initialize 2nd cohort output file
@@ -594,7 +593,7 @@ C-GH 08/19/2025
       WRITE (CHRTOUT,310) YEAR, DOY, DAS, 
      &       WTLF_C,XLAI_C,PLEAFN_C,
      &       WTLF,XLAI,PLEAFN, WLDOTN,
-     &  WLDOT_calc, WLDOTN_calc, SLDOT_calc, WLIDOT_calc, WLFDOT_calc, 
+     &  WLDOT_calc, SLDOT_calc, WLIDOT_calc, WLFDOT_calc, 
      &  NRUSLF_calc, CRUSLF_calc
 
 310   FORMAT (1X,I4,1X,I3,I6,
