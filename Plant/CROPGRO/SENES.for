@@ -19,6 +19,16 @@ C========================================================================
       SUBROUTINE SENES(DYNAMIC,
      &    FILECC, CLW, DTX, KCAN, NR7, NRUSLF, PAR,       !Input
      &    RHOL, SLAAD, STMWT, SWFAC, VSTAGE, WTLF, XLAI,  !Input
+
+!=========================================================================
+!     TEMP CHP Add printout for SENES variables
+
+     &    YRPLT,  !temporary input
+
+!     END TEMP CHP
+!=========================================================================
+
+
      &    SLDOT, SLNDOT, SSDOT, SSNDOT)                   !Output
 
 C-----------------------------------------------------------------------
@@ -50,6 +60,29 @@ C-----------------------------------------------------------------------
       REAL SWFCAB(NSWAB)
 
       TYPE (ControlType) CONTROL
+
+
+
+!=========================================================================
+!     TEMP CHP Add printout for SENES variables
+
+      EXTERNAL YR_DOY, TIMDIF, HEADER
+
+      CHARACTER*9 OUTSN  !SENES.OUT
+      INTEGER NOUTDG, ERRNUM, YEAR, DOY, DAP, TIMDIF, YRDOY, YRPLT
+      LOGICAL FEXIST
+      REAL NatSen, NMobSen, LoLitSen, WaterSen, R7Sen
+
+      CALL GET(CONTROL)
+      DAS   = CONTROL % DAS
+      YRDOY = CONTROL % YRDOY
+      CALL YR_DOY(YRDOY, YEAR, DOY) 
+      DAP = MAX(0,TIMDIF(YRPLT,YRDOY))
+      IF (DAP > DAS) DAP = 0
+
+!     end temp chp
+!=========================================================================
+
 
 !***********************************************************************
 !***********************************************************************
@@ -140,6 +173,16 @@ C-----------------------------------------------------------------------
 
       CLOSE (LUNCRP)
 
+
+!=========================================================================
+!     TEMP CHP Add printout for GROW variables
+
+          OUTSN  = 'SENES.OUT'
+          CALL GETLUN('OUTSN',  NOUTDG)
+
+!     end temp chp
+!=========================================================================
+
 !***********************************************************************
 !***********************************************************************
 !     Seasonal initialization - run once per season
@@ -155,6 +198,32 @@ C-----------------------------------------------------------------------
       DO I = 1,5
         SWFCAB(I) = 1.0
       ENDDO
+
+
+!=========================================================================
+!     TEMP CHP Add printout for SENES variables
+
+!       Initialize daily SENES output file      
+        INQUIRE (FILE = OUTSN, EXIST = FEXIST)
+        IF (FEXIST) THEN
+          OPEN (UNIT = NOUTDG, FILE = OUTSN, STATUS = 'OLD',
+     &      IOSTAT = ERRNUM, POSITION = 'APPEND')
+        ELSE
+          OPEN (UNIT = NOUTDG, FILE = OUTSN, STATUS = 'NEW',
+     &      IOSTAT = ERRNUM)
+          WRITE(NOUTDG,'("*SENES OUTPUT FILE")')
+        ENDIF
+
+        !Write headers
+        CALL HEADER(SEASINIT, NOUTDG, CONTROL % RUN)
+
+        WRITE (NOUTDG,200)
+  200   FORMAT('@YEAR DOY   DAS   DAP'
+     &  ,'      TotSen      NatSen     NMobSen    LoLitSen',
+     &   '    WaterSen       R7Sen')
+
+!     end temp chp
+!=========================================================================
 
 !***********************************************************************
 !***********************************************************************
@@ -177,6 +246,19 @@ C-----------------------------------------------------------------------
       SLDOT = 0.0
       SLNDOT = 0.0
       SSNDOT = 0.0
+
+!=========================================================================
+!     TEMP CHP Add printout for SENES variables
+
+      NatSen = 0.0
+      NMobSen = 0.0
+      LoLitSen = 0.0
+      WaterSen = 0.0
+      R7Sen = 0.0
+
+!     end temp chp
+!=========================================================================
+
       IF (DAS .LE. NR7 .AND. VSTAGE .GE. 1.0) THEN
 C-----------------------------------------------------------------------
 C     This section calculates natural senescence prior to the
@@ -186,6 +268,15 @@ C-----------------------------------------------------------------------
           PORLFT = 1.0 - TABEX(SENPOR,XSTAGE,VSTAGE,4)
           IF ((WTLF * ( 1.0 - RHOL)) .GT. CLW*PORLFT) THEN
             SLDOT = WTLF * ( 1.0 - RHOL) - CLW * PORLFT
+
+!=========================================================================
+!     TEMP CHP Add printout for SENES variables
+
+            NatSen = WTLF * ( 1.0 - RHOL) - CLW * PORLFT
+
+!     end temp chp
+!=========================================================================
+
           ENDIF
         ENDIF
 C-----------------------------------------------------------------------
@@ -199,6 +290,16 @@ C-----------------------------------------------------------------------
         LFSEN = MIN(WTLF,LFSEN)
         SLDOT = SLDOT + LFSEN
         SLDOT = MIN(WTLF,SLDOT)
+
+!=========================================================================
+!     TEMP CHP Add printout for SENES variables
+
+        NMobSen = SLDOT - NatSen
+
+!     end temp chp
+!=========================================================================
+
+
 C-----------------------------------------------------------------------
 C     This section calculates senescence due to low light in lower
 C     canopy.  First compute LAI at which light compensation is reached
@@ -215,6 +316,17 @@ C-----------------------------------------------------------------------
 C     Convert area loss to biomass(m2 *10000cm2/m2)/(cm2/g)=g/m2
 C-----------------------------------------------------------------------
         SLDOT = SLDOT + LTSEN * 10000. / SLAAD
+
+!=========================================================================
+!     TEMP CHP Add printout for SENES variables
+
+        LoLitSen = LTSEN * 10000. / SLAAD
+
+
+!     end temp chp
+!=========================================================================
+
+
 C-----------------------------------------------------------------------
 C     Calculate senescence due to water stress.
 C-----------------------------------------------------------------------
@@ -230,6 +342,15 @@ C-----------------------------------------------------------------------
         SSDOT = MIN(SSDOT,0.1*STMWT)
         SSNDOT = SLNDOT * PORPT
         SSNDOT = MIN(SSDOT,SSNDOT)
+
+!=========================================================================
+!     TEMP CHP Add printout for SENES variables
+
+        WaterSen = SLNDOT
+
+!     end temp chp
+!=========================================================================
+
 C-----------------------------------------------------------------------
 C     This section calculates senescence of leaves and petioles
 C     after R7.
@@ -246,11 +367,50 @@ C-----------------------------------------------------------------------
           SLNDOT = 0.0
           SSNDOT = 0.0
         ENDIF
+
+!=========================================================================
+!     TEMP CHP Add printout for SENES variables
+
+        R7Sen = SLDOT
+
+!     end temp chp
+!=========================================================================
+
         IF (STMWT .LT. 0.0001) THEN
           SLNDOT = 0.0
           SSNDOT = 0.0
         ENDIF
       ENDIF
+
+
+!=========================================================================
+!     TEMP CHP Add printout for SENES variables
+
+!***********************************************************************
+!***********************************************************************
+!     Daily output
+!***********************************************************************
+      ELSEIF (DYNAMIC .EQ. OUTPUT) THEN
+
+        WRITE (NOUTDG,300)
+     &   YEAR, DOY, DAS, DAP, 
+     &   SLDOT, NatSen, NMobSen, LoLitSen, WaterSen, R7Sen
+
+  300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
+     &    21F12.6)
+
+!     still temp chp...
+
+!***********************************************************************
+!***********************************************************************
+!     Seasonal Output 
+!***********************************************************************
+      ELSE IF (DYNAMIC .EQ. SEASEND) THEN
+C-----------------------------------------------------------------------
+          CLOSE (NOUTDG)
+
+!     end temp chp
+!=========================================================================
 
 !***********************************************************************
 !***********************************************************************

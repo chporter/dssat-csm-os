@@ -366,6 +366,15 @@ C-----------------------------------------------------------------------
         CALL SENES(RUNINIT, 
      &    FILECC, CLW, DTX, KCAN, NR7, NRUSLF, PAR,       !Input
      &    RHOL, SLAAD, STMWT, SWFAC, VSTAGE, WTLF, XLAI,  !Input
+
+!=========================================================================
+!     TEMP CHP Add printout for SENES variables
+
+     &    YRPLT,  !temporary input
+
+!     END TEMP CHP
+!=========================================================================
+
      &    SLDOT, SLNDOT, SSDOT, SSNDOT)                   !Output
 
 C-----------------------------------------------------------------------
@@ -642,6 +651,15 @@ C-----------------------------------------------------------------------
       CALL SENES(SEASINIT, 
      &    FILECC, CLW, DTX, KCAN, NR7, NRUSLF, PAR,       !Input
      &    RHOL, SLAAD, STMWT, SWFAC, VSTAGE, WTLF, XLAI,  !Input
+
+!=========================================================================
+!     TEMP CHP Add printout for SENES variables
+
+     &    YRPLT,  !temporary input
+
+!     END TEMP CHP
+!=========================================================================
+
      &    SLDOT, SLNDOT, SSDOT, SSNDOT)                   !Output
 
 C-----------------------------------------------------------------------
@@ -1215,6 +1233,15 @@ C-----------------------------------------------------------------------
       CALL SENES(INTEGR, 
      &    FILECC, CLW, DTX, KCAN, NR7, NRUSLF, PAR,       !Input
      &    RHOL, SLAAD, STMWT, SWFAC, VSTAGE, WTLF, XLAI,  !Input
+
+!=========================================================================
+!     TEMP CHP Add printout for SENES variables
+
+     &    YRPLT,  !temporary input
+
+!     END TEMP CHP
+!=========================================================================
+
      &    SLDOT, SLNDOT, SSDOT, SSNDOT)                   !Output
 
 C-----------------------------------------------------------------------
@@ -1452,6 +1479,12 @@ C----------------------------------
      &  WTNUP, WTRO, WTSDO, WTSHO, WTSO, XLAI, XPOD,      !Output
      &  ShutMob, RootMob, ShelMob,                        !Output
      &  TOSHMINE,TOCHMINE,HPODWT,HSDWT,HSHELWT)           !Output
+
+      CALL SENES(DYNAMIC, 
+     &    FILECC, CLW, DTX, KCAN, NR7, NRUSLF, PAR,       !Input
+     &    RHOL, SLAAD, STMWT, SWFAC, VSTAGE, WTLF, XLAI,  !Input
+     &    YRPLT,
+     &    SLDOT, SLNDOT, SSDOT, SSNDOT)                   !Output
 
 !     END TEMP CHP
 !=========================================================================

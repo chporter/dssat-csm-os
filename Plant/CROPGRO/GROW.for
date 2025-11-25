@@ -428,7 +428,7 @@ C-----------------------------------------------------------------------
 
         WRITE (NOUTDG,200)
   200   FORMAT('@YEAR DOY   DAS   DAP'
-     &  ,'       WLDOT      WLDOTN       SLDOT',
+     &  ,'        WTLF       WLDOT      WLDOTN       SLDOT',
      &   '      WLIDOT      WLFDOT      NRUSLF      CRUSLF')
 
 !     WLDOT = WLDOTN - SLDOT - WLIDOT - WLFDOT - NRUSLF/0.16 - CRUSLF
@@ -1237,8 +1237,8 @@ C-----------------------------------------------------------------------
       ELSEIF (DYNAMIC .EQ. OUTPUT) THEN
 
         WRITE (NOUTDG,300)
-     &   YEAR, DOY, DAS, DAP
-     & , WLDOT, WLDOTN, SLDOT, WLIDOT, WLFDOT, NRUSLF/0.16, CRUSLF
+     &   YEAR, DOY, DAS, DAP, 
+     &   WTLF, WLDOT, WLDOTN, SLDOT, WLIDOT, WLFDOT, NRUSLF/0.16, CRUSLF
 
   300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
      &    21F12.6)

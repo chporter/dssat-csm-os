@@ -67,7 +67,8 @@ C-GH 08/19/2025
       REAL WTLF_C, WNRLF_C, WCRLF_C, XLAI_C, WTNLF_C, PLEAFN_C
 CHP 2025-11-20
       REAL WLDOT_calc, SLDOT_calc, WLFDOT_calc, NRUSLF_calc, 
-     &  CRUSLF_calc, WLIDOT_calc
+     &  CRUSLF_calc, WLIDOT_calc, WatSen, LfMineSen
+
 
       LOGICAL FEXIST
 
@@ -141,7 +142,8 @@ C-GH 08/19/2025
   200 FORMAT('@YEAR DOY   DAS',
      &  '     LWADC   LAIDC   LN%DC     LWADO   LAIDO   LN%DO',
      &  '      WLDOTN      WLDOTc      SLDOTc',
-     &  '     WLIDOTc     WLFDOTc     NRUSLFc     CRUSLFc')
+     &  '     WLIDOTc     WLFDOTc     NRUSLFc     CRUSLFc',
+     &  '      WatSen   LfMineSen')
 
 !     Initialize 2nd cohort output file
       INQUIRE (FILE = COHORTOUT1, EXIST = FEXIST)
@@ -314,6 +316,8 @@ C-GH 08/19/2025
 !---------------------------------
 ! WATER STRESS SENESCENCE (LFWSSN)
 !---------------------------------
+      LFWSSN = 0.0
+
       IF (VSTAGE.GE.1)THEN
         DO I = NSWAB,2,-1
           IF (SWFCAB(I-1) .GT. 0) THEN
@@ -325,8 +329,7 @@ C-GH 08/19/2025
         SWFCAB(1) = SWFAC
         RATTP = SWFCAB(NSWAB)
         WSLOSS = SENDAY * (1. - RATTP) * WTLF
-        LFWSSN(1:LCMax)=0
-            
+
         IF (WSLOSS .GT. 0.0) THEN
           DO I=1,4
             IF (VSTAGE.GT.XSENMX(I))THEN
@@ -337,7 +340,7 @@ C-GH 08/19/2025
           WSLOSS = MIN(WSLOSS, WTLF - CUMLFDM * PORLFT)
           WSLOSS = MAX(WSLOSS, 0.0)
           WSLOSS=WSLOSS-SUM(LFNMNSN(1:LCMax))-SUM(LFNMN(1:LCMax))/0.16
-          
+
           DO I=NLC-1,1,-1
             IF (LFDM(I).GT.(LFNMNSN(I)+LFNMN(I)/0.16).AND.
      &                                          WSLOSS.GT.0) THEN
@@ -363,8 +366,6 @@ C-GH 08/19/2025
         ENDDO
       ENDIF
 
-      SLDOT_calc = 0.0
-
       DO I=1,NLC-1
         IF ((LFDM(I)-LFFRZ(I)).LE.0)THEN
           LFNMNSN(I)=0.0
@@ -372,8 +373,6 @@ C-GH 08/19/2025
         ELSE
           LFNMNSN(I)=LFNMNSN(I)*(LFDM(I)-LFFRZ(I))/LFDM(I)
           LFWSSN(I)=LFWSSN(I)*(LFDM(I)-LFFRZ(I))/LFDM(I)
-
-          SLDOT_calc = SLDOT_calc + LFNMNSN(I) + LFWSSN(I)
         ENDIF
       ENDDO
 
@@ -418,6 +417,9 @@ C-GH 08/19/2025
       ENDIF
 
       WLFDOT_calc = 0.0
+      SLDOT_calc = 0.0
+      WatSen = 0.0
+      LfMineSen = 0.0
 
       DO I=1,NLC-1
         IF ((LFDM(I)-LFPST(I)).LE.0)THEN
@@ -431,6 +433,9 @@ C-GH 08/19/2025
         ENDIF
 
         WLFDOT_calc = WLFDOT_calc + LFFRZ(I)
+        SLDOT_calc = SLDOT_calc + LFNMNSN(I) + LFWSSN(I)
+        WatSen = WatSen + LFWSSN(I)
+        LfMineSen = LfMineSen + LFNMNSN(I)
 
       ENDDO
 
@@ -594,10 +599,10 @@ C-GH 08/19/2025
      &       WTLF_C,XLAI_C,PLEAFN_C,
      &       WTLF,XLAI,PLEAFN, WLDOTN,
      &  WLDOT_calc, SLDOT_calc, WLIDOT_calc, WLFDOT_calc, 
-     &  NRUSLF_calc, CRUSLF_calc
+     &  NRUSLF_calc, CRUSLF_calc, WatSen, LfMineSen
 
 310   FORMAT (1X,I4,1X,I3,I6,
-     &     F10.4, F8.3, F8.3, F10.4, 2F8.3, 10F12.6)
+     &     F10.4, F8.3, F8.3, F10.4, 2F8.3, 20F12.6)
 
       write (CHRTOUT1,320) YEAR,DOY,LFAGE(1:50)
 320   format (1X,I4,1X,I3,50F6.1)
