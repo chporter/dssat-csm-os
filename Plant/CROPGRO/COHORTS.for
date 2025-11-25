@@ -228,9 +228,9 @@ C-GH 08/19/2025
 
 !     New growth for today's cohort
       LFDM(NLC)  = WLDOTN                   !leaf dry mass
-      LFAREA(NLC)= LFDM(1) * F              !leaf area
-      LFSN(NLC)  = PROLFF * 0.16 * LFDM(1)  !struct N (non-mobile)
-      LFNSN(NLC) = NGRLF - LFSN(1)          !non-struct N (mobile)
+      LFAREA(NLC)= LFDM(NLC) * F              !leaf area
+      LFSN(NLC)  = PROLFF * 0.16 * LFDM(NLC)  !struct N (non-mobile)
+      LFNSN(NLC) = NGRLF - LFSN(NLC)          !non-struct N (mobile)
       LFNSC(NLC) = WLDOTN * ALPHL           !non-struct CH2O
       LFAGE(NLC) = DTX                      !age ptd
 
@@ -261,8 +261,9 @@ C-GH 08/19/2025
         LCMP = -(1. / KCAN) * ALOG(ICMP / PAR)
       ENDIF
 
+      SHADEFAC = 1.0
       CUMAREA=0.0
-      DO I=1,LCMax
+      DO I=1,NLC-1
         CUMAREA=CUMAREA+LFAREA(I)/10000
         IF (CUMAREA/LCMP.GE.1)THEN
           SHADEFAC(I)=CUMAREA/LCMP
@@ -280,10 +281,9 @@ C-GH 08/19/2025
          NMINER = 0.0
       endif
 
-      LFNSN = 0.0
       NRUSLF_calc = 0.0
       LFNMN = 0.0
-      
+
       DO  I=1,NLC-1
         IF (LFNSN(I) .LE. 0.0 .OR. MAXNMINE .LE. 0.0 
      &                        .OR. NMOBMX .LE. 0.0) THEN
@@ -302,13 +302,10 @@ C-GH 08/19/2025
 ! N MINING SENESCENCE (LFNMNSN)
 !------------------------------
       LFNMNSN = 0.0
-      NRUSLF_calc = 0.0
 
       DO I=1,NLC-1
         IF (LFNMN(I).GE.LFNSN(I))THEN
           LFNMNSN(I)=LFDM(I)-(LFNMN(I)/0.16)
-
-          NRUSLF_calc = NRUSLF_calc + LFNMN(I) / 0.16
         ELSE
           LFNMNSN(I)=0
         ENDIF
@@ -704,7 +701,6 @@ C-GH 08/19/2025
         READ(C80,'(F6.0)',IOSTAT=ERR) MAXNMINE
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
       ENDIF
-
 
 !-----------------------------------------------------------------------
 !    Find and Read Senescence Section
