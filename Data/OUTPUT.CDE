@@ -48,6 +48,10 @@ PlantMob.OUT       Forage plant mobilization and refill of storage
 Storage.OUT        Forage storage organ characteristics daily output
 SoilWater.OUT      Daily soil water output file by layer              OUTSWL
 COHORTS.OUT        Leaf cohorts output file                           COHORTOUT
+COHORTS1.OUT       Leaf cohorts output file2                          COHORTOUT1
+COHORTS2.OUT       Leaf cohorts output file3                          COHORTOUT2
+GROW.OUT           Leaf growth output
+SENES.OUT          Leaf senescence output file
 
 !Daily csv format files:
 plantgro.csv       Daily plant growth output file in CSV format
