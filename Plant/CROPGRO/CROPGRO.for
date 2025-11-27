@@ -422,6 +422,7 @@ C-----------------------------------------------------------------------
      &  CADLF, CMINEA, CMINEP, CMOBMX, DTX, DXR57, F,       !Input
      &  FILECC, FREEZ1, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
      &  NMOBR, PAR, SWFAC, TMIN, VSTAGE, WLIDOT, WLDOTN,    !Input
+     &  SLNDOT, YRPLT,  !TEMP CHP
      &  WTLF, WTNLF, XLAI, WNRLF, WCRLF)                    !OUTPUT
 
       CALL OPGROW(CONTROL, ISWITCH, SoilProp, 
@@ -679,6 +680,7 @@ C-GH Add leaf Cohorts
      &  CADLF, CMINEA, CMINEP, CMOBMX, DTX, DXR57, F,       !Input
      &  FILECC, FREEZ1, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
      &  NMOBR, PAR, SWFAC, TMIN, VSTAGE, WLIDOT, WLDOTN,    !Input
+     &  SLNDOT, YRPLT,  !TEMP CHP
      &  WTLF, WTNLF, XLAI, WNRLF, WCRLF)                    !OUTPUT
 
 !-----------------------------------------------------------------------
@@ -899,6 +901,7 @@ C-GH
      &  CADLF, CMINEA, CMINEP, CMOBMX, DTX, DXR57, F,       !Input
      &  FILECC, FREEZ1, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
      &  NMOBR, PAR, SWFAC, TMIN, VSTAGE, WLIDOT, WLDOTN,    !Input
+     &  SLNDOT, YRPLT,  !TEMP CHP
      &  WTLF, WTNLF, XLAI, WNRLF, WCRLF)                    !OUTPUT
        
 !       write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF
@@ -1328,6 +1331,7 @@ C----------------------------------
      &  CADLF, CMINEA, CMINEP, CMOBMX, DTX, DXR57, F,       !Input
      &  FILECC, FREEZ1, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
      &  NMOBR, PAR, SWFAC, TMIN, VSTAGE, WLIDOT, WLDOTN,    !Input
+     &  SLNDOT, YRPLT,  !TEMP CHP
      &  WTLF, WTNLF, XLAI, WNRLF, WCRLF)                    !OUTPUT
            
 !      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
@@ -1387,6 +1391,7 @@ C----------------------------------
      &  CADLF, CMINEA, CMINEP, CMOBMX, DTX, DXR57, F,       !Input
      &  FILECC, FREEZ1, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
      &  NMOBR, PAR, SWFAC, TMIN, VSTAGE, WLIDOT, WLDOTN,    !Input
+     &  SLNDOT, YRPLT,  !TEMP CHP
      &  WTLF, WTNLF, XLAI, WNRLF, WCRLF)                    !OUTPUT
 
         CALL OPGROW(CONTROL, ISWITCH, SoilProp, 

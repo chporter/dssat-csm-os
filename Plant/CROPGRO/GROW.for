@@ -429,7 +429,8 @@ C-----------------------------------------------------------------------
         WRITE (NOUTDG,200)
   200   FORMAT('@YEAR DOY   DAS   DAP'
      &  ,'        WTLF       WLDOT      WLDOTN       SLDOT',
-     &   '      WLIDOT      WLFDOT      NRUSLF      CRUSLF')
+     &   '      WLIDOT      WLFDOT      NRUSLF      CRUSLF',
+     &  ',       CADLF       NADLF')
 
 !     WLDOT = WLDOTN - SLDOT - WLIDOT - WLFDOT - NRUSLF/0.16 - CRUSLF
 
@@ -1238,7 +1239,8 @@ C-----------------------------------------------------------------------
 
         WRITE (NOUTDG,300)
      &   YEAR, DOY, DAS, DAP, 
-     &   WTLF, WLDOT, WLDOTN, SLDOT, WLIDOT, WLFDOT, NRUSLF/0.16, CRUSLF
+     &   WTLF, WLDOT, WLDOTN, SLDOT, WLIDOT, WLFDOT, NRUSLF/0.16, 
+     &   CRUSLF, CADLF, NADLF/0.16
 
   300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
      &    21F12.6)

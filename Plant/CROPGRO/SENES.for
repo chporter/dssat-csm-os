@@ -294,7 +294,7 @@ C-----------------------------------------------------------------------
 !=========================================================================
 !     TEMP CHP Add printout for SENES variables
 
-        NMobSen = SLDOT - NatSen
+        NMobSen = LFSEN
 
 !     end temp chp
 !=========================================================================
@@ -321,7 +321,6 @@ C-----------------------------------------------------------------------
 !     TEMP CHP Add printout for SENES variables
 
         LoLitSen = LTSEN * 10000. / SLAAD
-
 
 !     end temp chp
 !=========================================================================
@@ -394,7 +393,9 @@ C-----------------------------------------------------------------------
 
         WRITE (NOUTDG,300)
      &   YEAR, DOY, DAS, DAP, 
-     &   SLDOT, NatSen, NMobSen, LoLitSen, WaterSen, R7Sen
+     &   SLDOT, NatSen, NMobSen, LoLitSen, WaterSen, R7Sen,
+     &    RATTP, PORLFT, WSLOSS
+
 
   300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
      &    21F12.6)
