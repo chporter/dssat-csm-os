@@ -420,11 +420,11 @@ C-----------------------------------------------------------------------
      &  TOSHMINE,TOCHMINE,HPODWT,HSDWT,HSHELWT)           !Output
       
       CALL COHORTS(DYNAMIC, 
-     &  CADLF, CMINEA, CMINEP, CMOBMX, DTX, DXR57, F,       !Input
-     &  FILECC, FREEZ1, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
-     &  NMOBR, PAR, SWFAC, TMIN, VSTAGE, WLIDOT, WLDOTN,    !Input
-     &  SLNDOT, YRPLT,  !TEMP CHP
-     &  WTLF, WTNLF, XLAI, WNRLF, WCRLF)                    !OUTPUT
+     &  DTX, F,       !Input
+     &  FILECC, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
+     &  NMOBR, PAR, SWFAC, VSTAGE, WLIDOT, WLDOTN,    !Input
+     &  YRPLT,  !TEMP CHP
+     &  WTLF, XLAI)                    !OUTPUT
 
       CALL OPGROW(CONTROL, ISWITCH, SoilProp, 
      &    CADLF, CADST, CANHT, CANWH, CMINEA, DWNOD, GROWTH,  
@@ -678,11 +678,11 @@ C     Call to root growth and rooting depth routine
 C-----------------------------------------------------------------------
 C-GH Add leaf Cohorts
       CALL COHORTS(DYNAMIC, 
-     &  CADLF, CMINEA, CMINEP, CMOBMX, DTX, DXR57, F,       !Input
-     &  FILECC, FREEZ1, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
-     &  NMOBR, PAR, SWFAC, TMIN, VSTAGE, WLIDOT, WLDOTN,    !Input
-     &  SLNDOT, YRPLT,  !TEMP CHP
-     &  WTLF, WTNLF, XLAI, WNRLF, WCRLF)                    !OUTPUT
+     &  DTX, F,       !Input
+     &  FILECC, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
+     &  NMOBR, PAR, SWFAC, VSTAGE, WLIDOT, WLDOTN,    !Input
+     &  YRPLT,  !TEMP CHP
+     &  WTLF, XLAI)                    !OUTPUT
 
 !-----------------------------------------------------------------------
 !     Write headings to output file GROWTH.OUT
@@ -899,11 +899,11 @@ C-GH
 !       write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
       
       CALL COHORTS(EMERG, 
-     &  CADLF, CMINEA, CMINEP, CMOBMX, DTX, DXR57, F,       !Input
-     &  FILECC, FREEZ1, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
-     &  NMOBR, PAR, SWFAC, TMIN, VSTAGE, WLIDOT, WLDOTN,    !Input
-     &  SLNDOT, YRPLT,  !TEMP CHP
-     &  WTLF, WTNLF, XLAI, WNRLF, WCRLF)                    !OUTPUT
+     &  DTX, F,       !Input
+     &  FILECC, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
+     &  NMOBR, PAR, SWFAC, VSTAGE, WLIDOT, WLDOTN,    !Input
+     &  YRPLT,  !TEMP CHP
+     &  WTLF, XLAI)                    !OUTPUT
        
 !       write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF
 !       pause
@@ -1329,11 +1329,11 @@ C     CALL COHORT MODEL
 C----------------------------------
 !      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
       CALL COHORTS(DYNAMIC, 
-     &  CADLF, CMINEA, CMINEP, CMOBMX, DTX, DXR57, F,       !Input
-     &  FILECC, FREEZ1, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
-     &  NMOBR, PAR, SWFAC, TMIN, VSTAGE, WLIDOT, WLDOTN,    !Input
-     &  SLNDOT, YRPLT,  !TEMP CHP
-     &  WTLF, WTNLF, XLAI, WNRLF, WCRLF)                    !OUTPUT
+     &  DTX, F,       !Input
+     &  FILECC, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
+     &  NMOBR, PAR, SWFAC, VSTAGE, WLIDOT, WLDOTN,    !Input
+     &  YRPLT,  !TEMP CHP
+     &  WTLF, XLAI)                    !OUTPUT
            
 !      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
 !      pause
@@ -1389,11 +1389,11 @@ C----------------------------------
      &    TOSHMINE,TOCHMINE,HPODWT,HSDWT,HSHELWT)         !Output
 
         CALL COHORTS(DYNAMIC, 
-     &  CADLF, CMINEA, CMINEP, CMOBMX, DTX, DXR57, F,       !Input
-     &  FILECC, FREEZ1, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
-     &  NMOBR, PAR, SWFAC, TMIN, VSTAGE, WLIDOT, WLDOTN,    !Input
-     &  SLNDOT, YRPLT,  !TEMP CHP
-     &  WTLF, WTNLF, XLAI, WNRLF, WCRLF)                    !OUTPUT
+     &  DTX, F,       !Input
+     &  FILECC, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
+     &  NMOBR, PAR, SWFAC, VSTAGE, WLIDOT, WLDOTN,    !Input
+     &  YRPLT,  !TEMP CHP
+     &  WTLF, XLAI)                    !OUTPUT
 
         CALL OPGROW(CONTROL, ISWITCH, SoilProp, 
      &    CADLF, CADST, CANHT, CANWH, CMINEA, DWNOD, GROWTH,  

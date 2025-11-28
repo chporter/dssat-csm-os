@@ -569,10 +569,13 @@ C-----------------------------------------------------------------------
      &    (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
 
 !       Handle leaf cohorts
+        LFCAD = 0.0
         DO I = 1, NLC
-          LFCAD(I) = LFDM(I) / WTLF * (CADLF + NADLF / 0.16) *
-     &    (1. - MIN(1.0,
-     &    (LeafTotSen(I) + LFPST(I) + LFFRZ(I)) / LFDM(I)))
+          IF (LFDM(I) > 0.0) THEN
+            LFCAD(I) = LFDM(I) / WTLF * (CADLF + NADLF / 0.16) *
+     &        (1. - MIN(1.0,
+     &        (LeafTotSen(I) + LFPST(I) + LFFRZ(I)) / LFDM(I)))
+          ENDIF
         ENDDO
 
         ADD = (CADLF+NADLF/0.16) *

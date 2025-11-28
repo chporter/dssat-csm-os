@@ -35,7 +35,8 @@ C-----------------------------------------------------------------------
       DAP   = MAX(0,TIMDIF(YRPLT,YRDOY))
       WLFDOT = WTLF - SLDOT - NRUSLF/0.16
 
-!     Handle leaf cohorts
+!     Handle freeze damage for leaf cohorts
+      LFFRZ = 0.0
       DO I = 1, NLC
         LFFRZ(I) = LFDM(I) - LeafTotSen(I) - LFNMN(I) / 0.16
       ENDDO

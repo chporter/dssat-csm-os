@@ -43,6 +43,7 @@ C========================================================================
 !-----------------------------------------------------------------------
       USE ModuleDefs
       USE ModuleData
+      USE COHORTS_MOD
       IMPLICIT NONE
       EXTERNAL GETLUN, FIND, ERROR, IGNORE, CANOPY
       SAVE
@@ -80,7 +81,7 @@ C========================================================================
       REAL NLEAK
       REAL NMINEA, NFIXN, TRNU
 
-      REAL TGRO(TS)
+      REAL TGRO(TS), CMineFactor
       
 !     FO - Cotton-Nitrogen
       REAL NSTFAC, PNSTRES, XNSTRES
@@ -425,10 +426,21 @@ C
 C-----------------------------------------------------------------------
         IF (CMINEP .GT. 0) THEN
           CMINEA = CMINEP - PGLEFT
-          CRUSLF = CMINEA / CMINEP * CMOBMX * WCRLF * (DTX + DXR57)
-          CRUSST = CMINEA / CMINEP * CMOBMX * WCRST * (DTX + DXR57)
-          CRUSRT = CMINEA / CMINEP * CMOBMX * WCRRT * (DTX + DXR57)
-          CRUSSH = CMINEA / CMINEP * CMOBMX * WCRSH * (DTX + DXR57)
+          CMineFactor = CMINEA / CMINEP * CMOBMX * (DTX + DXR57)
+ !         CRUSLF = CMINEA / CMINEP * CMOBMX * WCRLF * (DTX + DXR57)
+ !         CRUSST = CMINEA / CMINEP * CMOBMX * WCRST * (DTX + DXR57)
+ !         CRUSRT = CMINEA / CMINEP * CMOBMX * WCRRT * (DTX + DXR57)
+ !         CRUSSH = CMINEA / CMINEP * CMOBMX * WCRSH * (DTX + DXR57)
+          CRUSLF = CMineFactor * WCRLF 
+          CRUSST = CMineFactor * WCRST 
+          CRUSRT = CMineFactor * WCRRT 
+          CRUSSH = CMineFactor * WCRSH 
+
+!         Handle C mining for leaf cohorts
+          LFCMN = 0.0
+          DO I = 1, NLC
+            LFCMN(I) = CMineFactor * LFNSC(I)
+          ENDDO 
         ENDIF
       ENDIF
       CADLF = CADLF + CSAVEV/PCH2O * LSTR

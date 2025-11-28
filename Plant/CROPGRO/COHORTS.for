@@ -16,15 +16,22 @@ C=======================================================================
 
 !     Leaf cohort processes
       REAL, DIMENSION(LCMax) ::  
-     &  LFCMN,      !leaf non-struc CH2O mined (g[CH2O]/m2) = CRUSLF
+!       calculated in GROW
      &  LFCAD,      !leaf non-struc CH2O stored  (g[CH2O]/m2) = CADLF
+
+!       calculated in FREEZE
+     &  LFFRZ,      !leaf mass frozen today (g[leaf]/m2) = WLFDOT
+
+!       proportionally distributed to cohorts here
+     &  LFPST,      !leaf pest damage today (g[leaf]/m2) = WLIDOT
+
+     &  LFCMN,      !leaf non-struc CH2O mined (g[CH2O]/m2) = CRUSLF
      &  LFNMN,      !Leaf non-struc N mined today (g[N]]/m2) = NRUSLF
      &  LFNAD,      !Leaf non-struc N stored today (g[N]]/m2) = NADLF
      &  LeafTotSen, !Total leaf senescense today (g[leaf]/m2) = SLDOT
      &  LFNMNSN,    !Leaf senescence due to N mining (g[leaf]/m2)
-     &  LFWSSN,     !leaf water stress senescence today (g[leaf]/m2)
-     &  LFFRZ,      !leaf mass frozen today (g[leaf]/m2) = WLFDOT
-     &  LFPST       !leaf pest damage today (g[leaf]/m2) = WLIDOT
+     &  LFWSSN      !leaf water stress senescence today (g[leaf]/m2)
+
 
 
 
@@ -40,7 +47,7 @@ C  11/--/2025 GH, CHP  Revised.
 C=======================================================================
 
       SUBROUTINE COHORTS(DYNAMIC, 
-     &  CMINEA, CMINEP, CMOBMX, DTX, DXR57, F,       !Input
+     &  DTX, F,       !Input
      &  FILECC, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
      &  NMOBR, PAR, SWFAC, VSTAGE, WLIDOT, WLDOTN,    !Input
      &  YRPLT,  !TEMP CHP
@@ -66,15 +73,15 @@ C-GH
 
 !     REAL WCRLF  !,CRUSLF
       REAL NMINEA,NMINEP,NMOBR
-      REAL CMINEA,CMINEP
+!     REAL CMINEA,CMINEP
 !     REAL NRUSLF,SLDOT,SLNDOT
 !     REAL SLNDOT
-      REAL DTX,DXR57
+      REAL DTX  !,DXR57
       REAL PAR  !,CHECK
       REAL WTLF,RATTP,XLAI  !,WTNLF
       REAL LCMP !,WNRLF !,LEAFN
       REAL SWFCAB(NSWAB),SWFAC
-      REAL CMOBMX,NMOBMX,NMINER,ALPHL
+      REAL NMOBMX,NMINER,ALPHL  !CMOBMX,
 !     REAL TMIN,FREEZ1,WLIDOT,CADLF,NLOFF,NLPEST
       REAL WLIDOT,NLOFF,NLPEST
       REAL NGRLF,WLDOTN,F
@@ -250,25 +257,26 @@ C-GH 08/19/2025
 !***********************************************************************
       ELSEIF (DYNAMIC .EQ. INTEGR) THEN
 !-----------------------------------------------------------------------
-!---------------------------
-! NON-STRUCTURAL CH2O MINING
-!---------------------------
-!     LFCMN(I) = leaf non-structural CH2O mined today in cohort I
-      CRUSLF_calc = 0.0
-      LFCMN = 0.0
-
-      DO  I=1,NLC
-        IF (LFNSC(I) .LE. 0.0 .OR. CMOBMX .LE. 0.0)THEN
-          LFCMN(I)=0.0
-        ELSE
-          LFCMN(I) = LFNSC(I) * CMINEA / CMINEP * CMOBMX * (DTX + DXR57)
-          LFCMN(I) = MIN(LFCMN(I), LFNSC(I))
-          IF ((LFNSC(I) - LFCMN(I)) .LE. 0.00001) THEN
-            LFCMN(I) = LFNSC(I)
-          ENDIF
-        ENDIF
-        CRUSLF_calc = CRUSLF_calc + LFCMN(I)
-      END DO
+!!---------------------------
+!! NON-STRUCTURAL CH2O MINING
+!!---------------------------
+!     CHP 2025-11-28 Handle cohorts in VEGGR subroutine
+!!     LFCMN(I) = leaf non-structural CH2O mined today in cohort I
+!      CRUSLF_calc = 0.0
+!      LFCMN = 0.0
+!
+!      DO  I=1,NLC
+!        IF (LFNSC(I) .LE. 0.0 .OR. CMOBMX .LE. 0.0)THEN
+!          LFCMN(I)=0.0
+!        ELSE
+!          LFCMN(I) = LFNSC(I) * CMINEA / CMINEP * CMOBMX * (DTX + DXR57)
+!          LFCMN(I) = MIN(LFCMN(I), LFNSC(I))
+!          IF ((LFNSC(I) - LFCMN(I)) .LE. 0.00001) THEN
+!            LFCMN(I) = LFNSC(I)
+!          ENDIF
+!        ENDIF
+!        CRUSLF_calc = CRUSLF_calc + LFCMN(I)
+!      END DO
 
 !-------------------------------------------
 ! INCREASED N MINING FROM SHADING (SHADEFAC)
@@ -400,6 +408,8 @@ C-GH 08/19/2025
 !--------------------
       WLIDOT_calc = 0.0
       LFPST = 0.0
+!     CHP 2025-11-28 keep pest damage here
+
 
       IF (WLIDOT .GT. 0.0) THEN
 ! FOR PROPORTIONAL DISTRIBUTION OF PEST DAMAGE:
