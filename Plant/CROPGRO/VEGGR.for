@@ -396,6 +396,8 @@ C-----------------------------------------------------------------------
       CRUSST = 0.0
       CRUSRT = 0.0
       CRUSSH = 0.0
+      LFCMN = 0.0
+
 C-----------------------------------------------------------------------
 C    Calculate Increase in Remobilizable C due to N shortage and
 C      add to Carbon Pool.  Distribute to Leaves and Stems.
@@ -437,12 +439,12 @@ C-----------------------------------------------------------------------
           CRUSSH = CMineFactor * WCRSH 
 
 !         Handle C mining for leaf cohorts
-          LFCMN = 0.0
           DO I = 1, NLC
             LFCMN(I) = CMineFactor * LFNSC(I)
           ENDDO 
         ENDIF
       ENDIF
+
       CADLF = CADLF + CSAVEV/PCH2O * LSTR
       CADST = CADST + CSAVEV * (1. - LSTR)/PCH2O
 

@@ -61,9 +61,10 @@ C-----------------------------------------------------------------------
       REAL SENMAX(4), SENPOR(4), XSENMX(4), XSTAGE(4)
       REAL SWFCAB(NSWAB)
 
+      REAL, DIMENSION(LCMax) :: NatSen_c, NMobSen_c, LoLitSen_c, 
+     &    WaterSen_c,  R7Sen_c
+
       TYPE (ControlType) CONTROL
-
-
 
 !=========================================================================
 !     TEMP CHP Add printout for SENES variables
@@ -196,6 +197,7 @@ C-----------------------------------------------------------------------
       SLNDOT = 0.0
       SSNDOT = 0.0
       RATTP  = 1.0
+      LeafTotSen = 0.0  !leaf cohorts
 
       DO I = 1,5
         SWFCAB(I) = 1.0
@@ -261,6 +263,15 @@ C-----------------------------------------------------------------------
 !     end temp chp
 !=========================================================================
 
+!     Cohort data
+      LeafTotSen = 0.0
+      NatSen_c = 0.0
+      NMobSen_c = 0.0
+      LoLitSen_c = 0.0
+      WaterSen_c = 0.0
+      R7Sen_c = 0.0
+
+
       IF (DAS .LE. NR7 .AND. VSTAGE .GE. 1.0) THEN
 C-----------------------------------------------------------------------
 C     This section calculates natural senescence prior to the
@@ -270,6 +281,19 @@ C-----------------------------------------------------------------------
           PORLFT = 1.0 - TABEX(SENPOR,XSTAGE,VSTAGE,4)
           IF ((WTLF * ( 1.0 - RHOL)) .GT. CLW*PORLFT) THEN
             SLDOT = WTLF * ( 1.0 - RHOL) - CLW * PORLFT
+
+
+!!!!!       chp 2025-11-29
+!           This leaf cohort senescence calculation assumes all leaves senesce 
+!           at the same rate as the whole pool of leaves.
+!           This needs to be changed to allow older leaves to senesce more than 
+!           young leaves.
+
+            DO I = 1, NLC
+              NatSen_c(I) = LFDM(I) * ( 1.0 - RHOL) 
+     &            - CumLeafDM(I) * PORLFT
+            ENDDO
+
 
 !=========================================================================
 !     TEMP CHP Add printout for SENES variables
@@ -290,13 +314,20 @@ C     leaves and petioles is different from canopy average.
 C-----------------------------------------------------------------------
         LFSEN = SENRTE * NRUSLF / 0.16
         LFSEN = MIN(WTLF,LFSEN)
+
         SLDOT = SLDOT + LFSEN
         SLDOT = MIN(WTLF,SLDOT)
+
+!       cohorts
+        DO I = 1, NLC
+          NMobSen_c(I) = SENRTE * LFNMN(I) / 0.16
+        ENDDO
 
 !=========================================================================
 !     TEMP CHP Add printout for SENES variables
 
         NMobSen = LFSEN
+        LFNMNSN = NMobSen_c
 
 !     end temp chp
 !=========================================================================
@@ -313,6 +344,12 @@ C-----------------------------------------------------------------------
           LCMP = -(1. / KCAN) * ALOG(ICMP / PAR)
           LTSEN = DTX * (XLAI - LCMP) / TCMP
           LTSEN = MAX(0.0, LTSEN)
+
+          DO I = I, NLC
+            LoLitSen_c(I) = DTX * (XLAI - LCMP) / TCMP * 10000. / SLAAD
+            LoLitSen_c(I) = MAX(0.0, LoLitSen_c(I))
+          ENDDO
+
         ENDIF
 C-----------------------------------------------------------------------
 C     Convert area loss to biomass(m2 *10000cm2/m2)/(cm2/g)=g/m2
@@ -337,12 +374,30 @@ C-----------------------------------------------------------------------
           WSLOSS = MIN(WSLOSS, WTLF - CLW * PORLFT)
           WSLOSS = MAX(WSLOSS, 0.0)
           SLNDOT = WSLOSS
+
+
+!!!!!     chp 2025-11-29
+!         This leaf cohort senescence calculation assumes all leaves senesce 
+!         at the same rate as the whole pool of leaves.
+!         This needs to be changed to allow older leaves to senesce more than 
+!         young leaves.
+
+          DO I = 1, NLC
+            WaterSen_c(I) = SENDAY * (1. - RATTP) * LFDM(I)
+            WaterSen_c(I) = MIN(WaterSen_c(I), LFDM(I) 
+     &            - CumLeafDM(I) * PORLFT)
+            WaterSen_c(I) = MAX(WaterSen_c(I), 0.0)
+          ENDDO
+
         ENDIF
+
         SLDOT = SLDOT + SLNDOT
         SSDOT = SLDOT * PORPT
         SSDOT = MIN(SSDOT,0.1*STMWT)
         SSNDOT = SLNDOT * PORPT
         SSNDOT = MIN(SSDOT,SSNDOT)
+
+        LFWSSN = WaterSen_c
 
 !=========================================================================
 !     TEMP CHP Add printout for SENES variables
@@ -359,6 +414,11 @@ C-----------------------------------------------------------------------
       ELSEIF (DAS .GT. NR7) THEN
         IF (WTLF .GT. 0.0001) THEN
           SLDOT = WTLF * SENRT2
+
+          DO I = 1, NLC
+            R7Sen_c(I) = LFDM(I) * SENRT2
+          ENDDO
+
           SLNDOT = SLDOT
           SSDOT = SLDOT * PORPT
           SSNDOT = SSDOT
@@ -383,6 +443,10 @@ C-----------------------------------------------------------------------
         ENDIF
       ENDIF
 
+      DO I = 1, NLC
+        LeafTotSen(I) = NatSen_c(I) + NMobSen_c(I) +  LoLitSen_c(I) 
+     &      + WaterSen_c(I) + R7Sen_c(I)
+      ENDDO
 
 !=========================================================================
 !     TEMP CHP Add printout for SENES variables

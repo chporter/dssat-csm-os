@@ -21,10 +21,11 @@ C=======================================================================
       USE ModuleDefs     !Definitions of constructed variable types, 
                          ! which contain control information, soil
                          ! parameters, hourly weather data.
+      USE COHORTS_MOD
       IMPLICIT NONE
       SAVE
 
-      INTEGER DYNAMIC
+      INTEGER DYNAMIC, I
 
       REAL CNMINE, NDMNEW, NMINEA, NMINEP, NMINER, NMOBR
       REAL NRUSLF, NRUSRT, NRUSSH, NRUSST, RPRO
@@ -55,6 +56,7 @@ C=======================================================================
       NRUSST = 0.0
       NRUSRT = 0.0
       NRUSSH = 0.0
+      LFNMN = 0.0
 
 C-----------------------------------------------------------------------
 !    Leave MOBIL with N Mined from Leaf, Stem,Root, Shell, and
@@ -70,7 +72,14 @@ C-----------------------------------------------------------------------
          NRUSRT = NMINER * WNRRT
          NRUSSH = NMINER * WNRSH
          CNMINE = NMINEA / 0.16 * RPRO        !Not used
+
+!        Handle leaf cohorts
+         DO  I = 1, NLC
+           LFNMN(I) = NMINER * LFNSN(I)
+         END DO
+
       ENDIF
+
 !***********************************************************************
 !***********************************************************************
 !     END OF DYNAMIC IF CONSTRUCT

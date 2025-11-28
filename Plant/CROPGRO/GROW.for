@@ -539,6 +539,7 @@ C***********************************************************************
       ELSEIF (DYNAMIC == INTEGR) THEN
 C-----------------------------------------------------------------------
       NLPEST = 0.0    !CHP - N loss due to pest damage
+      LFCAD = 0.0     !Leaf cohort C reserves
 
       GROWTH = WLDOTN + WSDOTN + WRDOTN + WSHDTN + WSDDTN + NODGR
   
@@ -569,7 +570,6 @@ C-----------------------------------------------------------------------
      &    (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
 
 !       Handle leaf cohorts
-        LFCAD = 0.0
         DO I = 1, NLC
           IF (LFDM(I) > 0.0) THEN
             LFCAD(I) = LFDM(I) / WTLF * (CADLF + NADLF / 0.16) *

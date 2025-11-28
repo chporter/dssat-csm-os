@@ -421,8 +421,8 @@ C-----------------------------------------------------------------------
       
       CALL COHORTS(DYNAMIC, 
      &  DTX, F,       !Input
-     &  FILECC, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
-     &  NMOBR, PAR, SWFAC, VSTAGE, WLIDOT, WLDOTN,    !Input
+     &  FILECC, NGRLF,         !Input 
+     &  WLIDOT, WLDOTN,    !Input
      &  YRPLT,  !TEMP CHP
      &  WTLF, XLAI)                    !OUTPUT
 
@@ -679,8 +679,8 @@ C-----------------------------------------------------------------------
 C-GH Add leaf Cohorts
       CALL COHORTS(DYNAMIC, 
      &  DTX, F,       !Input
-     &  FILECC, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
-     &  NMOBR, PAR, SWFAC, VSTAGE, WLIDOT, WLDOTN,    !Input
+     &  FILECC, NGRLF,         !Input 
+     &  WLIDOT, WLDOTN,    !Input
      &  YRPLT,  !TEMP CHP
      &  WTLF, XLAI)                    !OUTPUT
 
@@ -900,8 +900,8 @@ C-GH
       
       CALL COHORTS(EMERG, 
      &  DTX, F,       !Input
-     &  FILECC, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
-     &  NMOBR, PAR, SWFAC, VSTAGE, WLIDOT, WLDOTN,    !Input
+     &  FILECC, NGRLF,         !Input 
+     &  WLIDOT, WLDOTN,    !Input
      &  YRPLT,  !TEMP CHP
      &  WTLF, XLAI)                    !OUTPUT
        
@@ -1330,8 +1330,8 @@ C----------------------------------
 !      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
       CALL COHORTS(DYNAMIC, 
      &  DTX, F,       !Input
-     &  FILECC, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
-     &  NMOBR, PAR, SWFAC, VSTAGE, WLIDOT, WLDOTN,    !Input
+     &  FILECC, NGRLF,         !Input 
+     &  WLIDOT, WLDOTN,    !Input
      &  YRPLT,  !TEMP CHP
      &  WTLF, XLAI)                    !OUTPUT
            
@@ -1390,8 +1390,8 @@ C----------------------------------
 
         CALL COHORTS(DYNAMIC, 
      &  DTX, F,       !Input
-     &  FILECC, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
-     &  NMOBR, PAR, SWFAC, VSTAGE, WLIDOT, WLDOTN,    !Input
+     &  FILECC, NGRLF,         !Input 
+     &  WLIDOT, WLDOTN,    !Input
      &  YRPLT,  !TEMP CHP
      &  WTLF, XLAI)                    !OUTPUT
 
