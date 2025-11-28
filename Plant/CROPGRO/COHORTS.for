@@ -1,4 +1,35 @@
 C=======================================================================
+      MODULE COHORTS_MOD
+C=======================================================================
+      INTEGER NLC     !current number of leaf cohorts
+
+      INTEGER, PARAMETER :: LCMax = 200 !maximum number of leaf cohorts
+
+!     Leaf cohort state variables
+      REAL, DIMENSION(LCMax) ::  
+     &  LFDM,       !Leaf dry matter for cohort I (g[leaf]/m2)
+     &  LFNSN,      !Leaf non-structural (mobile) N (g[N]]/m2)
+     &  LFSN,       !Leaf structural (non-mobile) N (g[N]]/m2)
+     &  LFAREA,     !Leaf area (cm2[leaf]/m2
+     &  LFNSC,      !Leaf non-structural (mobile) CH2O (g[CH2O]/m2)
+     &  LFAGE       !Leaf age for (thermal days)
+
+!     Leaf cohort processes
+      REAL, DIMENSION(LCMax) ::  
+     &  LFCMN,      !leaf non-struc CH2O mined (g[CH2O]/m2) = CRUSLF
+     &  LFCAD,      !leaf non-struc CH2O stored  (g[CH2O]/m2) = CADLF
+     &  LFNMN,      !Leaf non-struc N mined today (g[N]]/m2) = NRUSLF
+     &  LFNAD,      !Leaf non-struc N stored today (g[N]]/m2) = NADLF
+     &  LeafTotSen, !Total leaf senescense today (g[leaf]/m2) = SLDOT
+     &  LFNMNSN,    !Leaf senescence due to N mining (g[leaf]/m2)
+     &  LFWSSN,     !leaf water stress senescence today (g[leaf]/m2)
+     &  LFFRZ,      !leaf mass frozen today (g[leaf]/m2) = WLFDOT
+     &  LFPST       !leaf pest damage today (g[leaf]/m2) = WLIDOT
+
+
+
+      CONTAINS
+C=======================================================================
 C  COHORTS, Subroutine, K.J. Boote, P. Alderman
 C-----------------------------------------------------------------------
 C  Daily leaf cohorts
@@ -9,51 +40,45 @@ C  11/--/2025 GH, CHP  Revised.
 C=======================================================================
 
       SUBROUTINE COHORTS(DYNAMIC, 
-     &  CADLF, CMINEA, CMINEP, CMOBMX, DTX, DXR57, F,       !Input
-     &  FILECC, FREEZ1, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
-     &  NMOBR, PAR, SWFAC, TMIN, VSTAGE, WLIDOT, WLDOTN,    !Input
-     &  SLNDOT, YRPLT,  !TEMP CHP
-     &  WTLF, WTNLF, XLAI, WNRLF, WCRLF)                    !OUTPUT
+     &  CMINEA, CMINEP, CMOBMX, DTX, DXR57, F,       !Input
+     &  FILECC, KCAN, NGRLF, NMINEA, NMINEP,        !Input 
+     &  NMOBR, PAR, SWFAC, VSTAGE, WLIDOT, WLDOTN,    !Input
+     &  YRPLT,  !TEMP CHP
+     &  WTLF, XLAI)                    !OUTPUT
 
       USE ModuleData
       IMPLICIT NONE
       SAVE
-      EXTERNAL YR_DOY, GETLUN, IPCOHO, HEADER, TIMDIF
+      EXTERNAL YR_DOY, GETLUN, HEADER, TIMDIF
 
       CHARACTER*11 COHORTOUT
       character*12 COHORTOUT1, COHORTOUT2
       CHARACTER*92, INTENT(IN) :: FILECC
 
-      INTEGER, PARAMETER :: LCMax = 200 !maximum number of leaf cohorts
-
       INTEGER DYNAMIC
       INTEGER YRDOY,YEAR,DOY, DAS, YRPLT, DAP, TIMDIF
-      INTEGER I, ERRNUM, FirstDAS, NLC
+      INTEGER I, ERRNUM, FirstDAS
       INTEGER,PARAMETER::NSWAB = 5
       INTEGER CHRTOUT
 
 C-GH
       integer CHRTOUT1, CHRTOUT2
 
-      REAL WCRLF  !,CRUSLF
+!     REAL WCRLF  !,CRUSLF
       REAL NMINEA,NMINEP,NMOBR
       REAL CMINEA,CMINEP
 !     REAL NRUSLF,SLDOT,SLNDOT
-      REAL SLNDOT
+!     REAL SLNDOT
       REAL DTX,DXR57
       REAL PAR  !,CHECK
-      REAL WTLF,RATTP,XLAI,WTNLF
-      REAL LCMP,WNRLF !,LEAFN
+      REAL WTLF,RATTP,XLAI  !,WTNLF
+      REAL LCMP !,WNRLF !,LEAFN
       REAL SWFCAB(NSWAB),SWFAC
       REAL CMOBMX,NMOBMX,NMINER,ALPHL
-      REAL TMIN,FREEZ1,WLIDOT,CADLF,NLOFF,NLPEST
+!     REAL TMIN,FREEZ1,WLIDOT,CADLF,NLOFF,NLPEST
+      REAL WLIDOT,NLOFF,NLPEST
       REAL NGRLF,WLDOTN,F
       REAL PROLFF,MAXNMINE,KCAN,ICMP,TCMP,SENDAY
-      REAL LFDM(LCMax),LFNSN(LCMax),LFSN(LCMax),LFAREA(LCMax)
-      REAL LFNSC(LCMax),LFAGE(LCMax)
-      REAL LFCMN(LCMax),LFCAD(LCMax)
-      REAL LFNMN(LCMax),LFNAD(LCMax)
-      REAL LFNMNSN(LCMax),LFWSSN(LCMax),LFFRZ(LCMax),LFPST(LCMax)
 !     REAL SUMLFDM,SUMLFNSN,SUMLFAREA,SUMLFN,PLEAFN
       REAL PLEAFN
       REAL SUMLFWSSN,SUMLFFRZ,SUMLFPST,SUMLFNMNSN
@@ -290,39 +315,6 @@ C-GH 08/19/2025
       END DO
       NRUSLF_calc = NRUSLF_calc / 0.16
 
-!!     From MOBIL
-!C-----------------------------------------------------------------------
-!!    Leave MOBIL with N Mined from Leaf, Stem,Root, Shell, and
-!!    Total Plant Tissue, and CH2O used in the Re-synthesis of Protein
-!!-----------------------------------------------------------------------
-!      IF (NDMNEW - TRNU > 1.E-5 .AND. NMINEP .GT. 1.E-4) THEN
-!         ...
-!         NMINER = NMINEA/NMINEP * NMOBR
-!         NRUSLF = NMINER * WNRLF
-!      ENDIF
-! WNRLF   N available for mobilization from leaves above lower limit of 
-!           mining (g[N] / m2)
-
-!!From Grow:
-!C-----------------------------------------------------------------------
-!C     Calculate Remaining N in Shells, Leaves, Stems, and Roots
-!C     That can be Mined (Plant N-Balance).
-!C-----------------------------------------------------------------------
-!      IF ((WTLF - WCRLF) > 1.E-4) THEN
-!        WNRLF = MAX (WTNLF - PROLFF * 0.16 * (WTLF-WCRLF), 0.0)
-!      ELSE
-!        WNRLF = 0.0
-!      ENDIF
-
-!!     From VEGGR
-!C-----------------------------------------------------------------------
-!C     Compute maximum N required for tissue growth
-!C-----------------------------------------------------------------------
-!      NGRLF  = WLDOTN * FNINL
-! NGRLF   Maximum N demand for leaf growth (g[leaf N] / m2[ground] / d)
-! FNINL   Maximum fraction of N for growing leaf tissue (g[N] / g[leaf])
-
-
 !------------------------------
 ! N MINING SENESCENCE (LFNMNSN)
 !------------------------------
@@ -331,30 +323,10 @@ C-GH 08/19/2025
       DO I=1,NLC
         IF (LFNMN(I).GE.LFNSN(I))THEN
           LFNMNSN(I)=LFDM(I)-(LFNMN(I)/0.16)
-
-!     from SENES
-!        LFSEN = SENRTE * NRUSLF / 0.16
-! SENRTE    Factor by which protein mined from leaves each day is 
-!             multiplied to determine LEAF senescence.
-!             (g(leaf) / g(protein loss))
-
-
         ELSE
           LFNMNSN(I)=0
         ENDIF
       ENDDO
-
-
-! LFNMN(I)     Leaf N mining rate for today for cohort I
-!                (g[leaf N]/m2[ground]/d)
-! LFNMNSN(I)   Leaf dry matter senescence due to N mining for today for
-!                cohort I (g[leaf]/m2[ground]/d)
-! LFNMNR(I)    Maximum leaf N mining rate for cohort I
-!                (g[leaf N]/m2[ground]/d)
-! LFNSN(I)     Leaf non-structural (mobile) N for cohort I
-!                (g[leaf N]/m2[ground])
-! LFSN(I)      Leaf structural (non-mobile) N for cohort I
-!                (g[leaf N]/m2[ground])
 
 !---------------------------------
 ! WATER STRESS SENESCENCE (LFWSSN)
@@ -400,46 +372,28 @@ C-GH 08/19/2025
         LFWSSN(1:LCMax) = 0.0
       ENDIF
 
-!C-----------------------------------------------------------------------
-!!     FROM SENES:
-!C     Calculate senescence due to water stress.
-!C-----------------------------------------------------------------------
-!!     Update value of RATTP.
-!      DO I = NSWAB,2,-1
-!        SWFCAB(I) = SWFCAB(I-1)
-!      ENDDO
-!      SWFCAB(1) = SWFAC
-!      RATTP = SWFCAB(NSWAB)
-
-!        WSLOSS = SENDAY * (1. - RATTP) * WTLF
-!        IF (WSLOSS .GT. 0.0) THEN
-!          PORLFT = 1.0 - TABEX(SENMAX, XSENMX, VSTAGE, 4)
-!          WSLOSS = MIN(WSLOSS, WTLF - CLW * PORLFT)
-!          WSLOSS = MAX(WSLOSS, 0.0)
-!          SLNDOT = WSLOSS
+!!----------------------------
+!! FREEZING SENESCENCE (LFFRZ)
+!!----------------------------
+!     CHP 2025-11-28 Handle cohorts in FREEZE subroutine
+!      LFFRZ = 0.0
+!
+!      IF(TMIN.LT.FREEZ1)THEN
+!        DO I=1,NLC
+!          LFFRZ(I)=LFDM(I)-LFNMN(I)/0.16-LFNMNSN(I)-LFWSSN(I)
+!          LFFRZ(I)=MAX(LFFRZ(I),0.0)
+!        ENDDO
+!      ENDIF
+!
+!      DO I=1,NLC
+!        IF ((LFDM(I)-LFFRZ(I)).LE.0)THEN
+!          LFNMNSN(I)=0.0
+!          LFWSSN(I)=0.0
+!        ELSE
+!          LFNMNSN(I)=LFNMNSN(I)*(LFDM(I)-LFFRZ(I))/LFDM(I)
+!          LFWSSN(I)=LFWSSN(I)*(LFDM(I)-LFFRZ(I))/LFDM(I)
 !        ENDIF
-
-!----------------------------
-! FREEZING SENESCENCE (LFFRZ)
-!----------------------------
-      LFFRZ = 0.0
-
-      IF(TMIN.LT.FREEZ1)THEN
-        DO I=1,NLC
-          LFFRZ(I)=LFDM(I)-LFNMN(I)/0.16-LFNMNSN(I)-LFWSSN(I)
-          LFFRZ(I)=MAX(LFFRZ(I),0.0)
-        ENDDO
-      ENDIF
-
-      DO I=1,NLC
-        IF ((LFDM(I)-LFFRZ(I)).LE.0)THEN
-          LFNMNSN(I)=0.0
-          LFWSSN(I)=0.0
-        ELSE
-          LFNMNSN(I)=LFNMNSN(I)*(LFDM(I)-LFFRZ(I))/LFDM(I)
-          LFWSSN(I)=LFWSSN(I)*(LFDM(I)-LFFRZ(I))/LFDM(I)
-        ENDIF
-      ENDDO
+!      ENDDO
 
 !--------------------
 ! PEST DAMAGE (LFPST)
@@ -447,14 +401,14 @@ C-GH 08/19/2025
       WLIDOT_calc = 0.0
       LFPST = 0.0
 
-      IF(WLIDOT.GT.0)THEN
+      IF (WLIDOT .GT. 0.0) THEN
 ! FOR PROPORTIONAL DISTRIBUTION OF PEST DAMAGE:
-        DO I=1,NLC
-          IF(LFDM(I).GT.0)THEN
-            LFPST(I)=LFDM(I)/WTLF*WLIDOT
+        DO I = 1, NLC
+          IF (LFDM(I) .GT. 0.0) THEN
+            LFPST(I) = LFDM(I) / WTLF * WLIDOT
             WLIDOT_calc = WLIDOT_calc + LFPST(I)
           ELSE
-            LFPST(I)=0
+            LFPST(I)=0.0
           ENDIF
         ENDDO
 
@@ -504,27 +458,28 @@ C-GH 08/19/2025
 
       ENDDO
 
-!----------------------------
-! NON-STRUCTURAL CH2O STORING
-!----------------------------.
-      CADLF_calc = 0.0
-
-      IF(CADLF.GT.0)THEN
-        DO I=1,NLC
-          IF (LFDM(I) .GT. 0.0) THEN
-            LFCAD(I) = ((LFDM(I) - LFNSC(I)) / (WTLF - WCRLF)) * CADLF *
-     &        (1. - MIN(1.0, 
-     &        (LFPST(I) + LFFRZ(I) + LFWSSN(I) + LFNMNSN(I)) / LFDM(I)))
-
-            CADLF_calc = CADLF_calc + LFCAD(I)
-
-          ELSE
-            LFCAD(I)=0.0
-          ENDIF
-        ENDDO
-      ELSE
-        LFCAD(1:LCMax)=0.0
-      ENDIF
+!!----------------------------
+!! NON-STRUCTURAL CH2O STORING
+!!----------------------------.
+!     CHP 2025-11-28 Handle cohorts in GROW subroutine
+!      CADLF_calc = 0.0
+!
+!      IF(CADLF.GT.0)THEN
+!        DO I=1,NLC
+!          IF (LFDM(I) .GT. 0.0) THEN
+!            LFCAD(I) = ((LFDM(I) - LFNSC(I)) / (WTLF - WCRLF)) * CADLF *
+!     &        (1. - MIN(1.0, 
+!     &        (LFPST(I) + LFFRZ(I) + LFWSSN(I) + LFNMNSN(I)) / LFDM(I)))
+!
+!            CADLF_calc = CADLF_calc + LFCAD(I)
+!
+!          ELSE
+!            LFCAD(I)=0.0
+!          ENDIF
+!        ENDDO
+!      ELSE
+!        LFCAD(1:LCMax)=0.0
+!      ENDIF
 
 !-------------------------
 ! NON-STRUCTURAL N STORING
@@ -937,3 +892,8 @@ C-GH 08/19/2025
 ! YEAR         Year of simulation (YYYY)
 ! YRDOY        Current day of simulation (YYYYDDD)
 !***********************************************************************
+
+
+C=======================================================================
+      END MODULE COHORTS_MOD
+C=======================================================================

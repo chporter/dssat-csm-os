@@ -11,6 +11,7 @@ C  05/11/1999 GH  Incorporated in CROPGRO
 C  06/19/2001 GH  Fix SSNDOT, SSDOT
 C  08/12/2003 CHP Added I/O error checking
 C  06/30/2006 CHP/CDM Added optional KCAN to ECO file.
+!  11/28/2025 CHP Added leaf cohorts
 C-----------------------------------------------------------------------
 C  Called : PLANT
 C  Calls  : ERROR, FIND, IGNORE
@@ -34,6 +35,7 @@ C========================================================================
 C-----------------------------------------------------------------------
       USE ModuleDefs
       USE ModuleData
+      USE COHORTS_MOD
       IMPLICIT NONE
       EXTERNAL GETLUN, FIND, ERROR, IGNORE, TABEX
       SAVE

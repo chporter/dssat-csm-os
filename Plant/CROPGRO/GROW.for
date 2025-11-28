@@ -63,7 +63,7 @@ C=======================================================================
       USE ModuleDefs     !Definitions of constructed variable types, 
                          ! which contain control information, soil
                          ! parameters, hourly weather data.
-      
+      USE COHORTS_MOD
       IMPLICIT NONE
       EXTERNAL IPGROW, ERROR, STRESS, LTGROW
 
@@ -81,7 +81,7 @@ C=======================================================================
       CHARACTER*30 FILEIO
       CHARACTER*92 FILECC, FILEGC
 
-      INTEGER DYNAMIC, NOUTDO, L, NLAYR
+      INTEGER DYNAMIC, NOUTDO, L, NLAYR, I
       INTEGER YRDOY, YRNR1, MDATE
       INTEGER YRPLT, CropStatus
 
@@ -567,12 +567,21 @@ C-----------------------------------------------------------------------
       IF (WTLF > 1.E-4) THEN
         WLDOT = WLDOT + (CADLF+NADLF/0.16) *
      &    (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
+
+!       Handle leaf cohorts
+        DO I = 1, NLC
+          LFCAD(I) = LFDM(I) / WTLF * (CADLF + NADLF / 0.16) *
+     &    (1. - MIN(1.0,
+     &    (LeafTotSen(I) + LFPST(I) + LFFRZ(I)) / LFDM(I)))
+        ENDDO
+
         ADD = (CADLF+NADLF/0.16) *
      &    (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
         ShutMob = ShutMob - ADD * 10.             !kg/ha
       ELSE
         ADD = 0.0
       ENDIF
+
       IF (WLDOT < 0.0) THEN
         WLDOT = MAX(WLDOT, -WTLF)
       ENDIF

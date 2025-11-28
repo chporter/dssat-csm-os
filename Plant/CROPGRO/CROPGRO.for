@@ -55,12 +55,13 @@ C=======================================================================
 !-----------------------------------------------------------------------
       USE ModuleDefs     !Definitions of constructed variable types, 
       USE ModuleData
+      USE COHORTS_MOD
 
       IMPLICIT NONE
       EXTERNAL DEMAND, FREEZE, GROW, HRES_CGRO, INCOMP, IPPLNT, MOBIL,
      &  NFIX, NUPTAK, OPGROW, OPHARV, P_CGRO, PEST, PHENOL,
      &  PHOTO, PLANTNBAL, PODDET, PODS, RESPIR, ROOTS, SENES,
-     &  VEGGR, COHORTS
+     &  VEGGR
       SAVE
 !-----------------------------------------------------------------------
       CHARACTER*1 DETACH, IDETO, ISWNIT, ISWSYM,

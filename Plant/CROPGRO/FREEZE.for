@@ -21,18 +21,24 @@ C========================================================================
      &    MDATE,                                          !Input/Output
      &    WLFDOT, CropStatus)                             !Output
 C-----------------------------------------------------------------------
+      USE COHORTS_MOD
       IMPLICIT NONE
       EXTERNAL TIMDIF, WARNING
       SAVE
 C-----------------------------------------------------------------------
       CHARACTER*1  IDETO
       CHARACTER*78 MESSAGE(10)
-      INTEGER MDATE, YRDOY, DAP, NOUTDO, YRPLT, TIMDIF, CropStatus
+      INTEGER MDATE, YRDOY, DAP, NOUTDO, YRPLT, TIMDIF, CropStatus, I
       REAL  WLFDOT, WTLF, SLDOT, NRUSLF, TMIN, FREEZ2
 
 C-----------------------------------------------------------------------
       DAP   = MAX(0,TIMDIF(YRPLT,YRDOY))
       WLFDOT = WTLF - SLDOT - NRUSLF/0.16
+
+!     Handle leaf cohorts
+      DO I = 1, NLC
+        LFFRZ(I) = LFDM(I) - LeafTotSen(I) - LFNMN(I) / 0.16
+      ENDDO
 
       IF (TMIN .LT. FREEZ2) THEN
         IF (MDATE .LT. 0) THEN
