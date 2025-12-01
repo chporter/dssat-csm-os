@@ -420,11 +420,10 @@ C-----------------------------------------------------------------------
      &  TOSHMINE,TOCHMINE,HPODWT,HSDWT,HSHELWT)           !Output
       
       CALL COHORTS(DYNAMIC, 
-     &  DTX, F,       !Input
-     &  FILECC, NGRLF,         !Input 
-     &  WLIDOT, WLDOTN,    !Input
-     &  YRPLT,  !TEMP CHP
-     &  WTLF, XLAI)                    !OUTPUT
+     &  DTX, F, FILECC, NGRLF,                !Input
+     &  WLIDOT, WLDOTN,                       !Input
+     &  YRPLT,                                !TEMP CHP
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT
 
       CALL OPGROW(CONTROL, ISWITCH, SoilProp, 
      &    CADLF, CADST, CANHT, CANWH, CMINEA, DWNOD, GROWTH,  
@@ -678,11 +677,10 @@ C     Call to root growth and rooting depth routine
 C-----------------------------------------------------------------------
 C-GH Add leaf Cohorts
       CALL COHORTS(DYNAMIC, 
-     &  DTX, F,       !Input
-     &  FILECC, NGRLF,         !Input 
-     &  WLIDOT, WLDOTN,    !Input
-     &  YRPLT,  !TEMP CHP
-     &  WTLF, XLAI)                    !OUTPUT
+     &  DTX, F, FILECC, NGRLF,                !Input
+     &  WLIDOT, WLDOTN,                       !Input
+     &  YRPLT,                                !TEMP CHP
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT
 
 !-----------------------------------------------------------------------
 !     Write headings to output file GROWTH.OUT
@@ -899,11 +897,10 @@ C-GH
 !       write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
       
       CALL COHORTS(EMERG, 
-     &  DTX, F,       !Input
-     &  FILECC, NGRLF,         !Input 
-     &  WLIDOT, WLDOTN,    !Input
-     &  YRPLT,  !TEMP CHP
-     &  WTLF, XLAI)                    !OUTPUT
+     &  DTX, F, FILECC, NGRLF,                !Input
+     &  WLIDOT, WLDOTN,                       !Input
+     &  YRPLT,                                !TEMP CHP
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT
        
 !       write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF
 !       pause
@@ -1329,11 +1326,10 @@ C     CALL COHORT MODEL
 C----------------------------------
 !      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
       CALL COHORTS(DYNAMIC, 
-     &  DTX, F,       !Input
-     &  FILECC, NGRLF,         !Input 
-     &  WLIDOT, WLDOTN,    !Input
-     &  YRPLT,  !TEMP CHP
-     &  WTLF, XLAI)                    !OUTPUT
+     &  DTX, F, FILECC, NGRLF,                !Input
+     &  WLIDOT, WLDOTN,                       !Input
+     &  YRPLT,                                !TEMP CHP
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT
            
 !      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
 !      pause
@@ -1389,11 +1385,10 @@ C----------------------------------
      &    TOSHMINE,TOCHMINE,HPODWT,HSDWT,HSHELWT)         !Output
 
         CALL COHORTS(DYNAMIC, 
-     &  DTX, F,       !Input
-     &  FILECC, NGRLF,         !Input 
-     &  WLIDOT, WLDOTN,    !Input
-     &  YRPLT,  !TEMP CHP
-     &  WTLF, XLAI)                    !OUTPUT
+     &  DTX, F, FILECC, NGRLF,                !Input
+     &  WLIDOT, WLDOTN,                       !Input
+     &  YRPLT,                                !TEMP CHP
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT
 
         CALL OPGROW(CONTROL, ISWITCH, SoilProp, 
      &    CADLF, CADST, CANHT, CANWH, CMINEA, DWNOD, GROWTH,  

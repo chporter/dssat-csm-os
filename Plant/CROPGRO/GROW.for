@@ -148,6 +148,7 @@ C=======================================================================
      &  SDPRO, WTFSD, WTPSD, SDWTPL
       REAL RMIN, SDLIP, WLFI, WSTI, WRTI
       REAL CLW, CSW
+      REAL LCADD, LNADD
 
 !     Surface and soil residue due to daily senescence of plant matter
       REAL SENRT(NL), SENNOD(NL)
@@ -430,7 +431,7 @@ C-----------------------------------------------------------------------
   200   FORMAT('@YEAR DOY   DAS   DAP'
      &  ,'        WTLF       WLDOT      WLDOTN       SLDOT',
      &   '      WLIDOT      WLFDOT      NRUSLF      CRUSLF',
-     &  ',       CADLF       NADLF')
+     &  ',       LCADD       LNADD')
 
 !     WLDOT = WLDOTN - SLDOT - WLIDOT - WLFDOT - NRUSLF/0.16 - CRUSLF
 
@@ -561,6 +562,12 @@ C       WLDOT = Net leaf growth rate
 C-----------------------------------------------------------------------
       WLDOT = WLDOTN - SLDOT - WLIDOT - WLFDOT - NRUSLF/0.16 - CRUSLF
 
+
+      LCADD = 0.0
+      LNADD = 0.0
+      LFCAD = 0.0
+      LFNAD = 0.0
+
 !     ShutMob is amount of leaf mass lost due to N and C mobilization
 !     A positive value represents leaf mass lost. (kg/ha)
       ShutMob = (NRUSLF/0.16 + CRUSLF) * 10.      !kg/ha
@@ -569,10 +576,18 @@ C-----------------------------------------------------------------------
         WLDOT = WLDOT + (CADLF+NADLF/0.16) *
      &    (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
 
+        LCADD = CADLF * (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
+        LNADD = NADLF/0.16 *
+     &    (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
+
+
 !       Handle leaf cohorts
         DO I = 1, NLC
           IF (LFDM(I) > 0.0) THEN
-            LFCAD(I) = LFDM(I) / WTLF * (CADLF + NADLF / 0.16) *
+            LFCAD(I) = LFDM(I) / WTLF * (CADLF) *
+     &        (1. - MIN(1.0,
+     &        (LeafTotSen(I) + LFPST(I) + LFFRZ(I)) / LFDM(I)))
+            LFNAD(I) = LFDM(I) / WTLF * (NADLF / 0.16) *
      &        (1. - MIN(1.0,
      &        (LeafTotSen(I) + LFPST(I) + LFFRZ(I)) / LFDM(I)))
           ENDIF
@@ -729,6 +744,8 @@ C     is damaged by insects, freezing, or senesced.  Otherwise, could
 C     get increase in tissue N composition when tissue is aborted.  Need
 C     to account for mass, N and C lost this way in sections below
 C-----------------------------------------------------------------------
+! CHP 2025-12-01 should this be SLDOT instead of SLNDOT?
+!     SLNDOT is water senescence, SLDOT is total senescence
       WRCLDT = ALPHL * WLDOTN - CRUSLF - RHOL*(SLNDOT+WLIDOT+WLFDOT)
       IF (WTLF > 1.E-4) THEN
          WRCLDT = WRCLDT + CADLF *
@@ -1078,6 +1095,8 @@ C     Calculate Remaining N in Shells, Leaves, Stems, and Roots
 C     That can be Mined (Plant N-Balance).
 C-----------------------------------------------------------------------
       IF ((WTLF - WCRLF) > 1.E-4) THEN
+! WNRLF    N available for mobilization from leaves above lower limit of 
+!            mining (g[N] / m2)
         WNRLF = MAX (WTNLF - PROLFF * 0.16 * (WTLF-WCRLF), 0.0)
       ELSE
         WNRLF = 0.0
@@ -1252,7 +1271,7 @@ C-----------------------------------------------------------------------
         WRITE (NOUTDG,300)
      &   YEAR, DOY, DAS, DAP, 
      &   WTLF, WLDOT, WLDOTN, SLDOT, WLIDOT, WLFDOT, NRUSLF/0.16, 
-     &   CRUSLF, CADLF, NADLF/0.16
+     &   CRUSLF, LCADD, LNADD
 
   300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
      &    21F12.6)
