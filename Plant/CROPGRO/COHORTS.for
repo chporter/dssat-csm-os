@@ -570,11 +570,12 @@ C-GH 08/19/2025
      &      - LeafMassDecrease * LFNSC(I) / LFDM(I)
 
 !         DRY MATTER (WTLF in GROW)
-          LFDM(I) = LFDM(I) + LFCAD(I) + LFNAD(I)/0.16 - LFNMN(I)/0.16 
+!         LFNAD already divided by 0.16. Don't do it again.
+          LFDM(I) = LFDM(I) + LFCAD(I) + LFNAD(I) - LFNMN(I)/0.16 
      &         - LFCMN(I) - LeafMassDecrease
 
           WLDOT_calc = WLDOT_calc 
-     &          + LFCAD(I) + LFNAD(I)/0.16 - LFNMN(I)/0.16 - LFCMN(I) 
+     &          + LFCAD(I) + LFNAD(I) - LFNMN(I)/0.16 - LFCMN(I) 
      &          - LeafMassDecrease
 
         ENDIF
@@ -621,32 +622,32 @@ C-GH 08/19/2025
 !     CUMLFDM=CUMLFDM+LFDM(1)
       CUMLFDM = CUMLFDM + WLDOTN
 
-!     ===============================================================
-!     TEMP CHP
-!     Force summed state variables to be equal to values from GROW
-
-!     Leaf mass
-      Ratio = WTLF / WTLF_C
-      LFDM = LFDM * Ratio
-      WTLF_C = SUM(LFDM)
-
-!     Leaf non-structural CH2O
-      Ratio = WCRLF / WCRLF_C
-      LFNSC = LFNSC * Ratio
-      WCRLF_C = SUM(LFNSC)
-
-!     Leaf non-structural (mobile) N
-      Ratio = WNRLF / WNRLF_C
-      LFNSN = LFNSN * Ratio
-      WNRLF_C = SUM(LFNSN)
-
-!     Leaf structural N
-      Ratio = (WTNLF - WNRLF) / SUM(LFSN)
-      LFSN = LFSN * Ratio
-      WTNLF_C = SUM(LFNSN) + SUM(LFSN)
-
-!     end TEMP CHP
-!     ===============================================================
+!!     ===============================================================
+!!     TEMP CHP
+!!     Force summed state variables to be equal to values from GROW
+!
+!!     Leaf mass
+!      Ratio = WTLF / WTLF_C
+!      LFDM = LFDM * Ratio
+!      WTLF_C = SUM(LFDM)
+!
+!!     Leaf non-structural CH2O
+!      Ratio = WCRLF / WCRLF_C
+!      LFNSC = LFNSC * Ratio
+!      WCRLF_C = SUM(LFNSC)
+!
+!!     Leaf non-structural (mobile) N
+!      Ratio = WNRLF / WNRLF_C
+!      LFNSN = LFNSN * Ratio
+!      WNRLF_C = SUM(LFNSN)
+!
+!!     Leaf structural N
+!      Ratio = (WTNLF - WNRLF) / SUM(LFSN)
+!      LFSN = LFSN * Ratio
+!      WTNLF_C = SUM(LFNSN) + SUM(LFSN)
+!
+!!     end TEMP CHP
+!!     ===============================================================
 
       IF (WTLF_C > 0.0) THEN
         PLEAFN_C=WTNLF_C/WTLF_C*100
