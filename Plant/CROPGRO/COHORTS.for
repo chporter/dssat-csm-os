@@ -40,9 +40,9 @@ C=======================================================================
      &  LeafTotSen, !Total leaf senescense today (g[leaf]/m2) = SLDOT
 
      &  LFNMNSN,    !Leaf senescence due to N mining (g[leaf]/m2)
-     &  LFWSSN,     !leaf water stress senescence today (g[leaf]/m2)
+     &  LFWSSN      !leaf water stress senescence today (g[leaf]/m2)
 
-     &  WRCLDT_coh  !Net C addition for leaves (g[CH2O] / m2 /d)
+!    &  WRCLDT_coh  !Net C addition for leaves (g[CH2O] / m2 /d)
 
 
       CONTAINS
@@ -113,7 +113,7 @@ C-GH 08/19/2025
 CHP 2025-11-20
       REAL WLDOT_calc, SLDOT_calc, WLFDOT_calc, NRUSLF_calc, 
      &  CRUSLF_calc, WLIDOT_calc, WatSen, LfMineSen, 
-     &  CADLF_calc, NADLF_calc
+     &  LCADD_calc, LNADD_calc
       REAL LeafMassDecrease
 
 
@@ -193,7 +193,8 @@ C-GH 08/19/2025
      &  '     LWADC   LAIDC   LN%DC     LWADO   LAIDO   LN%DO',
      &  '      WLDOTN      WLDOTc      SLDOTc',
      &  '     WLIDOTc     WLFDOTc     NRUSLFc     CRUSLFc',
-     &  '      WatSen      NMinSn      CADLFc      NADLFc')
+     &  '      WatSen      NMinSn      LCADDc      LNADDc',
+     &  '      WNRLFc      WCRLFc')
 
 !     Initialize 2nd cohort output file
       INQUIRE (FILE = COHORTOUT1, EXIST = FEXIST)
@@ -234,13 +235,17 @@ C-GH 08/19/2025
 !-------------------------------------
 ! COHORT VARIABLES FOR NEW LEAF TISSUE
 !-------------------------------------
+      LFAGE(1) = DTX
       LFDM(1)  = WLDOTN
       CumLeafDM(1) = WLDOTN
       LFAREA(1)= LFDM(1) * F
+      LFNSC(1) = WLDOTN * ALPHL
       LFSN(1)  = PROLFF * 0.16 * LFDM(1)
       LFNSN(1) = NGRLF - LFSN(1)
-      LFNSC(1) = WLDOTN * ALPHL
-      LFAGE(1) = DTX
+      LeafNTot(1) = LFNSN(1) + LFSN(1)
+
+!     WNRLF = MAX (WTNLF - PROLFF * 0.16 * (WTLF-WCRLF), 0.0)
+!     LFNSN(1) = MAX(LeafNTot
 
 !------------------------------------
 ! UPDATING TOTAL LEAF STATE VARIABLES
@@ -484,7 +489,7 @@ C-GH 08/19/2025
 !! NON-STRUCTURAL CH2O STORING
 !!----------------------------.
 !     CHP 2025-11-28 Handle cohorts in GROW subroutine
-      CADLF_calc = 0.0
+      LCADD_calc = 0.0
 !
 !      IF(CADLF.GT.0)THEN
         DO I=1,NLC
@@ -493,7 +498,7 @@ C-GH 08/19/2025
 !     &        (1. - MIN(1.0, 
 !     &        (LFPST(I) + LFFRZ(I) + LFWSSN(I) + LFNMNSN(I)) / LFDM(I)))
 !
-            CADLF_calc = CADLF_calc + LFCAD(I)
+            LCADD_calc = LCADD_calc + LFCAD(I)
 !
 !          ELSE
 !            LFCAD(I)=0.0
@@ -506,7 +511,7 @@ C-GH 08/19/2025
 !-------------------------
 ! NON-STRUCTURAL N STORING
 !-------------------------
-      NADLF_calc = 0.0
+      LNADD_calc = 0.0
 !      IF(NADLF.GT.0)THEN
 !       DO I=1,199
 !	  IF (LFDM(I).GT.0)THEN
@@ -520,7 +525,7 @@ C-GH 08/19/2025
 !      LFNAD(1:LCMax)=0.0
  !     ENDIF
       DO I = 1, NLC
-        NADLF_calc = NADLF_calc + LFNAD(I)
+        LNADD_calc = LNADD_calc + LFNAD(I)
       ENDDO
 
 !------------------
@@ -565,9 +570,52 @@ C-GH 08/19/2025
           LFNSN(I) = LFNSN(I) + LFNAD(I) - LFNMN(I) 
      &      - LeafMassDecrease * LFNSN(I) / LFDM(I)
 
+
+!     From GROW: calculatino of WNRLF = LFNSN
+!C-----------------------------------------------------------------------
+!C     Calculate Remaining N in Shells, Leaves, Stems, and Roots
+!C     That can be Mined (Plant N-Balance).
+!C-----------------------------------------------------------------------
+!      IF ((WTLF - WCRLF) > 1.E-4) THEN
+!! WNRLF    N available for mobilization from leaves above lower limit of 
+!!            mining (g[N] / m2)
+!        WNRLF = MAX (WTNLF - PROLFF * 0.16 * (WTLF-WCRLF), 0.0)
+!      ELSE
+!        WNRLF = 0.0
+!      ENDIF
+
+
+
+
 !         NON-STRUCTURAL CH2O (WCRLF in GROW)
           LFNSC(I) = LFNSC(I) + LFCAD(I) - LFCMN(I)
      &      - LeafMassDecrease * LFNSC(I) / LFDM(I)
+
+
+!!     From GROW: calculation of WCRLF = LFNSC
+!C-----------------------------------------------------------------------
+!C     Carbon Reserves:  Net Growth Rates for Mobile Carbohydrates
+!C-----------------------------------------------------------------------
+!C     Account for N added to existing plant tissue, e.g., NADLF, that
+!C     is damaged by insects, freezing, or senesced.  Otherwise, could
+!C     get increase in tissue N composition when tissue is aborted.  Need
+!C     to account for mass, N and C lost this way in sections below
+!C-----------------------------------------------------------------------
+!! CHP 2025-12-01 should this be SLDOT instead of SLNDOT?
+!!     SLNDOT is water senescence, SLDOT is total senescence
+!      WRCLDT = ALPHL * WLDOTN - CRUSLF - RHOL*(SLNDOT+WLIDOT+WLFDOT)
+!      IF (WTLF > 1.E-4) THEN
+!         WRCLDT = WRCLDT + CADLF *
+!     &     (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
+!      ENDIF
+!
+!      WCRLF = WCRLF + WRCLDT
+
+
+
+
+
+
 
 !         DRY MATTER (WTLF in GROW)
 !         LFNAD already divided by 0.16. Don't do it again.
@@ -582,10 +630,6 @@ C-GH 08/19/2025
       ENDDO
 
       NLC = NLC + 1  !today's new cohort
-      DO I = 1, NLC
-        LFAGE(I) = LFAGE(I) + DTX  !cohort age in p-t-d
-        LeafNTot(I) = LFNSN(I) + LFSN(I)
-      ENDDO
 
 !     New growth for today's cohort
       LFDM(NLC)  = WLDOTN                     !leaf dry mass
@@ -593,11 +637,10 @@ C-GH 08/19/2025
       LFSN(NLC)  = PROLFF * 0.16 * LFDM(NLC)  !struct N (non-mobile)
       LFNSN(NLC) = NGRLF - LFSN(NLC)          !non-struct N (mobile)
       LFNSC(NLC) = WLDOTN * ALPHL             !non-struct CH2O
-      LFAGE(NLC) = DTX                        !age ptd
       CumLeafDM(NLC) = WLDOTN
 
-!     Total N in leaves (WTNLF)
       DO I = 1, NLC
+        LFAGE(I) = LFAGE(I) + DTX  !cohort age in p-t-d
         LeafNTot(I) = LFNSN(I) + LFSN(I)
       ENDDO
 
@@ -673,8 +716,8 @@ C-GH 08/19/2025
      &       WTLF_C,XLAI_C,PLEAFN_C,
      &       WTLF,XLAI,PLEAFN, WLDOTN,
      &  WLDOT_calc, SLDOT_calc, WLIDOT_calc, WLFDOT_calc, 
-     &  NRUSLF_calc, CRUSLF_calc, WatSen, LfMineSen, CADLF_calc,
-     &  NADLF_calc
+     &  NRUSLF_calc, CRUSLF_calc, WatSen, LfMineSen, LCADD_calc,
+     &  LNADD_calc, WNRLF_C, WCRLF_C
 
 310   FORMAT (1X,I4,1X,I3,2I6,
      &     F10.4, F8.3, F8.3, F10.4, 2F8.3, 20F12.6)

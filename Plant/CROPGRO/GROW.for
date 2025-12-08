@@ -431,7 +431,7 @@ C-----------------------------------------------------------------------
   200   FORMAT('@YEAR DOY   DAS   DAP'
      &  ,'        WTLF       WLDOT      WLDOTN       SLDOT',
      &   '      WLIDOT      WLFDOT      NRUSLF      CRUSLF',
-     &  ',       LCADD       LNADD')
+     &  ',       LCADD       LNADD       WNRLF       WCRLF')
 
 !     WLDOT = WLDOTN - SLDOT - WLIDOT - WLFDOT - NRUSLF/0.16 - CRUSLF
 
@@ -746,7 +746,9 @@ C     to account for mass, N and C lost this way in sections below
 C-----------------------------------------------------------------------
 ! CHP 2025-12-01 should this be SLDOT instead of SLNDOT?
 !     SLNDOT is water senescence, SLDOT is total senescence
-      WRCLDT = ALPHL * WLDOTN - CRUSLF - RHOL*(SLNDOT+WLIDOT+WLFDOT)
+!     WRCLDT = ALPHL * WLDOTN - CRUSLF - RHOL*(SLNDOT+WLIDOT+WLFDOT)
+!     temp chp ??? change or not? It does make some difference.
+      WRCLDT = ALPHL * WLDOTN - CRUSLF - RHOL*(SLDOT+WLIDOT+WLFDOT)
       IF (WTLF > 1.E-4) THEN
          WRCLDT = WRCLDT + CADLF *
      &     (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
@@ -1271,7 +1273,7 @@ C-----------------------------------------------------------------------
         WRITE (NOUTDG,300)
      &   YEAR, DOY, DAS, DAP, 
      &   WTLF, WLDOT, WLDOTN, SLDOT, WLIDOT, WLFDOT, NRUSLF/0.16, 
-     &   CRUSLF, LCADD, LNADD
+     &   CRUSLF, LCADD, LNADD, WNRLF, WCRLF
 
   300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
      &    21F12.6)
