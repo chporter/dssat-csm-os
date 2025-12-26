@@ -1353,16 +1353,18 @@ C  tillage and rainfall kinetic energy
           ENDIF
 
 !         Limit LL to realistic values
-!         Upper limit for LL_SOM
+!         Upper bound for LL_SOM
           LL_SOM(L) = MIN(LL_SOM(L), LL_INIT(L)*1.2)
-!         Lower limit for LL_SOM
+!         Lower bound for LL_SOM
           LL_SOM(L) = MAX(LL_SOM(L), LL_INIT(L)*0.8)
 
 !         Limit DUL to realistic values
-!         Upper limit for DUL_SOM
+!         Upper bound for DUL_SOM
           DUL_SOM(L) = MIN(DUL_SOM(L), DUL_INIT(L)*1.2, SAT(L) - 0.01)
-!         Lower limit for DUL_SOM
-          DUL_SOM(L) = MAX(DUL_SOM(L), DUL_INIT(L)*0.8, SAT(L) - 0.30)
+!         Lower bound for DUL_SOM
+!         2025-12-26 Remove restriction on relationship to SAT for lower bound
+!         DUL_SOM(L) = MAX(DUL_SOM(L), DUL_INIT(L)*0.8), SAT(L) - 0.30)
+          DUL_SOM(L) = MAX(DUL_SOM(L), DUL_INIT(L)*0.8) !, SAT(L) - 0.30)
 
 !         TEMP CHP
           IF (L == 2) THEN
