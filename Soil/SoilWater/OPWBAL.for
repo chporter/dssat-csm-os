@@ -193,9 +193,9 @@ C-----------------------------------------------------------------------
 
         IF (FMOPT == 'A' .OR. FMOPT == ' ') THEN   ! VSH
 !         New print format includes mulch, tiledrain and runoff info
-          WRITE (NOUTDW, '("!",T133,
+          WRITE (NOUTDW, '("!",T141,
      &    "Soil water content (mm3/mm3) by soil depth (cm):",
-     &    /,"!",T128,20A8)') (LayerText(L), L=1,NLAYR)
+     &    /,"!",T136,20A8)') (LayerText(L), L=1,NLAYR)
           WRITE (NOUTDW,1120, ADVANCE='NO')
  1120     FORMAT('@YEAR DOY   DAS',
      &    '    SWTD    SWXD    ROFC    DRNC    PREC    IR#C',
