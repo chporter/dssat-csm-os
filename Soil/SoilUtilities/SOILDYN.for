@@ -143,7 +143,7 @@ C-----------------------------------------------------------------------
       REAL, DIMENSION(NL) :: LL_INIT, SWCN_INIT, SAT_INIT, SW_INIT
 
 !     Base soil values modified by soil organic matter
-      REAL dBD_SOM, dDLAYR_SOM, dDUL_SOM, dLL_SOM, 
+      REAL dBD_SOM, dDUL_SOM, dLL_SOM, !dDLAYR_SOM, 
      &    dSOM_tot, dSOMLIT_tot, dSOMLIT_day, dOC_day
       REAL, DIMENSION(NL) :: BD_SOM, DLAYR_SOM, DS_SOM, DUL_SOM, LL_SOM
       REAL, DIMENSION(NL) :: SomLit, SomLit_INIT, SOM_PCT, SOM_PCT_init
@@ -167,6 +167,15 @@ C-----------------------------------------------------------------------
 
       LOGICAL PRINT_TODAY, VG_ok
       REAL WCR_TEMP
+
+!     -------------------------------------------------------
+!     temp chp
+!     Check conservation of mass after updating soil thickness and BD
+!     Element zero is whole profile value
+      REAL, DIMENSION(0:NL) :: SOILMASS, SoilMassA, SOILMASS_INIT
+      REAL TotSOMLIT
+!     -------------------------------------------------------
+
 
 !     ---------------------------------------------------------------
 !     Composite variables
@@ -1014,6 +1023,25 @@ C  tillage and rainfall kinetic energy
         IF (POROS(L) < DUL(L)) POROS(L) = SAT(L)
       ENDDO
 
+!-----------------------------------------------------------------------
+!     temp chp
+      SOILMASS = 0.0
+      TotSOMLIT = 0.0
+      DO L = 1, NLAYR
+        SOILMASS(L) = BD_SOM(L) * DLAYR_SOM(L)
+!        g/cm2      =   g/cm3   *   cm
+        SOILMASS(0) = SOILMASS(0) + SOILMASS(L)
+!       Convert SOM from kg/ha to g/cm2
+        TotSOMLIT = TotSOMLIT + SOMLIT(L) * 1.0E-5
+      ENDDO
+      WRITE(5151,'(I8,50F10.4)') CONTROL%DAS, TotSOMLIT, 
+     &    SOILMASS(0)  !:NLAYR)
+
+      SOILMASS_INIT = SOILMASS
+!-----------------------------------------------------------------------
+
+
+
       SOILPROP % BD    = BD
       SOILPROP % CN    = CN
       SOILPROP % DLAYR = DLAYR
@@ -1169,6 +1197,8 @@ C  tillage and rainfall kinetic energy
 !       Update soil water holding capacity daily due to changes in bulk
 !       density and organic carbon content of soil.
 !       These equations based on Gupta & Larson 1979, Adams 1973, Izaurralde 2006
+        SoilMassA = 0.0
+
         DO L = 1, NLAYR
 !         Change to SOM since initialization
 !         SOM units have already been converted to OM (not C)
@@ -1176,6 +1206,7 @@ C  tillage and rainfall kinetic energy
           dSOMLIT_day = SomLit(L) - SomLit_yest(L) !kg[OM]/ha
 
 !         Change SOM from kg/ha to percent
+!         First estimate uses BD_SOM and DLAYR_SOM from yesterday.
           SOM_PCT(L) = SomLit(L) * 1.E-5/(BD_SOM(L)*DLAYR_SOM(L))*100.
 !                       kg[OM]    g[OM]/cm2     cm3       1
 !                    = -------- * --------- * -------  * ---- * 100%
@@ -1196,44 +1227,70 @@ C  tillage and rainfall kinetic energy
 !           Need to update soil properties based on changes to SOM
 
 !           First -- modify layer thickness
-!           dDlayr = change in layer thickness due to addition (or depletion)
-!             of organic matter.
-!           Mean bulk density of organic matter is 0.224 g/cm3 (from Adams,1973)
-
-!                    kg[om]   10^3 g     ha        m2           cm3
-!           dDlayr = ------ * ------ * ------- * -------- * -----------  
-!                      ha       kg     10^4 m2   10^4 cm2   0.224 g[om]
-
-            dDLAYR_SOM = dSOMLIT_day * 4.46E-5
-!              cm      =kg/ha * 4.46E-5
-
-!           New base layer thickness and depths
-!           2025-09-30 Look at incremental daily change instead of cumulative
-!           DLAYR_SOM(L) = DLAYR_INIT(L) + dDLAYR_SOM
-            DLAYR_SOM(L) = DLAYR_SOM(L) + dDLAYR_SOM
+!           CHP 2026-01-05 This does not ensure conservation of mass
+!           NEW METHOD: (See new method below BD_SOM calcs)
+!           Use updated SOILMASS and BD_SOM to calculate DLAYR changes.
+!            OLD METHOD:  
+!!           dDlayr = change in layer thickness due to addition (or depletion)
+!!             of organic matter.
+!!           Mean bulk density of organic matter is 0.224 g/cm3 (from Adams,1973)
+!
+!!                    kg[om]   10^3 g     ha        m2           cm3
+!!           dDlayr = ------ * ------ * ------- * -------- * -----------  
+!!                      ha       kg     10^4 m2   10^4 cm2   0.224 g[om]
+!
+!            dDLAYR_SOM = dSOMLIT_day * 4.46E-5
+!!              cm      =kg/ha * 4.46E-5
+!
+!!           New base layer thickness and depths
+!!           2025-09-30 Look at incremental daily change instead of cumulative
+!!           DLAYR_SOM(L) = DLAYR_INIT(L) + dDLAYR_SOM
+!            DLAYR_SOM(L) = DLAYR_SOM(L) + dDLAYR_SOM
 
 !           -------------------------------------------------------
-!           Bulk density changes are based on percent difference to the
-!             calculated BD, applied to user-input BD.
-!            BD_SOM(L) = 100.0 / 
-!     &        (SOM_PCT(L) / 0.224 + (100. - SOM_PCT(L)) / BD_mineral(L))
-!
-            BD_calc(L) = 100.0 / 
-     &        (SOM_PCT(L) / 0.224 + (100. - SOM_PCT(L)) / 2.65)
+!           Use iterative method to calculate BD_SOM and DLAYR_SOM because
+!           there is a circular logic in that SOM_PCT depends on BD_SOM and
+!           DLAYR_SOM and vice versa. I found through spreadsheet calculations 
+!           that one additional iteration completes the computations, so the 
+!           following loop with 2 iterations is guaranteed to converge.
+            DO I = 1, 2
+!             Bulk density changes are based on percent difference to the
+!               calculated BD, applied to user-input BD.
+!             BD_SOM(L) = 100.0 / 
+!     &         (SOM_PCT(L) / 0.224 + (100. - SOM_PCT(L)) / BD_mineral(L))
+!             
+              BD_calc(L) = 100.0 / 
+     &          (SOM_PCT(L) / 0.224 + (100. - SOM_PCT(L)) / 2.65)
+              
+              BD_SOM(L) = BD_calc(L) / BD_calc_init(L) * BD_init(L)
+              
+!             Limit BD to realistic values
+!             2025-10-21 CHP remove upper and lower bounds on BD 
+!             Upper limit for BD_SOM
+!             BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2, 1.80) 
+              BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2) 
+!             Lower limit for BD_SOM
+!             BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8, 0.95) 
+              BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8) 
+!             Calculate the difference
+              dBD_SOM = BD_SOM(L) - BD_INIT(L)
+              
+!             NEW METHOD: DLAYR calculations 
+              SoilMassA(L) = SoilMass_init(L) + 
+!               g/cm2     =   g/cm2     +   
+     &                             (SomLit(L) - SomLit_init(L)) * 1.0E-5
+!                                              kg/ha            * (g/cm2)/(kg/ha)
+              IF (I == 2) THEN
+                SoilMassA(0) = SoilMassA(0) + SoilMassA(L)
+              ENDIF
 
-            BD_SOM(L) = BD_calc(L) / BD_calc_init(L) * BD_init(L)
-
-!           Limit BD to realistic values
-!           2025-10-21 CHP remove upper and lower bounds on BD 
-!           Upper limit for BD_SOM
-!           BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2, 1.80) 
-            BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2) 
-!           Lower limit for BD_SOM
-!           BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8, 0.95) 
-            BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8) 
-!           Calculate the difference
-            dBD_SOM = BD_SOM(L) - BD_INIT(L)
-
+              DLAYR_SOM(L) = SoilMassA(L) / BD_SOM(L)
+!                 cm          g/cm2          g/cm3
+              
+!             update SOM_PCT based on new values of BD_SOM and DLAYR_SOM
+              SOM_PCT(L) = SomLit(L) * 1.E-5 / 
+     &                                (BD_SOM(L) * DLAYR_SOM(L)) * 100.
+            ENDDO
 !           -------------------------------------------------------
 !           Update DS
             IF (L == 1) THEN
@@ -1364,7 +1421,7 @@ C  tillage and rainfall kinetic energy
 !         Lower bound for DUL_SOM
 !         2025-12-26 Remove restriction on relationship to SAT for lower bound
 !         DUL_SOM(L) = MAX(DUL_SOM(L), DUL_INIT(L)*0.8), SAT(L) - 0.30)
-          DUL_SOM(L) = MAX(DUL_SOM(L), DUL_INIT(L)*0.8) !, SAT(L) - 0.30)
+          DUL_SOM(L) = MAX(DUL_SOM(L), DUL_INIT(L)*0.8) 
 
 !         TEMP CHP
           IF (L == 2) THEN
@@ -1378,6 +1435,21 @@ C  tillage and rainfall kinetic energy
 
         ENDDO
       ENDIF
+
+!-----------------------------------------------------------------------
+!     temp chp
+      SOILMASS = 0.0
+      TotSOMLIT = 0.0
+      DO L = 1, NLAYR
+        SOILMASS(L) = BD_SOM(L) * DLAYR_SOM(L)
+!        g/cm2      =   g/cm3   *   cm
+        SOILMASS(0) = SOILMASS(0) + SOILMASS(L)
+!       Convert SOM from kg/ha to g/cm2
+        TotSOMLIT = TotSOMLIT + SOMLIT(L) * 1.0E-5
+      ENDDO
+      WRITE(5151,'(I8,50F10.4)') CONTROL%DAS, TotSOMLIT, SOILMASSA(0),
+     &    SOILMASS(0)  !:NLAYR)
+!-----------------------------------------------------------------------
 
       SOM_PCT_yest = SOM_PCT    !SOM in g/100g
       SOC_PCT_yest = OC         !SOC in g/100g
