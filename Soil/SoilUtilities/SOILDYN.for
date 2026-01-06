@@ -169,13 +169,11 @@ C-----------------------------------------------------------------------
       REAL WCR_TEMP
 
 !     -------------------------------------------------------
-!     temp chp
 !     Check conservation of mass after updating soil thickness and BD
 !     Element zero is whole profile value
-      REAL, DIMENSION(0:NL) :: SOILMASS, SoilMassA, SOILMASS_INIT
+      REAL, DIMENSION(0:NL) :: SOILMASS, SOILMASS_INIT !based on BD*DUL 
+      REAL, DIMENSION(NL) :: SoilMassA  !based on increase to SOM
       REAL TotSOMLIT
-!     -------------------------------------------------------
-
 
 !     ---------------------------------------------------------------
 !     Composite variables
@@ -1023,25 +1021,6 @@ C  tillage and rainfall kinetic energy
         IF (POROS(L) < DUL(L)) POROS(L) = SAT(L)
       ENDDO
 
-!-----------------------------------------------------------------------
-!     temp chp
-      SOILMASS = 0.0
-      TotSOMLIT = 0.0
-      DO L = 1, NLAYR
-        SOILMASS(L) = BD_SOM(L) * DLAYR_SOM(L)
-!        g/cm2      =   g/cm3   *   cm
-        SOILMASS(0) = SOILMASS(0) + SOILMASS(L)
-!       Convert SOM from kg/ha to g/cm2
-        TotSOMLIT = TotSOMLIT + SOMLIT(L) * 1.0E-5
-      ENDDO
-      WRITE(5151,'(I8,50F10.4)') CONTROL%DAS, TotSOMLIT, 
-     &    SOILMASS(0)  !:NLAYR)
-
-      SOILMASS_INIT = SOILMASS
-!-----------------------------------------------------------------------
-
-
-
       SOILPROP % BD    = BD
       SOILPROP % CN    = CN
       SOILPROP % DLAYR = DLAYR
@@ -1118,6 +1097,17 @@ C  tillage and rainfall kinetic energy
         SOC_PCT_yest = SOC_PCT_init   !SOC in g/100g
         BD_calc_init = BD_calc        !initial BD
 
+!       Initial soil mass
+        SOILMASS = 0.0
+        DO L = 1, NLAYR
+          SOILMASS(L) = BD_SOM(L) * DLAYR_SOM(L)
+!          g/cm2      =   g/cm3   *   cm
+          SOILMASS(0) = SOILMASS(0) + SOILMASS(L)
+!         Convert SOM from kg/ha to g/cm2
+        ENDDO
+        
+        SOILMASS_INIT = SOILMASS  !g/cm2
+
 !       ---------------------------------------------------------------------------
 !       Method of changing DUL and LL depend on MSDYN switch in Simulation Controls
         SELECT CASE(ISWITCH % MSDYN)
@@ -1167,10 +1157,6 @@ C  tillage and rainfall kinetic energy
         CASE DEFAULT ! Do nothing here
         END SELECT
 
-!       TEMP CHP
-        WRITE(5454,'(A,A)') "MSDYN = ", ISWITCH % MSDYN
-!       END TEMP CHP
-
 !       Print initial values
         Print_today = .TRUE.
         FIRST = .FALSE.
@@ -1214,6 +1200,12 @@ C  tillage and rainfall kinetic energy
 !
 !                    = g[OM]/g[soil] * 100%
 
+!         Update soil mass with changes to SOM in this layer
+          SoilMassA(L) = SoilMass_init(L) + 
+!            g/cm2     =   g/cm2     +   
+     &                    (SomLit(L) - SomLit_init(L)) * 1.0E-5
+!                                        kg/ha         * (g/cm2)/(kg/ha)
+
 !         If the total cumulative change is small, use initial values.
           IF (ABS(dSOMLIT_tot) < 0.01) THEN
 !           No changes to soil properties due to organic matter
@@ -1224,7 +1216,7 @@ C  tillage and rainfall kinetic energy
             LL_SOM(L)   = LL_INIT(L)
 
           ELSE
-!           Need to update soil properties based on changes to SOM
+!           Update soil properties based on changes to SOM
 
 !           First -- modify layer thickness
 !           CHP 2026-01-05 This does not ensure conservation of mass
@@ -1251,14 +1243,10 @@ C  tillage and rainfall kinetic energy
 !           Use iterative method to calculate BD_SOM and DLAYR_SOM because
 !           there is a circular logic in that SOM_PCT depends on BD_SOM and
 !           DLAYR_SOM and vice versa. I found through spreadsheet calculations 
-!           that one additional iteration completes the computations, so the 
-!           following loop with 2 iterations is guaranteed to converge.
+!           that two iterations allow convergence.
             DO I = 1, 2
 !             Bulk density changes are based on percent difference to the
 !               calculated BD, applied to user-input BD.
-!             BD_SOM(L) = 100.0 / 
-!     &         (SOM_PCT(L) / 0.224 + (100. - SOM_PCT(L)) / BD_mineral(L))
-!             
               BD_calc(L) = 100.0 / 
      &          (SOM_PCT(L) / 0.224 + (100. - SOM_PCT(L)) / 2.65)
               
@@ -1275,15 +1263,7 @@ C  tillage and rainfall kinetic energy
 !             Calculate the difference
               dBD_SOM = BD_SOM(L) - BD_INIT(L)
               
-!             NEW METHOD: DLAYR calculations 
-              SoilMassA(L) = SoilMass_init(L) + 
-!               g/cm2     =   g/cm2     +   
-     &                             (SomLit(L) - SomLit_init(L)) * 1.0E-5
-!                                              kg/ha            * (g/cm2)/(kg/ha)
-              IF (I == 2) THEN
-                SoilMassA(0) = SoilMassA(0) + SoilMassA(L)
-              ENDIF
-
+!             recalculate DLAYR with changes to BD and soil mass.
               DLAYR_SOM(L) = SoilMassA(L) / BD_SOM(L)
 !                 cm          g/cm2          g/cm3
               
@@ -1375,18 +1355,6 @@ C  tillage and rainfall kinetic energy
             DUL_SOM(L) = DUL_calc(L) / DUL_calc_init(L) * DUL_init(L)
             LL_SOM(L)  = LL_calc(L) / LL_calc_init(L) * LL_init(L)
 
-!         TEMP CHP
-          IF (L == 2) THEN
-            write(1678,'(I8, I5, I3, 
-     &      3F10.4, 2F10.5, 
-     &      2F10.4,2F10.5)') 
-     &      YRDOY, DAS, L, 
-     &      OC(L), CLAY(L), SAND(L), DUL_calc(L), LL_calc(L),
-     &      DUL_calc(L) / DUL_calc_init(L),
-     &      LL_calc(L) / LL_calc_init(L),
-     &      DUL_SOM(L), LL_SOM(L)
-          ENDIF
-
 !           ---------------------------------------------------------------------------
 !           CASE ('G') !Gupta and Larson 1979 method
             CASE DEFAULT
@@ -1423,21 +1391,11 @@ C  tillage and rainfall kinetic energy
 !         DUL_SOM(L) = MAX(DUL_SOM(L), DUL_INIT(L)*0.8), SAT(L) - 0.30)
           DUL_SOM(L) = MAX(DUL_SOM(L), DUL_INIT(L)*0.8) 
 
-!         TEMP CHP
-          IF (L == 2) THEN
-            write(5678,'(I3, I8, I5, I3, F10.4,
-     &      F10.1,F10.3,F10.3,F10.5,F10.4,F10.6,
-     &      F10.4,F10.6,F10.4,F10.6)') 
-     &      CONTROL%TRTNUM, YRDOY, DAS, L, DLAYR_SOM(L), 
-     &      SomLit(L), SOMLITC(L), SOM_PCT(L), OC(L), BD_SOM(L), 
-     &      DUL_SOM(L), LL_SOM(L)
-          ENDIF
-
         ENDDO
       ENDIF
 
 !-----------------------------------------------------------------------
-!     temp chp
+!     SOILMASS before tillage
       SOILMASS = 0.0
       TotSOMLIT = 0.0
       DO L = 1, NLAYR
@@ -1447,9 +1405,6 @@ C  tillage and rainfall kinetic energy
 !       Convert SOM from kg/ha to g/cm2
         TotSOMLIT = TotSOMLIT + SOMLIT(L) * 1.0E-5
       ENDDO
-      WRITE(5151,'(I8,50F10.4)') CONTROL%DAS, TotSOMLIT, SOILMASSA(0),
-     &    SOILMASS(0)  !:NLAYR)
-!-----------------------------------------------------------------------
 
       SOM_PCT_yest = SOM_PCT    !SOM in g/100g
       SOC_PCT_yest = OC         !SOC in g/100g
@@ -1572,6 +1527,19 @@ C-----------------------------------------------------------------------
 !           Organic C in %
             OC(L) = SomLitC(L) * 1.E-5 / (BD(L) * DLAYR(L)) * 100.
           ENDDO
+
+!-----------------------------------------------------------------------
+!         SOILMASS after tillage
+          SOILMASS = 0.0
+          TotSOMLIT = 0.0
+          DO L = 1, NLAYR
+            SOILMASS(L) = BD_SOM(L) * DLAYR_SOM(L)
+!            g/cm2      =   g/cm3   *   cm
+            SOILMASS(0) = SOILMASS(0) + SOILMASS(L)
+!           Convert SOM from kg/ha to g/cm2
+            TotSOMLIT = TotSOMLIT + SOMLIT(L) * 1.0E-5
+          ENDDO
+
         END IF
 
 C-----------------------------------------------------------------------
