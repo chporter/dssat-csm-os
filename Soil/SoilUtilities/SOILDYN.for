@@ -1391,20 +1391,18 @@ C  tillage and rainfall kinetic energy
 !         DUL_SOM(L) = MAX(DUL_SOM(L), DUL_INIT(L)*0.8), SAT(L) - 0.30)
           DUL_SOM(L) = MAX(DUL_SOM(L), DUL_INIT(L)*0.8) 
 
+!         TEMP CHP
+          IF (L == 2) THEN
+            write(5678,'(I3, I8, I5, I3, F10.4,
+     &      F10.1,F10.3,F10.3,F10.5,F10.4,F10.6,
+     &      F10.4,F10.6,F10.4,F10.6)') 
+     &      CONTROL%TRTNUM, YRDOY, DAS, L, DLAYR_SOM(L), 
+     &      SomLit(L), SOMLITC(L), SOM_PCT(L), OC(L), BD_SOM(L), 
+     &      DUL_SOM(L), LL_SOM(L)
+          ENDIF
+
         ENDDO
       ENDIF
-
-!-----------------------------------------------------------------------
-!     SOILMASS before tillage
-      SOILMASS = 0.0
-      TotSOMLIT = 0.0
-      DO L = 1, NLAYR
-        SOILMASS(L) = BD_SOM(L) * DLAYR_SOM(L)
-!        g/cm2      =   g/cm3   *   cm
-        SOILMASS(0) = SOILMASS(0) + SOILMASS(L)
-!       Convert SOM from kg/ha to g/cm2
-        TotSOMLIT = TotSOMLIT + SOMLIT(L) * 1.0E-5
-      ENDDO
 
       SOM_PCT_yest = SOM_PCT    !SOM in g/100g
       SOC_PCT_yest = OC         !SOC in g/100g
@@ -1527,19 +1525,6 @@ C-----------------------------------------------------------------------
 !           Organic C in %
             OC(L) = SomLitC(L) * 1.E-5 / (BD(L) * DLAYR(L)) * 100.
           ENDDO
-
-!-----------------------------------------------------------------------
-!         SOILMASS after tillage
-          SOILMASS = 0.0
-          TotSOMLIT = 0.0
-          DO L = 1, NLAYR
-            SOILMASS(L) = BD_SOM(L) * DLAYR_SOM(L)
-!            g/cm2      =   g/cm3   *   cm
-            SOILMASS(0) = SOILMASS(0) + SOILMASS(L)
-!           Convert SOM from kg/ha to g/cm2
-            TotSOMLIT = TotSOMLIT + SOMLIT(L) * 1.0E-5
-          ENDDO
-
         END IF
 
 C-----------------------------------------------------------------------
@@ -1676,6 +1661,22 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
       SOILPROP % POROS  = POROS  
 
       CALL PUT(SOILPROP)
+
+!-----------------------------------------------------------------------
+!         SOILMASS end of day
+          SOILMASS = 0.0
+          TotSOMLIT = 0.0
+          DO L = 1, NLAYR
+            SOILMASS(L) = BD_SOM(L) * DLAYR_SOM(L)
+!            g/cm2      =   g/cm3   *   cm
+            SOILMASS(0) = SOILMASS(0) + SOILMASS(L)
+!           Convert SOM from kg/ha to g/cm2
+            TotSOMLIT = TotSOMLIT + SOMLIT(L) * 1.0E-5
+          ENDDO
+
+!       TEMP CHP
+        WRITE(5679,'(I3, I8, I5, 2F15.5)') 
+     &      CONTROL%TRTNUM, YRDOY, DAS, SOILMASS(0), TotSOMLIT 
 
 !***********************************************************************
 !***********************************************************************
@@ -2121,7 +2122,9 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
         CALL YR_DOY(CONTROL % YRDOY, YEAR, DOY) 
         WRITE(DLUN,'(1X,I4,1X,I3.3,1X,I5,
      &    F8.1,2F8.3,F8.1,F8.2,
-     &    4F8.3,4F8.2,8F8.3,4F8.3,4F8.2,12F8.5)') 
+!     &    4F8.3,4F8.2,8F8.3,4F8.3,4F8.2,12F8.5)') 
+     &    4F8.3,4F8.3,8F8.4,4F8.3,4F8.2,12F8.5)') 
+!         KECHG,DLAYR,BDs,  SWCN, SAT,  (DUL, LL, DUL-LL)
      &    YEAR, DOY, CONTROL % DAS, CRAIN, SOILCOV, SUMKE, CN, TOTAW, 
      &    KECHGE(1),KECHGE(2),KECHGE(3),KECHGE(4),
      &    DLAYR (1), DLAYR(2), DLAYR(3), DLAYR(4),
