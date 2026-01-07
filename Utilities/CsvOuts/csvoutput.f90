@@ -1447,7 +1447,7 @@ Subroutine CsvOutEnvSum(                                        &
      MaxStag, EXNAME,                                           &
      N2OEM, CO2EM, CH4EM, TCEQM,                                &
      NDCH, CO2A, DAYLA, TMINA, TAVGA, TMAXA, SRADA,             &
-     PRCP, PETP, ETCP, ESCP, EPCP,                              &
+     PRCP, PETP, ETCP, ESCP, EPCP, WSGA, NSTA,                  &
      Csvline, pCsvline, lngth) 
       
 !  USE SumModule
@@ -1460,7 +1460,7 @@ Subroutine CsvOutEnvSum(                                        &
    Real, Intent (IN) :: N2OEM, CO2EM, CH4EM, TCEQM
    Real, Dimension(0:MaxStag), Intent(IN) ::          &
      CO2A, DAYLA, TMINA, TAVGA, TMAXA, SRADA,         &
-     PRCP, PETP, ETCP, ESCP, EPCP
+     PRCP, PETP, ETCP, ESCP, EPCP, WSGA, NSTA
    
    Character(:), allocatable, Target, Intent(Out) :: Csvline
    Character(:), Pointer, Intent(Out) :: pCsvline
@@ -1473,7 +1473,8 @@ Subroutine CsvOutEnvSum(                                        &
    RUN, TRTNUM, ROTNO, ROTOPT, REPNO, CROP, MODEL, EXNAME,  &
    N2OEM, CO2EM, CH4EM, TCEQM,                              &   
    NDCH(0), DAYLA(0), CO2A(0), TMINA(0), TAVGA(0), TMAXA(0), SRADA(0), PRCP(0), PETP(0), ETCP(0), ESCP(0), EPCP(0),  &
-   (NDCH(i), TMINA(i), TAVGA(i), TMAXA(i), SRADA(i), PRCP(i), PETP(i), ETCP(i), ESCP(i), EPCP(i), i=1,MaxStag)       
+   WSGA(0), NSTA(0),    &
+   (NDCH(i), TMINA(i), TAVGA(i), TMAXA(i), SRADA(i), PRCP(i), PETP(i), ETCP(i), ESCP(i), EPCP(i), WSGA(i), NSTA(i), i=1,MaxStag)       
    
    lngth = Len(Trim(Adjustl(tmp)))
    size = lngth
