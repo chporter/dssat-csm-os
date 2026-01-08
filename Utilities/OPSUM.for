@@ -1170,13 +1170,14 @@ C-------------------------------------------------------------------
 
            CALL CsvOutEnvSum( 
      &       RUN, TRTNUM, ROTNO, ROTOPT, REPNO, CROP, MODEL, 
-     &       MaxStag, CONTROL%FILEX(1:8),
+     &       MaxStag, CONTROL%FILEX(1:8), YRDOY,
      &       N2OEM, CO2EM, CH4EM, TCEQM, 
      &       NDCH, CO2A, DAYLA, TMINA, TAVGA, TMAXA, SRADA, PRCP, 
-     &       PETP, ETCP, ESCP, EPCP, WSGA, NSTA,
+     &       PETP, ETCP, ESCP, EPCP, WSGA, NSTA, ESData % PhaseName,
      &       vCsvlineEnvSum, vpCsvlineEnvSum, vlngthEnvSum) 
 
            CALL LinklstEnvSum(vCsvlineEnvSum)
+
           ENDIF   !ascii or csv format
         END SELECT
       ENDIF     !IDETO switch for output
