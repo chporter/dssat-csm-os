@@ -951,12 +951,15 @@
 !     ************************************************************
         IF (SOM3FRAC(L) < 0.) THEN
           IF (SOM_TOT(L) > 1.E-6) THEN
-!           Adiku equation
-            StableC = 0.15 * (CLAY(L) + SILT(L)) + 0.69    !g/kg
-            StableC = StableC / 10.                        !g/100g
-!           Gargiulo's regression
-!           y = 0.0093x + 0.1829
-!           StableC = 0.0093 * (CLAY(L) + SILT(L)) + 0.1829   !g/100g
+            StableC = Stable_C(CLAY(L), SILT(L))  !g[C]/100g[soil]
+
+!!           Adiku equation
+!            StableC = 0.15 * (CLAY(L) + SILT(L)) + 0.69    !g/kg
+!            StableC = StableC / 10.                        !g/100g
+!!           Gargiulo's regression
+!!           y = 0.0093x + 0.1829
+!!           StableC = 0.0093 * (CLAY(L) + SILT(L)) + 0.1829   !g/100g
+
             SOM3FRAC(L) = StableC / SOM_TOT(L)
             Method(L) = 'Regression eqn'
           ELSE
@@ -1004,3 +1007,26 @@
         
       RETURN
       END SUBROUTINE SOMFRAC_INIT
+
+!========================================================================
+
+      Function Stable_C(CLAY, SILT)
+
+      IMPLICIT NONE
+      REAL Stable_C, Clay, Silt
+
+!     Adiku equation
+      Stable_C = 0.15 * (CLAY + SILT) + 0.69    !g/kg
+      Stable_C = Stable_C / 10.                 !g/100g
+
+!     Gargiulo's regression
+!     y = 0.0093x + 0.1829
+!     Stable_C = 0.0093 * (CLAY + SILT) + 0.1829   !g/100g
+
+      RETURN
+      END FUNCTION Stable_C
+
+!========================================================================
+!========================================================================
+
+

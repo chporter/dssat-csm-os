@@ -760,17 +760,6 @@ C             CHP Added TRTNUM to CONTROL variable.
         Case DEFAULT; ERR = .TRUE.
         END SELECT
 
-      Case ('SOIL')
-        SELECT CASE (VarName)
-        Case ('TOMINFOM'); Value = SAVE_data % ORGC % TOMINFOM
-        Case ('TOMINSOM'); Value = SAVE_data % ORGC % TOMINSOM
-        Case ('TOMINSOM1');Value = SAVE_data % ORGC % TOMINSOM1
-        Case ('TOMINSOM2');Value = SAVE_data % ORGC % TOMINSOM2
-        Case ('TOMINSOM3');Value = SAVE_data % ORGC % TOMINSOM3
-        Case ('TNIMBSOM'); Value = SAVE_data % ORGC % TNIMBSOM
-        Case DEFAULT; ERR = .TRUE.
-        END SELECT
-
       CASE ('PDLABETA')
         SELECT CASE(VarName)
         CASE('PDLA'); Value = SAVE_data % PDLABETA % PDLA

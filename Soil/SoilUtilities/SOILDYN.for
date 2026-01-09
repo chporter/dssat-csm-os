@@ -47,7 +47,7 @@ C-----------------------------------------------------------------------
       IMPLICIT NONE
       EXTERNAL ERROR, FIND, WARNING, INFO, TEXTURECLASS, SOILLAYERCLASS,
      &  CALBROKCRYPARA, RETC_VG, SOILLAYERTEXT, PRINT_SOILPROP, 
-     &  SETPM, OPSOILDYN, ALBEDO_avg, TILLEVENT, SOILMIXING
+     &  SETPM, OPSOILDYN, ALBEDO_avg, TILLEVENT, SOILMIXING, Stable_C
       SAVE
 
       LOGICAL NOTEXTURE, PHFLAG, FIRST, NO_OC
@@ -154,10 +154,11 @@ C-----------------------------------------------------------------------
 
 !     Izaurralde method and Bagnall percent approach
       INTEGER, PARAMETER :: METHOD = 2
-      REAL, DIMENSION(NL) :: BD_calc, BD_calc_init  !, BD_mineral
+!     REAL StableC, Stable_C
+      REAL, DIMENSION(NL) :: BD_calc, BD_calc_init !, BD_calc_max 
       REAL, DIMENSION(NL) :: DUL_calc, DUL_calc_init  
       REAL, DIMENSION(NL) :: LL_calc, LL_calc_init  
-      REAL, DIMENSION(NL) :: SOC_init
+      REAL, DIMENSION(NL) :: SOC_init !, SOM_PCT_min
 
       REAL CN_BASE
       REAL, DIMENSION(NL) :: BD_BASE, DL_BASE, DS_BASE, SAT_BASE,SC_BASE
@@ -1089,6 +1090,19 @@ C  tillage and rainfall kinetic energy
 !           change to BD_calc to scale BD, which was input by user.
           BD_calc(L) = 100./(SOM_PCT(L)/0.224 + (100.-SOM_PCT(L))/2.65)
 
+!!         Estimate maximum BD equivalent to BD at minimum soil organic matter
+!!         Use stable C regression function from SOMINIT_C
+!          StableC = Stable_C(CLAY(L), SILT(L))  !g[C]/100g[soil]
+!
+!!         Convert SSOMC at 1.9 kg[OM]/kg[C] (Adams, 1973)
+!          SOM_PCT_min(L) = StableC * 1.9 
+!!              g[OM]          g[C]       kg[OM] 
+!!           -----------  = ----------- * ------ 
+!!           100 g[soil]    100 g[soil]   kg[C]  
+!
+!          BD_calc_max(L) = 100./
+!     &      (SOM_PCT_min(L) / 0.224 + (100. - SOM_PCT_min(L)) / 2.65)
+
         ENDDO
 
 !       Set initial arrays
@@ -1254,10 +1268,11 @@ C  tillage and rainfall kinetic energy
               
 !             Limit BD to realistic values
 !             2025-10-21 CHP remove upper and lower bounds on BD 
-!             Upper limit for BD_SOM
+!             Upper bound for BD_SOM
 !             BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2, 1.80) 
-              BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2) 
-!             Lower limit for BD_SOM
+!             BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2, BD_calc_max(L))
+              BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2)
+!             Lower bound for BD_SOM
 !             BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8, 0.95) 
               BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8) 
 !             Calculate the difference
