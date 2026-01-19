@@ -407,6 +407,7 @@
         SOC_SOIL(L) = SOMLITC(L)
       ENDDO
       CALL PUT('ORGC', 'SOCinit', SOC_SOIL)
+      CALL PUT('ORGC', 'SOM3C',   SOM3C)
 
 !       Get detailed SOM and litter output for checking the litter
 !     initialization (SOM initialization was printed from SoilCNPinit_C

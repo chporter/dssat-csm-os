@@ -154,11 +154,11 @@ C-----------------------------------------------------------------------
 
 !     Izaurralde method and Bagnall percent approach
       INTEGER, PARAMETER :: METHOD = 2
-!     REAL StableC, Stable_C
-      REAL, DIMENSION(NL) :: BD_calc, BD_calc_init !, BD_calc_max 
+      REAL StableC, Stable_C, StableOM
+      REAL, DIMENSION(NL) :: BD_calc, BD_calc_init, BD_calc_max 
       REAL, DIMENSION(NL) :: DUL_calc, DUL_calc_init  
       REAL, DIMENSION(NL) :: LL_calc, LL_calc_init  
-      REAL, DIMENSION(NL) :: SOC_init !, SOM_PCT_min
+      REAL, DIMENSION(NL) :: SOC_init, SOM3C, SOM_PCT_min
 
       REAL CN_BASE
       REAL, DIMENSION(NL) :: BD_BASE, DL_BASE, DS_BASE, SAT_BASE,SC_BASE
@@ -1073,35 +1073,43 @@ C  tillage and rainfall kinetic energy
 !       SOC_init is the soil portion of SOMLITC (no surface component)/
         CALL GET ('ORGC', 'SOCinit', SOC_init)
         SomLit_yest = SomLit_init
+!       Stable organcic C
+        CALL GET ('ORGC', 'SOM3C', SOM3C)
 
         DO L = 1, NLAYR
-!         (See conversion explanation below)
+!         SOM g[OM] / 100 g[soil]  (See conversion explanation below)
           SOM_PCT(L) = SomLit_init(L) * 1.E-5 / (BD(L) * DLAYR(L)) 
      &                                                            * 100.
           SOC_PCT_init(L) = SOC_init(L) * 1.E-5 / (BD(L) * DLAYR(L))
      &                                                            * 100.
 
-!         This can result in negative BD_mineral for very high organic
-!           matter content.  
-!!         For Izaurralde method, calculate initial mineral BD
-!          BD_Mineral(L) =(100.-SOM_PCT(L))/(100./BD(L)-SOM_PCT(L)/0.224)
-
-!         Instead, calculate a BD_calc. Use the 
-!           change to BD_calc to scale BD, which was input by user.
+!         Use the change to BD_calc to scale BD, which was input by user.
+!         Mean bulk density of organic matter is 0.224 g/cm3 (from Adams,1973)
           BD_calc(L) = 100./(SOM_PCT(L)/0.224 + (100.-SOM_PCT(L))/2.65)
 
-!!         Estimate maximum BD equivalent to BD at minimum soil organic matter
-!!         Use stable C regression function from SOMINIT_C
-!          StableC = Stable_C(CLAY(L), SILT(L))  !g[C]/100g[soil]
-!
-!!         Convert SSOMC at 1.9 kg[OM]/kg[C] (Adams, 1973)
-!          SOM_PCT_min(L) = StableC * 1.9 
-!!              g[OM]          g[C]       kg[OM] 
-!!           -----------  = ----------- * ------ 
-!!           100 g[soil]    100 g[soil]   kg[C]  
-!
-!          BD_calc_max(L) = 100./
-!     &      (SOM_PCT_min(L) / 0.224 + (100. - SOM_PCT_min(L)) / 2.65)
+!         Estimate maximum BD equivalent to BD at minimum soil organic matter
+!         Use stable C regression function from SOMINIT_C
+          StableC = Stable_C(CLAY(L), SILT(L))  !g[C]/100g[soil]
+!         Convert to SOM using 1.9 kg[OM]/kg[C] (Adams, 1973)
+          StableOM = StableC * 1.9              !g[OM]/100g[soil]
+
+!         If using CENTURY model, get inital stable C 
+          IF (ISWITCH % MESOM == 'P') THEN
+!           For CENTURY model, use calculated stable C
+            StableOM = SOM3C(L) * 1.9 * 1.E-5 / BD(L) / DLAYR(L) * 100.
+!             g[OM]      kg[C]    kg[OM]    g[OM]/cm2  cm3[soil]      1
+!          ---------- =  ----- *  ------ * --------- * --------- * -------- * 100%
+!          100g[soil]     ha      kg[C]     kg[OM]/ha   g[soil]    cm[soil]
+          ENDIF
+
+          SOM_PCT_min(L) = MIN(StableOM, SOM_PCT(L) * 0.98)
+
+          BD_calc_max(L) = 100./
+     &      (SOM_PCT_min(L) / 0.224 + (100. - SOM_PCT_min(L)) / 2.65)
+
+          WRITE(5680,'(I5,I3,5F10.4,1X,A1)') CONTROL%RUN, L, 
+     &      SOM_PCT(L), STABLEOM, BD(L), BD_CALC(L), BD_CALC_MAX(L)
+     &      , MESOM
 
         ENDDO
 
@@ -1272,9 +1280,13 @@ C  tillage and rainfall kinetic energy
 !             BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2, 1.80) 
 !             BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2, BD_calc_max(L))
               BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2)
+              IF (BD_SOM(L) > BD_calc_max(L)) THEN
+                BD_SOM(L) = BD_calc_max(L)
+              ENDIF
 !             Lower bound for BD_SOM
 !             BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8, 0.95) 
               BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8) 
+
 !             Calculate the difference
               dBD_SOM = BD_SOM(L) - BD_INIT(L)
               
