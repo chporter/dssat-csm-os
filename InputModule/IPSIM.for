@@ -149,7 +149,7 @@ C=======================================================================
 !                   1  => DayCent N2O calculation
 
 !        Soil dynamics (modification of soil water holding capacity with changes to organic matter)
-         MSDYN   = 'B' 
+         MSDYN   = 'P' 
 !                  'G' !=> Gupta and Larson method 
 !                  'B' !=> Bagnall et al. method (incremental)
 !                  'P' !=> Bagnall percent change approach
@@ -690,7 +690,7 @@ C-----------------------------------------------------------------------
         CASE('G', 'g'); MSDYN = 'G'
         CASE('B', 'b'); MSDYN = 'B'
         CASE('P', 'p'); MSDYN = 'P'
-        CASE DEFAULT;   MSDYN = 'G'
+        CASE DEFAULT;   MSDYN = 'P'
       END SELECT
 
       SELECT CASE(MESEV)
