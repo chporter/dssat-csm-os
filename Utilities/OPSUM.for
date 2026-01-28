@@ -699,20 +699,19 @@ C-------------------------------------------------------------------
         IF (BWAH < -1) BWAH = -9.9
 
         MODEL = CONTROL % MODEL
-        IF (MODEL == MODEL_LAST) THEN
+        CROP = CONTROL % CROP
+        IF (MODEL == MODEL_LAST .OR. CROP == 'FA') THEN
           NewModel = .FALSE.
         ELSE
           NewModel = .TRUE.
           MODEL_LAST = MODEL
         ENDIF
 
-        CROP = CONTROL % CROP
         IF (CROP == CROP_LAST .OR. CROP == 'FA') THEN
           NewCrop = .FALSE.
         ELSE
           NewCrop = .TRUE.
           CROP_LAST = CROP
-
         ENDIF
 
         IF (FMOPT == 'A' .OR. FMOPT == ' ' .OR. FMOPT == '') THEN
@@ -1118,6 +1117,7 @@ C-------------------------------------------------------------------
      &           '  PRCP',I,'  PETP',I,'  ETCP',I,'  ESCP',I,'  EPCP',I,
      &           '  WSGA',I,'  NSTA',I
               ENDIF
+
             ENDIF
           
 !           These 3 variables are not in Summary.OUT
@@ -1179,6 +1179,7 @@ C-------------------------------------------------------------------
            CALL LinklstEnvSum(vCsvlineEnvSum)
 
           ENDIF   !ascii or csv format
+          CLOSE(ESLUN)
         END SELECT
       ENDIF     !IDETO switch for output
 

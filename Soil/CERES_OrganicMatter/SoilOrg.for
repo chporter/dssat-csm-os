@@ -879,7 +879,7 @@ C         recruit (NREQ-N CONC) g of N
         DO L = 1, NLAYR
           SOC_SOIL(L) = SOMLITC(L)
         ENDDO
-        CALL PUT('ORCG', 'SOCinit', SOC_SOIL)
+        CALL PUT('ORGC', 'SOCinit', SOC_SOIL)
       ENDIF
 
 C***********************************************************************
