@@ -1412,7 +1412,9 @@ C  tillage and rainfall kinetic energy
 
 !         Limit DUL to realistic values
 !         Upper bound for DUL_SOM
-          DUL_SOM(L) = MIN(DUL_SOM(L), DUL_INIT(L)*1.2, SAT(L) - 0.01)
+!         2026-01-29 Remove restriction on relationship to SAT for upper bound
+!         DUL_SOM(L) = MIN(DUL_SOM(L), DUL_INIT(L)*1.2, SAT(L) - 0.01)
+          DUL_SOM(L) = MIN(DUL_SOM(L), DUL_INIT(L)*1.2)
 !         Lower bound for DUL_SOM
 !         2025-12-26 Remove restriction on relationship to SAT for lower bound
 !         DUL_SOM(L) = MAX(DUL_SOM(L), DUL_INIT(L)*0.8), SAT(L) - 0.30)
