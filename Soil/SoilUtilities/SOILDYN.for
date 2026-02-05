@@ -1189,7 +1189,7 @@ C  tillage and rainfall kinetic energy
       CALL ALBEDO_avg(KTRANS, MEINF, MULCH, SOILPROP, SW(1), XHLAI)
 
 !     IF (INDEX('RSN',MEINF) .LE. 0) THEN
-      IF (INDEX('RSM',MEINF) > 0) THEN 
+!     IF (INDEX('RSM',MEINF) > 0) THEN 
 
 !       ---------------------------------------------------
 !       Update combined soil/mulch albedo
@@ -1431,7 +1431,7 @@ C  tillage and rainfall kinetic energy
           ENDIF
 
         ENDDO
-      ENDIF
+!     ENDIF  use MEINF to turn off SoilDynamics
 
       SOM_PCT_yest = SOM_PCT    !SOM in g/100g
       SOC_PCT_yest = OC         !SOC in g/100g
