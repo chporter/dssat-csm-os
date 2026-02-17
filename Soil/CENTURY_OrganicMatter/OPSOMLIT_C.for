@@ -55,7 +55,7 @@
 
       REAL CUMRESC, TLITC, TMETABC, TSOM1C, TSOM2C,
      &  TSOM3C, TSOMC, TSTRUCC
-      REAL SOC_20CM, SOC_20CM_P, SOC_40CM, SOC_40CM_P, FRAC
+      REAL SOC_20CM, SOC_20CM_P, SOC_40CM, SOC_40CM_P  !, FRAC
       REAL SON_20CM, SON_20CM_P, SON_40CM, SON_40CM_P
       REAL SOP_20CM, SOP_20CM_P, SOP_40CM, SOP_40CM_P
       REAL SOIL_20CM, SOIL_40CM
@@ -79,6 +79,9 @@
       REAL SomLitC(0:NL), SomLitE(0:NL,NELEM)
 
       LOGICAL DOPRINT, FEXIST, PRINTC, PRINTN, PRINTP
+
+!     2026-02-17 temp chp?
+      REAL, DIMENSION(1:NL) :: Frac1, Frac2
 
 !!     C:N ratios:
 !      CHARACTER*11 OUTCN
@@ -242,6 +245,61 @@
         ENDIF
       ENDIF
 
+!     -------------------------------------------------------------------------
+!     TEMP CHP?
+!     2026-02-17 CHP Keep the proportions of layers used for 0-20 and 20-40 cm 
+!     outputs constant over the simulation, regardless of tillage or SOM soil
+!     dynamics.
+
+! case   1   2   3   4   5
+!      --------------------- surface
+!        *   *   *
+!        |   |   |
+!        *   |   |
+!      ------|---|---------- 20 cm depth
+!            *   |   *   *
+!                |   |   |
+!                |   *   |
+!      ----------|-------|-- 40 cm depth
+!                *       *
+
+
+      Frac1 = 0.0
+      Frac2 = 0.0
+
+      Frac1(1) = 1.0
+
+      DO L = 2, NLAYR
+        IF (DS(L) <= 20.) THEN
+!         Entire layer is in top 20 cm. Case 1.
+          Frac1(L) = 1.0
+
+        ELSEIF (DS(L-1) < 20.) THEN
+!         A portion (FRAC1) of layer is in top 20 cm. Cases 2 & 3.
+          FRAC1(L) = (20. - DS(L-1)) / DLAYR(L)
+
+          IF (DS(L) <= 40.) THEN
+!           The remaining portion (1 - FRAC1) is between 20-40cm. Case 2.
+            Frac2(L) = 1.0 - Frac1(L)
+!           Frac1 + Frac2 = 1.0
+
+          ELSE
+!           20 cm of the layer is between 20 and 40 cm. Case 3.
+            FRAC2(L) = 20. / DLAYR(L) 
+!           Frac1 + Frac2 < 1.0
+          ENDIF
+
+        ELSEIF (DS(L) <= 40.) THEN
+!         The entire layer is between 20-40 cm. Case 4.
+          Frac2(L) = 1.0
+
+        ELSEIF (DS(L-1) < 40.) THEN
+!         A portion (FRAC2) of layer is between 20-40 cm. Case 5.
+          FRAC2(L) = (40. - DS(L-1)) / DLAYR(L)
+          EXIT
+        ENDIF
+      ENDDO
+
       ENDIF !DYNAMIC=SEASINIT
 
 !***********************************************************************
@@ -296,6 +354,8 @@
         END SELECT
       ENDDO
 
+      IF (.NOT. DOPRINT) RETURN
+
 !     Calculate sample carbon from 0-20 cm and from 20-40 cm
 !       in kg/ha and percent
       SOC_20CM = SOM1C(0)+ SOM1C(1) + SOM2C(1) + SOM3C(1)
@@ -303,68 +363,92 @@
       SON_20CM = SOM1E(0,1)+ SOM1E(1,1) + SOM2E(1,1) + SOM3E(1,1)
       SOP_20CM = SOM1E(0,2)+ SOM1E(1,2) + SOM23E(1,2)
       SOIL_20CM = DLAYR(1) * BD(1) * 1.E5
-
+ 
       SOC_40CM = 0.0
       SLC_40CM = 0.0
       SON_40CM = 0.0
       SOP_40CM = 0.0
       SOIL_40CM = 0.0
-
+ 
       DO L = 2, NLAYR
-        IF (DS(L) <= 20.) THEN
-!         Entire layer is in top 20 cm
-          SOC_20CM = SOC_20CM + SOM1C(L) + SOM2C(L) + SOM3C(L)
-          SLC_20CM = SLC_20CM + SOM1C(L) + SOM2C(L) + SOM3C(L) + LITC(L)
-          SON_20CM = SON_20CM + SOM1E(L,1)+SOM2E(L,1)+SOM3E(L,1)
-          SOP_20CM = SOP_20CM + SOM1E(L,2)+SOM23E(L,2)
-          SOIL_20CM = SOIL_20CM + DLAYR(L) * BD(L) * 1.E5
+        IF (Frac1(L) > 0.0) THEN
+          SOC_20CM = SOC_20CM + (SOM1C(L) + SOM2C(L) + SOM3C(L)) 
+     &         * Frac1(L)
+          SLC_20CM = SLC_20CM + (SOM1C(L) + SOM2C(L) +SOM3C(L) +LITC(L))
+     &         * Frac1(L)
+          SON_20CM = SON_20CM + (SOM1E(L,1)+SOM2E(L,1)+SOM3E(L,1)) 
+     &         * Frac1(L)
+          SOP_20CM = SOP_20CM + (SOM1E(L,2)+SOM23E(L,2)) * Frac1(L)
+          SOIL_20CM = SOIL_20CM + (DLAYR(L) * BD(L) * 1.E5) * Frac1(L)
+        ENDIF
 
-        ELSEIF (DS(L-1) < 20.) THEN
-!         A portion (FRAC) of layer is in top 20 cm
-          FRAC = (20. - DS(L-1)) / DLAYR(L)
-          SOC_20CM =SOC_20CM + FRAC*(SOM1C(L)+SOM2C(L)+SOM3C(L))
-          SLC_20CM =SLC_20CM + FRAC*(SOM1C(L)+SOM2C(L)+SOM3C(L)+LITC(L))
-          SON_20CM =SON_20CM + FRAC*(SOM1E(L,1)+SOM2E(L,1)+SOM3E(L,1))
-          SOP_20CM =SOP_20CM + FRAC*(SOM1E(L,2)+SOM23E(L,2))
-          SOIL_20CM = SOIL_20CM + FRAC * DLAYR(L) * BD(L) * 1.E5
-
-          IF (DS(L) < 40.) THEN
-!           The remaining portion (1 - FRAC) is between 20-40cm
-            SOC_40CM =(1. - FRAC)*(SOM1C(L) + SOM2C(L)+SOM3C(L))
-            SLC_40CM =(1. - FRAC)*(SOM1C(L) + SOM2C(L)+SOM3C(L)+LITC(L))
-            SON_40CM =(1. - FRAC)*(SOM1E(L,1)+SOM2E(L,1)+SOM3E(L,1))
-            SOP_40CM =(1. - FRAC)*(SOM1E(L,2)+SOM23E(L,2))
-            SOIL_40CM=(1. - FRAC)* DLAYR(L) * BD(L) * 1.E5
-
-          ELSE
-!           Part of the remaining portion is between 20-40 cm
-            FRAC = 20. / DLAYR(L)
-            SOC_40CM = FRAC * (SOM1C(L) + SOM2C(L) + SOM3C(L))
-            SLC_40CM = FRAC * (SOM1C(L) + SOM2C(L) + SOM3C(L) + LITC(L))
-            SON_40CM = FRAC * (SOM1E(L,1) + SOM2E(L,1) + SOM3E(L,1))
-            SOP_40CM = FRAC * (SOM1E(L,2) + SOM23E(L,2))
-            SOIL_40CM= FRAC * DLAYR(L) * BD(L) * 1.E5
-          ENDIF
-
-        ELSEIF (DS(L) <= 40.) THEN
-!         The entire layer is between 20-40 cm
-          SOC_40CM = SOC_40CM + SOM1C(L) + SOM2C(L) + SOM3C(L)
-          SLC_40CM = SLC_40CM + SOM1C(L) + SOM2C(L) + SOM3C(L)+ LITC(L)
-          SON_40CM = SON_40CM + SOM1E(L,1) + SOM2E(L,1) + SOM3E(L,1)
-          SOP_40CM = SOP_40CM + SOM1E(L,2) + SOM23E(L,2) 
-          SOIL_40CM = SOIL_40CM + DLAYR(L) * BD(L) * 1.E5
-
-        ELSEIF (DS(L-1) < 40.) THEN
-!         A portion (FRAC) of layer is between 20-40 cm
-          FRAC = (40. - DS(L-1)) / DLAYR(L)
-          SOC_40CM = SOC_40CM +FRAC*(SOM1C(L)+SOM2C(L)+SOM3C(L))
-          SLC_40CM = SLC_40CM +FRAC*(SOM1C(L)+SOM2C(L)+SOM3C(L)+LITC(L))
-          SON_40CM = SON_40CM +FRAC*(SOM1E(L,1)+SOM2E(L,1)+SOM3E(L,1))
-          SOP_40CM = SOP_40CM +FRAC*(SOM1E(L,2)+SOM23E(L,2))
-          SOIL_40CM= SOIL_40CM + FRAC * DLAYR(L) * BD(L) * 1.E5
+        IF (Frac2(L) > 0.0) THEN
+          SOC_40CM = SOC_40CM + (SOM1C(L) + SOM2C(L) + SOM3C(L)) 
+     &         * Frac2(L)
+          SLC_40CM = SLC_40CM + (SOM1C(L) + SOM2C(L) +SOM3C(L) +LITC(L))
+     &         * Frac2(L)
+          SON_40CM = SON_40CM + (SOM1E(L,1) + SOM2E(L,1) + SOM3E(L,1))
+     &         * Frac2(L)
+          SOP_40CM = SOP_40CM + (SOM1E(L,2) + SOM23E(L,2)) * Frac2(L)
+          SOIL_40CM= SOIL_40CM+ (DLAYR(L) * BD(L) * 1.E5) * Frac2(L)
         ENDIF
       ENDDO
 
+
+!       IF (DS(L) <= 20.) THEN
+!!        Entire layer is in top 20 cm
+!         SOC_20CM = SOC_20CM + SOM1C(L) + SOM2C(L) + SOM3C(L)
+!         SLC_20CM = SLC_20CM + SOM1C(L) + SOM2C(L) + SOM3C(L) + LITC(L)
+!         SON_20CM = SON_20CM + SOM1E(L,1)+SOM2E(L,1)+SOM3E(L,1)
+!         SOP_20CM = SOP_20CM + SOM1E(L,2)+SOM23E(L,2)
+!         SOIL_20CM = SOIL_20CM + DLAYR(L) * BD(L) * 1.E5
+!
+!       ELSEIF (DS(L-1) < 20.) THEN
+!!        A portion (FRAC) of layer is in top 20 cm
+!         FRAC = (20. - DS(L-1)) / DLAYR(L)
+!         SOC_20CM =SOC_20CM + FRAC*(SOM1C(L)+SOM2C(L)+SOM3C(L))
+!         SLC_20CM =SLC_20CM + FRAC*(SOM1C(L)+SOM2C(L)+SOM3C(L)+LITC(L))
+!         SON_20CM =SON_20CM + FRAC*(SOM1E(L,1)+SOM2E(L,1)+SOM3E(L,1))
+!         SOP_20CM =SOP_20CM + FRAC*(SOM1E(L,2)+SOM23E(L,2))
+!         SOIL_20CM = SOIL_20CM + FRAC * DLAYR(L) * BD(L) * 1.E5
+!
+!         IF (DS(L) < 40.) THEN
+!!          The remaining portion (1 - FRAC) is between 20-40cm
+!           SOC_40CM =(1. - FRAC)*(SOM1C(L) + SOM2C(L)+SOM3C(L))
+!           SLC_40CM =(1. - FRAC)*(SOM1C(L) + SOM2C(L)+SOM3C(L)+LITC(L))
+!           SON_40CM =(1. - FRAC)*(SOM1E(L,1)+SOM2E(L,1)+SOM3E(L,1))
+!           SOP_40CM =(1. - FRAC)*(SOM1E(L,2)+SOM23E(L,2))
+!           SOIL_40CM=(1. - FRAC)* DLAYR(L) * BD(L) * 1.E5
+!
+!         ELSE
+!!          Part of the remaining portion is between 20-40 cm
+!           FRAC = 20. / DLAYR(L)
+!           SOC_40CM = FRAC * (SOM1C(L) + SOM2C(L) + SOM3C(L))
+!           SLC_40CM = FRAC * (SOM1C(L) + SOM2C(L) + SOM3C(L) + LITC(L))
+!           SON_40CM = FRAC * (SOM1E(L,1) + SOM2E(L,1) + SOM3E(L,1))
+!           SOP_40CM = FRAC * (SOM1E(L,2) + SOM23E(L,2))
+!           SOIL_40CM= FRAC * DLAYR(L) * BD(L) * 1.E5
+!         ENDIF
+!
+!       ELSEIF (DS(L) <= 40.) THEN
+!!        The entire layer is between 20-40 cm
+!         SOC_40CM = SOC_40CM + SOM1C(L) + SOM2C(L) + SOM3C(L)
+!         SLC_40CM = SLC_40CM + SOM1C(L) + SOM2C(L) + SOM3C(L)+ LITC(L)
+!         SON_40CM = SON_40CM + SOM1E(L,1) + SOM2E(L,1) + SOM3E(L,1)
+!         SOP_40CM = SOP_40CM + SOM1E(L,2) + SOM23E(L,2) 
+!         SOIL_40CM = SOIL_40CM + DLAYR(L) * BD(L) * 1.E5
+!
+!       ELSEIF (DS(L-1) < 40.) THEN
+!!        A portion (FRAC) of layer is between 20-40 cm
+!         FRAC = (40. - DS(L-1)) / DLAYR(L)
+!         SOC_40CM = SOC_40CM +FRAC*(SOM1C(L)+SOM2C(L)+SOM3C(L))
+!         SLC_40CM = SLC_40CM +FRAC*(SOM1C(L)+SOM2C(L)+SOM3C(L)+LITC(L))
+!         SON_40CM = SON_40CM +FRAC*(SOM1E(L,1)+SOM2E(L,1)+SOM3E(L,1))
+!         SOP_40CM = SOP_40CM +FRAC*(SOM1E(L,2)+SOM23E(L,2))
+!         SOIL_40CM= SOIL_40CM + FRAC * DLAYR(L) * BD(L) * 1.E5
+!       ENDIF
+!     ENDDO
+!
       SOC_20CM_P = SOC_20CM / SOIL_20CM * 100.
       SLC_20CM_P = SLC_20CM / SOIL_20CM * 100.
       SON_20CM_P = SON_20CM / SOIL_20CM * 100.
