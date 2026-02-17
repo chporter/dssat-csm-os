@@ -1111,6 +1111,40 @@ C  tillage and rainfall kinetic energy
      &      SOM_PCT(L), STABLEOM, BD(L), BD_CALC(L), BD_CALC_MAX(L)
      &      , MESOM
 
+!---------------------------------------------------------------
+!         temp chp 2026-006
+          IF (DUL(L) > SAT(L) - 0.01) THEN
+            WRITE(5432,'(A12,I5,1X,A,I4,1X,A,F10.5,1X,A,F10.5)') 
+     &         CONTROL % FILEX, CONTROL % TRTNUM, SOILPROP % SLNO,
+     &         L, ' DUL  ', DUL(L), ' DUL > SAT - 0.01 ', SAT(L) - 0.01
+          ENDIF
+
+          IF (DUL(L) < SAT(L) - 0.30) THEN
+            WRITE(5432,'(A12,I5,1X,A,I4,1X,A,F10.5,1X,A,F10.5)') 
+     &         CONTROL % FILEX, CONTROL % TRTNUM, SOILPROP % SLNO,
+     &         L, ' DUL  ', DUL(L), ' DUL < SAT - 0.30 ', SAT(L) - 0.30
+          ENDIF
+
+          IF (BD(L) > BD_calc_max(L)) THEN
+            WRITE(5432,'(A12,I5,1X,A,I4,1X,A,F10.5,1X,A,F10.5)') 
+     &         CONTROL % FILEX, CONTROL % TRTNUM, SOILPROP % SLNO,
+     &         L, ' BD   ', BD(L), ' BD > BDMAX_CALC  ', BD_calc_max(L)
+          ENDIF
+
+          IF (BD(L) > 1.8) THEN
+            WRITE(5432,'(A12,I5,1X,A,I4,1X,A,F10.5,1X,A,F10.5)') 
+     &         CONTROL % FILEX, CONTROL % TRTNUM, SOILPROP % SLNO,
+     &         L, ' BD   ', BD(L), ' BD > 1.8         ', 1.8
+          ENDIF
+
+          IF (BD(L) < 0.95) THEN
+            WRITE(5432,'(A12,I5,1X,A,I4,1X,A,F10.5,1X,A,F10.5)') 
+     &         CONTROL % FILEX, CONTROL % TRTNUM, SOILPROP % SLNO,
+     &         L, ' BD   ', BD(L), ' BD < 0.95        ', 0.95
+          ENDIF
+!         end temp chp
+!---------------------------------------------------------------
+
         ENDDO
 
 !       Set initial arrays
