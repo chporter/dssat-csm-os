@@ -700,7 +700,7 @@
      &    SOM1FRAC, SOM2FRAC, SOM3FRAC) 
 
       Use ModuleDefs
-      EXTERNAL ERROR, FIND, GETLUN, IGNORE, INFO, PATH
+      EXTERNAL ERROR, FIND, GETLUN, IGNORE, INFO, PATH, Stable_C
       SAVE
 
       TYPE (ControlType), INTENT(IN) :: CONTROL
@@ -727,7 +727,7 @@
       INTEGER LNUM, LUN, NTEX, PFLAG
       LOGICAL FEXIST
 
-      REAL Frac, FHDur_real, StableC
+      REAL Frac, FHDur_real, StableC, Stable_C
       REAL, DIMENSION(12) :: S3A, S3B  !0-20 cm and 0-40 cm layers
 !     SOM3 values from file for 12 textures, 6 durations, 2 depths
       REAL, DIMENSION(12,6,2) :: S3V
@@ -1018,6 +1018,10 @@
 !     Adiku equation
       Stable_C = 0.15 * (CLAY + SILT) + 0.69    !g/kg
       Stable_C = Stable_C / 10.                 !g/100g
+
+!     NAPESHM-derived pedotransfer function 
+!     Stable Carbon = 0.41 + 0.0053 * (Silt + Clay)                                Eq. [2]
+!      Stable_C = 0.41 + 0.0053 * (Silt + Clay)  !g/100g
 
 !     Gargiulo's regression
 !     y = 0.0093x + 0.1829
