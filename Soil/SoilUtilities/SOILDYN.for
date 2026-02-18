@@ -1111,39 +1111,40 @@ C  tillage and rainfall kinetic energy
      &      SOM_PCT(L), STABLEOM, BD(L), BD_CALC(L), BD_CALC_MAX(L)
      &      , MESOM
 
-!---------------------------------------------------------------
-!         temp chp 2026-006
-          IF (DUL(L) > SAT(L) - 0.01) THEN
-            WRITE(5432,'(A12,I5,1X,A,I4,1X,A,F10.5,1X,A,F10.5)') 
-     &         CONTROL % FILEX, CONTROL % TRTNUM, SOILPROP % SLNO,
-     &         L, ' DUL  ', DUL(L), ' DUL > SAT - 0.01 ', SAT(L) - 0.01
-          ENDIF
-
-          IF (DUL(L) < SAT(L) - 0.30) THEN
-            WRITE(5432,'(A12,I5,1X,A,I4,1X,A,F10.5,1X,A,F10.5)') 
-     &         CONTROL % FILEX, CONTROL % TRTNUM, SOILPROP % SLNO,
-     &         L, ' DUL  ', DUL(L), ' DUL < SAT - 0.30 ', SAT(L) - 0.30
-          ENDIF
-
-          IF (BD(L) > BD_calc_max(L)) THEN
-            WRITE(5432,'(A12,I5,1X,A,I4,1X,A,F10.5,1X,A,F10.5)') 
-     &         CONTROL % FILEX, CONTROL % TRTNUM, SOILPROP % SLNO,
-     &         L, ' BD   ', BD(L), ' BD > BDMAX_CALC  ', BD_calc_max(L)
-          ENDIF
-
-          IF (BD(L) > 1.8) THEN
-            WRITE(5432,'(A12,I5,1X,A,I4,1X,A,F10.5,1X,A,F10.5)') 
-     &         CONTROL % FILEX, CONTROL % TRTNUM, SOILPROP % SLNO,
-     &         L, ' BD   ', BD(L), ' BD > 1.8         ', 1.8
-          ENDIF
-
-          IF (BD(L) < 0.95) THEN
-            WRITE(5432,'(A12,I5,1X,A,I4,1X,A,F10.5,1X,A,F10.5)') 
-     &         CONTROL % FILEX, CONTROL % TRTNUM, SOILPROP % SLNO,
-     &         L, ' BD   ', BD(L), ' BD < 0.95        ', 0.95
-          ENDIF
-!         end temp chp
-!---------------------------------------------------------------
+!!---------------------------------------------------------------
+!!         temp chp 2026-02-06
+!!         Guardrails printout
+!          IF (DUL(L) > SAT(L) - 0.01) THEN
+!            WRITE(5432,'(A12,I5,1X,A,I4,1X,A,F10.5,1X,A,F10.5)') 
+!     &         CONTROL % FILEX, CONTROL % TRTNUM, SOILPROP % SLNO,
+!     &         L, ' DUL  ', DUL(L), ' DUL > SAT - 0.01 ', SAT(L) - 0.01
+!          ENDIF
+!
+!          IF (DUL(L) < SAT(L) - 0.30) THEN
+!            WRITE(5432,'(A12,I5,1X,A,I4,1X,A,F10.5,1X,A,F10.5)') 
+!     &         CONTROL % FILEX, CONTROL % TRTNUM, SOILPROP % SLNO,
+!     &         L, ' DUL  ', DUL(L), ' DUL < SAT - 0.30 ', SAT(L) - 0.30
+!          ENDIF
+!
+!          IF (BD(L) > BD_calc_max(L)) THEN
+!            WRITE(5432,'(A12,I5,1X,A,I4,1X,A,F10.5,1X,A,F10.5)') 
+!     &         CONTROL % FILEX, CONTROL % TRTNUM, SOILPROP % SLNO,
+!     &         L, ' BD   ', BD(L), ' BD > BDMAX_CALC  ', BD_calc_max(L)
+!          ENDIF
+!
+!          IF (BD(L) > 1.8) THEN
+!            WRITE(5432,'(A12,I5,1X,A,I4,1X,A,F10.5,1X,A,F10.5)') 
+!     &         CONTROL % FILEX, CONTROL % TRTNUM, SOILPROP % SLNO,
+!     &         L, ' BD   ', BD(L), ' BD > 1.8         ', 1.8
+!          ENDIF
+!
+!          IF (BD(L) < 0.95) THEN
+!            WRITE(5432,'(A12,I5,1X,A,I4,1X,A,F10.5,1X,A,F10.5)') 
+!     &         CONTROL % FILEX, CONTROL % TRTNUM, SOILPROP % SLNO,
+!     &         L, ' BD   ', BD(L), ' BD < 0.95        ', 0.95
+!          ENDIF
+!!         end temp chp
+!!---------------------------------------------------------------
 
         ENDDO
 
@@ -1308,18 +1309,21 @@ C  tillage and rainfall kinetic energy
               
               BD_SOM(L) = BD_calc(L) / BD_calc_init(L) * BD_init(L)
               
-!             Limit BD to realistic values
-!             2025-10-21 CHP remove upper and lower bounds on BD 
-!             Upper bound for BD_SOM
-!             BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2, 1.80) 
-!             BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2, BD_calc_max(L))
-              BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2)
-              IF (BD_SOM(L) > BD_calc_max(L)) THEN
-                BD_SOM(L) = BD_calc_max(L)
-              ENDIF
-!             Lower bound for BD_SOM
-!             BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8, 0.95) 
-              BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8) 
+!     2026-02-19 temp chp
+!     temporarily remove all guardrails
+
+!!             Limit BD to realistic values
+!!             2025-10-21 CHP remove upper and lower bounds on BD 
+!!             Upper bound for BD_SOM
+!!             BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2, 1.80) 
+!!             BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2, BD_calc_max(L))
+!              BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2)
+!              IF (BD_SOM(L) > BD_calc_max(L)) THEN
+!                BD_SOM(L) = BD_calc_max(L)
+!              ENDIF
+!!             Lower bound for BD_SOM
+!!             BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8, 0.95) 
+!              BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8) 
 
 !             Calculate the difference
               dBD_SOM = BD_SOM(L) - BD_INIT(L)
@@ -1438,21 +1442,24 @@ C  tillage and rainfall kinetic energy
 !           ---------------------------------------------------------------------------
           ENDIF
 
-!         Limit LL to realistic values
-!         Upper bound for LL_SOM
-          LL_SOM(L) = MIN(LL_SOM(L), LL_INIT(L)*1.2)
-!         Lower bound for LL_SOM
-          LL_SOM(L) = MAX(LL_SOM(L), LL_INIT(L)*0.8)
+!     2026-02-19 temp chp
+!     temporarily remove all guardrails
 
-!         Limit DUL to realistic values
-!         Upper bound for DUL_SOM
-!         2026-01-29 Remove restriction on relationship to SAT for upper bound
-!         DUL_SOM(L) = MIN(DUL_SOM(L), DUL_INIT(L)*1.2, SAT(L) - 0.01)
-          DUL_SOM(L) = MIN(DUL_SOM(L), DUL_INIT(L)*1.2)
-!         Lower bound for DUL_SOM
-!         2025-12-26 Remove restriction on relationship to SAT for lower bound
-!         DUL_SOM(L) = MAX(DUL_SOM(L), DUL_INIT(L)*0.8), SAT(L) - 0.30)
-          DUL_SOM(L) = MAX(DUL_SOM(L), DUL_INIT(L)*0.8) 
+!!         Limit LL to realistic values
+!!         Upper bound for LL_SOM
+!          LL_SOM(L) = MIN(LL_SOM(L), LL_INIT(L)*1.2)
+!!         Lower bound for LL_SOM
+!          LL_SOM(L) = MAX(LL_SOM(L), LL_INIT(L)*0.8)
+!
+!!         Limit DUL to realistic values
+!!         Upper bound for DUL_SOM
+!!         2026-01-29 Remove restriction on relationship to SAT for upper bound
+!!         DUL_SOM(L) = MIN(DUL_SOM(L), DUL_INIT(L)*1.2, SAT(L) - 0.01)
+!          DUL_SOM(L) = MIN(DUL_SOM(L), DUL_INIT(L)*1.2)
+!!         Lower bound for DUL_SOM
+!!         2025-12-26 Remove restriction on relationship to SAT for lower bound
+!!         DUL_SOM(L) = MAX(DUL_SOM(L), DUL_INIT(L)*0.8), SAT(L) - 0.30)
+!          DUL_SOM(L) = MAX(DUL_SOM(L), DUL_INIT(L)*0.8) 
 
 !         TEMP CHP
           IF (L == 2) THEN
@@ -2158,7 +2165,8 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
 
         CALL HEADER(SEASINIT, DLUN, CONTROL % RUN)
         WRITE(DLUN,"(/,
-     &  '@YEAR DOY   DAS   CRAIN  SOLCOV   SUMKE    ROCN   TOTAW',
+     &  '@YEAR DOY   DAS Experiment..',
+     &  '   CRAIN  SOLCOV   SUMKE    ROCN   TOTAW',
      &  '   SCP1D   SCP2D   SCP3D   SCP4D',
      &  '  KECHG1  KECHG2  KECHG3  KECHG4',
      &  '  DLAYR1  DLAYR2  DLAYR3  DLAYR4',
@@ -2185,12 +2193,15 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
      &    .OR. Print_today)) THEN    !OR back to normal after tillage)
         CALL YR_DOY(CONTROL % YRDOY, YEAR, DOY) 
         WRITE(DLUN,'(1X,I4,1X,I3.3,1X,I5,
+     &    1X,A12,
      &    F8.1,2F8.3,F8.1,F8.2,
      &    4F8.4,
 !     &    4F8.3,4F8.2,8F8.3,4F8.3,4F8.2,12F8.5)') 
      &    4F8.3,4F8.3,8F8.4,4F8.3,4F8.2,12F8.5)') 
 !         KECHG,DLAYR,BDs,  SWCN, SAT,  (DUL, LL, DUL-LL)
-     &    YEAR, DOY, CONTROL % DAS, CRAIN, SOILCOV, SUMKE, CN, TOTAW, 
+     &    YEAR, DOY, CONTROL % DAS, 
+     &    CONTROL % FILEX,
+     &    CRAIN, SOILCOV, SUMKE, CN, TOTAW, 
      &    OC(1),    OC(2),    OC(3),    OC(4),
      &    KECHGE(1),KECHGE(2),KECHGE(3),KECHGE(4),
      &    DLAYR (1), DLAYR(2), DLAYR(3), DLAYR(4),
