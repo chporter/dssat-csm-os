@@ -51,7 +51,7 @@ C=======================================================================
       CHARACTER*92  FILESS
       CHARACTER*255 C255
 
-      INTEGER I,J,P1,NLAYRI,LINSOL,ISECT
+      INTEGER I,J,P1,NLAYRI,LINSOL,ISECT, NMSG
       INTEGER NSENS,NLSOIL,NLOOP,ERR,LUNSL,PATHL, LINSOL_1
 
 !     05/27/2004 CHP Added these variables to COMSOI.blk
@@ -494,26 +494,52 @@ C-KRT*******************************************************************
          ENDIF
 
          IF (ISWITCH%ISWWAT .NE. 'N') THEN
+           NMSG = 3
+           DO J = 1, NLAYRI
+              IF (SAT(J) .LE. 0.0) THEN
+                 NMSG = NMSG + 1
+                 WRITE(MSG(NMSG),'(I4,I7,2X,A)') 
+     &              LINSOL_1+J-1, J, "SAT <= 0"
+              ENDIF  
+
+              IF (DUL(J) .LE. 0.0) THEN
+                 NMSG = NMSG + 1
+                 WRITE(MSG(NMSG),'(I4,I7,2X,A)') 
+     &              LINSOL_1+J-1, J, "DUL <= 0"
+              ENDIF
+
+              IF (LL(J) .LE. 0.0) THEN
+                 NMSG = NMSG + 1
+                 WRITE(MSG(NMSG),'(I4,I7,2X,A)') 
+     &              LINSOL_1+J-1, J, "LL <= 0"
+              ENDIF  
+
+              IF (SAT(J) - DUL(J) .LT. 0.009) THEN
+                 NMSG = NMSG + 1
+                 WRITE(MSG(NMSG),'(I4,I7,2X,A)') 
+     &              LINSOL_1+J-1, J, "DUL > SAT - 0.01"
+              ENDIF
+
+              IF ((DUL(J) - LL(J)) .LT. 0.009) THEN
+                 NMSG = NMSG + 1
+                 WRITE(MSG(NMSG),'(I4,I7,2X,A)') 
+     &              LINSOL_1+J-1, J, "LL > DUL - 0.01"
+              ENDIF
+            ENDDO
+
+            IF (NMSG > 3) THEN
+               WRITE(MSG(1),'(A,A)') 'File: ',TRIM(FILESS)
+               WRITE(MSG(2),'("Soil ID: ",A)') SLNO
+               WRITE(MSG(3),'(A)') "Line  Layer  Error"
+               WRITE(MSG(NMSG + 1),'(A)') "Model will stop."
+               CALL WARNING(NMSG+1,ERRKEY,MSG)
+               CALL ERROR (ERRKEY,25,FILES,LINSOL_1+J-1)
+            ENDIF
+
            ERR = 0
            DO J = 1, NLAYRI
-             IF ((DUL(J) - SAT(J)) .GT. 0.0) THEN
-                CALL ERROR (ERRKEY,7,FILES,LINSOL_1+J-1)
-              ENDIF
-              IF ((LL(J) - DUL(J)) .GT. 0.0) THEN
-                 CALL ERROR (ERRKEY,8,FILES,LINSOL_1+J-1)
-              ENDIF
-              IF (DUL(J) .LT. 0.0) THEN
-                 CALL ERROR (ERRKEY,13,FILES,LINSOL_1+J-1)
-              ENDIF
-              IF (ABS(SAT(J) - DUL(J)) .LE. 0.0) THEN
-                 SAT(J) = DUL(J) + 0.01
-              ENDIF
-              IF (ABS(DUL(J) -  LL(J)) .LE. 0.0) THEN
-                 LL(J) = DUL(J) - 0.01
-              ENDIF  
               IF (SHF(J) .LT. 0.0) THEN
                  WRITE(MSG(1),'(A,A72)') 'File: ',FILESS
-                 
                  WRITE(MSG(2),'(A,I4,2X,A,I2)') 
      &                'Line number:',LINSOL_1+J-1, 'Soil layer: ',J
                  MSG(3) = 'Root growth factor is missing.  '

@@ -604,6 +604,9 @@ SHF is missing or defined as < 0. Please define as a value > or = 0.0.
 IPSOIL   21
 Soil input section not found.  Please correct file.
 
+IPSOIL   25
+Errors found in soil layer properties. Please see Warning.OUT for details.
+
 IPSOIL   29
 File not found.  Please check soil profile name or create file.
 

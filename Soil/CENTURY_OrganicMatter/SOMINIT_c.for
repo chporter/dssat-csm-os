@@ -1020,8 +1020,8 @@
       Stable_C = Stable_C / 10.                 !g/100g
 
 !     NAPESHM-derived pedotransfer function 
-!     Stable Carbon = 0.41 + 0.0053 * (Silt + Clay)                                Eq. [2]
-!      Stable_C = 0.41 + 0.0053 * (Silt + Clay)  !g/100g
+!     Stable Carbon = 0.41 + 0.0053 * (Silt + Clay)     Eq. [2]
+!     Stable_C = 0.41 + 0.0053 * (Silt + Clay)  !g/100g
 
 !     Gargiulo's regression
 !     y = 0.0093x + 0.1829

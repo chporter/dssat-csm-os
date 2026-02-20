@@ -1106,6 +1106,10 @@ C  tillage and rainfall kinetic energy
 
           BD_calc_max(L) = 100./
      &      (SOM_PCT_min(L) / 0.224 + (100. - SOM_PCT_min(L)) / 2.65)
+!         Keep the user input BD if it is greater.
+          IF (BD_calc_max(L) < BD_init(L)) THEN
+            BD_calc_max(L) = BD_init(L)
+          ENDIF
 
           WRITE(5680,'(I5,I3,5F10.4,1X,A1)') CONTROL%RUN, L, 
      &      SOM_PCT(L), STABLEOM, BD(L), BD_CALC(L), BD_CALC_MAX(L)
@@ -1309,18 +1313,17 @@ C  tillage and rainfall kinetic energy
               
               BD_SOM(L) = BD_calc(L) / BD_calc_init(L) * BD_init(L)
               
-!     2026-02-19 temp chp
-!     temporarily remove all guardrails
+!     -----------------------------------------------------------------------------
+!         Guardrails for BD
 
-!!             Limit BD to realistic values
-!!             2025-10-21 CHP remove upper and lower bounds on BD 
-!!             Upper bound for BD_SOM
+!             Upper bound for BD_SOM
+              IF (BD_SOM(L) > BD_calc_max(L)) THEN
+                BD_SOM(L) = BD_calc_max(L)
+              ENDIF
 !!             BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2, 1.80) 
 !!             BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2, BD_calc_max(L))
 !              BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2)
-!              IF (BD_SOM(L) > BD_calc_max(L)) THEN
-!                BD_SOM(L) = BD_calc_max(L)
-!              ENDIF
+
 !!             Lower bound for BD_SOM
 !!             BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8, 0.95) 
 !              BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8) 
@@ -1442,24 +1445,26 @@ C  tillage and rainfall kinetic energy
 !           ---------------------------------------------------------------------------
           ENDIF
 
-!     2026-02-19 temp chp
-!     temporarily remove all guardrails
+!     -----------------------------------------------------------------------------
+!         Guardrails for DUL and LL
 
-!!         Limit LL to realistic values
-!!         Upper bound for LL_SOM
-!          LL_SOM(L) = MIN(LL_SOM(L), LL_INIT(L)*1.2)
-!!         Lower bound for LL_SOM
-!          LL_SOM(L) = MAX(LL_SOM(L), LL_INIT(L)*0.8)
-!
-!!         Limit DUL to realistic values
-!!         Upper bound for DUL_SOM
+!         Upper bound for DUL_SOM
+          DUL_SOM(L) = MIN(DUL_SOM(L), SAT(L) - 0.01)
 !!         2026-01-29 Remove restriction on relationship to SAT for upper bound
 !!         DUL_SOM(L) = MIN(DUL_SOM(L), DUL_INIT(L)*1.2, SAT(L) - 0.01)
 !          DUL_SOM(L) = MIN(DUL_SOM(L), DUL_INIT(L)*1.2)
-!!         Lower bound for DUL_SOM
+
+!         Lower bound for DUL_SOM
 !!         2025-12-26 Remove restriction on relationship to SAT for lower bound
 !!         DUL_SOM(L) = MAX(DUL_SOM(L), DUL_INIT(L)*0.8), SAT(L) - 0.30)
 !          DUL_SOM(L) = MAX(DUL_SOM(L), DUL_INIT(L)*0.8) 
+
+!         Upper bound for LL_SOM
+          LL_SOM(L) = MIN(LL_SOM(L), DUL_SOM(L) - 0.01)
+!          LL_SOM(L) = MIN(LL_SOM(L), LL_INIT(L)*1.2)
+
+!!         Lower bound for LL_SOM
+!          LL_SOM(L) = MAX(LL_SOM(L), LL_INIT(L)*0.8)
 
 !         TEMP CHP
           IF (L == 2) THEN
@@ -1470,6 +1475,7 @@ C  tillage and rainfall kinetic energy
      &      SomLit(L), SOMLITC(L), SOM_PCT(L), OC(L), BD_SOM(L), 
      &      DUL_SOM(L), LL_SOM(L)
           ENDIF
+!     -----------------------------------------------------------------------------
 
         ENDDO
 !     ENDIF  use MEINF to turn off SoilDynamics
