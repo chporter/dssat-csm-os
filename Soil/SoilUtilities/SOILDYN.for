@@ -2153,7 +2153,7 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
 !-----------------------------------------------------------------------
       IF (INDEX('AD',ISWITCH % IDETL) > 0 .AND. ISWITCH % IDETW == 'Y' 
 !    &   .AND.  INDEX('YR',ISWITCH % ISWTIL) > 0) THEN
-     &   ) THEN
+     &    ) THEN
         PrintDyn = .TRUE. 
         CALL GETLUN('OUTSOL',DLUN)
 !       Temporary output file for debugging:
@@ -2171,7 +2171,7 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
 
         CALL HEADER(SEASINIT, DLUN, CONTROL % RUN)
         WRITE(DLUN,"(/,
-     &  '@YEAR DOY   DAS Experiment..',
+     &  '@YEAR DOY   DAS',
      &  '   CRAIN  SOLCOV   SUMKE    ROCN   TOTAW',
      &  '   SCP1D   SCP2D   SCP3D   SCP4D',
      &  '  KECHG1  KECHG2  KECHG3  KECHG4',
@@ -2199,14 +2199,10 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
      &    .OR. Print_today)) THEN    !OR back to normal after tillage)
         CALL YR_DOY(CONTROL % YRDOY, YEAR, DOY) 
         WRITE(DLUN,'(1X,I4,1X,I3.3,1X,I5,
-     &    1X,A12,
      &    F8.1,2F8.3,F8.1,F8.2,
      &    4F8.4,
-!     &    4F8.3,4F8.2,8F8.3,4F8.3,4F8.2,12F8.5)') 
      &    4F8.3,4F8.3,8F8.4,4F8.3,4F8.2,12F8.5)') 
-!         KECHG,DLAYR,BDs,  SWCN, SAT,  (DUL, LL, DUL-LL)
      &    YEAR, DOY, CONTROL % DAS, 
-     &    CONTROL % FILEX,
      &    CRAIN, SOILCOV, SUMKE, CN, TOTAW, 
      &    OC(1),    OC(2),    OC(3),    OC(4),
      &    KECHGE(1),KECHGE(2),KECHGE(3),KECHGE(4),
