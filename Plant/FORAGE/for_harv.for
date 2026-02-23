@@ -394,33 +394,45 @@ C-----------------------------------------------------------------------
                 FHLEAF=0
                 FHSTEM=0
                 FHVSTG=0
-                IF(RSPLF(I)>=0)THEN
-                  FHLEAF=WTLF-(MOW(I)/10)*RSPLF(I)/100
-                  FHSTEM=STMWT-(MOW(I)/10)*(1.0-RSPLF(I)/100)
-                ELSE
-                  FHLEAF=WTLF-(MOW(I)/10)*WTLF/(WTLF+STMWT)
-                  FHSTEM=STMWT-(MOW(I)/10)*STMWT/(WTLF+STMWT)
+                IF (RSPLF(I) >= 0.0) THEN
+                  FHLEAF=WTLF-(MOW(I)/10.)*RSPLF(I)/100.
+                  FHSTEM=STMWT-(MOW(I)/10.)*(1.0-RSPLF(I)/100.)
+                ELSEIF (WTLF + STMWT > 0.0) THEN
+                  FHLEAF=WTLF-(MOW(I)/10.)*WTLF/(WTLF+STMWT)
+                  FHSTEM=STMWT-(MOW(I)/10.)*STMWT/(WTLF+STMWT)
                 END IF
 
                 FHLEAF=MAX(FHLEAF,0.0)
                 FHSTEM=MAX(FHSTEM,0.0)
                 FHVSTG=MAX(MVS(I),0.0)
-                canht=max(rsht(i)/100,0.0)
+
+!               chp 2026-02-23 trap floating invalid error
+!               RSHT(i) had value of NaN
+                IF (RSHT(I) > 0) THEN
+                  canht=max(rsht(i)/100.,0.0)
 !               canht=max(rsht(i),0.0)     !enter rsht in cm
+                ENDIF
 
                 fhtot = fhleaf+fhstem
 
-                fhlfn = fhleaf*pcnl/100
-                fhstn = fhstem*pcnst/100
+                fhlfn = fhleaf*pcnl/100.
+                fhstn = fhstem*pcnst/100.
                 fhtotn = fhlfn+fhstn
 
                 fhcrlf = fhleaf*rhol
                 fhcrst = fhstem*rhos
 
-                fhpctn = fhtotn/fhtot*100
-                fhplig = (fhleaf*pliglf+fhstem*pligst)/fhtot*100
-                fhpcho = (fhcrlf+fhcrst)/fhtot*100
-                fhpctlf = fhleaf/fhtot*100
+                IF (fhtot > 0.0) THEN
+                  fhpctn = fhtotn/fhtot*100.
+                  fhplig = (fhleaf*pliglf+fhstem*pligst)/fhtot*100.
+                  fhpcho = (fhcrlf+fhcrst)/fhtot*100.
+                  fhpctlf = fhleaf/fhtot*100.
+                ELSE
+                  fhpctn = 0.0
+                  fhplig = 0.0
+                  fhpcho = 0.0
+                  fhpctlf = 0.0
+                ENDIF
 
                 WTLF  = WTLF - FHLEAF
                 STMWT = STMWT - FHSTEM
@@ -432,7 +444,9 @@ C-----------------------------------------------------------------------
 
                 WTNLF  = WTLF*PCNL/100.
                 WTNST  = STMWT*PCNST/100.
-                WTNCAN = WTNCAN - FHLEAF*PCNL/100. - FHSTEM*PCNST/100.
+                IF (PCNST > 0.0) THEN
+                  WTNCAN = WTNCAN - FHLEAF*PCNL/100. - FHSTEM*PCNST/100.
+                ENDIF
 
                 IF ((WTLF - WCRLF) .GT. 0.0) THEN
                   WNRLF = MAX (WTNLF - PROLFF*0.16*(WTLF-WCRLF), 0.0)
