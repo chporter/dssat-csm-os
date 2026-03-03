@@ -3,7 +3,7 @@ C=======================================================================
 C=======================================================================
       INTEGER NLC     !current number of leaf cohorts
 
-      INTEGER, PARAMETER :: LCMax = 200 !maximum number of leaf cohorts
+      INTEGER, PARAMETER :: LCMax = 1000 !maximum number of leaf cohorts
 
 !     Leaf cohort state variables
       REAL, DIMENSION(LCMax) ::  
@@ -172,6 +172,9 @@ C-GH 08/19/2025
      &  ALPHL, ICMP, MAXNMINE, NMOBMX, NVSMOB,  !Output
      &  PROLFF, SENDAY, SENMAX, TCMP, XSENMX)   !Output
 
+!     no longer used in this routine:
+!     ICMP, MAXNMINE, NMOBMX, NVSMOB, SENDAY, SENMAX, TCMP, XSENMX
+
 !     Added MAXNMINE to the species file.
 !     MAXNMINE = 0.060
 
@@ -244,26 +247,21 @@ C-GH 08/19/2025
       LFNSN(1) = NGRLF - LFSN(1)
       LeafNTot(1) = LFNSN(1) + LFSN(1)
 
+!     From GROW:
 !     WNRLF = MAX (WTNLF - PROLFF * 0.16 * (WTLF-WCRLF), 0.0)
 !     LFNSN(1) = MAX(LeafNTot
 
 !------------------------------------
 ! UPDATING TOTAL LEAF STATE VARIABLES
 !------------------------------------
-!      WTLF=SUM(LFDM(1:199))
-!      WNRLF=SUM(LFNSN(1:199))
-!      WCRLF=SUM(LFNSC(1:199))
-!      XLAI=SUM(LFAREA(1:199))/10000
-!      WTNLF=SUM(LFNSN(1:199))+SUM(LFSN(1:199))
-      
-      WTLF_C =SUM(LFDM(1:LCMax))
-      WNRLF_C =SUM(LFNSN(1:LCMax))
-      WCRLF_C =SUM(LFNSC(1:LCMax))
-      XLAI_C =SUM(LFAREA(1:LCMax))/10000
-      WTNLF_C =SUM(LFNSN(1:LCMax))+SUM(LFSN(1:LCMax))
+      WTLF_C  = SUM(LFDM(1:LCMax))
+      WNRLF_C = SUM(LFNSN(1:LCMax))
+      WCRLF_C = SUM(LFNSC(1:LCMax))
+      XLAI_C  = SUM(LFAREA(1:LCMax)) / 10000.
+      WTNLF_C = SUM(LFNSN(1:LCMax)) + SUM(LFSN(1:LCMax))
 
-      CUMLFDM=CUMLFDM+LFDM(1)
-      PLEAFN=WTNLF_C/WTLF_C*100
+      CUMLFDM = CUMLFDM + LFDM(1)
+      PLEAFN = WTNLF_C / WTLF_C * 100.
   
       WRITE (CHRTOUT,310) YEAR, DOY, DAS,
      &       NINT(WTLF_C*10),XLAI_C,PLEAFN
@@ -277,7 +275,14 @@ C-GH 08/19/2025
 !!---------------------------
 !! NON-STRUCTURAL CH2O MINING
 !!---------------------------
-!     CHP 2025-11-28 Handle cohorts in VEGGR subroutine
+!     CHP 2025-11-28 Handle cohorts in VEGGR subroutine  ************* <<<--- VEGGR
+
+       ! Code in VEGGR:
+       !
+       !      CMineFactor = CMINEA / CMINEP * CMOBMX * (DTX + DXR57)
+       !      LFCMN(I) = CMineFactor * LFNSC(I)
+       !
+
 !!     LFCMN(I) = leaf non-structural CH2O mined today in cohort I
       CRUSLF_calc = 0.0
 !      LFCMN = 0.0
@@ -298,6 +303,7 @@ C-GH 08/19/2025
 !!-------------------------------------------
 !! INCREASED N MINING FROM SHADING (SHADEFAC)
 !!-------------------------------------------
+!     This part is not handled (yet) in VEGGR  ************* <<<--- SHADEFAC NOT HANDLED YET
 !      IF (PAR .GT. 0.) THEN
 !        LCMP = -(1. / KCAN) * ALOG(ICMP / PAR)
 !      ENDIF
@@ -325,6 +331,13 @@ C-GH 08/19/2025
       NRUSLF_calc = 0.0
 !      LFNMN = 0.0
 !
+! This is now done in MOBIL, but does not include shadefac  ************* <<<--- MOBIL
+
+      ! code in MOBIL:
+      !
+      !     LFNMN(I) = NMINER * LFNSN(I)
+      !
+
       DO  I=1,NLC
 !        IF (LFNSN(I) .LE. 0.0 .OR. MAXNMINE .LE. 0.0 
 !     &                        .OR. NMOBMX .LE. 0.0) THEN
@@ -343,6 +356,14 @@ C-GH 08/19/2025
 !!------------------------------
 !! N MINING SENESCENCE (LFNMNSN)
 !!------------------------------
+! This is now done in SENES  ************* <<<--- SENES
+
+
+   ! Code from SENES:
+   !       NMobSen_c(I) = SENRTE * LFNMN(I) / 0.16
+   !     LFNMNSN = NMobSen_c
+
+
 !      LFNMNSN = 0.0
 !
 !      DO I=1,NLC
@@ -356,6 +377,15 @@ C-GH 08/19/2025
 !!---------------------------------
 !! WATER STRESS SENESCENCE (LFWSSN)
 !!---------------------------------
+! This is now done in SENES  ************* <<<--- SENES
+
+!       water senescence code from SENES
+  !          WaterSen_c(I) = SENDAY * (1. - RATTP) * LFDM(I)
+  !          WaterSen_c(I) = MIN(WaterSen_c(I), LFDM(I) 
+  !   &            - CumLeafDM(I) * PORLFT)
+  !          WaterSen_c(I) = MAX(WaterSen_c(I), 0.0)
+
+  ! 
 !      LFWSSN = 0.0
 !
 !      IF (VSTAGE.GE.1)THEN
@@ -397,9 +427,17 @@ C-GH 08/19/2025
 !        LFWSSN(1:LCMax) = 0.0
 !      ENDIF
 
+
 !!----------------------------
 !! FREEZING SENESCENCE (LFFRZ)
 !!----------------------------
+! This is now done in FREEZE  ************* <<<--- FREEZE
+
+   !  Code from FREEZE:
+   !     LFFRZ(I) = LFDM(I) - LeafTotSen(I) - LFNMN(I) / 0.16
+
+
+
 !     CHP 2025-11-28 Handle cohorts in FREEZE subroutine
 !      LFFRZ = 0.0
 !
@@ -468,15 +506,15 @@ C-GH 08/19/2025
       LfMineSen = 0.0
 
       DO I=1,NLC
-!       IF ((LFDM(I)-LFPST(I)).LE.0)THEN
-!         LFNMNSN(I)=0.0
-!         LFFRZ(I)=0.0
-!         LFWSSN(I)=0.0
-!       ELSE
-!         LFNMNSN(I)=LFNMNSN(I)*(LFDM(I)-LFPST(I))/LFDM(I)
-!         LFFRZ(I)=LFFRZ(I)*(LFDM(I)-LFPST(I))/LFDM(I)
-!         LFWSSN(I)=LFWSSN(I)*(LFDM(I)-LFPST(I))/LFDM(I)
-!       ENDIF
+       IF ((LFDM(I)-LFPST(I)).LE.0)THEN
+         LFNMNSN(I)=0.0
+         LFFRZ(I)=0.0
+         LFWSSN(I)=0.0
+       ELSE
+         LFNMNSN(I)=LFNMNSN(I)*(LFDM(I)-LFPST(I))/LFDM(I)
+         LFFRZ(I)=LFFRZ(I)*(LFDM(I)-LFPST(I))/LFDM(I)
+         LFWSSN(I)=LFWSSN(I)*(LFDM(I)-LFPST(I))/LFDM(I)
+       ENDIF
 
         WLFDOT_calc = WLFDOT_calc + LFFRZ(I)
         SLDOT_calc = SLDOT_calc + LeafTotSen(I)
@@ -488,7 +526,7 @@ C-GH 08/19/2025
 !!----------------------------
 !! NON-STRUCTURAL CH2O STORING
 !!----------------------------.
-!     CHP 2025-11-28 Handle cohorts in GROW subroutine
+!     CHP 2025-11-28 Handle cohorts in GROW subroutine  ************* <<<--- GROW
       LCADD_calc = 0.0
 !
 !      IF(CADLF.GT.0)THEN
@@ -511,6 +549,7 @@ C-GH 08/19/2025
 !-------------------------
 ! NON-STRUCTURAL N STORING
 !-------------------------
+!     CHP 2025-11-28 Handle cohorts in GROW subroutine  ************* <<<--- GROW
       LNADD_calc = 0.0
 !      IF(NADLF.GT.0)THEN
 !       DO I=1,199
@@ -531,28 +570,38 @@ C-GH 08/19/2025
 !------------------
 ! TOTAL LEAF N LOSS
 !------------------      
-      NLOFF=0
+
+!     This code does not seem to match GROW code at all   <<<--- !!!
+
+!     code in GROW:
+!      NLOFF  = (SLNDOT + WLIDOT + WLFDOT) * (PCNL/100.) +
+!     &         (SLDOT-SLNDOT) * PROLFF * 0.16
+
+      NLOFF = 0.0
       DO I=1,NLC
         IF (LFDM(I).GT.0.0)THEN
-          NLOFF=NLOFF+(LFWSSN(I)+LFPST(I)+LFFRZ(I))*
-     &        ((LFNSN(I)+LFSN(I))/LFDM(I))+LFNMNSN(I)*(LFSN(I)/LFDM(I))
+          NLOFF = NLOFF                          ! Equivalent GROW variables
+     &      + (LFWSSN(I) + LFPST(I) + LFFRZ(I))  ! + (SLNDOT + WLIDOT + WLFDOT)
+     &      * ((LFNSN(I) + LFSN(I)) / LFDM(I))   ! * (WTNLF) / WTLF
+     &      + LFNMNSN(I) * (LFSN(I) / LFDM(I))   ! + NMobSen_c * (WTNLF - WNRLF) / WTLF
         ENDIF
       ENDDO
 
 !-----------------------------
 ! LEAF N LOSS FROM PEST DAMAGE
 !-----------------------------
-      NLPEST=0
+! chp - this is not used anywhere. For reporting only?
+      NLPEST = 0.0
       DO I=1,NLC
         IF (LFDM(I).GT.0.0)THEN
-          NLPEST=NLPEST+LFPST(I)*((LFNSN(I)+LFSN(I))/LFDM(I))
+          NLPEST = NLPEST + LFPST(I) * ((LFNSN(I) + LFSN(I)) / LFDM(I))
         ENDIF
       ENDDO
 
 !---------------------------------------------
 ! INTEGRATION OF N AND CH2O MINING AND SENESCENCE
 !---------------------------------------------
-      WLDOT_calc = WLDOTN
+      WLDOT_calc = WLDOTN   !total new growth today
 
       DO I=1,NLC
         IF (LFDM(I) .GT. 0.0) THEN
@@ -570,8 +619,12 @@ C-GH 08/19/2025
           LFNSN(I) = LFNSN(I) + LFNAD(I) - LFNMN(I) 
      &      - LeafMassDecrease * LFNSN(I) / LFDM(I)
 
+!         Equivalent equation in GROW terminology:
+!         WNRLF = WNRLF + LNADD - NRUSLF 
+!    &      - (WLIDOT + WLFDOT + SLDOT) * WNRLF / WTLF
 
-!     From GROW: calculatino of WNRLF = LFNSN
+
+!     From GROW: calculation of WNRLF = LFNSN
 !C-----------------------------------------------------------------------
 !C     Calculate Remaining N in Shells, Leaves, Stems, and Roots
 !C     That can be Mined (Plant N-Balance).
@@ -613,15 +666,31 @@ C-GH 08/19/2025
 
 
 
-
-
-
-
 !         DRY MATTER (WTLF in GROW)
+!         NOTE: All of today's new growth, WLDOTN, goes to today's 
+!             new cohort and does not appear in this integration eqn.
 !         LFNAD already divided by 0.16. Don't do it again.
-          LFDM(I) = LFDM(I) + LFCAD(I) + LFNAD(I) - LFNMN(I)/0.16 
-     &         - LFCMN(I) - LeafMassDecrease
 
+          LFDM(I) = LFDM(I) 
+     &            + LFCAD(I)         ! doesn't appear in GROW WLDOT calculations
+     &            + LFNAD(I)         ! doesn't appear in GROW WLDOT calculations
+     &            - LFNMN(I)/0.16    ! = NRUSLF/0.16
+     &            - LFCMN(I)         ! = CRUSLF
+     &            - LeafMassDecrease ! = SLDOT + WLIDOT + WLFDOT
+
+!C-----------------------------------------------------------------------
+!!     From GROW: calculation of WTLF = LFDM
+!C-----------------------------------------------------------------------
+!C       WLDOT = Net leaf growth rate
+!C-----------------------------------------------------------------------
+!      WLDOT = WLDOTN - SLDOT - WLIDOT - WLFDOT - NRUSLF/0.16 - CRUSLF
+!C-----------------------------------------------------------------------
+!C    Integration, Add Today's Net Growth to Existing Weights
+!C-----------------------------------------------------------------------
+!      WTLF   = WTLF   + WLDOT
+!C-----------------------------------------------------------------------
+
+!         Keep track of total leaff mass addition today
           WLDOT_calc = WLDOT_calc 
      &          + LFCAD(I) + LFNAD(I) - LFNMN(I)/0.16 - LFCMN(I) 
      &          - LeafMassDecrease
