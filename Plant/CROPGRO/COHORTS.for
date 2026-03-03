@@ -263,8 +263,8 @@ C-GH 08/19/2025
       CUMLFDM = CUMLFDM + LFDM(1)
       PLEAFN = WTNLF_C / WTLF_C * 100.
   
-      WRITE (CHRTOUT,310) YEAR, DOY, DAS,
-     &       NINT(WTLF_C*10),XLAI_C,PLEAFN
+!      WRITE (CHRTOUT,310) YEAR, DOY, DAS,
+!     &       NINT(WTLF_C*10),XLAI_C,PLEAFN
 
 !***********************************************************************
 !***********************************************************************
