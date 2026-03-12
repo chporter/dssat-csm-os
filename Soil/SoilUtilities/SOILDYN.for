@@ -713,7 +713,9 @@ C     Initialize curve number (according to J.T. Ritchie) 1-JUL-97 BDB
             ENDIF
           ENDIF
 
-          OC(L) = (0.15 * (CLAY(L) + SILT(L)) + 0.69) / 10.    !g/100g
+!         Use stable C function, which may be exchanged as we get better data.
+!         OC(L) = (0.15 * (CLAY(L) + SILT(L)) + 0.69) / 10.    !g/100g
+          OC(L) = Stable_C(CLAY(L), SILT(L))
           NMSG = NMSG+1
           WRITE(MSG(NMSG),'(I5,I6,2F6.1,F6.2," (estimated)")') 
      &          L, NINT(DS(L)), CLAY(L), SILT(L), OC(L)
