@@ -69,7 +69,8 @@ C-----------------------------------------------------------------------
       CHARACTER*17 SOILLAYERTYPE(NL)
       CHARACTER*50 SLDESC, TAXON
       INTEGER NLAYR
-      REAL CN, DMOD, KTRANS, SALB, SLDP, SLPF, SWCON, TEMP, TOTAW, U
+      REAL CN, DMOD, KTRANS, SALB, SLDP, SLPF, SWCON, TEMP
+      REAL TOTAW, TOTAWC, U
       REAL SWAD, SWnew
       REAL, DIMENSION(NL) :: ADCOEF, BD, CEC, CLAY, DLAYR, DS, DUL
       REAL, DIMENSION(NL) :: KG2PPM, LL, OC, PH, POROS, SAND, SAT, SILT
@@ -713,7 +714,9 @@ C     Initialize curve number (according to J.T. Ritchie) 1-JUL-97 BDB
             ENDIF
           ENDIF
 
-          OC(L) = (0.15 * (CLAY(L) + SILT(L)) + 0.69) / 10.    !g/100g
+!         Use stable C function, which may be exchanged as we get better data.
+!         OC(L) = (0.15 * (CLAY(L) + SILT(L)) + 0.69) / 10.    !g/100g
+          OC(L) = Stable_C(CLAY(L), SILT(L))
           NMSG = NMSG+1
           WRITE(MSG(NMSG),'(I5,I6,2F6.1,F6.2," (estimated)")') 
      &          L, NINT(DS(L)), CLAY(L), SILT(L), OC(L)
@@ -979,9 +982,9 @@ C  tillage and rainfall kinetic energy
       ISWTIL = ISWITCH % ISWTIL
       NTIL = TILLVALS % NTIL
 
-      CALL OPSOILDYN(CONTROL, DYNAMIC, ISWITCH, 
+      CALL OPSOILDYN(CONTROL, DYNAMIC, ISWITCH, LayerText,  NLAYR,
      &  BD, BD_SOM, CN, CRAIN, DLAYR, DUL, KECHGE, LL, OC, 
-     &  PRINT_TODAY, SAT, SOILCOV, SUMKE, SWCN, TOTAW)
+     &  PRINT_TODAY, SAT, SOILCOV, SOMLITC, SUMKE, SWCN, TOTAW, TOTAWC)
 
 !     Skip initialization for sequenced runs:
       IF (INDEX('FQ',RNMODE) > 0 .AND. RUN /= 1) RETURN
@@ -1106,6 +1109,10 @@ C  tillage and rainfall kinetic energy
 
           BD_calc_max(L) = 100./
      &      (SOM_PCT_min(L) / 0.224 + (100. - SOM_PCT_min(L)) / 2.65)
+!         Keep the user input BD if it is greater.
+          IF (BD_calc_max(L) < BD_init(L)) THEN
+            BD_calc_max(L) = BD_init(L)
+          ENDIF
 
           WRITE(5680,'(I5,I3,5F10.4,1X,A1)') CONTROL%RUN, L, 
      &      SOM_PCT(L), STABLEOM, BD(L), BD_CALC(L), BD_CALC_MAX(L)
@@ -1309,18 +1316,17 @@ C  tillage and rainfall kinetic energy
               
               BD_SOM(L) = BD_calc(L) / BD_calc_init(L) * BD_init(L)
               
-!     2026-02-19 temp chp
-!     temporarily remove all guardrails
+!     -----------------------------------------------------------------------------
+!         Guardrails for BD
 
-!!             Limit BD to realistic values
-!!             2025-10-21 CHP remove upper and lower bounds on BD 
-!!             Upper bound for BD_SOM
+!             Upper bound for BD_SOM
+              IF (BD_SOM(L) > BD_calc_max(L)) THEN
+                BD_SOM(L) = BD_calc_max(L)
+              ENDIF
 !!             BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2, 1.80) 
 !!             BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2, BD_calc_max(L))
 !              BD_SOM(L) = MIN(BD_SOM(L), BD_INIT(L)*1.2)
-!              IF (BD_SOM(L) > BD_calc_max(L)) THEN
-!                BD_SOM(L) = BD_calc_max(L)
-!              ENDIF
+
 !!             Lower bound for BD_SOM
 !!             BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8, 0.95) 
 !              BD_SOM(L) = MAX(BD_SOM(L), BD_INIT(L)*0.8) 
@@ -1442,24 +1448,26 @@ C  tillage and rainfall kinetic energy
 !           ---------------------------------------------------------------------------
           ENDIF
 
-!     2026-02-19 temp chp
-!     temporarily remove all guardrails
+!     -----------------------------------------------------------------------------
+!         Guardrails for DUL and LL
 
-!!         Limit LL to realistic values
-!!         Upper bound for LL_SOM
-!          LL_SOM(L) = MIN(LL_SOM(L), LL_INIT(L)*1.2)
-!!         Lower bound for LL_SOM
-!          LL_SOM(L) = MAX(LL_SOM(L), LL_INIT(L)*0.8)
-!
-!!         Limit DUL to realistic values
-!!         Upper bound for DUL_SOM
+!         Upper bound for DUL_SOM
+          DUL_SOM(L) = MIN(DUL_SOM(L), SAT(L) - 0.01)
 !!         2026-01-29 Remove restriction on relationship to SAT for upper bound
 !!         DUL_SOM(L) = MIN(DUL_SOM(L), DUL_INIT(L)*1.2, SAT(L) - 0.01)
 !          DUL_SOM(L) = MIN(DUL_SOM(L), DUL_INIT(L)*1.2)
-!!         Lower bound for DUL_SOM
+
+!         Lower bound for DUL_SOM
 !!         2025-12-26 Remove restriction on relationship to SAT for lower bound
 !!         DUL_SOM(L) = MAX(DUL_SOM(L), DUL_INIT(L)*0.8), SAT(L) - 0.30)
 !          DUL_SOM(L) = MAX(DUL_SOM(L), DUL_INIT(L)*0.8) 
+
+!         Upper bound for LL_SOM
+          LL_SOM(L) = MIN(LL_SOM(L), DUL_SOM(L) - 0.01)
+!          LL_SOM(L) = MIN(LL_SOM(L), LL_INIT(L)*1.2)
+
+!!         Lower bound for LL_SOM
+!          LL_SOM(L) = MAX(LL_SOM(L), LL_INIT(L)*0.8)
 
 !         TEMP CHP
           IF (L == 2) THEN
@@ -1470,6 +1478,7 @@ C  tillage and rainfall kinetic energy
      &      SomLit(L), SOMLITC(L), SOM_PCT(L), OC(L), BD_SOM(L), 
      &      DUL_SOM(L), LL_SOM(L)
           ENDIF
+!     -----------------------------------------------------------------------------
 
         ENDDO
 !     ENDIF  use MEINF to turn off SoilDynamics
@@ -1684,7 +1693,8 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
 
 !     Doesn't actually change daily if both BD and DLAYR are updated
 !     simultaneously.
-      TOTAW = 0.0
+      TOTAWC = 0.0  !Available water capacity (DUL - LL) for  profile
+      TOTAW  = 0.0  !Plant available water (SW - LL) for whole profile
       DO L = 1, NLAYR
 !       Conversion from kg/ha to ppm (or mg/l).  Recalculate daily.
         KG2PPM(L) = 10.0 / (BD(L) * DLAYR(L))
@@ -1697,7 +1707,8 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
         ENDIF 
 
 !       Available water capacity (mm)
-        TOTAW = TOTAW + (DUL(L) - LL(L)) * DLAYR(L) * 10.
+        TOTAWC = TOTAWC + (DUL(L) - LL(L)) * DLAYR(L) * 10.
+        TOTAW  = TOTAW  + (SW(L)  - LL(L)) * DLAYR(L) * 10.
         POROS(L)  = 1.0 - BD(L) / 2.65
         IF (POROS(L) < DUL(L)) POROS(L) = SAT(L)
       
@@ -1756,9 +1767,9 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
 !-----------------------------------------------------------------------
       IF (ISWWAT == 'N') RETURN
 
-      CALL OPSOILDYN(CONTROL, DYNAMIC, ISWITCH, 
+      CALL OPSOILDYN(CONTROL, DYNAMIC, ISWITCH, LayerText,  NLAYR,
      &  BD, BD_SOM, CN, CRAIN, DLAYR, DUL, KECHGE, LL, OC, 
-     &  PRINT_TODAY, SAT, SOILCOV, SUMKE, SWCN, TOTAW)
+     &  PRINT_TODAY, SAT, SOILCOV, SOMLITC, SUMKE, SWCN, TOTAW, TOTAWC)
 
 !***********************************************************************
 !***********************************************************************
@@ -2119,9 +2130,11 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
 
 !=======================================================================
 !     SUBROUTINE OPSOILDYN -- output dynamic soil properties
-      SUBROUTINE OPSOILDYN(CONTROL, DYNAMIC, ISWITCH, 
+      SUBROUTINE OPSOILDYN(CONTROL, DYNAMIC, ISWITCH, LayerText, NLAYR,
      &  BD, BD_SOM, CN, CRAIN, DLAYR, DUL, KECHGE, LL, OC, 
-     &  PRINT_TODAY, SAT, SOILCOV, SUMKE, SWCN, TOTAW)
+     &  PRINT_TODAY, SAT, SOILCOV, SOMLITC, SUMKE, SWCN, TOTAW, TOTAWC)
+
+!  03/12/2026 CHP Add 2nd output file with all soil layers for selected vars
 
       USE ModuleDefs
       IMPLICIT NONE
@@ -2131,13 +2144,19 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
       TYPE (ControlType) CONTROL
       TYPE (SwitchType)  ISWITCH
 
-      CHARACTER*11, PARAMETER :: OUTSOL = 'SoilDyn.OUT'
-      INTEGER DLUN, DOY, DYNAMIC, YEAR   
+!     Labels for soil layer depth info
+      CHARACTER*1 FMOPT
+      CHARACTER*8 LayerText(11)
+      CHARACTER*11 OUTSOL 
+      CHARACTER*12 OUTSOL2 
+
+      INTEGER DLUN, DLUN2, DOY, DYNAMIC, L, NLAYR, YEAR   
       LOGICAL FEXIST, PrintDyn
       LOGICAL Print_today !, TILLED
-      REAL CN, CRAIN, SOILCOV, SUMKE, TOTAW
+      REAL CN, CRAIN, SOILCOV, SUMKE, TOTAW, TOTAWC
+      REAL DUL10, LL10, DML10, OC10, SOIL10, OCKG10, CUMDEP
       REAL, DIMENSION(NL) :: BD, BD_SOM, DLAYR, DUL, LL, OC, SAT, SWCN
-      REAL, DIMENSION(0:NL) :: KECHGE
+      REAL, DIMENSION(0:NL) :: KECHGE, SOMLITC
 
 !***********************************************************************
 !***********************************************************************
@@ -2145,38 +2164,142 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
 !***********************************************************************
       IF (DYNAMIC .EQ. SEASINIT) THEN
 !-----------------------------------------------------------------------
+      FMOPT   = ISWITCH % FMOPT
+
       IF (INDEX('AD',ISWITCH % IDETL) > 0 .AND. ISWITCH % IDETW == 'Y' 
 !    &   .AND.  INDEX('YR',ISWITCH % ISWTIL) > 0) THEN
-     &   ) THEN
+     &    ) THEN
         PrintDyn = .TRUE. 
-        CALL GETLUN('OUTSOL',DLUN)
-!       Temporary output file for debugging:
-        INQUIRE (FILE = OUTSOL, EXIST = FEXIST)
-        IF (FEXIST) THEN      
-          !SoilDyn.out file has already been created for this run.
-          OPEN (UNIT=DLUN, FILE=OUTSOL, STATUS='OLD', POSITION='APPEND')
-        ELSE                  
-          CALL GETLUN('OUTSOL', DLUN)
-          OPEN (UNIT=DLUN, FILE=OUTSOL, STATUS='NEW')
-          WRITE(DLUN,'("*SOIL DYNAMICS OUTPUT FILE")')
+
+        IF (FMOPT .NE. 'C') THEN
+!         ASCII OUTPUT
+          OUTSOL = "SOILDYN.OUT"
+          CALL GETLUN('OUTSOL',DLUN)
+          INQUIRE (FILE = OUTSOL, EXIST = FEXIST)
+          IF (FEXIST) THEN      
+            !SoilDyn.out file has already been created for this run.
+            OPEN (UNIT=DLUN, FILE=OUTSOL,STATUS='OLD',POSITION='APPEND')
+          ELSE                  
+            OPEN (UNIT=DLUN, FILE=OUTSOL, STATUS='NEW')
+            WRITE(DLUN,'("*SOIL DYNAMICS OUTPUT FILE")')
+          ENDIF
+
+          IF (INDEX('FQ',CONTROL%RNMODE) == 0 .OR. CONTROL%RUN == 1)THEN
+            CALL HEADER(SEASINIT, DLUN, CONTROL % RUN)
+            WRITE(DLUN,"(/,
+     &      '@YEAR DOY   DAS Experiment..',
+     &      '   CRAIN  SOLCOV   SUMKE    ROCN  TOTAWC   TOTAW',
+     &      '   SCP1D   SCP2D   SCP3D   SCP4D',
+     &      '  KECHG1  KECHG2  KECHG3  KECHG4',
+     &      '  DLAYR1  DLAYR2  DLAYR3  DLAYR4',
+     &      '     BD1     BD2     BD3     BD4',
+     &      '    BDS1    BDS2    BDS3    BDS4',
+     &      '   SWCN1   SWCN2   SWCN3   SWCN4',
+     &      '    SAT1    SAT2    SAT3    SAT4',
+     &      '    DUL1    DUL2    DUL3    DUL4',
+     &      '     LL1     LL2     LL3     LL4',
+     &      '    DML1    DML2    DML3    DML4')")
+          ENDIF
+
+        ELSE
+!         CSV OUTPUT
+          OUTSOL = "SOILDYN.CSV"
+          CALL GETLUN('OUTSOL',DLUN)
+          INQUIRE (FILE = OUTSOL, EXIST = FEXIST)
+          IF (FEXIST) THEN      
+            !SoilDyn.out file has already been created for this run.
+            OPEN (UNIT=DLUN, FILE=OUTSOL,STATUS='OLD',POSITION='APPEND')
+          ELSE                  
+            OPEN (UNIT=DLUN, FILE=OUTSOL, STATUS='NEW')
+          ENDIF
+
+          IF (INDEX('FQ',CONTROL%RNMODE) == 0 .OR. CONTROL%RUN == 1)THEN
+            WRITE(DLUN,"(
+     &    'RUN,EXP,TRTNUM,ROTNUM,REPNO,',
+     &    'YEAR,DOY,DAS,',
+     &    'CRAIN,SOLCOV,SUMKE,ROCN,TOTAWC,TOTAW,',
+     &    'SCP1D,SCP2D,SCP3D,SCP4D,',
+     &    'KECHG1,KECHG2,KECHG3,KECHG4,',
+     &    'DLAYR1,DLAYR2,DLAYR3,DLAYR4,',
+     &    'BD1,BD2,BD3,BD4,',
+     &    'BDS1,BDS2,BDS3,BDS4,',
+     &    'SWCN1,SWCN2,SWCN3,SWCN4,',
+     &    'SAT1,SAT2,SAT3,SAT4,',
+     &    'DUL1, DUL2,DUL3,DUL4,',
+     &    'LL1,LL2,LL3,LL4,',
+     &    'DML1,DML2,DML3,DML4')")
+          ENDIF
         ENDIF
 
-       IF (INDEX('FQ',CONTROL%RNMODE) > 0 .AND. CONTROL%RUN /= 1)RETURN
+!     ----------------------------------------------------------------------
+!       SOILDYN2.OUT
+!       Detailed soil outputs for whole profile, selected variables
+!       Temporary output file for debugging:
+        IF (FMOPT .NE. 'C') THEN
+!         ASCII OUTPUT
+          OUTSOL2 = "SOILDYN2.OUT"
+          CALL GETLUN('OUTSOL2',DLUN2)
+          INQUIRE (FILE = OUTSOL2, EXIST = FEXIST)
+          IF (FEXIST) THEN      
+            !SoilDyn2.out file has already been created for this run.
+            OPEN(UNIT=DLUN2,FILE=OUTSOL2,STATUS='OLD',POSITION='APPEND')
+          ELSE                  
+            CALL GETLUN('OUTSOL2', DLUN2)
+            OPEN (UNIT=DLUN2, FILE=OUTSOL2, STATUS='NEW')
+            WRITE(DLUN2,'("*SOIL DYNAMICS OUTPUT FILE2")')
+          ENDIF
+         
+          IF (INDEX('FQ',CONTROL%RNMODE) > 0 .AND.CONTROL%RUN /=1)RETURN
+         
+          CALL HEADER(SEASINIT, DLUN2, CONTROL % RUN)
 
-        CALL HEADER(SEASINIT, DLUN, CONTROL % RUN)
-        WRITE(DLUN,"(/,
-     &  '@YEAR DOY   DAS Experiment..',
-     &  '   CRAIN  SOLCOV   SUMKE    ROCN   TOTAW',
-     &  '   SCP1D   SCP2D   SCP3D   SCP4D',
-     &  '  KECHG1  KECHG2  KECHG3  KECHG4',
-     &  '  DLAYR1  DLAYR2  DLAYR3  DLAYR4',
-     &  '     BD1     BD2     BD3     BD4',
-     &  '    BDS1    BDS2    BDS3    BDS4',
-     &  '   SWCN1   SWCN2   SWCN3   SWCN4',
-     &  '    SAT1    SAT2    SAT3    SAT4',
-     &  '    DUL1    DUL2    DUL3    DUL4',
-     &  '     LL1     LL2     LL3     LL4',
-     &  '    DML1    DML2    DML3    DML4')")
+          WRITE(DLUN2,'(/,A,28X,A,49X,A,49X,A,49X,A)') '!',
+     &     'DUL(cm3/cm3) at soil dep. (cm):',
+     &     'LL (cm3/cm3) at soil dep. (cm):',
+     &     'DML(cm3/cm3) at soil dep. (cm):',
+     &     'OC (g/100g) at soil dep. (cm):'
+
+          WRITE(DLUN2,'("!",27X,40A8)') (LayerText(L), L=1,10), 
+     &                                  (LayerText(L), L=1,10),
+     &                                  (LayerText(L), L=1,10),
+     &                                  (LayerText(L), L=1,10)
+
+           WRITE(DLUN2,"(A,
+     &      9(4X,A3,I1),3X,A5,
+     &      9(5X,A2,I1),4X,A4,
+     &      9(4X,A3,I1),3X,A5,
+     &      9(5X,A2,I1),4X,A4)")
+            
+     &      '@YEAR DOY   DAS Experiment..',
+     &      ('DUL',L,L=1,9),'DUL10',
+     &      ('LL', L,L=1,9),'LL10',
+     &      ('DML',L,L=1,9),'DML10',
+     &      ('OC', L,L=1,9),'OC10'
+
+        ELSE
+!         CSV OUTPUT
+          OUTSOL2 = "SOILDYN2.CSV"
+          CALL GETLUN('OUTSOL2',DLUN2)
+          INQUIRE (FILE = OUTSOL2, EXIST = FEXIST)
+          IF (FEXIST) THEN      
+            !SoilDyn2.out file has already been created for this run.
+            OPEN(UNIT=DLUN2,FILE=OUTSOL2,STATUS='OLD',POSITION='APPEND')
+          ELSE                  
+            OPEN (UNIT=DLUN2, FILE=OUTSOL2, STATUS='NEW')
+          ENDIF
+          IF (INDEX('FQ',CONTROL%RNMODE) > 0.AND.CONTROL%RUN /= 1)RETURN
+
+          WRITE(DLUN2,'(A,A)', ADVANCE='NO')
+     &      'RUN,EXP,TRTNUM,ROTNUM,REPNO,',
+     &      'YEAR,DOY,DAS'
+          WRITE(DLUN2,'(9(A4,I1),A6,9(A3,I1),A5,
+     &                  9(A4,I1),A6,9(A3,I1),A5)')
+     &      (',DUL',L,L=1,9),',DUL10',
+     &      (',LL', L,L=1,9),',LL10',
+     &      (',DML',L,L=1,9),',DML10',
+     &      (',OC', L,L=1,9),',OC10'
+        ENDIF
+
       ELSE
         PrintDyn = .FALSE.
       ENDIF
@@ -2192,16 +2315,17 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
 !    &    .OR. TILLED                           !OR Tilled recently
      &    .OR. Print_today)) THEN    !OR back to normal after tillage)
         CALL YR_DOY(CONTROL % YRDOY, YEAR, DOY) 
-        WRITE(DLUN,'(1X,I4,1X,I3.3,1X,I5,
+
+        IF (FMOPT .NE. 'C') THEN
+!         ASCII OUTPUT
+          WRITE(DLUN,'(1X,I4,1X,I3.3,1X,I5,
      &    1X,A12,
-     &    F8.1,2F8.3,F8.1,F8.2,
+     &    F8.1,2F8.3,F8.1,2F8.2,
      &    4F8.4,
-!     &    4F8.3,4F8.2,8F8.3,4F8.3,4F8.2,12F8.5)') 
      &    4F8.3,4F8.3,8F8.4,4F8.3,4F8.2,12F8.5)') 
-!         KECHG,DLAYR,BDs,  SWCN, SAT,  (DUL, LL, DUL-LL)
      &    YEAR, DOY, CONTROL % DAS, 
      &    CONTROL % FILEX,
-     &    CRAIN, SOILCOV, SUMKE, CN, TOTAW, 
+     &    CRAIN, SOILCOV, SUMKE, CN, TOTAWC, TOTAW, 
      &    OC(1),    OC(2),    OC(3),    OC(4),
      &    KECHGE(1),KECHGE(2),KECHGE(3),KECHGE(4),
      &    DLAYR (1), DLAYR(2), DLAYR(3), DLAYR(4),
@@ -2212,6 +2336,89 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
      &    DUL   (1),   DUL(2),   DUL(3),   DUL(4),
      &    LL    (1),    LL(2),    LL(3),    LL(4),
      &    DUL(1)-LL(1), DUL(2)-LL(2), DUL(3)-LL(3), DUL(4)-LL(4)
+
+        ELSE
+!         CSV OUTPUT
+          WRITE(DLUN,'(53(g0,","),g0)')
+     &    CONTROL%RUN, CONTROL%ENAME, CONTROL%TRTNUM, CONTROL%ROTNUM, 
+     &    CONTROL%REPNO,
+     &    YEAR, DOY, CONTROL % DAS, 
+     &    CRAIN, SOILCOV, SUMKE, CN, TOTAWC, TOTAW, 
+     &    OC(1),    OC(2),    OC(3),    OC(4),
+     &    KECHGE(1),KECHGE(2),KECHGE(3),KECHGE(4),
+     &    DLAYR (1), DLAYR(2), DLAYR(3), DLAYR(4),
+     &    BD    (1),    BD(2),    BD(3),    BD(4),
+     &    BD_SOM(1),BD_SOM(2),BD_SOM(3),BD_SOM(4),
+     &    SWCN  (1),  SWCN(2),  SWCN(3),  SWCN(4),
+     &    SAT   (1),   SAT(2),   SAT(3),   SAT(4),
+     &    DUL   (1),   DUL(2),   DUL(3),   DUL(4),
+     &    LL    (1),    LL(2),    LL(3),    LL(4),
+     &    DUL(1)-LL(1), DUL(2)-LL(2), DUL(3)-LL(3), DUL(4)-LL(4)
+        ENDIF
+
+!     ----------------------------------------------------------------------
+!       SOILDYN2.OUT
+
+!       Layer 10 is weighted average of all layers 10 thru NLAYR
+        SELECT CASE (NLAYR)
+        CASE (:9)
+!         Layer 10 doesn't exist
+          DUL10 = 0.0
+          LL10  = 0.0
+          DML10 = 0.0
+          OC10  = 0.0
+        CASE (10)
+!         Exactly 10 layers, just report layer 10
+          DUL10 = DUL(10) 
+          LL10  = LL(10)
+          DML10 = DUL(10) - LL(10)
+          OC10  = OC(10)
+        CASE(11:)
+!         More than 10 layers, report weighted average of layers 10 thru NLAYR
+          DUL10 = 0.0
+          LL10 = 0.0
+          DML10 = 0.0
+          OCKG10 = 0.0
+          SOIL10 = 0.0
+          CUMDEP = 0.0
+          DO L = 10, NLAYR
+            DUL10 = DUL10 + DUL(L) * DLAYR(L)
+            LL10  = LL10  + LL(L)  * DLAYR(L)
+            DML10 = DML10 + (DUL(L) - LL(L)) * DLAYR(L)
+            OCKG10 = OCKG10 + SOMLITC(L)
+            SOIL10 = SOIL10 + BD(L) * DLAYR(L)
+            CUMDEP = CUMDEP + DLAYR(L)
+          ENDDO
+          DUL10 = DUL10 / CUMDEP
+          LL10  = LL10  / CUMDEP
+          DML10 = DML10 / CUMDEP
+!         OC10 = OC(kg) / Soil(kg) * 100%
+          OC10  = OCKG10 * 1.E-5 / SOIL10 * 100.
+        END SELECT
+
+        IF (FMOPT .NE. 'C') THEN
+!         ASCII OUTPUT
+          WRITE(DLUN2,'(1X,I4,1X,I3.3,1X,I5,
+     &      1X,A12,
+     &      30F8.5,10F8.3)')
+     &      YEAR, DOY, CONTROL % DAS, 
+     &      CONTROL % FILEX,
+     &      (DUL(L),L=1,9), DUL10, 
+     &      (LL(L),L=1,9), LL10,
+     &      (DUL(L)-LL(L),L=1,9), DML10,
+     &      (OC(L),L=1,9), OC10
+        ELSE
+!         CSV OUTPUT
+          WRITE(DLUN2,'(47(g0,","),g0)')
+     &      CONTROL%RUN, CONTROL%ENAME, CONTROL%TRTNUM, CONTROL%ROTNUM, 
+     &      CONTROL%REPNO,
+     &      YEAR, DOY, CONTROL % DAS, 
+     &      (DUL(L),L=1,9), DUL10, 
+     &      (LL(L),L=1,9), LL10,
+     &      (DUL(L)-LL(L),L=1,9), DML10,
+     &      (OC(L),L=1,9), OC10
+        ENDIF
+
         Print_today =  .FALSE.
       ENDIF
 
