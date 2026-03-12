@@ -69,7 +69,8 @@ C-----------------------------------------------------------------------
       CHARACTER*17 SOILLAYERTYPE(NL)
       CHARACTER*50 SLDESC, TAXON
       INTEGER NLAYR
-      REAL CN, DMOD, KTRANS, SALB, SLDP, SLPF, SWCON, TEMP, TOTAW, U
+      REAL CN, DMOD, KTRANS, SALB, SLDP, SLPF, SWCON, TEMP
+      REAL TOTAW, TOTAWC, U
       REAL SWAD, SWnew
       REAL, DIMENSION(NL) :: ADCOEF, BD, CEC, CLAY, DLAYR, DS, DUL
       REAL, DIMENSION(NL) :: KG2PPM, LL, OC, PH, POROS, SAND, SAT, SILT
@@ -981,9 +982,9 @@ C  tillage and rainfall kinetic energy
       ISWTIL = ISWITCH % ISWTIL
       NTIL = TILLVALS % NTIL
 
-      CALL OPSOILDYN(CONTROL, DYNAMIC, ISWITCH, 
+      CALL OPSOILDYN(CONTROL, DYNAMIC, ISWITCH, LayerText,  NLAYR,
      &  BD, BD_SOM, CN, CRAIN, DLAYR, DUL, KECHGE, LL, OC, 
-     &  PRINT_TODAY, SAT, SOILCOV, SUMKE, SWCN, TOTAW)
+     &  PRINT_TODAY, SAT, SOILCOV, SOMLITC, SUMKE, SWCN, TOTAW, TOTAWC)
 
 !     Skip initialization for sequenced runs:
       IF (INDEX('FQ',RNMODE) > 0 .AND. RUN /= 1) RETURN
@@ -1692,7 +1693,8 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
 
 !     Doesn't actually change daily if both BD and DLAYR are updated
 !     simultaneously.
-      TOTAW = 0.0
+      TOTAWC = 0.0  !Available water capacity (DUL - LL) for whole profile
+      TOTAW  = 0.0  !Plant available water (SW - LL) for whole profile
       DO L = 1, NLAYR
 !       Conversion from kg/ha to ppm (or mg/l).  Recalculate daily.
         KG2PPM(L) = 10.0 / (BD(L) * DLAYR(L))
@@ -1705,7 +1707,8 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
         ENDIF 
 
 !       Available water capacity (mm)
-        TOTAW = TOTAW + (DUL(L) - LL(L)) * DLAYR(L) * 10.
+        TOTAWC = TOTAWC + (DUL(L) - LL(L)) * DLAYR(L) * 10.
+        TOTAW  = TOTAW  + (SW(L)  - LL(L)) * DLAYR(L) * 10.
         POROS(L)  = 1.0 - BD(L) / 2.65
         IF (POROS(L) < DUL(L)) POROS(L) = SAT(L)
       
@@ -1764,9 +1767,9 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
 !-----------------------------------------------------------------------
       IF (ISWWAT == 'N') RETURN
 
-      CALL OPSOILDYN(CONTROL, DYNAMIC, ISWITCH, 
+      CALL OPSOILDYN(CONTROL, DYNAMIC, ISWITCH, LayerText,  NLAYR,
      &  BD, BD_SOM, CN, CRAIN, DLAYR, DUL, KECHGE, LL, OC, 
-     &  PRINT_TODAY, SAT, SOILCOV, SUMKE, SWCN, TOTAW)
+     &  PRINT_TODAY, SAT, SOILCOV, SOMLITC, SUMKE, SWCN, TOTAW, TOTAWC)
 
 !***********************************************************************
 !***********************************************************************
@@ -2127,9 +2130,11 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
 
 !=======================================================================
 !     SUBROUTINE OPSOILDYN -- output dynamic soil properties
-      SUBROUTINE OPSOILDYN(CONTROL, DYNAMIC, ISWITCH, 
+      SUBROUTINE OPSOILDYN(CONTROL, DYNAMIC, ISWITCH, LayerText, NLAYR,
      &  BD, BD_SOM, CN, CRAIN, DLAYR, DUL, KECHGE, LL, OC, 
-     &  PRINT_TODAY, SAT, SOILCOV, SUMKE, SWCN, TOTAW)
+     &  PRINT_TODAY, SAT, SOILCOV, SOMLITC, SUMKE, SWCN, TOTAW, TOTAWC)
+
+!  03/12/2026 CHP Add 2nd output file with all soil layers for selected vars
 
       USE ModuleDefs
       IMPLICIT NONE
@@ -2139,13 +2144,18 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
       TYPE (ControlType) CONTROL
       TYPE (SwitchType)  ISWITCH
 
+!     Labels for soil layer depth info
+      CHARACTER*8 LayerText(11)
       CHARACTER*11, PARAMETER :: OUTSOL = 'SoilDyn.OUT'
-      INTEGER DLUN, DOY, DYNAMIC, YEAR   
+      CHARACTER*12, PARAMETER :: OUTSOL2 = 'SoilDyn2.OUT'
+
+      INTEGER DLUN, DLUN2, DOY, DYNAMIC, L, NLAYR, YEAR   
       LOGICAL FEXIST, PrintDyn
       LOGICAL Print_today !, TILLED
-      REAL CN, CRAIN, SOILCOV, SUMKE, TOTAW
+      REAL CN, CRAIN, SOILCOV, SUMKE, TOTAW, TOTAWC
+      REAL DUL10, LL10, DML10, OC10, SOIL10, OCKG10, CUMDEP
       REAL, DIMENSION(NL) :: BD, BD_SOM, DLAYR, DUL, LL, OC, SAT, SWCN
-      REAL, DIMENSION(0:NL) :: KECHGE
+      REAL, DIMENSION(0:NL) :: KECHGE, SOMLITC
 
 !***********************************************************************
 !***********************************************************************
@@ -2157,8 +2167,8 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
 !    &   .AND.  INDEX('YR',ISWITCH % ISWTIL) > 0) THEN
      &    ) THEN
         PrintDyn = .TRUE. 
+
         CALL GETLUN('OUTSOL',DLUN)
-!       Temporary output file for debugging:
         INQUIRE (FILE = OUTSOL, EXIST = FEXIST)
         IF (FEXIST) THEN      
           !SoilDyn.out file has already been created for this run.
@@ -2174,7 +2184,7 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
         CALL HEADER(SEASINIT, DLUN, CONTROL % RUN)
         WRITE(DLUN,"(/,
      &  '@YEAR DOY   DAS',
-     &  '   CRAIN  SOLCOV   SUMKE    ROCN   TOTAW',
+     &  '   CRAIN  SOLCOV   SUMKE    ROCN  TOTAWC   TOTAW',
      &  '   SCP1D   SCP2D   SCP3D   SCP4D',
      &  '  KECHG1  KECHG2  KECHG3  KECHG4',
      &  '  DLAYR1  DLAYR2  DLAYR3  DLAYR4',
@@ -2185,6 +2195,49 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
      &  '    DUL1    DUL2    DUL3    DUL4',
      &  '     LL1     LL2     LL3     LL4',
      &  '    DML1    DML2    DML3    DML4')")
+
+!     ----------------------------------------------------------------------
+!       SOILDYN2.OUT
+!       Detailed soil outputs for whole profile, selected variables
+!       Temporary output file for debugging:
+        CALL GETLUN('OUTSOL2',DLUN2)
+        INQUIRE (FILE = OUTSOL2, EXIST = FEXIST)
+        IF (FEXIST) THEN      
+          !SoilDyn2.out file has already been created for this run.
+          OPEN (UNIT=DLUN2, FILE=OUTSOL2,STATUS='OLD',POSITION='APPEND')
+        ELSE                  
+          CALL GETLUN('OUTSOL2', DLUN2)
+          OPEN (UNIT=DLUN2, FILE=OUTSOL2, STATUS='NEW')
+          WRITE(DLUN2,'("*SOIL DYNAMICS OUTPUT FILE2")')
+        ENDIF
+
+       IF (INDEX('FQ',CONTROL%RNMODE) > 0 .AND. CONTROL%RUN /= 1) RETURN
+
+        CALL HEADER(SEASINIT, DLUN2, CONTROL % RUN)
+
+       WRITE(DLUN2,'(/,A,15X,A,49X,A,49X,A,49X,A)') '!',
+     &  'DUL(cm3/cm3) at soil dep. (cm):',
+     &  'LL (cm3/cm3) at soil dep. (cm):',
+     &  'DML(cm3/cm3) at soil dep. (cm):',
+     &  'OC (g/100g) at soil dep. (cm):'
+
+       WRITE(DLUN2,'("!",14X,40A8)') (LayerText(L), L=1,10), 
+     &                               (LayerText(L), L=1,10),
+     &                               (LayerText(L), L=1,10),
+     &                               (LayerText(L), L=1,10)
+
+        WRITE(DLUN2,"(A,
+     &  9(4X,A3,I1),3X,A5,
+     &  9(5X,A2,I1),4X,A4,
+     &  9(4X,A3,I1),3X,A5,
+     &  9(5X,A2,I1),4X,A4)")
+
+     &  '@YEAR DOY   DAS',
+     &  ('DUL',L,L=1,9),'DUL10',
+     &  ('LL', L,L=1,9),'LL10',
+     &  ('DML',L,L=1,9),'DML10',
+     &  ('OC', L,L=1,9),'OC10'
+
       ELSE
         PrintDyn = .FALSE.
       ENDIF
@@ -2200,12 +2253,13 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
 !    &    .OR. TILLED                           !OR Tilled recently
      &    .OR. Print_today)) THEN    !OR back to normal after tillage)
         CALL YR_DOY(CONTROL % YRDOY, YEAR, DOY) 
+
         WRITE(DLUN,'(1X,I4,1X,I3.3,1X,I5,
-     &    F8.1,2F8.3,F8.1,F8.2,
+     &    F8.1,2F8.3,F8.1,2F8.2,
      &    4F8.4,
      &    4F8.3,4F8.3,8F8.4,4F8.3,4F8.2,12F8.5)') 
      &    YEAR, DOY, CONTROL % DAS, 
-     &    CRAIN, SOILCOV, SUMKE, CN, TOTAW, 
+     &    CRAIN, SOILCOV, SUMKE, CN, TOTAWC, TOTAW, 
      &    OC(1),    OC(2),    OC(3),    OC(4),
      &    KECHGE(1),KECHGE(2),KECHGE(3),KECHGE(4),
      &    DLAYR (1), DLAYR(2), DLAYR(3), DLAYR(4),
@@ -2216,6 +2270,54 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
      &    DUL   (1),   DUL(2),   DUL(3),   DUL(4),
      &    LL    (1),    LL(2),    LL(3),    LL(4),
      &    DUL(1)-LL(1), DUL(2)-LL(2), DUL(3)-LL(3), DUL(4)-LL(4)
+
+!     ----------------------------------------------------------------------
+!       SOILDYN2.OUT
+
+!       Layer 10 is weighted average of all layers 10 thru NLAYR
+        SELECT CASE (NLAYR)
+        CASE (:9)
+!         Layer 10 doesn't exist
+          DUL10 = 0.0
+          LL10  = 0.0
+          DML10 = 0.0
+          OC10  = 0.0
+        CASE (10)
+!         Exactly 10 layers, just report layer 10
+          DUL10 = DUL(10) 
+          LL10  = LL(10)
+          DML10 = DUL(10) - LL(10)
+          OC10  = OC(10)
+        CASE(11:)
+!         More than 10 layers, report weighted average of layers 10 thru NLAYR
+          DUL10 = 0.0
+          LL10 = 0.0
+          DML10 = 0.0
+          OCKG10 = 0.0
+          SOIL10 = 0.0
+          CUMDEP = 0.0
+          DO L = 10, NLAYR
+            DUL10 = DUL10 + DUL(L) * DLAYR(L)
+            LL10  = LL10  + LL(L)  * DLAYR(L)
+            DML10 = DML10 + (DUL(L) - LL(L)) * DLAYR(L)
+            OCKG10 = OCKG10 + SOMLITC(L)
+            SOIL10 = SOIL10 + BD(L) * DLAYR(L)
+            CUMDEP = CUMDEP + DLAYR(L)
+          ENDDO
+          DUL10 = DUL10 / CUMDEP
+          LL10  = LL10  / CUMDEP
+          DML10 = DML10 / CUMDEP
+!         OC10 = OC(kg) / Soil(kg) * 100%
+          OC10  = OCKG10 * 1.E-5 / SOIL10 * 100.
+        END SELECT
+
+        WRITE(DLUN2,'(1X,I4,1X,I3.3,1X,I5,30F8.5,10F8.3)')
+     &    YEAR, DOY, CONTROL % DAS, 
+     &    (DUL(L),L=1,9), DUL10, 
+     &    (LL(L),L=1,9), LL10,
+     &    (DUL(L)-LL(L),L=1,9), DML10,
+     &    (OC(L),L=1,9), OC10
+
         Print_today =  .FALSE.
       ENDIF
 
