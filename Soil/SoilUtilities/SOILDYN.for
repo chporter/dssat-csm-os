@@ -2173,7 +2173,7 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
 
         IF (FMOPT .NE. 'C') THEN
 !         ASCII OUTPUT
-          OUTSOL = "SOILDYN.OUT"
+          OUTSOL = "SoilDyn.OUT"
           CALL GETLUN('OUTSOL',DLUN)
           INQUIRE (FILE = OUTSOL, EXIST = FEXIST)
           IF (FEXIST) THEN      
@@ -2203,7 +2203,7 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
 
         ELSE
 !         CSV OUTPUT
-          OUTSOL = "SOILDYN.CSV"
+          OUTSOL = "soildyn.csv"
           CALL GETLUN('OUTSOL',DLUN)
           INQUIRE (FILE = OUTSOL, EXIST = FEXIST)
           IF (FEXIST) THEN      
@@ -2237,7 +2237,7 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
 !       Temporary output file for debugging:
         IF (FMOPT .NE. 'C') THEN
 !         ASCII OUTPUT
-          OUTSOL2 = "SOILDYN2.OUT"
+          OUTSOL2 = "SoilDyn2.OUT"
           CALL GETLUN('OUTSOL2',DLUN2)
           INQUIRE (FILE = OUTSOL2, EXIST = FEXIST)
           IF (FEXIST) THEN      
@@ -2278,7 +2278,7 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
 
         ELSE
 !         CSV OUTPUT
-          OUTSOL2 = "SOILDYN2.CSV"
+          OUTSOL2 = "soildyn2.csv"
           CALL GETLUN('OUTSOL2',DLUN2)
           INQUIRE (FILE = OUTSOL2, EXIST = FEXIST)
           IF (FEXIST) THEN      
