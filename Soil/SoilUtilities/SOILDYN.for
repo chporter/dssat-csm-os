@@ -1693,7 +1693,7 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
 
 !     Doesn't actually change daily if both BD and DLAYR are updated
 !     simultaneously.
-      TOTAWC = 0.0  !Available water capacity (DUL - LL) for whole profile
+      TOTAWC = 0.0  !Available water capacity (DUL - LL) for  profile
       TOTAW  = 0.0  !Plant available water (SW - LL) for whole profile
       DO L = 1, NLAYR
 !       Conversion from kg/ha to ppm (or mg/l).  Recalculate daily.
@@ -2145,9 +2145,10 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
       TYPE (SwitchType)  ISWITCH
 
 !     Labels for soil layer depth info
+      CHARACTER*1 FMOPT
       CHARACTER*8 LayerText(11)
-      CHARACTER*11, PARAMETER :: OUTSOL = 'SoilDyn.OUT'
-      CHARACTER*12, PARAMETER :: OUTSOL2 = 'SoilDyn2.OUT'
+      CHARACTER*11 OUTSOL 
+      CHARACTER*12 OUTSOL2 
 
       INTEGER DLUN, DLUN2, DOY, DYNAMIC, L, NLAYR, YEAR   
       LOGICAL FEXIST, PrintDyn
@@ -2163,80 +2164,141 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
 !***********************************************************************
       IF (DYNAMIC .EQ. SEASINIT) THEN
 !-----------------------------------------------------------------------
+      FMOPT   = ISWITCH % FMOPT
+
       IF (INDEX('AD',ISWITCH % IDETL) > 0 .AND. ISWITCH % IDETW == 'Y' 
 !    &   .AND.  INDEX('YR',ISWITCH % ISWTIL) > 0) THEN
      &    ) THEN
         PrintDyn = .TRUE. 
 
-        CALL GETLUN('OUTSOL',DLUN)
-        INQUIRE (FILE = OUTSOL, EXIST = FEXIST)
-        IF (FEXIST) THEN      
-          !SoilDyn.out file has already been created for this run.
-          OPEN (UNIT=DLUN, FILE=OUTSOL, STATUS='OLD', POSITION='APPEND')
-        ELSE                  
-          CALL GETLUN('OUTSOL', DLUN)
-          OPEN (UNIT=DLUN, FILE=OUTSOL, STATUS='NEW')
-          WRITE(DLUN,'("*SOIL DYNAMICS OUTPUT FILE")')
+        IF (FMOPT .NE. 'C') THEN
+!         ASCII OUTPUT
+          OUTSOL = "SOILDYN.OUT"
+          CALL GETLUN('OUTSOL',DLUN)
+          INQUIRE (FILE = OUTSOL, EXIST = FEXIST)
+          IF (FEXIST) THEN      
+            !SoilDyn.out file has already been created for this run.
+            OPEN (UNIT=DLUN, FILE=OUTSOL,STATUS='OLD',POSITION='APPEND')
+          ELSE                  
+            OPEN (UNIT=DLUN, FILE=OUTSOL, STATUS='NEW')
+            WRITE(DLUN,'("*SOIL DYNAMICS OUTPUT FILE")')
+          ENDIF
+
+          IF (INDEX('FQ',CONTROL%RNMODE) == 0 .OR. CONTROL%RUN == 1)THEN
+            CALL HEADER(SEASINIT, DLUN, CONTROL % RUN)
+            WRITE(DLUN,"(/,
+     &      '@YEAR DOY   DAS',
+     &      '   CRAIN  SOLCOV   SUMKE    ROCN  TOTAWC   TOTAW',
+     &      '   SCP1D   SCP2D   SCP3D   SCP4D',
+     &      '  KECHG1  KECHG2  KECHG3  KECHG4',
+     &      '  DLAYR1  DLAYR2  DLAYR3  DLAYR4',
+     &      '     BD1     BD2     BD3     BD4',
+     &      '    BDS1    BDS2    BDS3    BDS4',
+     &      '   SWCN1   SWCN2   SWCN3   SWCN4',
+     &      '    SAT1    SAT2    SAT3    SAT4',
+     &      '    DUL1    DUL2    DUL3    DUL4',
+     &      '     LL1     LL2     LL3     LL4',
+     &      '    DML1    DML2    DML3    DML4')")
+          ENDIF
+
+        ELSE
+!         CSV OUTPUT
+          OUTSOL = "SOILDYN.CSV"
+          CALL GETLUN('OUTSOL',DLUN)
+          INQUIRE (FILE = OUTSOL, EXIST = FEXIST)
+          IF (FEXIST) THEN      
+            !SoilDyn.out file has already been created for this run.
+            OPEN (UNIT=DLUN, FILE=OUTSOL,STATUS='OLD',POSITION='APPEND')
+          ELSE                  
+            OPEN (UNIT=DLUN, FILE=OUTSOL, STATUS='NEW')
+          ENDIF
+
+          IF (INDEX('FQ',CONTROL%RNMODE) == 0 .OR. CONTROL%RUN == 1)THEN
+            WRITE(DLUN,"(
+     &    'RUN,EXP,TRTNUM,ROTNUM,REPNO,',
+     &    'YEAR,DOY,DAS,',
+     &    'CRAIN,SOLCOV,SUMKE,ROCN,TOTAWC,TOTAW,',
+     &    'SCP1D,SCP2D,SCP3D,SCP4D,',
+     &    'KECHG1,KECHG2,KECHG3,KECHG4,',
+     &    'DLAYR1,DLAYR2,DLAYR3,DLAYR4,',
+     &    'BD1,BD2,BD3,BD4,',
+     &    'BDS1,BDS2,BDS3,BDS4,',
+     &    'SWCN1,SWCN2,SWCN3,SWCN4,',
+     &    'SAT1,SAT2,SAT3,SAT4,',
+     &    'DUL1, DUL2,DUL3,DUL4,',
+     &    'LL1,LL2,LL3,LL4,',
+     &    'DML1,DML2,DML3,DML4')")
+          ENDIF
         ENDIF
-
-       IF (INDEX('FQ',CONTROL%RNMODE) > 0 .AND. CONTROL%RUN /= 1)RETURN
-
-        CALL HEADER(SEASINIT, DLUN, CONTROL % RUN)
-        WRITE(DLUN,"(/,
-     &  '@YEAR DOY   DAS',
-     &  '   CRAIN  SOLCOV   SUMKE    ROCN  TOTAWC   TOTAW',
-     &  '   SCP1D   SCP2D   SCP3D   SCP4D',
-     &  '  KECHG1  KECHG2  KECHG3  KECHG4',
-     &  '  DLAYR1  DLAYR2  DLAYR3  DLAYR4',
-     &  '     BD1     BD2     BD3     BD4',
-     &  '    BDS1    BDS2    BDS3    BDS4',
-     &  '   SWCN1   SWCN2   SWCN3   SWCN4',
-     &  '    SAT1    SAT2    SAT3    SAT4',
-     &  '    DUL1    DUL2    DUL3    DUL4',
-     &  '     LL1     LL2     LL3     LL4',
-     &  '    DML1    DML2    DML3    DML4')")
 
 !     ----------------------------------------------------------------------
 !       SOILDYN2.OUT
 !       Detailed soil outputs for whole profile, selected variables
 !       Temporary output file for debugging:
-        CALL GETLUN('OUTSOL2',DLUN2)
-        INQUIRE (FILE = OUTSOL2, EXIST = FEXIST)
-        IF (FEXIST) THEN      
-          !SoilDyn2.out file has already been created for this run.
-          OPEN (UNIT=DLUN2, FILE=OUTSOL2,STATUS='OLD',POSITION='APPEND')
-        ELSE                  
-          CALL GETLUN('OUTSOL2', DLUN2)
-          OPEN (UNIT=DLUN2, FILE=OUTSOL2, STATUS='NEW')
-          WRITE(DLUN2,'("*SOIL DYNAMICS OUTPUT FILE2")')
+        IF (FMOPT .NE. 'C') THEN
+!         ASCII OUTPUT
+          OUTSOL2 = "SOILDYN2.OUT"
+          CALL GETLUN('OUTSOL2',DLUN2)
+          INQUIRE (FILE = OUTSOL2, EXIST = FEXIST)
+          IF (FEXIST) THEN      
+            !SoilDyn2.out file has already been created for this run.
+            OPEN(UNIT=DLUN2,FILE=OUTSOL2,STATUS='OLD',POSITION='APPEND')
+          ELSE                  
+            CALL GETLUN('OUTSOL2', DLUN2)
+            OPEN (UNIT=DLUN2, FILE=OUTSOL2, STATUS='NEW')
+            WRITE(DLUN2,'("*SOIL DYNAMICS OUTPUT FILE2")')
+          ENDIF
+         
+          IF (INDEX('FQ',CONTROL%RNMODE) > 0 .AND.CONTROL%RUN /=1)RETURN
+         
+          CALL HEADER(SEASINIT, DLUN2, CONTROL % RUN)
+
+          WRITE(DLUN2,'(/,A,15X,A,49X,A,49X,A,49X,A)') '!',
+     &     'DUL(cm3/cm3) at soil dep. (cm):',
+     &     'LL (cm3/cm3) at soil dep. (cm):',
+     &     'DML(cm3/cm3) at soil dep. (cm):',
+     &     'OC (g/100g) at soil dep. (cm):'
+
+          WRITE(DLUN2,'("!",14X,40A8)') (LayerText(L), L=1,10), 
+     &                                  (LayerText(L), L=1,10),
+     &                                  (LayerText(L), L=1,10),
+     &                                  (LayerText(L), L=1,10)
+
+           WRITE(DLUN2,"(A,
+     &      9(4X,A3,I1),3X,A5,
+     &      9(5X,A2,I1),4X,A4,
+     &      9(4X,A3,I1),3X,A5,
+     &      9(5X,A2,I1),4X,A4)")
+            
+     &      '@YEAR DOY   DAS',
+     &      ('DUL',L,L=1,9),'DUL10',
+     &      ('LL', L,L=1,9),'LL10',
+     &      ('DML',L,L=1,9),'DML10',
+     &      ('OC', L,L=1,9),'OC10'
+
+        ELSE
+!         CSV OUTPUT
+          OUTSOL2 = "SOILDYN2.CSV"
+          CALL GETLUN('OUTSOL2',DLUN2)
+          INQUIRE (FILE = OUTSOL2, EXIST = FEXIST)
+          IF (FEXIST) THEN      
+            !SoilDyn2.out file has already been created for this run.
+            OPEN(UNIT=DLUN2,FILE=OUTSOL2,STATUS='OLD',POSITION='APPEND')
+          ELSE                  
+            OPEN (UNIT=DLUN2, FILE=OUTSOL2, STATUS='NEW')
+          ENDIF
+          IF (INDEX('FQ',CONTROL%RNMODE) > 0.AND.CONTROL%RUN /= 1)RETURN
+
+          WRITE(DLUN2,'(A,A)', ADVANCE='NO')
+     &      'RUN,EXP,TRTNUM,ROTNUM,REPNO,',
+     &      'YEAR,DOY,DAS'
+          WRITE(DLUN2,'(9(A4,I1),A6,9(A3,I1),A5,
+     &                  9(A4,I1),A6,9(A3,I1),A5)')
+     &      (',DUL',L,L=1,9),',DUL10',
+     &      (',LL', L,L=1,9),',LL10',
+     &      (',DML',L,L=1,9),',DML10',
+     &      (',OC', L,L=1,9),',OC10'
         ENDIF
-
-       IF (INDEX('FQ',CONTROL%RNMODE) > 0 .AND. CONTROL%RUN /= 1) RETURN
-
-        CALL HEADER(SEASINIT, DLUN2, CONTROL % RUN)
-
-       WRITE(DLUN2,'(/,A,15X,A,49X,A,49X,A,49X,A)') '!',
-     &  'DUL(cm3/cm3) at soil dep. (cm):',
-     &  'LL (cm3/cm3) at soil dep. (cm):',
-     &  'DML(cm3/cm3) at soil dep. (cm):',
-     &  'OC (g/100g) at soil dep. (cm):'
-
-       WRITE(DLUN2,'("!",14X,40A8)') (LayerText(L), L=1,10), 
-     &                               (LayerText(L), L=1,10),
-     &                               (LayerText(L), L=1,10),
-     &                               (LayerText(L), L=1,10)
-
-        WRITE(DLUN2,"(A,
-     &  9(4X,A3,I1),3X,A5,
-     &  9(5X,A2,I1),4X,A4,
-     &  9(4X,A3,I1),3X,A5,
-     &  9(5X,A2,I1),4X,A4)")
-
-     &  '@YEAR DOY   DAS',
-     &  ('DUL',L,L=1,9),'DUL10',
-     &  ('LL', L,L=1,9),'LL10',
-     &  ('DML',L,L=1,9),'DML10',
-     &  ('OC', L,L=1,9),'OC10'
 
       ELSE
         PrintDyn = .FALSE.
@@ -2254,7 +2316,9 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
      &    .OR. Print_today)) THEN    !OR back to normal after tillage)
         CALL YR_DOY(CONTROL % YRDOY, YEAR, DOY) 
 
-        WRITE(DLUN,'(1X,I4,1X,I3.3,1X,I5,
+        IF (FMOPT .NE. 'C') THEN
+!         ASCII OUTPUT
+          WRITE(DLUN,'(1X,I4,1X,I3.3,1X,I5,
      &    F8.1,2F8.3,F8.1,2F8.2,
      &    4F8.4,
      &    4F8.3,4F8.3,8F8.4,4F8.3,4F8.2,12F8.5)') 
@@ -2270,6 +2334,25 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
      &    DUL   (1),   DUL(2),   DUL(3),   DUL(4),
      &    LL    (1),    LL(2),    LL(3),    LL(4),
      &    DUL(1)-LL(1), DUL(2)-LL(2), DUL(3)-LL(3), DUL(4)-LL(4)
+
+        ELSE
+!         CSV OUTPUT
+          WRITE(DLUN,'(53(g0,","),g0)')
+     &    CONTROL%RUN, CONTROL%ENAME, CONTROL%TRTNUM, CONTROL%ROTNUM, 
+     &    CONTROL%REPNO,
+     &    YEAR, DOY, CONTROL % DAS, 
+     &    CRAIN, SOILCOV, SUMKE, CN, TOTAWC, TOTAW, 
+     &    OC(1),    OC(2),    OC(3),    OC(4),
+     &    KECHGE(1),KECHGE(2),KECHGE(3),KECHGE(4),
+     &    DLAYR (1), DLAYR(2), DLAYR(3), DLAYR(4),
+     &    BD    (1),    BD(2),    BD(3),    BD(4),
+     &    BD_SOM(1),BD_SOM(2),BD_SOM(3),BD_SOM(4),
+     &    SWCN  (1),  SWCN(2),  SWCN(3),  SWCN(4),
+     &    SAT   (1),   SAT(2),   SAT(3),   SAT(4),
+     &    DUL   (1),   DUL(2),   DUL(3),   DUL(4),
+     &    LL    (1),    LL(2),    LL(3),    LL(4),
+     &    DUL(1)-LL(1), DUL(2)-LL(2), DUL(3)-LL(3), DUL(4)-LL(4)
+        ENDIF
 
 !     ----------------------------------------------------------------------
 !       SOILDYN2.OUT
@@ -2311,12 +2394,25 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
           OC10  = OCKG10 * 1.E-5 / SOIL10 * 100.
         END SELECT
 
-        WRITE(DLUN2,'(1X,I4,1X,I3.3,1X,I5,30F8.5,10F8.3)')
-     &    YEAR, DOY, CONTROL % DAS, 
-     &    (DUL(L),L=1,9), DUL10, 
-     &    (LL(L),L=1,9), LL10,
-     &    (DUL(L)-LL(L),L=1,9), DML10,
-     &    (OC(L),L=1,9), OC10
+        IF (FMOPT .NE. 'C') THEN
+!         ASCII OUTPUT
+          WRITE(DLUN2,'(1X,I4,1X,I3.3,1X,I5,30F8.5,10F8.3)')
+     &      YEAR, DOY, CONTROL % DAS, 
+     &      (DUL(L),L=1,9), DUL10, 
+     &      (LL(L),L=1,9), LL10,
+     &      (DUL(L)-LL(L),L=1,9), DML10,
+     &      (OC(L),L=1,9), OC10
+        ELSE
+!         CSV OUTPUT
+          WRITE(DLUN2,'(47(g0,","),g0)')
+     &      CONTROL%RUN, CONTROL%ENAME, CONTROL%TRTNUM, CONTROL%ROTNUM, 
+     &      CONTROL%REPNO,
+     &      YEAR, DOY, CONTROL % DAS, 
+     &      (DUL(L),L=1,9), DUL10, 
+     &      (LL(L),L=1,9), LL10,
+     &      (DUL(L)-LL(L),L=1,9), DML10,
+     &      (OC(L),L=1,9), OC10
+        ENDIF
 
         Print_today =  .FALSE.
       ENDIF
