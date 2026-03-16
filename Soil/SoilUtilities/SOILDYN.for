@@ -957,8 +957,8 @@ C  tillage and rainfall kinetic energy
       NTIL = TILLVALS % NTIL
 
       CALL OPSOILDYN(CONTROL, DYNAMIC, ISWITCH, 
-     &  BD, BD_SOM, CN, CRAIN, DLAYR, DUL, KECHGE, LL, PRINT_TODAY, SAT,
-     &  SOILCOV, SUMKE, SWCN, TOTAW)
+     &  BD, BD_SOM, CN, CRAIN, DLAYR, DUL, KECHGE, LL, OC, 
+     &  PRINT_TODAY, SAT, SOILCOV, SUMKE, SWCN, TOTAW)
 
 !     Skip initialization for sequenced runs:
       IF (INDEX('FQ',RNMODE) > 0 .AND. RUN /= 1) RETURN
@@ -1419,8 +1419,8 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
       IF (ISWWAT == 'N') RETURN
 
       CALL OPSOILDYN(CONTROL, DYNAMIC, ISWITCH, 
-     &  BD, BD_SOM, CN, CRAIN, DLAYR, DUL, KECHGE, LL, PRINT_TODAY, SAT, 
-     &  SOILCOV, SUMKE, SWCN, TOTAW)
+     &  BD, BD_SOM, CN, CRAIN, DLAYR, DUL, KECHGE, LL, OC, 
+     &  PRINT_TODAY, SAT, SOILCOV, SUMKE, SWCN, TOTAW)
 
 !***********************************************************************
 !***********************************************************************
@@ -1471,7 +1471,7 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
 ! NLAYR     Actual number of soil layers 
 ! NOTEXTURE Logical variable which indicates whether soil texture data is 
 !             available 
-! OC(L)     Organic carbon content of layer (%)
+! OC(L)     Organic carbon content of layer (g[C]/100 g soil)
 ! PH(L)     pH in soil layer L 
 ! PHKCL(L)  pH in buffer, soil layer L 
 ! SALB      Bare soil albedo (fraction)
@@ -1782,8 +1782,8 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
 !=======================================================================
 !     SUBROUTINE OPSOILDYN -- output dynamic soil properties
       SUBROUTINE OPSOILDYN(CONTROL, DYNAMIC, ISWITCH, 
-     &  BD, BD_SOM, CN, CRAIN, DLAYR, DUL, KECHGE, LL, PRINT_TODAY, SAT,
-     &  SOILCOV, SUMKE, SWCN, TOTAW)
+     &  BD, BD_SOM, CN, CRAIN, DLAYR, DUL, KECHGE, LL, OC, 
+     &  PRINT_TODAY, SAT, SOILCOV, SUMKE, SWCN, TOTAW)
 
       USE ModuleDefs
       IMPLICIT NONE
@@ -1798,7 +1798,7 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
       LOGICAL FEXIST, PrintDyn
       LOGICAL Print_today !, TILLED
       REAL CN, CRAIN, SOILCOV, SUMKE, TOTAW
-      REAL, DIMENSION(NL) :: BD, BD_SOM, DLAYR, DUL, LL, SAT, SWCN
+      REAL, DIMENSION(NL) :: BD, BD_SOM, DLAYR, DUL, LL, OC, SAT, SWCN
       REAL, DIMENSION(0:NL) :: KECHGE
 
 !***********************************************************************
@@ -1827,6 +1827,7 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
         CALL HEADER(SEASINIT, DLUN, CONTROL % RUN)
         WRITE(DLUN,"(/,
      &  '@YEAR DOY   DAS   CRAIN  SOLCOV   SUMKE    ROCN   TOTAW',
+     &  '   SCP1D   SCP2D   SCP3D   SCP4D',
      &  '  KECHG1  KECHG2  KECHG3  KECHG4',
      &  '  DLAYR1  DLAYR2  DLAYR3  DLAYR4',
      &  '     BD1     BD2     BD3     BD4',
@@ -1853,8 +1854,12 @@ c** wdb orig          SUMKEL = SUMKE * EXP(-0.15*MCUMDEP)
         CALL YR_DOY(CONTROL % YRDOY, YEAR, DOY) 
         WRITE(DLUN,'(1X,I4,1X,I3.3,1X,I5,
      &    F8.1,2F8.3,F8.1,F8.2,
-     &    4F8.3,4F8.2,8F8.3,4F8.3,4F8.2,12F8.5)') 
+     &    4F8.4,
+!     &    4F8.3,4F8.2,8F8.3,4F8.3,4F8.2,12F8.5)') 
+     &    4F8.3,4F8.3,8F8.4,4F8.3,4F8.2,12F8.5)') 
+!         KECHG,DLAYR,BDs,  SWCN, SAT,  (DUL, LL, DUL-LL)
      &    YEAR, DOY, CONTROL % DAS, CRAIN, SOILCOV, SUMKE, CN, TOTAW, 
+     &    OC(1),    OC(2),    OC(3),    OC(4),
      &    KECHGE(1),KECHGE(2),KECHGE(3),KECHGE(4),
      &    DLAYR (1), DLAYR(2), DLAYR(3), DLAYR(4),
      &    BD    (1),    BD(2),    BD(3),    BD(4),
