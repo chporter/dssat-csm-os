@@ -421,9 +421,9 @@ C-----------------------------------------------------------------------
       
       CALL COHORTS(DYNAMIC, 
      &  DTX, F, FILECC, NGRLF,                !Input
-     &  WLIDOT, WLDOTN,                       !Input
-     &  YRPLT,                                !TEMP CHP
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT
+     &  WLDOTN,                               !Input
+     &  YRPLT,                                !Input
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
 
       CALL OPGROW(CONTROL, ISWITCH, SoilProp, 
      &    CADLF, CADST, CANHT, CANWH, CMINEA, DWNOD, GROWTH,  
@@ -678,9 +678,9 @@ C-----------------------------------------------------------------------
 C-GH Add leaf Cohorts
       CALL COHORTS(DYNAMIC, 
      &  DTX, F, FILECC, NGRLF,                !Input
-     &  WLIDOT, WLDOTN,                       !Input
-     &  YRPLT,                                !TEMP CHP
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT
+     &  WLDOTN,                               !Input
+     &  YRPLT,                                !Input
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
 
 !-----------------------------------------------------------------------
 !     Write headings to output file GROWTH.OUT
@@ -892,24 +892,20 @@ C-----------------------------------------------------------------------
         
 !-----------------------------------------------------------------------     
 C-GH
-       WLDOTN=WTLF
-	 NGRLF=WTNLF
+      WLDOTN=WTLF
+      NGRLF=WTNLF
 !       write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
-      
+
       CALL COHORTS(EMERG, 
      &  DTX, F, FILECC, NGRLF,                !Input
-     &  WLIDOT, WLDOTN,                       !Input
-     &  YRPLT,                                !TEMP CHP
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT
-       
-!       write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF
-!       pause
-       
+     &  WLDOTN,                               !Input
+     &  YRPLT,                                !Input
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
+
        WLDOTN=0
-	 NGRLF=0
+       NGRLF=0
 
 !-----------------------------------------------------------------------
-       
         IF (ISWPHO .EQ. 'Y' .OR. ISWPHO .EQ. 'H') THEN
 !       Plant phosphorus module initialization at plant emergence
           CALL P_CGRO (EMERG, ISWITCH, 
@@ -954,7 +950,7 @@ C    AND TO BE SENSITIVE TO TEMPERATURE PRIOR TO R5 STAGE, BUT
 C    STILL WANT THE SPEED-UP CAUSED BY THE "+ DXR57" FEATURE AFTER R5.
 C
 C-----------------------------------------------------------------------
-      CMINEP = CMOBMX * (DTX + DXR57) * (WCRST + WCRRT + WCRSH +WCRLF)
+      CMINEP = CMOBMX * (DTX + DXR57) * (WCRST + WCRRT + WCRSH + WCRLF)
       PGAVL = PG + CMINEP
 C-----------------------------------------------------------------------
 C       Compute maintenance respiration and subtract from available CH2O
@@ -1327,12 +1323,10 @@ C----------------------------------
 !      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
       CALL COHORTS(DYNAMIC, 
      &  DTX, F, FILECC, NGRLF,                !Input
-     &  WLIDOT, WLDOTN,                       !Input
-     &  YRPLT,                                !TEMP CHP
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT
-           
-!      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
-!      pause
+     &  WLDOTN,                               !Input
+     &  YRPLT,                                !Input
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
+
       IF ((WTLF+STMWT).GT. 0.0001) THEN
         PCNVEG = (WTNLF+WTNST)/(WTLF+STMWT)*100.
       ELSE
@@ -1386,9 +1380,9 @@ C----------------------------------
 
         CALL COHORTS(DYNAMIC, 
      &  DTX, F, FILECC, NGRLF,                !Input
-     &  WLIDOT, WLDOTN,                       !Input
-     &  YRPLT,                                !TEMP CHP
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT
+     &  WLDOTN,                               !Input
+     &  YRPLT,                                !Input
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
 
         CALL OPGROW(CONTROL, ISWITCH, SoilProp, 
      &    CADLF, CADST, CANHT, CANWH, CMINEA, DWNOD, GROWTH,  

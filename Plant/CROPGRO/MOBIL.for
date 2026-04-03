@@ -30,7 +30,7 @@ C=======================================================================
       REAL CNMINE, NDMNEW, NMINEA, NMINEP, NMINER, NMOBR
       REAL NRUSLF, NRUSRT, NRUSSH, NRUSST, RPRO
       REAL TRNU, WNRLF, WNRRT, WNRSH, WNRST
-      REAL LFNMN_SUM
+      REAL LFNMN_SUM, LFNSN_SUM
 
 !***********************************************************************
 !***********************************************************************
@@ -75,18 +75,20 @@ C-----------------------------------------------------------------------
          CNMINE = NMINEA / 0.16 * RPRO        !Not used
 
 !        Handle leaf cohorts
-         LFNMN_SUM =0.0
+         LFNMN_SUM = 0.0
+         LFNSN_SUM = 0.0
          DO  I = 1, NLC
            LFNMN(I) = NMINER * LFNSN(I)
            LFNMN_SUM = LFNMN_SUM + LFNMN(I)
+           LFNSN_SUM = LFNSN_SUM + LFNSN(I)
          END DO
 
+!!        TEMP CHP
+!         IF (ABS(LFNMN_SUM - NRUSLF) > 1.E-6) THEN
+!           PRINT *,'LFNMN_SUM, NRUSLF, LFNSN_SUM, WNRLF',
+!     &              LFNMN_SUM, NRUSLF, LFNSN_SUM, WNRLF
+!         ENDIF
       ENDIF
-
-!     temp chp
-!      IF (LFNMN_SUM .NE. NRUSLF) THEN
-!        PRINT *, LFNMN_SUM, NRUSLF
-!      ENDIF
 
 !***********************************************************************
 !***********************************************************************

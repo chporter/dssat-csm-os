@@ -200,7 +200,9 @@ C-----------------------------------------------------------------------
       SLNDOT = 0.0
       SSNDOT = 0.0
       RATTP  = 1.0
-      LeafTotSen = 0.0  !leaf cohorts
+      LeafTotSen = 0.0
+      LFNMNSN = 0.0   
+      LFWSSN = 0.0    
 
       DO I = 1,5
         SWFCAB(I) = 1.0
@@ -231,7 +233,6 @@ C-----------------------------------------------------------------------
      &   '    TotSen_c    NatSen_c    NMbSen_c    LitSen_c',
      &   '    WatSen_c     R7Sen_c')
 
-
 !     end temp chp
 !=========================================================================
 
@@ -260,18 +261,18 @@ C-----------------------------------------------------------------------
 !=========================================================================
 !     TEMP CHP Add printout for SENES variables
 !     whole leaf calculations
-!     SLDOT 
       NatSen = 0.0
       NMobSen = 0.0
       LoLitSen = 0.0
       WaterSen = 0.0
       R7Sen = 0.0
-
 !     end temp chp
 !=========================================================================
 
 !     Cohort data
       LeafTotSen = 0.0
+      LFNMNSN = 0.0   
+      LFWSSN = 0.0    
       NatSen_c = 0.0
       NMobSen_c = 0.0
       LoLitSen_c = 0.0
@@ -285,6 +286,7 @@ C-----------------------------------------------------------------------
       LoLitSen_sum = 0.0
       WaterSen_sum = 0.0
       R7Sen_sum = 0.0
+
 !=========================================================================
 
       IF (DAS .LE. NR7 .AND. VSTAGE .GE. 1.0) THEN
@@ -294,9 +296,8 @@ C     beginning of seed growth
 C-----------------------------------------------------------------------
         IF (VSTAGE .GE. 5.0) THEN
           PORLFT = 1.0 - TABEX(SENPOR,XSTAGE,VSTAGE,4)
-          IF ((WTLF * ( 1.0 - RHOL)) .GT. CLW*PORLFT) THEN
-            SLDOT = WTLF * ( 1.0 - RHOL) - CLW * PORLFT
-
+          IF ((WTLF * (1.0 - RHOL)) .GT. CLW*PORLFT) THEN
+            NatSen = WTLF * (1.0 - RHOL) - CLW * PORLFT
 
 !!!!!       chp 2025-11-29
 !           This leaf cohort senescence calculation assumes all leaves senesce 
@@ -306,20 +307,19 @@ C-----------------------------------------------------------------------
 
             NatSen_sum = 0.0
             DO I = 1, NLC
-              NatSen_c(I) = LFDM(I) * ( 1.0 - RHOL) 
-     &            - CumLeafDM(I) * PORLFT
+              NatSen_c(I) = NatSen * LFDM(I) / WTLF
               NatSen_sum = NatSen_sum + NatSen_c(I)
             ENDDO
 
+          ENDIF
 !=========================================================================
 !     TEMP CHP Add printout for SENES variables
 
-            NatSen = WTLF * ( 1.0 - RHOL) - CLW * PORLFT
+          SLDOT = NatSen
 
 !     end temp chp
 !=========================================================================
 
-          ENDIF
         ENDIF
 C-----------------------------------------------------------------------
 C     This section calculates leaf senescence due to N mobilization.
@@ -384,10 +384,10 @@ C-----------------------------------------------------------------------
 !     end temp chp
 !=========================================================================
 
-
 C-----------------------------------------------------------------------
 C     Calculate senescence due to water stress.
 C-----------------------------------------------------------------------
+
         WSLOSS = SENDAY * (1. - RATTP) * WTLF
         IF (WSLOSS .GT. 0.0) THEN
           PORLFT = 1.0 - TABEX(SENMAX, XSENMX, VSTAGE, 4)

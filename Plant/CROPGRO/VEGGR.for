@@ -89,6 +89,9 @@ C========================================================================
 !     P module
       REAL PStres2
 
+!     TEMP CHP
+      REAL LFCMN_tot 
+
       TYPE (ControlType) CONTROL
       CALL GET(CONTROL)
       DAS = CONTROL % DAS
@@ -413,6 +416,9 @@ C-----------------------------------------------------------------------
          LSTR = LSTR * WTLF/(STMWT+WTLF*LSTR)
       ENDIF
       IF (PGLEFT .GE. CMINEP) THEN
+!   chp 2026-03-24 CADLF can only be calculated for whole leaf state variable
+!       not for cohorts because PGLEFT, CMINEP, PCH2O, and LSTR are all available
+!       only for whole leaf. 
         CADLF = (PGLEFT-CMINEP)/PCH2O * LSTR
         CADST = (PGLEFT-CMINEP) * (1. - LSTR) / PCH2O
       ELSE
@@ -444,6 +450,12 @@ C-----------------------------------------------------------------------
           ENDDO 
         ENDIF
       ENDIF
+
+!!     TEMP CHP
+!      LFCMN_tot = SUM(LFCMN)
+!      IF (ABS(LFCMN_TOT - CRUSLF) > 1.0E-5) THEN
+!        PRINT *,'CRUSLF, LFCMN_TOT', CRUSLF, LFCMN_TOT
+!      ENDIF
 
       CADLF = CADLF + CSAVEV/PCH2O * LSTR
       CADST = CADST + CSAVEV * (1. - LSTR)/PCH2O

@@ -429,11 +429,12 @@ C-----------------------------------------------------------------------
 
         WRITE (NOUTDG,200)
   200   FORMAT('@YEAR DOY   DAS   DAP'
-     &  ,'        WTLF       WLDOT      WLDOTN       SLDOT',
-     &   '      WLIDOT      WLFDOT      NRUSLF      CRUSLF',
-     &  ',       LCADD       LNADD       WNRLF       WCRLF')
-
-!     WLDOT = WLDOTN - SLDOT - WLIDOT - WLFDOT - NRUSLF/0.16 - CRUSLF
+     &  '        WTLF        XLAI       WCRLF      PLEAFN',
+     &  '       WTNLF       WNRLF        LFSN',
+     &  '       WLDOT       LCADD       LNADD      CRUSLF',
+     &  '      NRUSLF      WLIDOT      WLFDOT       SLDOT'
+     &  '      SLNDOT       NLOFF       NLDOT',
+     &  '       NGRLF      WLDOTN')
 
 !     end temp chp
 !=========================================================================
@@ -508,6 +509,9 @@ C     Initial seedling or transplant weight
       WTNSD  = 0.0
       WTNTOT = WTNLF + WTNST + WTNRT + WTNSH + WTNSD
 
+!     2026-04-01 chp added initialization for mobile N
+      WNRLF = MAX (WTNLF - PROLFF * 0.16 * (WTLF-WCRLF), 0.0)
+
 !     Seed or transplant N at planting
       SDNPL  = WTPSD * SDPRO * 0.16 * 0.75 * PLTPOP -
      &  (WTNLF + WTNST + WTNRT)
@@ -562,6 +566,8 @@ C       WLDOT = Net leaf growth rate
 C-----------------------------------------------------------------------
       WLDOT = WLDOTN - SLDOT - WLIDOT - WLFDOT - NRUSLF/0.16 - CRUSLF
 
+!     Calculate net addition to leaves today per cohort
+      CALL LeafCohortPest(WLIDOT, WTLF) !Calculates LFPST for cohorts
 
       LCADD = 0.0
       LNADD = 0.0
@@ -580,20 +586,16 @@ C-----------------------------------------------------------------------
         LNADD = NADLF/0.16 *
      &    (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
 
-
-!       Handle leaf cohorts
+!       Handle new reserves for leaf cohorts. These will be adjusted for 
+!         leaf losses in the COHORTS subroutine.
         DO I = 1, NLC
           IF (LFDM(I) > 0.0) THEN
-            LFCAD(I) = LFDM(I) / WTLF * (CADLF) *
-     &        (1. - MIN(1.0,
-     &        (LeafTotSen(I) + LFPST(I) + LFFRZ(I)) / LFDM(I)))
-            LFNAD(I) = LFDM(I) / WTLF * (NADLF / 0.16) *
-     &        (1. - MIN(1.0,
-     &        (LeafTotSen(I) + LFPST(I) + LFFRZ(I)) / LFDM(I)))
+            LFCAD(I) = LFDM(I) / WTLF * CADLF
+            LFNAD(I) = LFDM(I) / WTLF * NADLF
           ENDIF
         ENDDO
 
-        ADD = (CADLF+NADLF/0.16) *
+        ADD = (CADLF + NADLF/0.16) *
      &    (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
         ShutMob = ShutMob - ADD * 10.             !kg/ha
       ELSE
@@ -821,7 +823,6 @@ C     is damaged by insects, freezing, or senesced.  Otherwise, could
 C     get increase in tissue N composition when tissue is aborted.  Need
 C     to account for mass, N and C lost this way in sections below
 C-----------------------------------------------------------------------
-
 C-----------------------------------------------------------------------
 C     Leaf nitrogen senescence and pest damage loss
 C-----------------------------------------------------------------------
@@ -1272,11 +1273,13 @@ C-----------------------------------------------------------------------
 
         WRITE (NOUTDG,300)
      &   YEAR, DOY, DAS, DAP, 
-     &   WTLF, WLDOT, WLDOTN, SLDOT, WLIDOT, WLFDOT, NRUSLF/0.16, 
-     &   CRUSLF, LCADD, LNADD, WNRLF, WCRLF
+     &   WTLF, XLAI, WCRLF, PCNL, WTNLF, WNRLF, WTNLF - WNRLF,
+     &   WLDOT, LCADD, LNADD, CRUSLF, NRUSLF/0.16, 
+     &   WLIDOT, WLFDOT, SLDOT, SLNDOT, 
+     &   NLOFF, NLDOT, NGRLF, WLDOTN
 
   300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
-     &    21F12.6)
+     &    30F12.6)
 
 !     still temp chp...
 
@@ -1844,7 +1847,7 @@ C=======================================================================
 !            matter. Structure of variable is defined in ModuleDefs.for 
 ! SENWT    Leaf senescence due to N mobilization (g[leaf] / m2[ground])
 ! SHELWT   Total mass of all shells (g / m2)
-! SLA      Specific leaf area (cm2[leaf] / m2[ground])
+! SLA      Specific leaf area (cm2[leaf] / g[leaf])
 ! SLAAD    Specific leaf area, excluding weight of C stored in leaves
 !           (cm2[leaf] / g[leaf])
 ! SLDOT    Defoliation due to daily leaf senescence (g/m2/day)
