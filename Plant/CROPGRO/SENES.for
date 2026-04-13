@@ -66,7 +66,6 @@ C-----------------------------------------------------------------------
       REAL LeafTotSen_sum, NatSen_sum, NMobSen_sum, LoLitSen_sum, 
      &    WaterSen_sum, R7Sen_sum
 
-
       TYPE (ControlType) CONTROL
 
 !=========================================================================
@@ -231,7 +230,7 @@ C-----------------------------------------------------------------------
      &  ,'      TotSen      NatSen     NMobSen    LoLitSen',
      &   '    WaterSen       R7Sen',
      &   '    TotSen_c    NatSen_c    NMbSen_c    LitSen_c',
-     &   '    WatSen_c     R7Sen_c')
+     &   '    WatSen_c     R7Sen_c       RATTP      PORLFT')
 
 !     end temp chp
 !=========================================================================
@@ -270,9 +269,9 @@ C-----------------------------------------------------------------------
 !=========================================================================
 
 !     Cohort data
-      LeafTotSen = 0.0
-      LFNMNSN = 0.0   
-      LFWSSN = 0.0    
+      LeafTotSen = 0.0  !=SLDOT
+      LFNMNSN = 0.0     
+      LFWSSN = 0.0      !=SLNDOT
       NatSen_c = 0.0
       NMobSen_c = 0.0
       LoLitSen_c = 0.0
@@ -316,7 +315,7 @@ C-----------------------------------------------------------------------
 !     TEMP CHP Add printout for SENES variables
 
           SLDOT = NatSen
-
+          LeafTotSen = NatSen_c
 !     end temp chp
 !=========================================================================
 
@@ -331,15 +330,16 @@ C-----------------------------------------------------------------------
         LFSEN = SENRTE * NRUSLF / 0.16
         LFSEN = MIN(WTLF,LFSEN)
 
-        SLDOT = SLDOT + LFSEN
-        SLDOT = MIN(WTLF,SLDOT)
-
 !       cohorts
         NMobSen_sum = 0.0
         DO I = 1, NLC
           NMobSen_c(I) = SENRTE * LFNMN(I) / 0.16
           NMobSen_sum = NMobSen_sum + NMobSen_c(I)
         ENDDO
+
+        SLDOT = SLDOT + LFSEN
+        SLDOT = MIN(WTLF,SLDOT)
+        LeafTotSen = LeafTotSen + NMobSen_c
 
 !=========================================================================
 !     TEMP CHP Add printout for SENES variables
@@ -375,6 +375,7 @@ C-----------------------------------------------------------------------
 C     Convert area loss to biomass(m2 *10000cm2/m2)/(cm2/g)=g/m2
 C-----------------------------------------------------------------------
         SLDOT = SLDOT + LTSEN * 10000. / SLAAD
+        LeafTotSen = LeafTotSen + LoLitSen_c
 
 !=========================================================================
 !     TEMP CHP Add printout for SENES variables
@@ -395,13 +396,6 @@ C-----------------------------------------------------------------------
           WSLOSS = MAX(WSLOSS, 0.0)
           SLNDOT = WSLOSS
 
-
-!!!!!     chp 2025-11-29
-!         This leaf cohort senescence calculation assumes all leaves senesce 
-!         at the same rate as the whole pool of leaves.
-!         This needs to be changed to allow older leaves to senesce more than 
-!         young leaves.
-
           WaterSen_sum = 0.0
           DO I = 1, NLC
             WaterSen_c(I) = SENDAY * (1. - RATTP) * LFDM(I)
@@ -410,16 +404,15 @@ C-----------------------------------------------------------------------
             WaterSen_c(I) = MAX(WaterSen_c(I), 0.0)
             WaterSen_sum = WaterSen_sum + WaterSen_c(I)
           ENDDO
-
         ENDIF
 
         SLDOT = SLDOT + SLNDOT
+        LeafTotSen = LeafTotSen + WaterSen_c
+
         SSDOT = SLDOT * PORPT
         SSDOT = MIN(SSDOT,0.1*STMWT)
         SSNDOT = SLNDOT * PORPT
         SSNDOT = MIN(SSDOT,SSNDOT)
-
-        LFWSSN = WaterSen_c
 
 !=========================================================================
 !     TEMP CHP Add printout for SENES variables
@@ -442,15 +435,20 @@ C-----------------------------------------------------------------------
             R7Sen_c(I) = LFDM(I) * SENRT2
             R7Sen_sum = R7Sen_sum + R7Sen_c(I)
           ENDDO
-
+          LeafTotSen = R7Sen_c
 
           SLNDOT = SLDOT
+          WaterSen_c = R7Sen_c
+
           SSDOT = SLDOT * PORPT
           SSNDOT = SSDOT
+
         ELSE
           SLDOT = 0.0
-          SSDOT = 0.0
+          LeafTotSen = 0.0
           SLNDOT = 0.0
+          WaterSen_c = 0.0
+          SSDOT = 0.0
           SSNDOT = 0.0
         ENDIF
 
@@ -462,12 +460,8 @@ C-----------------------------------------------------------------------
         ENDIF
       ENDIF
 
-      LeafTotSen_sum = 0.0
-      DO I = 1, NLC
-        LeafTotSen(I) = NatSen_c(I) + NMobSen_c(I) +  LoLitSen_c(I) 
-     &      + WaterSen_c(I) + R7Sen_c(I)
-        LeafTotSen_sum = LeafTotSen_sum + LeafTotSen(I)
-      ENDDO
+      LFWSSN = WaterSen_c
+      LeafTotSen_SUM = SUM(LeafTotSen)
 
 !=========================================================================
 !     TEMP CHP Add printout for SENES variables
@@ -482,11 +476,10 @@ C-----------------------------------------------------------------------
      &   YEAR, DOY, DAS, DAP, 
      &   SLDOT, NatSen, NMobSen, LoLitSen, WaterSen, R7Sen,
      &   LeafTotSen_sum, NatSen_sum, NMobSen_sum, LoLitSen_sum, 
-     &   WaterSen_sum, R7Sen_sum
-
+     &   WaterSen_sum, R7Sen_sum, RATTP, PORLFT
 
   300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
-     &    21F12.6)
+     &    50F12.6)
 
 !     still temp chp...
 
