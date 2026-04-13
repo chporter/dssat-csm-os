@@ -125,10 +125,10 @@ CHP 2025-11-20
 !-----------------------------------------------------------------------
       COHORTOUT = 'COHORTS.OUT'
       CALL GETLUN('COHORTOUT',  CHRTOUT)
-          
+
       COHORTOUT1 = "COHORTS1.OUT"
       CALL GETLUN('COHORTOUT1', CHRTOUT1)
-          
+
       COHORTOUT2 = "COHORTS2.OUT"
       CALL GETLUN('COHORTOUT2', CHRTOUT2)
 
@@ -349,9 +349,11 @@ C-GH 08/19/2025
           NLOFF_c(I) = 
      &      + (LFWSSN(I) + LFPST(I) + LFFRZ(I)) * PCNLeaf(I) / 100.
      &      + (LeafTotSen(I) - LFWSSN(I)) * PROLFF * 0.16
+          NLOFF_c(I) = MIN(NLOFF_c(I), LeafNTot(I))
 
 !         Total N loss today for cohort I
           NLDOT_c(I) = - NLOFF_c(I) - LFNMN(I) + LFNAD(I) 
+          NLDOT_c(I) = MAX(NLDOT_c(I), -LeafNTot(I))
         ENDIF
       ENDDO
 
@@ -405,17 +407,19 @@ C-GH 08/19/2025
      &      + LFCAD(I)      !new reserves
 !             leaf mass losses:
      &      - LFNSC(I) / LFDM(I) * LeafMassDecrease(I)
+          IF (LFNSC(I) < 0.0) THEN
+            LFNSC(I) = 0.0
+          ENDIF
 
 !     ---------------------------------------------------------
 !         Leaf N
           LeafNTot(I) = LeafNTot(I) + NLDOT_c(I) 
 
 !         Structural N (WTNLF minus WNRLF in GROW)
-          LFSN(I) = PROLFF * 0.16 * (LFDM(I) - LFNSC(I))
+          LFSN(I) = MIN(LeafNTot(I), PROLFF*0.16 * (LFDM(I) - LFNSC(I)))
 
 !         Non-structural N (WNRLF in GROW)
           LFNSN(I) = LeafNTot(I) - LFSN(I)
-
         ENDIF
       ENDDO
 
@@ -434,19 +438,18 @@ C-GH 08/19/2025
 !       struct N (non-mobile):
         LFSN(NLC)  = PROLFF * 0.16 * (WLDOTN - LFNSC(NLC))  
         LFNSN(NLC) = NGRLF - LFSN(NLC)          !non-struct N (mobile)
+      ENDIF
 
 !-------------------------------------------------------------------
-        
-        DO I = 1, NLC
-          CohortAge(I) = CohortAge(I) + DTX  !cohort age in p-t-d
-          LeafNTot(I) = LFNSN(I) + LFSN(I)
-          IF (LFDM(I) > 0.0) THEN
-            PCNLeaf(I) = LeafNTot(I) / LFDM(I) * 100.  ! Percent N 
-          ELSE
-            PCNLeaf(I) = 0.0
-          ENDIF
-        ENDDO
-      ENDIF
+      DO I = 1, NLC
+        CohortAge(I) = CohortAge(I) + DTX  !cohort age in p-t-d
+        LeafNTot(I) = LFNSN(I) + LFSN(I)
+        IF (LFDM(I) > 0.0) THEN
+          PCNLeaf(I) = LeafNTot(I) / LFDM(I) * 100.  ! Percent N 
+        ELSE
+          PCNLeaf(I) = 0.0
+        ENDIF
+      ENDDO
 
 !***********************************************************************
 !***********************************************************************
