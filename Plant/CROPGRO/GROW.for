@@ -655,7 +655,11 @@ C     is damaged by insects, freezing, or senesced.  Otherwise, could
 C     get increase in tissue N composition when tissue is aborted.  Need
 C     to account for mass, N and C lost this way in sections below
 C-----------------------------------------------------------------------
-      WRCLDT = ALPHL * WLDOTN - CRUSLF - RHOL*(SLNDOT+WLIDOT+WLFDOT)
+! CHP 2025-12-01 should this be SLDOT instead of SLNDOT?
+!     SLNDOT is water senescence, SLDOT is total senescence
+!     WRCLDT = ALPHL * WLDOTN - CRUSLF - RHOL*(SLNDOT+WLIDOT+WLFDOT)
+!     temp chp ??? change or not? It does make some difference.
+      WRCLDT = ALPHL * WLDOTN - CRUSLF - RHOL*(SLDOT+WLIDOT+WLFDOT)
       IF (WTLF > 1.E-4) THEN
          WRCLDT = WRCLDT + CADLF *
      &     (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
