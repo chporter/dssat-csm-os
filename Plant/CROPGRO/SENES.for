@@ -362,11 +362,11 @@ C-----------------------------------------------------------------------
           LCMP = -(1. / KCAN) * ALOG(ICMP / PAR)
           LTSEN = DTX * (XLAI - LCMP) / TCMP
           LTSEN = MAX(0.0, LTSEN)
+          LoLitSen = LTSEN * 10000. / SLAAD
 
           LoLitSen_sum = 0.0
-          DO I = I, NLC
-            LoLitSen_c(I) = DTX * (XLAI - LCMP) / TCMP * 10000. / SLAAD
-            LoLitSen_c(I) = MAX(0.0, LoLitSen_c(I))
+          DO I = 1, NLC
+            LoLitSen_c(I) = LoLitSen * LFDM(I) / WTLF
             LoLitSen_sum = LoLitSen_sum + LoLitSen_c(I)
           ENDDO
 
@@ -377,18 +377,9 @@ C-----------------------------------------------------------------------
         SLDOT = SLDOT + LTSEN * 10000. / SLAAD
         LeafTotSen = LeafTotSen + LoLitSen_c
 
-!=========================================================================
-!     TEMP CHP Add printout for SENES variables
-
-        LoLitSen = LTSEN * 10000. / SLAAD
-
-!     end temp chp
-!=========================================================================
-
 C-----------------------------------------------------------------------
 C     Calculate senescence due to water stress.
 C-----------------------------------------------------------------------
-
         WSLOSS = SENDAY * (1. - RATTP) * WTLF
         IF (WSLOSS .GT. 0.0) THEN
           PORLFT = 1.0 - TABEX(SENMAX, XSENMX, VSTAGE, 4)

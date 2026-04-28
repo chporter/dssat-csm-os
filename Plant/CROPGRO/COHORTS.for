@@ -351,7 +351,7 @@ C-GH 08/19/2025
      &      + (LeafTotSen(I) - LFWSSN(I)) * PROLFF * 0.16
           NLOFF_c(I) = MIN(NLOFF_c(I), LeafNTot(I))
 
-!         Total N loss today for cohort I
+!         Net N gain today for cohort I
           NLDOT_c(I) = - NLOFF_c(I) - LFNMN(I) + LFNAD(I) 
           NLDOT_c(I) = MAX(NLDOT_c(I), -LeafNTot(I))
         ENDIF
@@ -401,7 +401,7 @@ C-GH 08/19/2025
           LFSLA(I) = LFAREA(I) / LFDM(I)
 
 !     ---------------------------------------------------------
-!         Non-structural CH2O (WCRLF in GROW)
+!         Non-structural CH2O (~WCRLF in GROW)
           LFNSC(I) = LFNSC(I) 
      &      - LFCMN(I)      !~ CRUSLF, mined CH2O
      &      + LFCAD(I)      !new reserves
@@ -430,14 +430,14 @@ C-GH 08/19/2025
         NLC = NLC + 1  !today's new cohort
 
 !       New growth for today's cohort
-        LFDM(NLC)  = WLDOTN                     !leaf dry mass
-        CumLeafDM(NLC) = WLDOTN
-        LFAREA(NLC)= WLDOTN * F              !leaf area
-        CohortAge(NLC) = 0.0
-        LFNSC(NLC) = WLDOTN * ALPHL             !non-struct CH2O
+        LFDM(NLC)  = WLDOTN             !leaf dry mass
+        CumLeafDM(NLC) = WLDOTN         !cum leaf mass added
+        LFAREA(NLC)= WLDOTN * F         !leaf area
+        LFNSC(NLC) = WLDOTN * ALPHL     !non-struct CH2O
+
 !       struct N (non-mobile):
         LFSN(NLC)  = PROLFF * 0.16 * (WLDOTN - LFNSC(NLC))  
-        LFNSN(NLC) = NGRLF - LFSN(NLC)          !non-struct N (mobile)
+        LFNSN(NLC) = NGRLF - LFSN(NLC)  !non-struct N (mobile)
       ENDIF
 
 !-------------------------------------------------------------------
@@ -445,7 +445,7 @@ C-GH 08/19/2025
         CohortAge(I) = CohortAge(I) + DTX  !cohort age in p-t-d
         LeafNTot(I) = LFNSN(I) + LFSN(I)
         IF (LFDM(I) > 0.0) THEN
-          PCNLeaf(I) = LeafNTot(I) / LFDM(I) * 100.  ! Percent N 
+          PCNLeaf(I) = LeafNTot(I) / LFDM(I) * 100.  ! % N 
         ELSE
           PCNLeaf(I) = 0.0
         ENDIF
@@ -619,7 +619,6 @@ C-GH 08/19/2025
 !      AREAH  = AREALF - DISLA
 !      AREAH  = MAX(0.,AREAH)
 !      XHLAI  = AREAH / 10000.
-
 
 !-----------------------------------------------------------------------
       RETURN
