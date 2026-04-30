@@ -92,6 +92,10 @@ CHP 2025-11-20
      &  LFAREA,       !Leaf area (cm2[leaf]/m2)
      &  LFAREAH,      !Healthy leaf area (cm2[leaf]/m2)
      &  LFSLA         !Specific leaf area (cm2/g)
+!!       Composition and quality
+!     &  LFLIGNIN,     !Lignin content %
+!     &  LFCELLUL,     !Cellulose content %
+!     &  LFHEMICEL     !Hemicellulose content %
 
       REAL, DIMENSION(LCMax) :: LeafMassDecrease, NLDOT_c, 
      &    NLOFF_c
@@ -150,6 +154,10 @@ CHP 2025-11-20
       LFAREAH   = 0.0 !healthy leaf area (cm2[leaf]/m2)
 
       CUMLFDM = 0.0 !Not used by could be compared with CumLeafDM
+
+!      LFLIGNIN  = 0.0 !Lignin content %
+!      LFCELLUL  = 0.0 !Cellulose content %
+!      LFHEMICEL = 0.0 !Hemicellulose content %
 
 C-GH 08/19/2025
       WTLF_calc = 0.0
@@ -234,6 +242,11 @@ C-GH 08/19/2025
       ELSE
         PCNLeaf(1) = 0.0
       ENDIF
+
+!!     Composition
+!      LFLIGNIN  = function of ??
+!      LFCELLUL  = function of ??
+!      LFHEMICEL = function of ??
 
 !     Leaf area
       LFAREA(1)  = WLDOTN * F              !leaf area (cm2/m2)
@@ -420,6 +433,14 @@ C-GH 08/19/2025
 
 !         Non-structural N (WNRLF in GROW)
           LFNSN(I) = LeafNTot(I) - LFSN(I)
+
+!!        Composition
+!         LFLIGNIN = function of ??
+!         LFCELLUL = function of ??
+!         LFHEMICEL = function of ??
+!         ADF = function of LFLIGNIN, LFCELLUL, LFHEMICEL
+!         NDF = function of LFLIGNIN, LFCELLUL, LFHEMICEL
+
         ENDIF
       ENDDO
 
@@ -438,6 +459,11 @@ C-GH 08/19/2025
 !       struct N (non-mobile):
         LFSN(NLC)  = PROLFF * 0.16 * (WLDOTN - LFNSC(NLC))  
         LFNSN(NLC) = NGRLF - LFSN(NLC)  !non-struct N (mobile)
+
+!!        Composition
+!         LFLIGNIN = function of ??
+!         LFCELLUL = function of ??
+!         LFHEMICEL = function of ??
       ENDIF
 
 !-------------------------------------------------------------------
