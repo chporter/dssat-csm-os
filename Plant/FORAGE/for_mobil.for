@@ -27,10 +27,11 @@ C=======================================================================
       USE ModuleDefs     !Definitions of constructed variable types, 
         ! which contain control information, soil
         ! parameters, hourly weather data.
+      USE COHORTS_MOD
       IMPLICIT NONE
       SAVE
 
-      INTEGER DYNAMIC
+      INTEGER DYNAMIC, I
 
       REAL CNMINE, NMINEA   !NDMNEW, NMINEP, NMINER, NMOBR
       REAL NRUSLF, NRUSRT, NRUSSH, NRUSST, RPRO
@@ -40,6 +41,8 @@ C=======================================================================
       REAL ANMINELF, ANMINERT, ANMINESH, ANMINESR, ANMINEST, LFSNMOB, 
      &   RTSNMOB, !NMINELF, NMINERT, NMINESR, NMINEST, SHNMINE,
      &   SRSNMOB, STSNMOB, TSNMOB  
+
+      REAL LFNMN_SUM, LFNSN_SUM
 
 !***********************************************************************
 !***********************************************************************
@@ -79,6 +82,8 @@ C=======================================================================
       ANMINERT = 0.0
       ANMINESR = 0.0
       ANMINESH = 0.0
+
+      LFNMN = 0.0   !Leaf cohorts
 
 C-----------------------------------------------------------------------
 !    Leave FOR_MOBIL with N Mined from Leaf, Stem,Root, Shell, and
@@ -123,7 +128,6 @@ C     NMINELF SHOULD HAVE BEEN LFNMINE, ETC. IN EARLIER VERSION, NOW NMINEP=TSNM
         NRUSSH = ANMINESH
 
         CNMINE = NMINEA / 0.16 * RPRO        !Not used
-  
 
 C-----------------------------------------------------------------------
 !    Calculate proportion of N Mined from Leaf, Stem,Root, Shell, and
@@ -132,18 +136,28 @@ C-----------------------------------------------------------------------
 
       NRUSTOT = NRUSLF+NRUSST+NRUSSH+NRUSRT+NRUSSR
       IF (NRUSTOT .GT. 0.0) THEN
-      PNMLF=NRUSLF/NRUSTOT
-      PNMST=NRUSST/NRUSTOT
-      PNMRT=NRUSRT/NRUSTOT
-      PNMSR=NRUSSR/NRUSTOT
-      PNMSH=NRUSSH/NRUSTOT
+        PNMLF=NRUSLF/NRUSTOT
+        PNMST=NRUSST/NRUSTOT
+        PNMRT=NRUSRT/NRUSTOT
+        PNMSR=NRUSSR/NRUSTOT
+        PNMSH=NRUSSH/NRUSTOT
       ELSE
-      PNMLF=0.0
-      PNMST=0.0
-      PNMRT=0.0
-      PNMSR=0.0
-      PNMSH=0.0
+        PNMLF=0.0
+        PNMST=0.0
+        PNMRT=0.0
+        PNMSR=0.0
+        PNMSH=0.0
       ENDIF
+
+!        Handle leaf cohorts
+         LFNMN_SUM = 0.0
+         LFNSN_SUM = 0.0
+         DO  I = 1, NLC
+           LFNMN(I) = NMINER * LFNSN(I)
+           LFNMN_SUM = LFNMN_SUM + LFNMN(I)
+           LFNSN_SUM = LFNSN_SUM + LFNSN(I)
+         END DO
+
 !***********************************************************************
 !***********************************************************************
 !     END OF DYNAMIC IF CONSTRUCT

@@ -11,6 +11,7 @@ C  12/31/1996 GH  Deleted phenology statements.
 C  09/15/1998 CHP Modified for modular format.
 C  05/10/1999 GH  Incorporaed in CROPGRO
 !  06/15/2022 CHP Added CropStatus
+!  04/29/2026 chp Leaf cohorts
 C-----------------------------------------------------------------------
 C  Called by  : CROPGRO
 C  Calls      : None

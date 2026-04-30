@@ -11,6 +11,7 @@ C  12/31/1996 GH  Deleted phenology statements.
 C  09/15/1998 CHP Modified for modular format.
 C  05/10/1999 GH  Incorporaed in CROPGRO
 !  06/15/2022 CHP Added CropStatus
+!  04/29/2026 chp Leaf cohorts
 C-----------------------------------------------------------------------
 C  Called by  : CROPGRO
 C  Calls      : None
@@ -34,6 +35,7 @@ C========================================================================
 
 
 C-----------------------------------------------------------------------
+      USE COHORTS_MOD
       IMPLICIT NONE
       EXTERNAL WARNING, TIMDIF
       SAVE
@@ -41,7 +43,7 @@ C-----------------------------------------------------------------------
 !     CHARACTER*1  IDETO
 !     CHARACTER*30 FILEIO
       CHARACTER*78 MESSAGE(10)
-      INTEGER MDATE, YRDOY, DAP, YRPLT, TIMDIF, CropStatus    !NOUTDO, 
+      INTEGER MDATE, YRDOY, DAP, YRPLT, TIMDIF, CropStatus, I   !NOUTDO,
       REAL  WLFDOT, WTLF, SLDOT, NRUSLF, TMIN, FREEZ1, FREEZ2
       REAL  FRZDC, FRZDL, NRUSST, PSRSRFD,  !NRUSSR, PSRSRFL, PSRLYR1, 
      &  PSRLYRD, SSDOT, STMWT,   !SRLYRD, SRFTEMP, SRSRFD, SSRDOT, 
@@ -54,7 +56,8 @@ C      part of abandoned strategy to allow partial to total kill
 C      of the storage organ.  Plant would live as long as there
 C      was storage organ left.
 C-----------------------------------------------------------------------
-
+      WLFDOT = 0.0
+      LFFRZ  = 0.0
       WSRFDOT = 0.0
 
       PSRSRFD = 0.0
@@ -66,45 +69,54 @@ C      temperature multiplied by the proportion lost per degree below
 C      threshold.  For total kill (like DSSAT35) set FRZDC=1.0
 C-----------------------------------------------------------------------
 
-            FRZDL = (FREEZ1 - TMIN) * FRZDC
-            FRZDL = MIN(FRZDL,1.0)
-            FRZDL = MAX(FRZDL,0.0)
+      FRZDL = (FREEZ1 - TMIN) * FRZDC
+      FRZDL = MIN(FRZDL,1.0)
+      FRZDL = MAX(FRZDL,0.0)
 
-            WLFDOT = (WTLF - SLDOT - NRUSLF/0.16) * FRZDL
-            WLFDOT = MIN ((WTLF - SLDOT - NRUSLF/0.16), WLFDOT)
+      IF (FRZDL > 0.0) THEN
+
+        WLFDOT = (WTLF - SLDOT - NRUSLF/0.16) * FRZDL
+        WLFDOT = MIN ((WTLF - SLDOT - NRUSLF/0.16), WLFDOT)
+
+!       Handle freeze damage for leaf cohorts
+        LFFRZ = 0.0
+        DO I = 1, NLC
+          LFFRZ(I) = (LFDM(I) - LeafTotSen(I) - LFNMN(I) / 0.16) * FRZDL
+        ENDDO
+
 C-----------------------------------------------------------------------
 C      SJR 5/12/04 Moved VSTAGE adjustment to GROW
 C       to be compatible with adjustment for senescence
 C-----------------------------------------------------------------------
 !            VSTAGE = ((WTLF-WLFDOT)/WTLF) * VSTAGE
 
-            WSFDOT = (STMWT - SSDOT - NRUSST/0.16) * FRZDL
-            WSFDOT = MIN ((STMWT - SSDOT - NRUSST/0.16), WSFDOT)
+        WSFDOT = (STMWT - SSDOT - NRUSST/0.16) * FRZDL
+        WSFDOT = MIN ((STMWT - SSDOT - NRUSST/0.16), WSFDOT)
+      ENDIF
 
+      IF (TMIN .LE. FREEZ2) THEN
+        IF (MDATE .LT. 0) THEN
+          MDATE = YRDOY
+          CropStatus = 32 !cold stress
+        ENDIF
 
-            IF (TMIN .LE. FREEZ2) THEN
-                    IF (MDATE .LT. 0) THEN
-                        MDATE = YRDOY
-                        CropStatus = 32 !cold stress
-                        ENDIF
+        WLFDOT = WTLF - SLDOT - NRUSLF/0.16
 
-                  WLFDOT = WTLF - SLDOT - NRUSLF/0.16
+!       Handle freeze damage for leaf cohorts
+        LFFRZ = 0.0
+        DO I = 1, NLC
+          LFFRZ(I) = LFDM(I) - LeafTotSen(I) - LFNMN(I) / 0.16
+        ENDDO
+
 C-----------------------------------------------------------------------
 C      SJR 5/12/04 Moved VSTAGE adjustment to GROW
 C       to be compatible with adjustment for senescence
 C-----------------------------------------------------------------------
 !                  VSTAGE = 0.0
-                  WSFDOT = STMWT - SSDOT - NRUSST/0.16
-
-
-            ENDIF
-      
+        WSFDOT = STMWT - SSDOT - NRUSST/0.16
+      ENDIF
 
       DAP   = MAX(0,TIMDIF(YRPLT,YRDOY))
-
-        
-      
-
       WRITE(MESSAGE(1),100) DAP
       WRITE(MESSAGE(2),110) YRDOY
       CALL WARNING(1, 'FREEZE', MESSAGE)

@@ -23,6 +23,7 @@ C                        specify distribution of storage organ dry mass
 C                        between soil surface layer and soil layer 1
 C                        used to distribute senesced material for CENTURY model
 !  06/15/2022 CHP Added CropStatus
+!  04/30/2026 chp Added leaf cohorts
 C-----------------------------------------------------------------------
 C  Called by:  CROPGRO
 C  Calls:      FOR_IPGROW, FOR_STRESS
@@ -91,8 +92,14 @@ C=======================================================================
       USE ModuleDefs     !Definitions of constructed variable types, 
         ! which contain control information, soil
         ! parameters, hourly weather data.
+      USE COHORTS_MOD
       IMPLICIT NONE
       EXTERNAL FOR_IPGROW, ERROR, FOR_STRESS
+
+!     TEMP CHP
+      EXTERNAL TIMDIF, YR_DOY, GETLUN, HEADER
+!     END TEMP CHP
+
       SAVE
 !-----------------------------------------------------------------------
 
@@ -108,7 +115,7 @@ C=======================================================================
       character(len=60) ename
 !     CHARACTER*78 MESSAGE(2)
 
-      INTEGER DYNAMIC, NOUTDO, L, NLAYR
+      INTEGER DYNAMIC, NOUTDO, L, NLAYR, I
       INTEGER YRDOY, YRNR1, MDATE
       INTEGER YRPLT, RUN, CropStatus
 !     INTEGER MOWLUN,ISECT,ERR, I
@@ -191,6 +198,7 @@ C=======================================================================
 
       REAL RMIN, SDLIP, WLFI, WSTI, WRTI
       REAL CLW, CSW
+      REAL LCADD, LNADD
 
 !     Surface and soil residue due to daily senescence of plant matter
 !      REAL SENCLN(0:NL, 3), SENRT(NL), SENNOD(NL)
@@ -198,6 +206,7 @@ C=======================================================================
       REAL SenWt(0:NL)        !kg[dry matter]/ha
       REAL SenLig(0:NL)       !kg[lignin]/ha
       REAL SenE(0:NL,NELEM)   !kg[E]/ha (E=N, P, S,...)
+      REAL NLPEST
 
 !CHP - puncture variables, not functional
       REAL PUNCSD, PUNCTR, PUNDOT, SDPDOT 
@@ -254,12 +263,29 @@ C-----------------------------------------------------------------------
       TYPE (SoilType)    SOILPROP
       TYPE (ResidueType) SENESCE
       
+
+
+!=========================================================================
+!     TEMP CHP Add printout for GROW variables
+
+      CHARACTER*10 OUTGR  !GROW.OUT
+      INTEGER NOUTDG, ERRNUM, YEAR, DOY, DAS, DAP, TIMDIF
+      LOGICAL FEXIST
+
       YRDOY  = CONTROL % YRDOY
+      DAS   = CONTROL % DAS
+      DAP = MAX(0,TIMDIF(YRPLT,YRDOY))
+      IF (DAP > DAS) DAP = 0
+      CALL YR_DOY(YRDOY, YEAR, DOY) 
+
+!     end temp chp
+!=========================================================================
+
+
       crop   = control % crop
       trtno  = control % trtnum
-      run    = control % run
       ename  = control % ename
-      
+
 !     Transfer values from constructed data types into local variables.
       !Don't get DYNAMIC from CONTROL variable because it will not
       ! have EMERG value (set only in CROPGRO).
@@ -333,6 +359,15 @@ C-----------------------------------------------------------------------
         PCNMIN = PROLFF * 16.0            !Moved from INCOMP
 !-----------------------------------------------------------------------
       ENDIF
+
+!=========================================================================
+!     TEMP CHP Add printout for GROW variables
+
+          OUTGR  = 'GROW.OUT'
+          CALL GETLUN('OUTGR',  NOUTDG)
+
+!     end temp chp
+!=========================================================================
 
 !***********************************************************************
 !***********************************************************************
@@ -468,6 +503,36 @@ C-----------------------------------------------------------------------
 !        SLA    = F                 
 !      ENDIF
 
+
+!=========================================================================
+!     TEMP CHP Add printout for GROW variables
+
+!       Initialize daily GROW output file      
+        INQUIRE (FILE = OUTGR, EXIST = FEXIST)
+        IF (FEXIST) THEN
+          OPEN (UNIT = NOUTDG, FILE = OUTGR, STATUS = 'OLD',
+     &      IOSTAT = ERRNUM, POSITION = 'APPEND')
+        ELSE
+          OPEN (UNIT = NOUTDG, FILE = OUTGR, STATUS = 'NEW',
+     &      IOSTAT = ERRNUM)
+          WRITE(NOUTDG,'("*GROW OUTPUT FILE")')
+        ENDIF
+
+        !Write headers
+        CALL HEADER(SEASINIT, NOUTDG, CONTROL % RUN)
+
+        WRITE (NOUTDG,200)
+  200   FORMAT('@YEAR DOY   DAS   DAP'
+     &  '        WTLF        XLAI       WCRLF      PLEAFN',
+     &  '       WTNLF       WNRLF        LFSN',
+     &  '       WLDOT       LCADD       LNADD      CRUSLF',
+     &  '      NRUSLF      WLIDOT      WLFDOT       SLDOT'
+     &  '      SLNDOT       NLOFF       NLDOT',
+     &  '       NGRLF      WLDOTN')
+
+!     end temp chp
+!=========================================================================
+
 !***********************************************************************
 !***********************************************************************
 !     EMERGENCE CALCULATIONS - Performed once per season upon emergence
@@ -547,6 +612,10 @@ C     Initial seedling or transplant weight
       WTNSD  = 0.0
       WTNTOT = WTNLF + WTNST + WTNRT + WTNSH + WTNSD + WTNSR
 
+!     chp - check to see that this matches the calculation in forage!!!!
+!     2026-04-01 chp added initialization for mobile N
+      WNRLF = MAX (WTNLF - PROLFF * 0.16 * (WTLF-WCRLF), 0.0)
+
 !     Seed or transplant N at planting
       SDNPL  = WTPSD * SDPRO * 0.16 * 0.75 * PLTPOP -
      &  (WTNLF + WTNST + WTNRT + WTNSR)
@@ -582,6 +651,9 @@ C***********************************************************************
 
 
 C-----------------------------------------------------------------------
+      NLPEST = 0.0    !CHP - N loss due to pest damage
+      LFCAD = 0.0     !Leaf cohort C reserves
+
       GROWTH = WLDOTN + WSDOTN + WRDOTN + WSHDTN + WSDDTN + NODGR
      &    + WSRDOTN
   
@@ -726,11 +798,21 @@ C      Subtract losses to pest and freeze damage
 C-----------------------------------------------------------------------
       WLDOT = WLDOTN - CRUSLF - NRUSLF/0.16-
      &    SLDOT - WLIDOT - WLFDOT
+
 C--------------------------------------------
 C PDA 5/6/2010  ADDED CODE FOR FORAGE HARVEST 
 C--------------------------------------------
       IF (FHLEAF .GT. 0) THEN
         WLDOT=WLDOT-FHLEAF
+
+!     Calculate net addition to leaves today per cohort
+      CALL LeafCohortPest(WLIDOT, WTLF) !Calculates LFPST for cohorts
+
+      LCADD = 0.0
+      LNADD = 0.0
+      LFCAD = 0.0
+      LFNAD = 0.0
+
       ENDIF
 !      IF (FHLEAF .GT. 0) THEN
 !        IF (WTLF .GT. 0) THEN
@@ -753,6 +835,19 @@ C-----------------------------------------------------------------------
       IF (WTLF .GT. 0.0 .AND. FHLEAF.EQ.0) THEN
         WLDOT = WLDOT + CADLF - LFCADDM +
      &    (NADLF - LFNADDM)/0.16
+        LCADD = CADLF - LFCADDM + (NADLF - LFNADDM)/0.16
+        LNADD = NADLF/0.16 *
+     &    (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
+
+!       Handle new reserves for leaf cohorts. These will be adjusted for 
+!         leaf losses in the COHORTS subroutine.
+        DO I = 1, NLC
+          IF (LFDM(I) > 0.0) THEN
+            LFCAD(I) = LFDM(I) / WTLF * CADLF
+            LFNAD(I) = LFDM(I) / WTLF * NADLF
+          ENDIF
+        ENDDO
+
       ENDIF
 
       IF (WLDOT .LT. 0.0) THEN
@@ -2068,6 +2163,38 @@ C-----------------------------------------------------------------------
       SENESCE % ResE   = SenE
 
 
+
+!=========================================================================
+!     TEMP CHP Add printout for GROW variables
+
+!***********************************************************************
+!***********************************************************************
+!     Daily output
+!***********************************************************************
+      ELSEIF (DYNAMIC .EQ. OUTPUT) THEN
+
+        WRITE (NOUTDG,300)
+     &   YEAR, DOY, DAS, DAP, 
+     &   WTLF, XLAI, WCRLF, PCNL, WTNLF, WNRLF, WTNLF - WNRLF,
+     &   WLDOT, LCADD, LNADD, CRUSLF, NRUSLF/0.16, 
+     &   WLIDOT, WLFDOT, SLDOT, SLNDOT, 
+     &   NLOFF, NLDOT, NGRLF, WLDOTN
+
+  300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
+     &    30F12.6)
+
+!     still temp chp...
+
+!***********************************************************************
+!***********************************************************************
+!     Seasonal Output 
+!***********************************************************************
+      ELSE IF (DYNAMIC .EQ. SEASEND) THEN
+C-----------------------------------------------------------------------
+          CLOSE (NOUTDG)
+
+!     end temp chp
+!=========================================================================
 
 C***********************************************************************
 C***********************************************************************

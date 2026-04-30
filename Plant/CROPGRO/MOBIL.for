@@ -83,11 +83,6 @@ C-----------------------------------------------------------------------
            LFNSN_SUM = LFNSN_SUM + LFNSN(I)
          END DO
 
-!!        TEMP CHP
-!         IF (ABS(LFNMN_SUM - NRUSLF) > 1.E-6) THEN
-!           PRINT *,'LFNMN_SUM, NRUSLF, LFNSN_SUM, WNRLF',
-!     &              LFNMN_SUM, NRUSLF, LFNSN_SUM, WNRLF
-!         ENDIF
       ENDIF
 
 !***********************************************************************

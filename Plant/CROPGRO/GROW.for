@@ -22,6 +22,7 @@ C  01/19/2006 CHP N in senesced roots lost at actual N%, not minimum.
 C  04/01/2021 VSH/AH Added MultiHarvest code changes.
 !  06/15/2022 CHP Added CropStatus
 !  11/08/2023  FO Added lint growth for cotton.
+!  04/30/2026 chp Added leaf cohorts
 C-----------------------------------------------------------------------
 C  Called by:  PLANT
 C  Calls:      IPGROW, STRESS
