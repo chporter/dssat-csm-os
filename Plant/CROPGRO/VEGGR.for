@@ -20,6 +20,7 @@ C  06/21/2001 GH  Modified seasonal initialization
 C  08/12/2003 CHP Added I/O error checking
 !  07/13/2006 CHP Added P model
 !  06/11/2007 CHP PStres2 affects growth
+!  05/07/2026 CHP Added leaf cohorts
 C-----------------------------------------------------------------------
 C  Called by: PLANT
 C  Calls:     CANOPY

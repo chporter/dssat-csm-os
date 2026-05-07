@@ -56,6 +56,10 @@ C=======================================================================
       NRUSST = 0.0         !
       NRUSRT = 0.0         !
       NRUSSH = 0.0         !
+
+!     Leaf cohorts
+      LFNMN = 0.0
+
       NRUSSR = 0.0
       PNMLF=0.0
       PNMST=0.0
@@ -129,6 +133,19 @@ C     NMINELF SHOULD HAVE BEEN LFNMINE, ETC. IN EARLIER VERSION, NOW NMINEP=TSNM
 
         CNMINE = NMINEA / 0.16 * RPRO        !Not used
 
+!        Handle leaf cohorts
+         LFNMN_SUM = 0.0
+         LFNSN_SUM = 0.0
+         DO  I = 1, NLC
+!          NRUSLF   = LFSNMOB + ANMINELF
+! LFSNMOB Leaf N mobilization from natural senescence (g[N] / m2 / d)
+! ANMINELF Actual leaf N mobilized in excess of that from natural senescence
+!                  (g[N] / m2 / d)
+           LFNMN(I) = NMINER * LFNSN(I)  !leaf N mining rate
+           LFNMN_SUM = LFNMN_SUM + LFNMN(I)
+           LFNSN_SUM = LFNSN_SUM + LFNSN(I)  !leaf non-structural N
+         END DO
+
 C-----------------------------------------------------------------------
 !    Calculate proportion of N Mined from Leaf, Stem,Root, Shell, and
 !      Storage - Use to put back excess mobilized N
@@ -148,15 +165,6 @@ C-----------------------------------------------------------------------
         PNMSR=0.0
         PNMSH=0.0
       ENDIF
-
-!        Handle leaf cohorts
-         LFNMN_SUM = 0.0
-         LFNSN_SUM = 0.0
-         DO  I = 1, NLC
-           LFNMN(I) = NMINER * LFNSN(I)
-           LFNMN_SUM = LFNMN_SUM + LFNMN(I)
-           LFNSN_SUM = LFNSN_SUM + LFNSN(I)
-         END DO
 
 !***********************************************************************
 !***********************************************************************

@@ -364,13 +364,16 @@ C-----------------------------------------------------------------------
           LTSEN = MAX(0.0, LTSEN)
           LoLitSen = LTSEN * 10000. / SLAAD
 
+!         Handle leaf cohorts
+!         Probably want to modify this calculation to use age of cohorts
+!         to estimate location in the canopy.
           LoLitSen_sum = 0.0
           DO I = 1, NLC
             LoLitSen_c(I) = LoLitSen * LFDM(I) / WTLF
             LoLitSen_sum = LoLitSen_sum + LoLitSen_c(I)
           ENDDO
-
         ENDIF
+
 C-----------------------------------------------------------------------
 C     Convert area loss to biomass(m2 *10000cm2/m2)/(cm2/g)=g/m2
 C-----------------------------------------------------------------------

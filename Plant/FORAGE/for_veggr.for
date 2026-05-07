@@ -19,6 +19,7 @@ C  05/10/1999 GH  Incorporated in CROPGRO
 C  06/21/2001 GH  Modified seasonal initialization
 C  07/01/2003 SJR Added storage tissue organ and reduction and mobilization
 C                        controls for dormancy and harvest/damage
+!  05/07/2026 CHP Added leaf cohorts
 C-----------------------------------------------------------------------
 C  Called by: CROPGRO
 C  Calls:     FOR_CANOPY
@@ -67,6 +68,7 @@ C========================================================================
       USE ModuleDefs     !Definitions of constructed variable types, 
         ! which contain control information, soil
         ! parameters, hourly weather data.
+      USE COHORTS_MOD
       IMPLICIT NONE
       EXTERNAL GETLUN, FIND, ERROR, IGNORE, FOR_CANOPY, NLKDIST, TIMDIF
       SAVE
@@ -628,10 +630,8 @@ C            relative to that added to leaf + stem
         LSTR = LSTR * (WTLF - SLDOT ) / 
      &    (LSTR * (WTLF - SLDOT )
      &    + (STMWT - SSDOT) )
-
-
-
       ENDIF
+
       IF (PGLEFT .GE. CMINEP) THEN
         CADSR = (PGLEFT-CMINEP)/PCH2O * LSTSR
         CADLF = (PGLEFT-CMINEP)/PCH2O * LSTR*(1-LSTSR)
@@ -666,36 +666,44 @@ C-----------------------------------------------------------------------
 
 !      IF (CMINEP .GT. 0) THEN
         CMINEA = CMINEP - PGLEFT
-!        CMINEA = MAX(TSCMOB,CMINEP - PGLEFT)
+!       CMINEA = MAX(TSCMOB,CMINEP - PGLEFT)
         IF (CMINEA .GT. CMINEP) CMINEA = CMINEP
 
 C-----------------------------------------------------------------------
 C      In this case, the remaining TSNMOB will stay inthe WTNxx pools
 C-----------------------------------------------------------------------
         IF (CMINEA .LT. TSCMOB) THEN
-        LFSCMOB = LFSCMOB * (CMINEA / TSCMOB)
-        STSCMOB = STSCMOB * (CMINEA / TSCMOB)
-        RTSCMOB = RTSCMOB * (CMINEA / TSCMOB)
-        SRSCMOB = SRSCMOB * (CMINEA / TSCMOB)
+          LFSCMOB = LFSCMOB * (CMINEA / TSCMOB)
+          STSCMOB = STSCMOB * (CMINEA / TSCMOB)
+          RTSCMOB = RTSCMOB * (CMINEA / TSCMOB)
+          SRSCMOB = SRSCMOB * (CMINEA / TSCMOB)
         ELSE
 C-----------------------------------------------------------------------
 C      Otherwise all TSNMOB plus some portion of mobilized N will be used
 C-----------------------------------------------------------------------
 !            IF (CMINEP .GT.TSCMOB) THEN
-        CMINER = (CMINEA - TSCMOB) / (CMINEP - TSCMOB)
-        ACMINESH = SHCMINE * CMINER
-        ACMINELF = (LFCMINE - LFSCMOB) * CMINER
-        ACMINEST = (STCMINE - STSCMOB) * CMINER
-        ACMINERT = (RTCMINE - RTSCMOB) * CMINER
-        ACMINESR = (SRCMINE - SRSCMOB) * CMINER
+          CMINER = (CMINEA - TSCMOB) / (CMINEP - TSCMOB)
+          ACMINESH = SHCMINE * CMINER
+          ACMINELF = (LFCMINE - LFSCMOB) * CMINER
+          ACMINEST = (STCMINE - STSCMOB) * CMINER
+          ACMINERT = (RTCMINE - RTSCMOB) * CMINER
+          ACMINESR = (SRCMINE - SRSCMOB) * CMINER
+
         ENDIF
-        
+
         CRUSLF = LFSCMOB + ACMINELF
         CRUSST = STSCMOB + ACMINEST
         CRUSRT = RTSCMOB + ACMINERT
         CRUSSR = SRSCMOB + ACMINESR
         CRUSSH = ACMINESH
 !      ENDIF
+
+!         ------------------------------------------------
+!         Handle C mining for leaf cohorts
+          DO I = 1, NLC
+            LFCMN(I) = CMineFactor * LFNSC(I)
+          ENDDO 
+!         ------------------------------------------------
 
       ENDIF
 C-----------------------------------------------------------------------

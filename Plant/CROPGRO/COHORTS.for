@@ -10,7 +10,8 @@ C=======================================================================
      &  CumLeafDM,    !Cumulative leaf growth (g[leaf]/m2) = CLW
      &  CohortAge,    !Leaf age for (thermal days)
      &  LFNSC,        !Leaf non-structural (mobile) CH2O (g/m2) = WCRLF
-     &  LFNSN         !Leaf non-structural (mobile) N (g/m2) = WNRLF
+     &  LFNSN,        !Leaf non-structural (mobile) N (g/m2) = WNRLF
+     &  PCNLeaf       !Leaf N%
 
 !     Leaf cohort processes, calculated by other routines
       REAL, DIMENSION(LCMax) ::  
