@@ -673,8 +673,6 @@ C-----------------------------------------------------------------------
      &    RLV, RTDEP, SATFAC, SENRT, SRDOT, TRLV)         !Output
 
 C-----------------------------------------------------------------------
-C     Call to root growth and rooting depth routine
-C-----------------------------------------------------------------------
 C-GH Add leaf Cohorts
       CALL COHORTS(DYNAMIC, 
      &  DTX, F, FILECC, NGRLF,                !Input
@@ -889,7 +887,7 @@ C-----------------------------------------------------------------------
      &    CRUSRT, CRUSSH, CRUSST, EXCESS, NADLF, NADRT,   !Output
      &    NADST, NGRLF, NGRRT, NGRST, NSTRES,             !Output
      &    TNLEAK, WLDOTN, WRDOTN, WSDOTN)                 !Output
-        
+
 !-----------------------------------------------------------------------     
 C-GH
       WLDOTN=WTLF

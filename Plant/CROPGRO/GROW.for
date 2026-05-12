@@ -567,6 +567,10 @@ C       WLDOT = Net leaf growth rate
 C-----------------------------------------------------------------------
       WLDOT = WLDOTN - SLDOT - WLIDOT - WLFDOT - NRUSLF/0.16 - CRUSLF
 
+!     ShutMob is amount of leaf mass lost due to N and C mobilization
+!     A positive value represents leaf mass lost. (kg/ha)
+      ShutMob = (NRUSLF/0.16 + CRUSLF) * 10.      !kg/ha
+
 !     Calculate net addition to leaves today per cohort
       CALL LeafCohortPest(WLIDOT, WTLF) !Calculates LFPST for cohorts
 
@@ -574,10 +578,6 @@ C-----------------------------------------------------------------------
       LNADD = 0.0
       LFCAD = 0.0
       LFNAD = 0.0
-
-!     ShutMob is amount of leaf mass lost due to N and C mobilization
-!     A positive value represents leaf mass lost. (kg/ha)
-      ShutMob = (NRUSLF/0.16 + CRUSLF) * 10.      !kg/ha
 
       IF (WTLF > 1.E-4) THEN
         WLDOT = WLDOT + (CADLF+NADLF/0.16) *
