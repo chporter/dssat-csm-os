@@ -106,7 +106,7 @@ C========================================================================
       REAL NLEAK
       REAL NMINEA, NFIXN, TRNU
 
-      REAL TGRO(TS)
+      REAL TGRO(TS), CMineFactor
       REAL AGRSTR, CADSR, CADSRF, CMOBSRN, ! CLAIT, CMOBSR, 
      &    CMOBSRX, CRUSSR, FNINSR, FNINSRG, FRSTR,   
      &    NADSR, NGRSR, NGRSRG, PROSRG,   !PPMFAC, 
@@ -161,6 +161,14 @@ C-----------------------------------------------------------------------
      &  NRUSRT, NRUSSR, NRUSST, NSTFAC
 
       REAL AAA, BBB, CCC, DDD,ZZZ, XXX
+
+!     Cohorts
+      REAL CRUSLF_calc
+
+!      TYPE (ControlType) CONTROL
+!      CALL GET(CONTROL)
+!      DAS = CONTROL % DAS
+
 !***********************************************************************
 !***********************************************************************
 !     Run Initialization - Called once per simulation
@@ -331,7 +339,17 @@ C-----------------------------------------------------------------------
       NGRSR  = 0.0
       WSRDOTN = 0.0
       TNLKCHK = 0.0
-      
+
+!     CHP 2026-05-11
+!     These variables never get a value but they are exported to other routines.
+      LFSCMOB = 0.0
+      STSCMOB = 0.0
+      RTSCMOB = 0.0
+      SRSCMOB = 0.0
+      TSCMOB  = 0.0
+
+      CRUSLF_calc = 0.0
+
 !***********************************************************************
 !***********************************************************************
 !     EMERGENCE CALCULATIONS - Performed once per season upon emergence
@@ -351,8 +369,6 @@ C-----------------------------------------------------------------------
      &  CANHT, CANWH,                                     !Output
      &  EMERG)                                            !Control
 
-
-
 !***********************************************************************
 !***********************************************************************
 !     DAILY RATE/INTEGRATION
@@ -360,6 +376,8 @@ C-----------------------------------------------------------------------
       ELSEIF (DYNAMIC .EQ. INTEGR) THEN
 !-----------------------------------------------------------------------
       DAS   = MAX(0,TIMDIF(YRSIM,YRDOY))
+      CRUSLF_calc = 0.0
+
 !-----------------------------------------------------------------------
 C     Partitioning is modified by water stress and nitrogen stress
 C-----------------------------------------------------------------------
@@ -372,9 +390,7 @@ C-----------------------------------------------------------------------
       IF (SUPPN .LT. NSTFAC * NDMNEW .AND. NDMNEW .GT. 0. .AND. 
      &    YRDOY .NE. YREMRG) THEN
 !        NSTRES = MIN(1.0,SUPPN/(NDMNEW * 0.70))
-!        NSTRES = MIN(1.0,SUPPN/(NDMNEW * 0.70))
          NSTRES = MIN(1.0,SUPPN/(NDMNEW * NSTFAC))
-
       ELSE
         NSTRES = 1.0
       ENDIF
@@ -477,36 +493,34 @@ C     NAVL IS between lower and maximum N limit in this case,
 C       leaf expansion occurs as normal, but N concentration is reduced
 C-----------------------------------------------------------------------
         IF (NGRVEG .GT. 0.0 .AND. NAVL .LT. NGRVEG) THEN
-        NGRLF = MIN(NAVL * NGRLF / NGRVEG, NGRLF)
-        NGRST = MIN(NAVL * NGRST / NGRVEG, NGRST)
-        NGRRT = MIN(NAVL * NGRRT / NGRVEG, NGRRT)
-        NGRSR = MIN(NAVL * NGRSR / NGRVEG, NGRSR)
+          NGRLF = MIN(NAVL * NGRLF / NGRVEG, NGRLF)
+          NGRST = MIN(NAVL * NGRST / NGRVEG, NGRST)
+          NGRRT = MIN(NAVL * NGRRT / NGRVEG, NGRRT)
+          NGRSR = MIN(NAVL * NGRSR / NGRVEG, NGRSR)
         ENDIF
 C-----------------------------------------------------------------------
 C     Compute protein fraction of new vegetative tissue growth
 C-----------------------------------------------------------------------
         IF (WLDOTN .GT. 0.0) THEN
-        PROLFT = NGRLF * (100./16.)/WLDOTN
+          PROLFT = NGRLF * (100./16.)/WLDOTN
         ELSE
-        PROLFT = 0.0
+          PROLFT = 0.0
         ENDIF
         IF (WSDOTN .GT. 0.0) THEN
-        PROSTT = NGRST * (100./16.)/WSDOTN
+          PROSTT = NGRST * (100./16.)/WSDOTN
         ELSE
-        PROSTT = 0.0
+          PROSTT = 0.0
         ENDIF
         IF (WRDOTN .GT. 0.0) THEN
-        PRORTT = NGRRT * (100./16.)/WRDOTN
+          PRORTT = NGRRT * (100./16.)/WRDOTN
         ELSE
-        PRORTT = 0.0
+          PRORTT = 0.0
         ENDIF
         IF (WSRDOTN .GT. 0.0) THEN
-        PROSRT = NGRSR * (100./16.)/WSRDOTN
+          PROSRT = NGRSR * (100./16.)/WSRDOTN
         ELSE
-        PROSRT = 0.0
+          PROSRT = 0.0
         ENDIF
-
-
 
 C-----------------------------------------------------------------------
 C     Recompute respiration costs if expansion occurs at low N-conc.,
@@ -583,6 +597,9 @@ C-----------------------------------------------------------------------
       NRFRESP=0.0
       NLKGROW=0.0
       NLKCOST=0.0
+
+!     Leaf cohort CH2O mining ~ CRUSLF
+      LFCMN = 0.0
 
 C-----------------------------------------------------------------------
 C    Calculate Increase in Remobilizable C due to N shortage and
@@ -662,49 +679,68 @@ C-----------------------------------------------------------------------
 !     &              (WCRSR - STRWT * PCHOSRF)
 !        ENDIF
 
-
-
 !      IF (CMINEP .GT. 0) THEN
         CMINEA = CMINEP - PGLEFT
 !       CMINEA = MAX(TSCMOB,CMINEP - PGLEFT)
         IF (CMINEA .GT. CMINEP) CMINEA = CMINEP
 
-C-----------------------------------------------------------------------
-C      In this case, the remaining TSNMOB will stay inthe WTNxx pools
-C-----------------------------------------------------------------------
-        IF (CMINEA .LT. TSCMOB) THEN
-          LFSCMOB = LFSCMOB * (CMINEA / TSCMOB)
-          STSCMOB = STSCMOB * (CMINEA / TSCMOB)
-          RTSCMOB = RTSCMOB * (CMINEA / TSCMOB)
-          SRSCMOB = SRSCMOB * (CMINEA / TSCMOB)
-        ELSE
-C-----------------------------------------------------------------------
-C      Otherwise all TSNMOB plus some portion of mobilized N will be used
-C-----------------------------------------------------------------------
-!            IF (CMINEP .GT.TSCMOB) THEN
-          CMINER = (CMINEA - TSCMOB) / (CMINEP - TSCMOB)
-          ACMINESH = SHCMINE * CMINER
-          ACMINELF = (LFCMINE - LFSCMOB) * CMINER
-          ACMINEST = (STCMINE - STSCMOB) * CMINER
-          ACMINERT = (RTCMINE - RTSCMOB) * CMINER
-          ACMINESR = (SRCMINE - SRSCMOB) * CMINER
-
-        ENDIF
-
-        CRUSLF = LFSCMOB + ACMINELF
-        CRUSST = STSCMOB + ACMINEST
-        CRUSRT = RTSCMOB + ACMINERT
-        CRUSSR = SRSCMOB + ACMINESR
-        CRUSSH = ACMINESH
+!---------------------------------------------------------------------
+!    CHP 2026-05-11 commented out the following code. See note below.
+!C-----------------------------------------------------------------------
+!C      In this case, the remaining TSNMOB will stay inthe WTNxx pools
+!C-----------------------------------------------------------------------
+!        IF (CMINEA .LT. TSCMOB) THEN
+!          LFSCMOB = LFSCMOB * (CMINEA / TSCMOB)
+!          STSCMOB = STSCMOB * (CMINEA / TSCMOB)
+!          RTSCMOB = RTSCMOB * (CMINEA / TSCMOB)
+!          SRSCMOB = SRSCMOB * (CMINEA / TSCMOB)
+!        ELSE
+!C-----------------------------------------------------------------------
+!C      Otherwise all TSNMOB plus some portion of mobilized N will be used
+!C-----------------------------------------------------------------------
+!!            IF (CMINEP .GT.TSCMOB) THEN
+!          CMINER = (CMINEA - TSCMOB) / (CMINEP - TSCMOB)
+!          ACMINESH = SHCMINE * CMINER
+!          ACMINELF = (LFCMINE - LFSCMOB) * CMINER
+!          ACMINEST = (STCMINE - STSCMOB) * CMINER
+!          ACMINERT = (RTCMINE - RTSCMOB) * CMINER
+!          ACMINESR = (SRCMINE - SRSCMOB) * CMINER
+!
+!!        ENDIF
+!
+!        CRUSLF = LFSCMOB + ACMINELF
+!        CRUSST = STSCMOB + ACMINEST
+!        CRUSRT = RTSCMOB + ACMINERT
+!        CRUSSR = SRSCMOB + ACMINESR
+!        CRUSSH = ACMINESH
 !      ENDIF
+
+!---------------------------------------------------------------------
+!     CHP 2026-05-11 - TSCMOB, LFSCMOB, STSCMOB, RTSCMOB, and SRSCMOB
+!       are all zero. So the above code simplifies to this:
+
+        IF (CMINEP .GT. 0.0) THEN
+          CMINER = CMINEA / CMINEP
+          ACMINESH = SHCMINE * CMINER
+          ACMINELF = LFCMINE * CMINER
+          ACMINEST = STCMINE * CMINER
+          ACMINERT = RTCMINE * CMINER
+          ACMINESR = SRCMINE * CMINER
+
+          CRUSLF = ACMINELF
+          CRUSST = ACMINEST
+          CRUSRT = ACMINERT
+          CRUSSR = ACMINESR
+          CRUSSH = ACMINESH
 
 !         ------------------------------------------------
 !         Handle C mining for leaf cohorts
           DO I = 1, NLC
-            LFCMN(I) = CMineFactor * LFNSC(I)
+            LFCMN(I) = CMINER * LFCMINE_c(I)
           ENDDO 
+          CRUSLF_calc = SUM(LFCMN)
 !         ------------------------------------------------
-
+        ENDIF
       ENDIF
 C-----------------------------------------------------------------------
 C      "Original" Forage model modification to code for adding CSAVEV
@@ -729,8 +765,6 @@ C            When this was done, the CSAVEV code was returned to the
 C            original code from DSSAT4 for consistenc between the model
 C            versions.
 C-----------------------------------------------------------------------
-
-
       CADLF = CADLF + CADVG/PCH2O * LFCDEBT
       CADST = CADST + CADVG/PCH2O * STCDEBT 
       CADRT = CADRT + CADVG/PCH2O * RTCDEBT
@@ -916,8 +950,6 @@ C-----------------------------------------------------------------------
      &    PROSRR * 0.16 - 
      &    (WTNSR -(SSRDOT * PCNSR/100 - SRSNMOB))) 
 
-
-
       ELSE
         NADRAT = 0.0
         NADLF = 0.0
@@ -926,9 +958,6 @@ C-----------------------------------------------------------------------
         NADSR = 0.0
         NLEAK = 0.0
       ENDIF
-
-
-
 
 C-----------------------------------------------------------------------
 C      SJR 10/20/03 Added code to fix/distribute NLEAK
@@ -992,8 +1021,6 @@ C-----------------------------------------------------------------------
 
       XXX=PNMLF+PNMST+PNMRT+PNMSR+PNMSH
 
-
-
 C-----------------------------------------------------------------------
 C     Subroutine FOR_CANOPY calculates height and width of the FOR_CANOPY as a
 C     function of VSTAGE, air temperature, drought stress (TURFAC),
@@ -1037,9 +1064,8 @@ C-----------------------------------------------------------------------
      &    UNO3, UNH4, WLDOTN, WRDOTN, WSDOTN, WSRDOTN,    !Input/Output
      &    CHORECOVER, NLKSPENT, NLKNUSED)                 !Output
  
-      USE ModuleDefs     !Definitions of constructed variable types, 
-        ! which contain control information, soil
-        ! parameters, hourly weather data.
+      USE ModuleDefs
+      USE Cohorts_Mod
       IMPLICIT NONE
 
       REAL AGRLF, AGRRT, AGRSTM, AGRSTR, FNINL, FNINR,      
@@ -1059,6 +1085,10 @@ C-----------------------------------------------------------------------
         
       INTEGER L, NLAYR
       REAL UNH4(NL), UNO3(NL)
+
+!     Leaf cohorts
+      INTEGER I
+      REAL NMineAdjust, WTLF_calc
 
       NLEAK2 = 0.0
       NLKNG1 = 0.0
@@ -1128,10 +1158,10 @@ C      Add new growth to WxDOTN
       WSRDOTN = WSRDOTN + (NLKNG1 + NLKNG2 + NLKNG3) * FRSTR      
 
 C      Add N in new growth to NGRxx
-      NGRLF = NGRLF + (NLKNG1 + NLKNG2) * FRLF *FNINL + NLKRTRN3 * FRLF            
+      NGRLF = NGRLF + (NLKNG1 + NLKNG2) * FRLF *FNINL + NLKRTRN3 * FRLF
       NGRST = NGRST + (NLKNG1 + NLKNG2) * FRSTM *FNINS + 
      &    NLKRTRN3 * FRSTM            
-      NGRRT = NGRRT + (NLKNG1 + NLKNG2) * FRRT *FNINR + NLKRTRN3 * FRRT            
+      NGRRT = NGRRT + (NLKNG1 + NLKNG2) * FRRT *FNINR + NLKRTRN3 * FRRT
       NGRSR = NGRSR + (NLKNG1 + NLKNG2) * FRSTR *FNINSR + 
      &    NLKRTRN3 * FRSTR            
 
@@ -1160,6 +1190,14 @@ C      Adjust ANMINExx for N "returned" for CH2O
       NRUSSR = NRUSSR - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
      &    ANMINESR/ANMINETOT
       ENDIF
+
+!     Leaf cohorts
+      NMineAdjust = NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
+     &    ANMINELF/ANMINETOT
+      WTLF_calc = SUM(LFDM)
+      DO I = 1, NLC
+        LFNMN(I) = LFNMN(I) - LFDM(I) / WTLF_calc * NMineAdjust
+      ENDDO
 
 C      Calculate how much NLEAK was used as N and how much was 
 C      returned for CH2O

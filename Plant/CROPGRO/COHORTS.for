@@ -16,27 +16,33 @@ C=======================================================================
 !     Leaf cohort processes, calculated by other routines
       REAL, DIMENSION(LCMax) ::  
 
-!       calculated in FREEZE
+!       calculated in FREEZE, for_freeze
      &  LFFRZ,      !leaf mass frozen today (g[leaf]/m2) = WLFDOT
 
-!       calculated in VEGGR
+!       calculated in VEGGR, for_veggr
      &  LFCMN,      !leaf non-struc CH2O mined (g[CH2O]/m2) = CRUSLF
 
 !       Calculated LeafCohortPest
      &  LFPST,      !leaf pest damage today (g[leaf]/m2) = WLIDOT
 
-!       calculated in MOBIL
+!       calculated in MOBIL, for_mobil, for_veggr
      &  LFNMN,      !Leaf non-struc N mined today (g[N]]/m2) = NRUSLF
 
-!       calculated in SENES
+!       calculated in SENES, for_senmob
      &  LeafTotSen, !Total leaf senescense today (g[leaf]/m2) = SLDOT
      &  LFNMNSN,    !Leaf senescence due to N mining (g[leaf]/m2)
      &  LFWSSN,     !leaf water stress senescence today (g[leaf]/m2)
 
-!       calculated in GROW, adjusted in COHORTS
+!       calculated in GROW and for_grow, adjusted in COHORTS
      &  LFCAD,      !leaf non-struc CH2O stored  (g[CH2O]/m2) = CADLF
-     &  LFNAD       !Leaf non-struc N stored today (g[N]]/m2) = NADLF
+     &  LFNAD,      !Leaf non-struc N stored today (g[N]]/m2) = NADLF
 
+!       calculated in for_senmob, used in for_veggr and for_for_mobil
+     &  LFCMINE_c,  !Max potential CH2O mining today
+     &  LFSNMOB_c,  !Leaf N mobilized by natural senescence (g[N]/m2)
+
+!       calculated in for_harv
+     &  FHLEAF_c    !Forage harvest
 
       CONTAINS
 C=======================================================================
@@ -344,6 +350,8 @@ C-GH 08/19/2025
 ! LEAF ADDITIONS
 !------------------      
 !     Adjust new reserves to account for leaf losses just calculated.
+!     NOTE: this is done differently in for_grow. May cause some differences
+!       in results, but let's see how it goes.
       DO I = 1, NLC
         IF (LFDM(I) > 0.0) THEN
           Loss_adjust = (1. - MIN(1.0, LeafMassDecrease(I) / LFDM(I)))
@@ -371,6 +379,27 @@ C-GH 08/19/2025
         ENDIF
       ENDDO
 
+!!C--------------------------------------------
+!C--------------------------------------------
+!     from for_grow:
+!      NLOFF  = SLMDOT * 
+!     &    (SENNLV * (PCNL/100 - PROLFF * 0.16) + PROLFF * 0.16) 
+!     &    + (LTSEN + LFSENWT) * PROLFF *0.16
+!     &    + (SLNDOT + WLIDOT + WLFDOT) * PCNL/100  
+!      
+!C--------------------------------------------
+!C PDA 5/6/2010  ADDED CODE FOR FORAGE HARVEST 
+!C--------------------------------------------
+!      IF (FHLEAF.GT.0)THEN
+!        IF (WLDOTN.GT.0)THEN
+!        NLOFF=NLOFF+(FHLEAF-WLDOTN)*PCNL/100+NGRLF
+!        ELSE
+!        NLOFF=NLOFF+FHLEAF*PCNL/100
+!        ENDIF
+!      ENDIF
+!C--------------------------------------------
+!C--------------------------------------------
+
 !     Notes on leaf N changes, NLDOT_c:
 !     - New N, NGRLF, is added to today's new cohort, not distributed 
 !       to cohorts and so does not show up here.
@@ -395,6 +424,7 @@ C-GH 08/19/2025
      &      - LFNMN(I)/0.16       !N mined = NRUSLF/0.16 
      &      - LFCMN(I)            !C mined = CRUSLF
      &      - LeafMassDecrease(I) !freez, pst, senes=SLDOT+WLIDOT+WLFDOT
+     &      - FHLEAF_c(I)         !harvest
 
 !         Leaf dry matter (WTLF in GROW)
           LFDM(I) = LFDM(I) + WLDOT_cohort

@@ -42,7 +42,8 @@ C=======================================================================
      &   RTSNMOB, !NMINELF, NMINERT, NMINESR, NMINEST, SHNMINE,
      &   SRSNMOB, STSNMOB, TSNMOB  
 
-      REAL LFNMN_SUM, LFNSN_SUM
+!     Leaf cohorts
+      REAL LFNMN_SUM  !, LFNSN_SUM
 
 !***********************************************************************
 !***********************************************************************
@@ -125,7 +126,7 @@ C     NMINELF SHOULD HAVE BEEN LFNMINE, ETC. IN EARLIER VERSION, NOW NMINEP=TSNM
 !            ENDIF
 !      ENDIF
         
-        NRUSLF = LFSNMOB + ANMINELF
+        NRUSLF = LFSNMOB + ANMINELF !ANMINELF = 0.0
         NRUSST = STSNMOB + ANMINEST
         NRUSRT = RTSNMOB + ANMINERT
         NRUSSR = SRSNMOB + ANMINESR
@@ -135,15 +136,14 @@ C     NMINELF SHOULD HAVE BEEN LFNMINE, ETC. IN EARLIER VERSION, NOW NMINEP=TSNM
 
 !        Handle leaf cohorts
          LFNMN_SUM = 0.0
-         LFNSN_SUM = 0.0
+!        LFNSN_SUM = 0.0
          DO  I = 1, NLC
 !          NRUSLF   = LFSNMOB + ANMINELF
 ! LFSNMOB Leaf N mobilization from natural senescence (g[N] / m2 / d)
 ! ANMINELF Actual leaf N mobilized in excess of that from natural senescence
 !                  (g[N] / m2 / d)
-           LFNMN(I) = NMINER * LFNSN(I)  !leaf N mining rate
+           LFNMN(I) = LFSNMOB_c(I)  !leaf N mining rate
            LFNMN_SUM = LFNMN_SUM + LFNMN(I)
-           LFNSN_SUM = LFNSN_SUM + LFNSN(I)  !leaf non-structural N
          END DO
 
 C-----------------------------------------------------------------------

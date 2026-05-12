@@ -29,6 +29,7 @@ C  05/31/2005 SJR Added CH2OREF to senesce organs at minimum CH2O conc.
 C  09/28/2005 SJR Added SENMOB to senesce organs earlier in the day.
 !  01/26/2023 CHP Reduce compile warnings: add EXTERNAL stmts, remove 
 !                 unused variables, shorten lines. 
+!  05/12/2026 CHP added leaf cohorts
 C=======================================================================
 
       subroutine FORAGE(CONTROL, ISWITCH, 
@@ -45,6 +46,7 @@ C=======================================================================
       USE ModuleDefs
       USE ModuleData
       USE SumModule
+      USE COHORTS_MOD
 
       IMPLICIT NONE
       EXTERNAL FOR_IPPLNT, FOR_PHOTO, FOR_PHENOL, FOR_DORMANCY,
@@ -668,6 +670,12 @@ C-----------------------------------------------------------------------
      &  VSTAGE, DWTCO, DWTLO, DWTSO,
      &  PWTCO, PWTLO, PWTSO)                         !Input/Output
 
+      CALL COHORTS(DYNAMIC, 
+     &  DTX, F, FILECC, NGRLF,                !Input
+     &  WLDOTN,                               !Input
+     &  YRPLT,                                !Input
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
+
       CALL FOR_OPMOB(CONTROL, ISWITCH, 
      &  YRPLT, MDATE, DAS, YRDOY, DTX, DXR57, PGAVL, NAVL, PG, PPMFAC, 
      &  NMOBR, NMOBSR, MAINR, ASMDOT, RSPNO3, RSPNH4, RPRO,       
@@ -1091,6 +1099,12 @@ C-----------------------------------------------------------------------
      &    SRCADDOT, SRNADDOT)                             !Output
 !ENDIF
 
+      CALL COHORTS(DYNAMIC, 
+     &  DTX, F, FILECC, NGRLF,                !Input
+     &  WLDOTN,                               !Input
+     &  YRPLT,                                !Input
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
+
       CALL FOR_OPMOB(CONTROL, ISWITCH, 
      &  YRPLT, MDATE, DAS, YRDOY, DTX, DXR57, PGAVL, NAVL, PG, PPMFAC, 
      &  NMOBR, NMOBSR, MAINR, ASMDOT, RSPNO3, RSPNH4, RPRO,       
@@ -1436,6 +1450,22 @@ C-----------------------------------------------------------------------
      &    FNINSRG, NGRSRG, PROSRG, PROSRT, CHORECOVER,    !Output
      &    NLKSPENT, NLKNUSED, NLKCHK, TNLKCHK,            !Output
      &    EMERG)                                          !Control
+
+!-----------------------------------------------------------------------     
+C-GH
+      WLDOTN=WTLF
+      NGRLF=WTNLF
+!       write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
+
+      CALL COHORTS(EMERG, 
+     &  DTX, F, FILECC, NGRLF,                !Input
+     &  WLDOTN,                               !Input
+     &  YRPLT,                                !Input
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
+
+       WLDOTN=0
+       NGRLF=0
+
       ENDIF
 
 !***********************************************************************
@@ -2041,6 +2071,16 @@ C-----------------------------------------------------------------------
      &  VSTAGE, DWTCO, DWTLO, DWTSO,
      &  PWTCO, PWTLO, PWTSO)                         !Input/Output
 
+C----------------------------------
+C     CALL COHORT MODEL
+C----------------------------------
+!      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
+      CALL COHORTS(DYNAMIC, 
+     &  DTX, F, FILECC, NGRLF,                !Input
+     &  WLDOTN,                               !Input
+     &  YRPLT,                                !Input
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
+
       FHWAH= 0.0
       FHTOTN = 0.0
       FHLPH = 0.0
@@ -2138,6 +2178,11 @@ C-----------------------------------------------------------------------
      &  WCRSH, WRCSHD, SHCMINE, CRUSSH, CHORECOVER, NLKSPENT, NLKNUSED,
      &  NLKCHK, TNLKCHK, CMOBSR, LAIMOBR, VNMOBR)     
 
+        CALL COHORTS(DYNAMIC, 
+     &  DTX, F, FILECC, NGRLF,                !Input
+     &  WLDOTN,                               !Input
+     &  YRPLT,                                !Input
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
 
       CALL FOR_OPGROW(CONTROL, ISWITCH, 
      &    CADLF, CADST, CANHT, CANWH, CMINEA, DWNOD,  

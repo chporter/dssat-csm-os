@@ -119,10 +119,11 @@ C-----------------------------------------------------------------------
       REAL,dimension(4) :: YMOSWF
 
 !     Leaf cohorts
-      REAL, DIMENSION(LCMax) :: LFNMINE_c, LFNSEN_c, LFSNMOB_c, 
-     &    LeafTotSen, LTSEN_c, NMINELF_c, SLMDOT_c, WaterSen_c
+      REAL, DIMENSION(LCMax) :: CMINELF_c, LFNMINE_c, 
+     &    LFNSEN_c, LTSEN_c, 
+     &    LFSENWT_c, NMINELF_c, SLMDOT_c, WaterSen_c
       REAL LFNMINE_sum, LFNSEN_sum, LFSNMOB_sum, LTSEN_sum, NMINELF_sum,
-     &    SLMDOT_sum, WaterSen_sum
+     &    SLMDOT_sum, WaterSen_sum, LeafTotSen_SUM
 
 !***********************************************************************
 !***********************************************************************
@@ -424,12 +425,37 @@ C    Find and Read Surviving section  Added by Diego
       DAYL_1 = -1.0
       DAYL_2 = -2.0
 
+      LeafTotSen = 0.0
+      LFNMNSN = 0.0   
+      LFWSSN = 0.0    
+
       DO I = 1,5
         SWFCAB(I) = 1.0
       ENDDO
 
 !     Leaf cohorts
-      LFSNMOB_c = 0.0
+      CMINELF_c  = 0.0
+      LeafTotSen = 0.0  !=SLDOT
+      LFCMINE_c  = 0.0
+      LFNMINE_c  = 0.0
+      LFNMNSN    = 0.0
+      LFNSEN_c   = 0.0
+      LFSENWT_c  = 0.0
+      LFSNMOB_c  = 0.0
+      LFWSSN     = 0.0  !=SLNDOT
+      LTSEN_c    = 0.0
+      NMINELF_c  = 0.0
+      SLMDOT_c   = 0.0
+      WaterSen_c = 0.0
+
+      LeafTotSen_SUM = 0.0
+      LFNMINE_sum = 0.0
+      LFNSEN_sum  = 0.0
+      LFSNMOB_sum = 0.0
+      LTSEN_sum   = 0.0
+      NMINELF_sum = 0.0
+      SLMDOT_sum  = 0.0
+      WaterSen_sum= 0.0
 
 !***********************************************************************
 !***********************************************************************
@@ -504,6 +530,32 @@ C    Find and Read Surviving section  Added by Diego
 
       NMINEP = 0.0
       NMINEO = 0.0
+
+!     Leaf cohorts
+      CMINELF_c  = 0.0
+      LeafTotSen = 0.0  !=SLDOT
+      LFCMINE_c  = 0.0
+      LFNMINE_c  = 0.0
+      LFNMNSN    = 0.0
+      LFNSEN_c   = 0.0
+      LFSENWT_c  = 0.0
+      LFSNMOB_c  = 0.0
+      LFWSSN     = 0.0  !=SLNDOT
+      LTSEN_c    = 0.0
+      NMINELF_c  = 0.0
+      SLMDOT_c   = 0.0
+      WaterSen_c = 0.0
+
+      LeafTotSen_SUM = 0.0
+      LFNMINE_sum = 0.0
+      LFNSEN_sum  = 0.0
+      LFSNMOB_sum = 0.0
+      LTSEN_sum   = 0.0
+      NMINELF_sum = 0.0
+      SLMDOT_sum  = 0.0
+      WaterSen_sum= 0.0
+
+!=========================================================================
 
 C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
@@ -850,6 +902,7 @@ C-----------------------------------------------------------------------
 !            SRSCMOB = SSRMDOT * ((WCRSR / STRWT) - PCHOSRF)
 !            RTSCMOB = SRMDOT * ((WCRRT / RTWT) - PCHORTF)
 
+!       CHP 2026-05-11 - These values are always zero.
         TSCMOB = LFSCMOB + STSCMOB + SRSCMOB + RTSCMOB 
 
 C-----------------------------------------------------------------------
@@ -987,7 +1040,7 @@ C-----------------------------------------------------------------------
 !     --------------------------------------------
 !     Handle leaf cohorts
       DO I = 1, NLC
-        NMINELF_c(I) = NMOBR * LFDM(I)
+        NMINELF_c(I) = NMOBR * LFNSN(I)
         LFNMINE_c(I) = LFSNMOB_c(I) + NMINELF_c(I)
       ENDDO
       LFSNMOB_c = LFNMINE_c
@@ -1055,6 +1108,7 @@ C    1-12-2024 KJB and DP
       DO I = 1, NLC
         CMINELF_c(I) = CMOBMX * (DTX + DXR57) 
      &   * (LFNSC(I) - LFDM(I) * PCHOLFF) * MOBTEM * MOBSWF
+!       LFSCMOB is always zero in current code (2026-05-11 chp)
         LFCMINE_c(I) = MAX(LFSCMOB, CMINELF_c(I))
       ENDDO
 !     --------------------------------------------
@@ -1086,6 +1140,9 @@ C    1-12-2024 KJB and DP
 
       CMINEP = LFCMINE + STCMINE + RTCMINE + SRCMINE + SHCMINE
       CMINEO = CMINELF + CMINEST + CMINERT + CMINESR + SHCMINE
+
+      LFWSSN = WaterSen_c
+      LeafTotSen_SUM = SUM(LeafTotSen)
 
 !***********************************************************************
 !***********************************************************************

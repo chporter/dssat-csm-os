@@ -804,6 +804,7 @@ C PDA 5/6/2010  ADDED CODE FOR FORAGE HARVEST
 C--------------------------------------------
       IF (FHLEAF .GT. 0) THEN
         WLDOT=WLDOT-FHLEAF
+      ENDIF
 
 !     Calculate net addition to leaves today per cohort
       CALL LeafCohortPest(WLIDOT, WTLF) !Calculates LFPST for cohorts
@@ -813,7 +814,6 @@ C--------------------------------------------
       LFCAD = 0.0
       LFNAD = 0.0
 
-      ENDIF
 !      IF (FHLEAF .GT. 0) THEN
 !        IF (WTLF .GT. 0) THEN
 !          WLDOT = WLDOTN - SLDOT - WLIDOT - WLFDOT
@@ -835,9 +835,9 @@ C-----------------------------------------------------------------------
       IF (WTLF .GT. 0.0 .AND. FHLEAF.EQ.0) THEN
         WLDOT = WLDOT + CADLF - LFCADDM +
      &    (NADLF - LFNADDM)/0.16
-        LCADD = CADLF - LFCADDM + (NADLF - LFNADDM)/0.16
-        LNADD = NADLF/0.16 *
-     &    (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
+
+        LCADD = CADLF - LFCADDM 
+        LNADD = (NADLF - LFNADDM)/0.16
 
 !       Handle new reserves for leaf cohorts. These will be adjusted for 
 !         leaf losses in the COHORTS subroutine.
