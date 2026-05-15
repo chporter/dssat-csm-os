@@ -1169,35 +1169,37 @@ C      Adjust NRUSxx for N "returned" for CH2O
 C      Adjust ANMINExx for N "returned" for CH2O
       ANMINETOT = ANMINELF + ANMINEST + ANMINERT + ANMINESR
       IF (ANMINETOT .GT. 0.0) THEN
-      ANMINELF = ANMINELF - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
-     &    ANMINELF/ANMINETOT
-      ANMINEST = ANMINEST - NLKNG1 * (AGRVGI / (RPRO * 0.16)) *  
-     &    ANMINEST/ANMINETOT
-      ANMINERT = ANMINERT - NLKNG1 * (AGRVGI / (RPRO * 0.16)) *  
-     &    ANMINERT/ANMINETOT
-      ANMINESR = ANMINESR - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
-     &    ANMINESR/ANMINETOT
-
-
-      ANMINETOT = ANMINELF + ANMINEST + ANMINERT + ANMINESR
-
-      NRUSLF = NRUSLF - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
-     &    ANMINELF/ANMINETOT
-      NRUSST = NRUSST - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
-     &    ANMINEST/ANMINETOT
-      NRUSRT = NRUSRT - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
-     &    ANMINERT/ANMINETOT
-      NRUSSR = NRUSSR - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
-     &    ANMINESR/ANMINETOT
+        ANMINELF = ANMINELF - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
+     &      ANMINELF/ANMINETOT
+        ANMINEST = ANMINEST - NLKNG1 * (AGRVGI / (RPRO * 0.16)) *  
+     &      ANMINEST/ANMINETOT
+        ANMINERT = ANMINERT - NLKNG1 * (AGRVGI / (RPRO * 0.16)) *  
+     &      ANMINERT/ANMINETOT
+        ANMINESR = ANMINESR - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
+     &      ANMINESR/ANMINETOT
+        
+        
+        ANMINETOT = ANMINELF + ANMINEST + ANMINERT + ANMINESR
+        
+        NRUSLF = NRUSLF - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
+     &      ANMINELF/ANMINETOT
+        NRUSST = NRUSST - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
+     &      ANMINEST/ANMINETOT
+        NRUSRT = NRUSRT - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
+     &      ANMINERT/ANMINETOT
+        NRUSSR = NRUSSR - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
+     &      ANMINESR/ANMINETOT
       ENDIF
 
 !     Leaf cohorts
-      NMineAdjust = NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
+      IF (ANMINETOT > 0.0) THEN
+        NMineAdjust = NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
      &    ANMINELF/ANMINETOT
-      WTLF_calc = SUM(LFDM)
-      DO I = 1, NLC
-        LFNMN(I) = LFNMN(I) - LFDM(I) / WTLF_calc * NMineAdjust
-      ENDDO
+        WTLF_calc = SUM(LFDM)
+        DO I = 1, NLC
+          LFNMN(I) = LFNMN(I) - LFDM(I) / WTLF_calc * NMineAdjust
+        ENDDO
+      ENDIF
 
 C      Calculate how much NLEAK was used as N and how much was 
 C      returned for CH2O

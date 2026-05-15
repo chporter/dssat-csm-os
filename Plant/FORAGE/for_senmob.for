@@ -120,8 +120,7 @@ C-----------------------------------------------------------------------
 
 !     Leaf cohorts
       REAL, DIMENSION(LCMax) :: CMINELF_c, LFNMINE_c, 
-     &    LFNSEN_c, LTSEN_c, 
-     &    LFSENWT_c, NMINELF_c, SLMDOT_c, WaterSen_c
+     &    NMINELF_c, WaterSen_c
       REAL LFNMINE_sum, LFNSEN_sum, LFSNMOB_sum, LTSEN_sum, NMINELF_sum,
      &    SLMDOT_sum, WaterSen_sum, LeafTotSen_SUM
 

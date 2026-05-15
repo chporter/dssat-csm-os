@@ -993,11 +993,6 @@ C-----------------------------------------------------------------------
 
       ENDIF
 
-
-
-
-
-
 C-----------------------------------------------------------------------
 C     Calculate proportions of below and above ground storage organ 
 C      tissue at end of day - with new growth and losses.
@@ -1048,7 +1043,6 @@ C-----------------------------------------------------------------------
         WSHDOT = WSHDOT + (CADSH + NADSH/0.16) *
      &   (1. - MIN(1.0,WTABRT/SHELWT))
       ENDIF
-
 
 C-----------------------------------------------------------------------
 C     Net seed growth rate
@@ -1189,9 +1183,9 @@ C PDA 5/6/2010  ADDED CODE FOR FORAGE HARVEST
 C--------------------------------------------
       IF (FHLEAF.GT.0)THEN
         IF (WLDOTN.GT.0)THEN
-        CLOFF=CLOFF+(FHLEAF-WLDOTN)*RHOL+WLDOTN*ALPHL
+          CLOFF=CLOFF+(FHLEAF-WLDOTN)*RHOL+WLDOTN*ALPHL
         ELSE
-        CLOFF=CLOFF+FHLEAF*RHOL
+          CLOFF = CLOFF + FHLEAF * RHOL
         ENDIF
 !        IF (WTLF .GT. 0)THEN
 !          CLOFF=CLOFF
@@ -1481,8 +1475,6 @@ C-----------------------------------------------------------------------
 !      IF (WTLF .GT. 0.0) THEN
 !         NLDOT = NLDOT + NADLF - SLNADDOT - LFNADDM
 !      ENDIF
-
-
 
       NLOFF  = SLMDOT * 
      &    (SENNLV * (PCNL/100 - PROLFF * 0.16) + PROLFF * 0.16) 

@@ -90,9 +90,6 @@ C========================================================================
 !     P module
       REAL PStres2
 
-!     TEMP CHP
-      REAL LFCMN_tot 
-
       TYPE (ControlType) CONTROL
       CALL GET(CONTROL)
       DAS = CONTROL % DAS

@@ -37,9 +37,14 @@ C=======================================================================
      &  LFCAD,      !leaf non-struc CH2O stored  (g[CH2O]/m2) = CADLF
      &  LFNAD,      !Leaf non-struc N stored today (g[N]]/m2) = NADLF
 
-!       calculated in for_senmob, used in for_veggr and for_for_mobil
+!       calculated in for_senmob
      &  LFCMINE_c,  !Max potential CH2O mining today
      &  LFSNMOB_c,  !Leaf N mobilized by natural senescence (g[N]/m2)
+     &  LTSEN_c,    !Low light senescence
+!       is LFSENWT_c the same as LFNMNSN?
+     &  LFSENWT_c,  !Leaf senescence due to N mobilization
+     &  LFNSEN_c,   !natural senescence
+     &  SLMDOT_c,   !Leaf senescence with N mobilization 
 
 !       calculated in for_harv
      &  FHLEAF_c    !Forage harvest
@@ -82,6 +87,7 @@ CHP 2025-11-20
      &  LCADD_calc, LNADD_calc, NLDOT_calc, NLOFF_calc,
      &  LFSN_calc
 
+      CHARACTER (len=8) MODEL
       CHARACTER*11 COHORTOUT
       character*12 COHORTOUT1, COHORTOUT2
       LOGICAL FEXIST
@@ -108,6 +114,7 @@ CHP 2025-11-20
      &    NLOFF_c
 
       REAL CUMLFDM, Excess, SenFrac, WLDOT_cohort, Loss_adjust
+      REAL RHOL, CLOFF, WRCLDT
 
 !     Variables read from species file:
       REAL ALPHL, PROLFF
@@ -118,6 +125,7 @@ CHP 2025-11-20
 !     Not currently used, but will be needed for shading 
 !     Keep here or move to MOBIL?
       REAL ICMP, MAXNMINE, NMOBMX
+      REAL SENCLV, SENNLV, PCHOLFF !forage species file
 
 !     Date info for output files
       TYPE (ControlType) CONTROL
@@ -127,6 +135,8 @@ CHP 2025-11-20
       CALL YR_DOY(YRDOY, YEAR, DOY) 
       DAP = MAX(0,TIMDIF(YRPLT,YRDOY))
       IF (DAP > DAS) DAP = 0
+
+      MODEL = CONTROL % MODEL
 
 !***********************************************************************
 !***********************************************************************
@@ -159,6 +169,7 @@ CHP 2025-11-20
       LFSN      = 0.0 !Leaf structural (non-mobile) N (g[N]]/m2)
       LFAREA    = 0.0 !Leaf area (cm2[leaf]/m2)
       LFAREAH   = 0.0 !healthy leaf area (cm2[leaf]/m2)
+      FHLEAF_c  = 0.0 !harvested leaf mass
 
       CUMLFDM = 0.0 !Not used by could be compared with CumLeafDM
 
@@ -175,9 +186,10 @@ C-GH 08/19/2025
 
 !     Read parameters from species file
       CALL IPCOHO(
-     &  FILECC,                                 !Input
+     &  FILECC, MODEL,                          !Input
      &  ALPHL, ICMP, MAXNMINE, NMOBMX, NVSMOB,  !Output
-     &  PROLFF, SENDAY, SENMAX, TCMP, XSENMX)   !Output
+     &  PCHOLFF, PROLFF, SENDAY, SENMAX,        !Output
+     &  SENCLV, SENNLV, TCMP, XSENMX)           !Output
 
 !     Initialize COHORT.OUT file
       INQUIRE (FILE = COHORTOUT, EXIST = FEXIST)
@@ -306,99 +318,133 @@ C-GH 08/19/2025
 
 !------------------
 ! LEAF LOSSES
-!------------------      
-!     Calculate the loss of leaf tissue per cohort
-      DO I = 1, NLC
-!       Leaf mass decrease (WLIDOT + WLFDOT + SLDOT in GROW)
-        LeafMassDecrease(I) = LFFRZ(I) + LFPST(I) + LeafTotSen(I)
+!------------------
+      IF (SUM(FHLEAF_c) <= 0.0) THEN
+!       Calculate the loss of leaf tissue per cohort
+        DO I = 1, NLC
+!         Leaf mass decrease (WLIDOT + WLFDOT + SLDOT in GROW)
+          LeafMassDecrease(I) = LFFRZ(I) + LFPST(I) + LeafTotSen(I)
 
-!       Check that loss is no greater than leaf cohort mass 
-        IF (LeafMassDecrease(I) > LFDM(I)) THEN
-          LeafMassDecrease(I) = LFDM(I)
+!         Check that loss is no greater than leaf cohort mass 
+          IF (LeafMassDecrease(I) > LFDM(I)) THEN
+            LeafMassDecrease(I) = LFDM(I)
 
-!         Freeze damage occurs first
-          IF (LFFRZ(I) > LFDM(I)) THEN
-            LFFRZ(I) = LFDM(I)
-            Excess = 0.0
-          ELSE
-            Excess = LFDM(I) - LFFRZ(I)
+!           Freeze damage occurs first
+            IF (LFFRZ(I) > LFDM(I)) THEN
+              LFFRZ(I) = LFDM(I)
+              Excess = 0.0
+            ELSE
+              Excess = LFDM(I) - LFFRZ(I)
+            ENDIF
+
+!           Next, pests get their bit
+            IF (LFPST(I) > Excess) THEN
+              LFPST(I) = Excess
+              Excess = 0.0
+            ELSE
+              Excess = Excess - LFPST(I)
+            ENDIF
+
+!           Anything leftover gets taken by senescence
+            IF (Excess > 0.0) THEN
+              SenFrac = Excess / LeafTotSen(I)
+              LeafTotSen(I) = Excess
+              LFNMNSN(I) = LFNMNSN(I) * SenFrac
+              LFWSSN(I) = LFWSSN(I) * SenFrac
+            ELSE
+              LeafTotSen(I) = 0.0
+              LFNMNSN(I) = 0.0   
+              LFWSSN(I) = 0.0    
+            ENDIF
           ENDIF
-
-!         Next, pests get their bit
-          IF (LFPST(I) > Excess) THEN
-            LFPST(I) = Excess
-            Excess = 0.0
-          ELSE
-            Excess = Excess - LFPST(I)
-          ENDIF
-
-!         Anything leftover gets taken by senescence
-          IF (Excess > 0.0) THEN
-            SenFrac = Excess / LeafTotSen(I)
-            LeafTotSen(I) = Excess
-            LFNMNSN(I) = LFNMNSN(I) * SenFrac
-            LFWSSN(I) = LFWSSN(I) * SenFrac
-          ELSE
-            LeafTotSen(I) = 0.0
-            LFNMNSN(I) = 0.0   
-            LFWSSN(I) = 0.0    
-          ENDIF
-        ENDIF
-      ENDDO
+        ENDDO
+      ELSE
+!       On days with an interrim forage harvest, what should be done here?
+      ENDIF
 
 !------------------
 ! LEAF ADDITIONS
-!------------------      
+!------------------
 !     Adjust new reserves to account for leaf losses just calculated.
-!     NOTE: this is done differently in for_grow. May cause some differences
-!       in results, but let's see how it goes.
-      DO I = 1, NLC
-        IF (LFDM(I) > 0.0) THEN
-          Loss_adjust = (1. - MIN(1.0, LeafMassDecrease(I) / LFDM(I)))
-          LFCAD(I) = LFCAD(I) * Loss_adjust
-          LFNAD(I) = LFNAD(I) * Loss_adjust
-        ENDIF
-      ENDDO
+      SELECT CASE (MODEL(1:5))
+      CASE ('CRGRO')
+        DO I = 1, NLC
+          IF (LFDM(I) > 0.0) THEN
+            Loss_adjust = (1. - MIN(1.0, LeafMassDecrease(I) / LFDM(I)))
+            LFCAD(I) = LFCAD(I) * Loss_adjust
+            LFNAD(I) = LFNAD(I) * Loss_adjust
+          ENDIF
+        ENDDO
+
+      CASE ('PRFRM')
+        DO I = 1, NLC
+          IF (LFDM(I) -  LeafTotSen(I) > 0.0) THEN
+!           CHP: This is how it's done in for_grow, but I'm not convinced it's correct.
+!           If it is correct, we should do the same thing for CRGRO 
+            Loss_adjust = (1. - MIN(1.0, (LFPST(I) + LFFRZ(I)) / 
+     &                                   (LFDM(I) - LeafTotSen(I))))
+            LFCAD(I) = LFCAD(I) * Loss_adjust
+            LFNAD(I) = LFNAD(I) * Loss_adjust
+          ENDIF
+        ENDDO
+      END SELECT
 
 !------------------
 ! LEAF N CHANGES
-!------------------      
+!------------------
       NLOFF_c = 0.0
       NLDOT_c = 0.0
-      DO I = 1, NLC
-        IF (LFDM(I) .GT. 0.0) THEN
-!         N loss due to senescence, freeze, pest
-          NLOFF_c(I) = 
-     &      + (LFWSSN(I) + LFPST(I) + LFFRZ(I)) * PCNLeaf(I) / 100.
-     &      + (LeafTotSen(I) - LFWSSN(I)) * PROLFF * 0.16
-          NLOFF_c(I) = MIN(NLOFF_c(I), LeafNTot(I))
 
-!         Net N gain today for cohort I
-          NLDOT_c(I) = - NLOFF_c(I) - LFNMN(I) + LFNAD(I) 
-          NLDOT_c(I) = MAX(NLDOT_c(I), -LeafNTot(I))
-        ENDIF
-      ENDDO
+      SELECT CASE (MODEL(1:5))
+      CASE ('CRGRO')
+        DO I = 1, NLC
+          IF (LFDM(I) .GT. 0.0) THEN
+!           N loss due to senescence, freeze, pest
+            NLOFF_c(I) = 
+     &        + (LFWSSN(I) + LFPST(I) + LFFRZ(I)) * PCNLeaf(I) / 100.
+     &        + (LeafTotSen(I) - LFWSSN(I)) * PROLFF * 0.16
+            NLOFF_c(I) = MIN(NLOFF_c(I), LeafNTot(I))
 
-!!C--------------------------------------------
-!C--------------------------------------------
-!     from for_grow:
-!      NLOFF  = SLMDOT * 
-!     &    (SENNLV * (PCNL/100 - PROLFF * 0.16) + PROLFF * 0.16) 
-!     &    + (LTSEN + LFSENWT) * PROLFF *0.16
-!     &    + (SLNDOT + WLIDOT + WLFDOT) * PCNL/100  
-!      
-!C--------------------------------------------
-!C PDA 5/6/2010  ADDED CODE FOR FORAGE HARVEST 
-!C--------------------------------------------
-!      IF (FHLEAF.GT.0)THEN
-!        IF (WLDOTN.GT.0)THEN
-!        NLOFF=NLOFF+(FHLEAF-WLDOTN)*PCNL/100+NGRLF
-!        ELSE
-!        NLOFF=NLOFF+FHLEAF*PCNL/100
-!        ENDIF
-!      ENDIF
-!C--------------------------------------------
-!C--------------------------------------------
+!           Net N gain today for cohort I
+            NLDOT_c(I) = - NLOFF_c(I) - LFNMN(I) + LFNAD(I) 
+            NLDOT_c(I) = MAX(NLDOT_c(I), -LeafNTot(I))
+          ENDIF
+        ENDDO
+
+      CASE ('PRFRM')
+        DO I = 1, NLC
+          IF (LFDM(I) .GT. 0.0) THEN
+!           NLOFF      = SLMDOT *    
+            NLOFF_c(I) = LFNSEN_c(I) * 
+!    &       (SENNLV * (PCNL/100 - PROLFF * 0.16) + PROLFF * 0.16) 
+     &       (SENNLV * (PCNLeaf(I)/100. - PROLFF*0.16) + PROLFF*0.16)
+!    &       + (LTSEN + LFSENWT) * PROLFF *0.16
+     &       + (LTSEN_c(I) + LFSENWT_c(I)) * PROLFF *0.16
+!    &       + (SLNDOT + WLIDOT + WLFDOT) * PCNL/100  
+     &       + (LFWSSN(I) + LFPST(I) + LFFRZ(I)) * PCNLeaf(I)/100.
+
+            IF (FHLEAF_c(I) .GT. 0.0) THEN
+!             Harvest event today
+!             NLOFF = NLOFF + FHLEAF * PCNL/100.
+              NLOFF_c(I) = NLOFF_c(I) + FHLEAF_c(I) * PCNLeaf(I)/100.
+            ENDIF
+
+            NLOFF_c(I) = MIN(NLOFF_c(I), LeafNTot(I))
+
+!           Net N gain today for cohort I
+!           NLDOT=NGRLF-NRUSLF-NLOFF
+            NLDOT_c(I) = - NLOFF_c(I) - LFNMN(I)
+!           
+!           IF (WTLF .GT. 0.0.AND.FHLEAF.EQ.0) THEN
+            IF (LFDM(I) > 0.0 .AND. FHLEAF_C(I) == 0.0) THEN
+!             NLDOT = NLDOT + NADLF - LFNADDM
+              NLDOT_c(I) = NLDOT_c(I) + LFNAD(I)
+            ENDIF
+
+            NLDOT_c(I) = MAX(NLDOT_c(I), -LeafNTot(I))
+          ENDIF
+        ENDDO
+      END SELECT
 
 !     Notes on leaf N changes, NLDOT_c:
 !     - New N, NGRLF, is added to today's new cohort, not distributed 
@@ -446,14 +492,44 @@ C-GH 08/19/2025
 
 !     ---------------------------------------------------------
 !         Non-structural CH2O (~WCRLF in GROW)
-          LFNSC(I) = LFNSC(I) 
-     &      - LFCMN(I)      !~ CRUSLF, mined CH2O
-     &      + LFCAD(I)      !new reserves
-!             leaf mass losses:
-     &      - LFNSC(I) / LFDM(I) * LeafMassDecrease(I)
-          IF (LFNSC(I) < 0.0) THEN
-            LFNSC(I) = 0.0
-          ENDIF
+          SELECT CASE (MODEL(1:5))
+          CASE ('CRGRO')
+            LFNSC(I) = LFNSC(I) 
+     &        - LFCMN(I)      !~ CRUSLF, mined CH2O
+     &        + LFCAD(I)      !new reserves
+!               leaf mass losses:
+     &        - LFNSC(I) / LFDM(I) * LeafMassDecrease(I)
+            IF (LFNSC(I) < 0.0) THEN
+              LFNSC(I) = 0.0
+            ENDIF
+
+          CASE ('PRFRM')
+!           RHOL =  WCRLF/WTLF
+            RHOL = LFNSC(I) / LFDM(I)
+!           CLOFF = (SLMDOT + LTSEN + LFSENWT) *  
+            CLOFF = (SLMDOT_c(I) + LTSEN_c(I) + LFSENWT_c(I)) * 
+!    &              (SENCLV * (RHOL - PCHOLFF) + PCHOLFF) 
+     &              (SENCLV * (RHOL - PCHOLFF) + PCHOLFF) 
+!    &            + (SLNDOT + WLIDOT + WLFDOT) * RHOL
+     &            + (LFWSSN(I) + LFPST(I) + LFFRZ(I)) * RHOL
+!
+            IF (FHLEAF_c(I) .GT. 0.0) THEN
+!             CLOFF = CLOFF + FHLEAF * RHOL
+              CLOFF = CLOFF + FHLEAF_c(I) * RHOL
+            ENDIF
+
+            IF (CLOFF. LT. 0.0) THEN
+              CLOFF = 0.0
+            ENDIF
+
+!           WRCLDT=WLDOTN*ALPHL-CRUSLF-CLOFF
+            WRCLDT = -LFCMN(I) - CLOFF
+
+            IF (LFDM(I) .GT. 0.0.AND.FHLEAF_c(I) .EQ. 0.0) THEN
+!             WRCLDT = WRCLDT + CADLF - LFCADDM
+              WRCLDT = WRCLDT + LFCAD(I)
+            ENDIF
+          END SELECT
 
 !     ---------------------------------------------------------
 !         Leaf N
@@ -692,26 +768,28 @@ C-GH 08/19/2025
 !  11/18/2025 CHP Adapted from IPDMND.
 !=======================================================================
       SUBROUTINE IPCOHO(
-     &  FILECC,                                 !Input
+     &  FILECC, MODEL,                          !Input
      &  ALPHL, ICMP, MAXNMINE, NMOBMX, NVSMOB,  !Output
-     &  PROLFF, SENDAY, SENMAX, TCMP, XSENMX)   !Output
+     &  PCHOLFF, PROLFF, SENDAY, SENMAX,        !Output
+     &  SENCLV, SENNLV, TCMP, XSENMX)           !Output
 
 !-----------------------------------------------------------------------
       IMPLICIT NONE
       EXTERNAL GETLUN, ERROR, FIND, IGNORE, WARNING
 !-----------------------------------------------------------------------
       CHARACTER*92, INTENT(IN) :: FILECC
-      REAL, INTENT(OUT) :: ALPHL, ICMP, MAXNMINE, NMOBMX, 
-     &     NVSMOB, PROLFF, SENDAY, TCMP
+      REAL, INTENT(OUT) :: ALPHL, PCHOLFF, ICMP, MAXNMINE, NMOBMX, 
+     &     NVSMOB, PROLFF, SENDAY, SENCLV, SENNLV, TCMP
       REAL, INTENT(OUT) :: SENMAX(4), XSENMX(4)
 
       CHARACTER*6   ERRKEY
       PARAMETER (ERRKEY = 'IPCOHO')
       CHARACTER*6   SECTION
+      CHARACTER*8   MODEL
       CHARACTER*80  C80
 
       INTEGER LUNCRP,  ERR, LINC, LNUM, FOUND, ISECT
-      INTEGER II
+      INTEGER II, I
 
 !-----------------------------------------------------------------------
 !     Read in values from species file
@@ -729,10 +807,16 @@ C-GH 08/19/2025
         CALL ERROR(SECTION, 42, FILECC, LNUM)
       ELSE
         CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
-!       READ(C80,'(F6.0,6X,2F6.0,6X,F6.0)',IOSTAT=ERR)
-!    &          PROLFI, PROLFF, PROSTI, PROSTF
         READ(C80,'(12X,F6.0)',IOSTAT=ERR) PROLFF
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+
+        IF (MODEL(1:5) == 'PRFRM') THEN
+          DO I = 1, 11
+            CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+          ENDDO
+          READ(C80,'(F6.0)',IOSTAT=ERR) PCHOLFF
+          IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+        ENDIF
       ENDIF
 
 !-----------------------------------------------------------------------
@@ -744,7 +828,6 @@ C-GH 08/19/2025
         CALL ERROR(SECTION, 42, FILECC, LNUM)
       ELSE
         CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
-!       READ(C80,'(18X,3F6.0)',IOSTAT=ERR) NMOBMX, NVSMOB, NRCVR
         READ(C80,'(18X,2F6.0)',IOSTAT=ERR) NMOBMX, NVSMOB
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
 
@@ -753,9 +836,24 @@ C-GH 08/19/2025
         READ(C80,'(F6.0)',IOSTAT=ERR) ALPHL
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
 
-        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)  
-        READ(C80,'(F6.0)',IOSTAT=ERR) MAXNMINE
-        IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+        SELECT CASE (MODEL(1:5))
+        CASE ('CRGRO')
+          CALL IGNORE(LUNCRP,LNUM,ISECT,C80)  
+          READ(C80,'(F6.0)',IOSTAT=ERR) MAXNMINE
+          IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+
+        CASE ('PRFRM')
+          DO I = 1, 7
+            CALL IGNORE(LUNCRP,LNUM,ISECT,C80)  
+          ENDDO
+          READ(C80,'(2F6.0)',IOSTAT=ERR) SENNLV, SENCLV
+          IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+
+          CALL IGNORE(LUNCRP,LNUM,ISECT,C80)  
+          CALL IGNORE(LUNCRP,LNUM,ISECT,C80)  
+          READ(C80,'(F6.0)',IOSTAT=ERR) MAXNMINE
+          IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+        END SELECT
       ENDIF
 
 !-----------------------------------------------------------------------
