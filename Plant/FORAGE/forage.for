@@ -2205,6 +2205,77 @@ C-----------------------------------------------------------------------
      &    FRLF, FRSTM, FRRT,
      &    FHWAH, FHLPH, DWTCO, DWTLO, DWTSO,fhpctn,RHOR)
 
+      call forage_harvest(CONTROL,FILECC, ATMOW, ATTP,
+     &    RHOL,RHOS,PCNL,PCNST,SLA,RTWT,STRWT,       !Input
+     &    WTLF,STMWT,TOPWT,TOTWT,WCRLF,WCRST,        !Input/Output
+     &    WTNLF,WTNST,WNRLF,WNRST,WTNCAN,            !Input/Output
+     &    AREALF,XLAI,XHLAI,VSTAGE,vstagp,canht,     !Input/Output
+     &    FHWAH,FHTOTN, FHLPH,fhpctn,FREQ,
+     &    MOWC,RSPLC,HMFRQ,HMGDD,HMCUT,HMMOW,HRSPL,
+     &    DWTCO, DWTLO, DWTSO, PWTCO, PWTLO, PWTSO,
+     &    HMVS, WTCO, WTLO, WTSO, TAVG, MOWGDD,
+     &    MOWCOUNT, TGMIN, VTO1, VTB1, MOWREF, 
+     &    RSREF, YFREQ, YRSREF, YCUTHT, YCHMOW,
+     &    XCUTHT, XCHMOW, XFRGDD, XFREQ, CUTDAY,
+     &    PROLFF, PROSTF, pliglf, pligst)
+
+!     TEMP CHP
+      CALL FOR_GROW(CONTROL, ISWITCH, DYNAMIC, SOILPROP, 
+     &  AGEFAC, CADLF, CADST, CRUSLF, CRUSRT, CRUSSH,     !Input
+     &  CRUSST, DISLA, F, FILECC, FILEGC, FRLF, FRSTM,    !Input
+     &  LFSCMOB, LFSENWT, LFSNMOB, LTSEN, NADLF, NADRT,   !Input
+     &  NADST, NDTH, NFIXN, NGRLF, NGRRT, NGRSD, NGRSH,   !Input
+     &  NGRST, NMINEA, NODGR, NOUTDO, NPLTD, NRUSLF,      !Input
+     &  NRUSRT, NRUSSH, NRUSST, POTCAR, POTLIP,           !Input
+     &  PPLTD, RTSCMOB, RTSNMOB, SDIDOT, SDPROR,          !Input
+     &  SENNOD, SENRT, SLDOT, SLMDOT, SLNDOT,             !Input
+     &  SLNADDOT, SRDOT, SRMDOT, SRNADDOT,                !Input
+     &  SRNDOT, SRSCMOB, SRSNMOB, SSDOT, SSMDOT,          !Input
+     &  SSNADDOT, SSNDOT, SSRMDOT, SSRNADDOT,             !Input
+     &  STSCMOB, STLTSEN, STSENWT, STSNMOB, TRNH4U,       !Input
+     &  TRNO3U, TRNU, TURFAC, WLDOTN, WLIDOT, WRDOTN,     !Input
+     &  WRIDOT, WSDDTN, WSDOTN, WSHDTN, WSIDOT, WTABRT,   !Input
+     &  WTSHMT, YRNR1, MDATE, YRPLT,                      !Input
+     &  FHLEAF,FHSTEM,FHVSTG,                             !Input
+
+     &  SWIDOT, WLFDOT, WSHIDT, WTNFX, XHLAI,             !Input/Output
+
+     &  AREALF, BETN, CANNAA, CANWAA, CLW, CropStatus,    !Output
+     &  CSW, DWNOD, DWNODA, GROWTH, GRWRES, LAIMX, PCCSD, !Output
+     &  PCLSD, PCNL, PCNRT, PCNSD, PCNSH, PCNST, PLTPOP,  !Output
+     &  PLIGLF, PLIGNO, PLIGRT, PLIGSD, PLIGSH, PLIGST,   !Output
+     &  PODWT, PUNCSD, PUNCTR, RHOL, RHOS, RNITP,         !Output
+     &  ROWSPC, RTWT, SDNPL, SDRATE, SDWT, SDWTAM,        !Output
+     &  SEEDNI, SEEDNO, SENESCE, SHELWT, SLA,             !Output
+     &  SLAAD, STMWT, TOPWT, TOTWT, WCRLF, WCRRT, WCRSH,  !Output
+     &  WCRST, WNRLF, WNRRT, WNRSH, WNRST, WTCO,          !Output
+     &  WTLF, WTLO, WTMAIN, WTNCAN, WTNEW, WTNLA, WTNLF,  !Output
+     &  WTNLO, WTNNA, WTNNAG, WTNNO, WTNNOD, WTNOO,       !Output
+     &  WTNRA, WTNRO, WTNRT, WTNSA, WTNSD, WTNSDA,        !Output
+     &  WTNSDO, WTNSH, WTNSHA, WTNSHO, WTNSO, WTNST,      !Output
+     &  WTNUP, WTRO, WTSDO, WTSHO, WTSO, XLAI, XPOD,      !Output
+
+     &  CADRT, CADSH, NADSH,                              !Input
+     &  CADSR, CRUSSR, FRSTR, NADSR, NGRSR, NRUSSR,       !Input
+     &  PSRLYRD, PSRSRFD, PSRSRFL, PSRLYR1, SSRDOT,       !Input
+     &  SSRNDOT, STRSRFL, STRLYR1, WSRDOTN, WSRIDOT,      !Input
+     &  WSFDOT, WSRFDOT,                                  !Input/Output
+     &  CSRW, PCNSR, PLIGSR, RHOSR, STRWT, WCRSR,         !Output
+     &  WNRSR, WTNSR, WTNSRA, WTNSRO, WTSRO,              !Output
+     
+     &  ALPHL, ALPHR, ALPHS, ALPHSH, ALPHSR, PCARSR,      !Output
+     &  PLIPSR, PMINSR, POASR, PROSRF,CPFSTR, NSRALL,     !Output
+     &  NSRDOT, NSROFF, TPSRLYR1,TPSRSRFL, WRCSRDT,       !Output
+     &  WSRDOT, WSRI,                                     !Output
+
+     &  NLALL, NRALL, NSALL,                              !Output
+     &  PCHOLFF, PCHORTF, PCHOSRF, PCHOSTF,               !Output
+     &  RHOR, WLDOT, WRCLDT, WRCRDT, WRCSDT, WRCSHD,      !Output
+     &  WRDOT, WSDOT,                                     !Output
+
+     &  VSTAGE, DWTCO, DWTLO, DWTSO,
+     &  PWTCO, PWTLO, PWTSO)                         !Input/Output
+
 !     !!   ! Write to Overview.out and summary.out files.
 !     !!   CALL FOR_OPHARV (CONTROL, ISWITCH, 
 !!!    !!&  SDRATE, SDWT, SDWTAM, SEEDNO, STGDOY, STMWT,    !Input
@@ -2217,7 +2288,7 @@ C-----------------------------------------------------------------------
 !       Call PlantNBal only for seasonal output.
       IF (DYNAMIC .EQ. SEASEND) THEN
 
-      CALL FOR_DORMANCY( CONTROL,
+        CALL FOR_DORMANCY( CONTROL,
      &    DAYL, TMIN,                                        !Input
      &    DRMST, FREEZ2, FRZDC, PPGFAC, PPTFAC, PPMFAC,      !Output
      &    FNPGD, FNPMD, FNPTD, FRZDHD, FRZHRD, HARD1,        !Output
