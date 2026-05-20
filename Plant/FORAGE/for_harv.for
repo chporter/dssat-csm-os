@@ -98,7 +98,7 @@ C=======================================================================
       character(len=2)  crop
       CHARACTER(len=6)  SECTION,ERRKEY,trtchar
       character(len=10),parameter :: fhout='FORAGE.OUT'
-      CHARACTER*12 MOWFILE
+      CHARACTER*12 MOWFILE, FILEX
       CHARACTER*30 FILEIO
 !     CHARACTER*78 MSG(2)
       CHARACTER*80 FILECC
@@ -153,20 +153,26 @@ C***********************************************************************
         CALL PUT('MHARVEST','ISH_date',-99)
         CALL PUT('MHARVEST','ISH_wt',  -99.)
 
-C----------------------------------------------------------
-C     Open and read MOWFILE and PATH
-C----------------------------------------------------------
-C FO - 10/15/2020 Fixed path issue for MOWFILE.
+!C----------------------------------------------------------
+!C     Open and read MOWFILE and PATH
+!C----------------------------------------------------------
+!C FO - 10/15/2020 Fixed path issue for MOWFILE.
+!          CALL GETLUN('FILEIO', LUNIO)
+!          OPEN (LUNIO, FILE = FILEIO, STATUS = 'OLD', IOSTAT=ERRNUM)
+!          IF (ERRNUM .NE. 0) CALL ERROR(ERRKEY,ERRNUM,FILEIO,0)
+!
+!          READ (LUNIO,'(3(/),15X,A12,1X,A80)',IOSTAT=ERRNUM) mowfile,
+!     &       PATHEX
+!          IF (ERRNUM .NE. 0) CALL ERROR(ERRKEY,ERRNUM,FILEIO,5)
+!          mowfile(10:12) = 'MOW'
+!          CLOSE(LUNIO)
+
+!       2026-05-20 CHP Always need FileX name for forage.out, even
+!         when no mow file is read.
+        FILEX = CONTROL % FILEX
+
         IF (ATMOW .EQV. .FALSE.) THEN
-          CALL GETLUN('FILEIO', LUNIO)
-          OPEN (LUNIO, FILE = FILEIO, STATUS = 'OLD', IOSTAT=ERRNUM)
-          IF (ERRNUM .NE. 0) CALL ERROR(ERRKEY,ERRNUM,FILEIO,0)
-
-          READ (LUNIO,'(3(/),15X,A12,1X,A80)',IOSTAT=ERRNUM) mowfile,
-     &       PATHEX
-          IF (ERRNUM .NE. 0) CALL ERROR(ERRKEY,ERRNUM,FILEIO,5)
-          mowfile(10:12) = 'MOW'
-
+          MOWFILE = FILEX(1:8) // ".MOW"
           PATHL  = INDEX(PATHEX,BLANK)
           IF (PATHL .LE. 1) THEN
             FILEMOW = mowfile
@@ -174,8 +180,6 @@ C FO - 10/15/2020 Fixed path issue for MOWFILE.
             PATHL = LEN(TRIM(PATHEX))
             FILEMOW = PATHEX(1:(PATHL)) // mowfile
           ENDIF
-
-          CLOSE(LUNIO)
 
           INQUIRE(FILE = MOWFILE, EXIST = exists)
 
@@ -272,7 +276,6 @@ C   FO -  05/07/2020 Add new Y4K subroutine call to convert YRDOY
               CALL ERROR (ERRKEY,5,MOWFILE,LNUM)
             ENDIF
           ENDIF
-          
         ENDIF
 
         ! OPEN AND READ SPECIES FILE
@@ -488,7 +491,7 @@ C-----------------------------------------------------------------------
      &     ",I1,'.',I1,'.',I1,'.',"//
      &     "I3.3,1X,A10,4X,"//
      &     "A3,' ',I2.2,', ',I4,'; ',I2.2,':',I2.2,':',I2.2/)"
-                 WRITE (fhlun,fhoutfmt) mowfile(1:8),crop,trim(ename),
+                 WRITE (fhlun,fhoutfmt) FILEX(1:8),crop,trim(ename),
      &             Version,VBranch,
      &             MonthTxt(DATE_TIME(2)), DATE_TIME(3), DATE_TIME(1),
      &             DATE_TIME(5), DATE_TIME(6), DATE_TIME(7)
@@ -503,7 +506,7 @@ C-----------------------------------------------------------------------
                write(fhoutfmt,'(a)') '(i4,x,a8,a3,2(i5),i5,i4,'//
      &            '5(i6),f6.2,2(i6),3(f6.2),f6.1,x,f5.0,F6.1,F6.1)'
                WRITE(fhlun,fhoutfmt)
-     &           run,mowfile(1:8),crop,trtno,i,year,doy,
+     &           run,FILEX(1:8),crop,trtno,i,year,doy,
      &           Nint(topwt*10.),Nint(wtlf*10.),Nint(stmwt*10.),
      &           Nint(strwt*10.),Nint(rtwt*10.),xlai,
      &           Nint(fhtot*10.),Nint(fhtotn*10.),
@@ -674,7 +677,7 @@ C-----------------------------------------------------------------------
      &     ",I1,'.',I1,'.',I1,'.',"//
      &     "I3.3,1X,A10,4X,"//
      &     "A3,' ',I2.2,', ',I4,'; ',I2.2,':',I2.2,':',I2.2/)"
-            WRITE (fhlun,fhoutfmt) mowfile(1:8),crop,trim(ename),
+            WRITE (fhlun,fhoutfmt) FILEX(1:8),crop,trim(ename),
      &             Version,VBranch,
      &             MonthTxt(DATE_TIME(2)), DATE_TIME(3), DATE_TIME(1),
      &             DATE_TIME(5), DATE_TIME(6), DATE_TIME(7)
@@ -689,7 +692,7 @@ C-----------------------------------------------------------------------
           write(fhoutfmt,'(a)') '(i4,x,a8,a3,2(i5),i5,i4,'//
      &          '5(i6),f6.2,2(i6),3(f6.2),f6.1,x,f5.0,F6.1,F6.1)'
           WRITE(fhlun,fhoutfmt)
-     &         run,mowfile(1:8),crop,trtno,CUTNO,year,doy,
+     &         run,FILEX(1:8),crop,trtno,CUTNO,year,doy,
      &         Nint(topwt*10.),Nint(wtlf*10.),Nint(stmwt*10.),
      &         Nint(strwt*10.),Nint(rtwt*10.),xlai,
      &         Nint(fhtot*10.),Nint(fhtotn*10.),
