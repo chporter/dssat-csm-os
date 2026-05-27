@@ -612,7 +612,6 @@ C     Initial seedling or transplant weight
       WTNSD  = 0.0
       WTNTOT = WTNLF + WTNST + WTNRT + WTNSH + WTNSD + WTNSR
 
-!     chp - check to see that this matches the calculation in forage!!!!
 !     2026-04-01 chp added initialization for mobile N
       WNRLF = MAX (WTNLF - PROLFF * 0.16 * (WTLF-WCRLF), 0.0)
 
@@ -1178,6 +1177,13 @@ C-----------------------------------------------------------------------
       CLOFF = (SLMDOT + LTSEN + LFSENWT) *  
      &    (SENCLV * (RHOL - PCHOLFF) + PCHOLFF) 
      &    + (SLNDOT + WLIDOT + WLFDOT) * RHOL
+
+
+!     temp chp
+      write(5567,'(I7,50F10.4)') YRDOY, CLOFF, SLMDOT, LTSEN, LFSENWT, 
+     &    SENCLV, RHOL, PCHOLFF, SLNDOT, WLIDOT, WLFDOT
+
+
 C--------------------------------------------
 C PDA 5/6/2010  ADDED CODE FOR FORAGE HARVEST 
 C--------------------------------------------
@@ -1916,6 +1922,10 @@ C-----------------------------------------------------------------------
         WNRLF = 0.0
       ENDIF
 
+!     temp chp
+      write(5454,'(I7,10F10.4)') YRDOY, WNRLF, WTLF, WCRLF, WTNLF,PROLFF
+
+
       IF ((STMWT - WCRST) .GT. 0.0) THEN
         WNRST = MAX (WTNST - PROSTF * 0.16 * (STMWT-WCRST), 0.0)
       ELSE
@@ -2133,7 +2143,7 @@ C-----------------------------------------------------------------------
      &    RTWT, SDWT, SHELWT, STMWT, TOPWT,               !Input
      &    TOTWT, TURFAC, WTLF, YRDOY, YRPLT,              !Input
      &    MDATE, CropStatus,                              !Output
-     &  STRWT)                                                                  !Input
+     &  STRWT)                                            !Input
         RETURN
        ENDIF
 
@@ -2144,7 +2154,7 @@ C-----------------------------------------------------------------------
      &  RTWT, SDWT, SHELWT, STMWT, TOPWT,             !Input
      &  TOTWT, TURFAC, WTLF, YRDOY, YRPLT,            !Input
      &  MDATE, CropStatus,                            !Output
-     &  STRWT)                                                                  !Input
+     &  STRWT)                                        !Input
         RETURN
         ENDIF
        ENDIF

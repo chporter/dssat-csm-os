@@ -638,6 +638,25 @@ C-GH 08/19/2025
       ENDIF
       LAIMX_calc = MAX(LAIMX_calc, XLAI_calc)
 
+
+
+!!     temp chp
+!      LFNSEN_sum = SUM(LFNSEN_c)
+!      LTSEN_sum = SUM(LTSEN_c)
+!      LFSENWT_sum = SUM(LFSENWT_c)
+!      if (wtlf_calc > 0) then
+!        RHOL = WCRLF_calc / WTLF_calc
+!      else
+!        RHOL = 0.0
+!      endif
+!      WLIDOT_sum  = SUM(LFPST)
+
+!     write(5567,'(I7,50F10.4)') YRDOY, CLOFF, SLMDOT, LTSEN, LFSENWT, 
+      write(5568,'(I7,50F10.4)') YRDOY, CLOFF_SUM, LFNSEN_sum, 
+     &    LTSEN_sum, LFSENWT_sum, 
+!    &    SENCLV, RHOL, PCHOLFF, SLNDOT, WLIDOT, WLFDOT
+     &    SENCLV, RHOL, PCHOLFF, WatSen_calc, WLIDOT_sum, WLFDOT_calc
+
 !***********************************************************************
 !***********************************************************************
 !     OUTPUT section - DO THIS FOR SEASINIT AND INTEGR (for now)

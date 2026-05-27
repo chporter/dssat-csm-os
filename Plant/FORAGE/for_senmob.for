@@ -32,10 +32,16 @@ C========================================================================
      &    SSNDOT, SSDOT, SSRDOT, SSRMDOT, SSRNDOT, STCMINE,     !Output
      &    STSCMOB, STSNMOB, STLTSEN, STSENWT, TSCMOB,           !Output
      &    TSNMOB, VNMOBR,                                       !Output
+!=========================================================================
+!     TEMP CHP Add printout for SENES variables
+     &    YRPLT,  !temporary input
+!     END TEMP CHP
+!=========================================================================
      &    DYNAMIC)                                              !Control
 
 C-----------------------------------------------------------------------
       USE ModuleDefs
+      USE ModuleData
       USE COHORTS_MOD
       IMPLICIT NONE
       EXTERNAL GETLUN, FIND, ERROR, IGNORE, TIMDIF, TABEX, CURV
@@ -123,9 +129,27 @@ C-----------------------------------------------------------------------
       REAL, DIMENSION(LCMax) :: CMINELF_c, LFNMINE_c, 
      &    NMINELF_c, WaterSen_c
       REAL LFNMINE_sum, LFNSEN_sum, LFSNMOB_sum, LTSEN_sum, NMINELF_sum,
-     &    SLMDOT_sum, WaterSen_sum, LeafTotSen_SUM
+     &    SLMDOT_sum, WaterSen_sum, LeafTotSen_SUM, LFSENWT_sum,
+     &    CMINELF_sum, LFCMINE_sum 
+      REAL, DIMENSION(LCMax) :: PCNLeaf
 
-!***********************************************************************
+!=========================================================================
+!    TEMP CHP Add printout for SENESMOB variables
+      EXTERNAL YR_DOY, HEADER
+      TYPE (ControlType) CONTROL
+      CHARACTER*9 OUTSN  !SENES.OUT
+      INTEGER NOUTDG, ERRNUM, YEAR, DOY, DAP, YRPLT
+      LOGICAL FEXIST
+      CALL GET(CONTROL)
+      DAS   = CONTROL % DAS
+      YRDOY = CONTROL % YRDOY
+      CALL YR_DOY(YRDOY, YEAR, DOY) 
+      DAP = MAX(0,TIMDIF(YRPLT,YRDOY))
+      IF (DAP > DAS) DAP = 0
+!     end temp chp
+!=========================================================================
+
+***********************************************************************
 !***********************************************************************
 !     Run Initialization - Called once per simulation
 !***********************************************************************
@@ -356,6 +380,16 @@ C    Find and Read Surviving section  Added by Diego
 
       CLOSE (LUNCRP)
 
+
+!=========================================================================
+!     TEMP CHP Add printout for for_senmob variables
+
+          OUTSN  = 'SENES.OUT'
+          CALL GETLUN('OUTSN',  NOUTDG)
+
+!     end temp chp
+!=========================================================================
+
 !***********************************************************************
 !***********************************************************************
 !     Seasonal initialization - run once per season
@@ -456,6 +490,36 @@ C    Find and Read Surviving section  Added by Diego
       NMINELF_sum = 0.0
       SLMDOT_sum  = 0.0
       WaterSen_sum= 0.0
+
+
+!=========================================================================
+!     TEMP CHP Add printout for SENESMOB variables
+
+!       Initialize daily SENESMOB output file      
+        INQUIRE (FILE = OUTSN, EXIST = FEXIST)
+        IF (FEXIST) THEN
+          OPEN (UNIT = NOUTDG, FILE = OUTSN, STATUS = 'OLD',
+     &      IOSTAT = ERRNUM, POSITION = 'APPEND')
+        ELSE
+          OPEN (UNIT = NOUTDG, FILE = OUTSN, STATUS = 'NEW',
+     &      IOSTAT = ERRNUM)
+          WRITE(NOUTDG,'("*SENESMOB OUTPUT FILE")')
+        ENDIF
+
+        !Write headers
+        CALL HEADER(SEASINIT, NOUTDG, CONTROL % RUN)
+
+        WRITE (NOUTDG,200)
+  200   FORMAT('@YEAR DOY   DAS   DAP',
+     &   '      TotSen      NatSen     NMobSen    LoLitSen',
+     &   '    WaterSen      SLMDOT      Nmob_a      Nmob_p',
+     &   '     Nmob_mp     Cmine_p    Cmine_mp',
+     &   '    TotSen_c    NatSen_c    NMbSen_c    LitSen_c',
+     &   '    WatSen_c    SLMDOT_c     Nmoba_c     Nmobp_c',
+     &   '    Nmobmp_c    Cminep_c    Cminempc')
+
+!     end temp chp
+!=========================================================================
 
 !***********************************************************************
 !***********************************************************************
@@ -1144,6 +1208,39 @@ C    1-12-2024 KJB and DP
       LFWSSN = WaterSen_c
       LeafTotSen_SUM = SUM(LeafTotSen)
 
+!=========================================================================
+!     TEMP CHP Add printout for SENES variables
+
+!***********************************************************************
+!***********************************************************************
+!     Daily output
+!***********************************************************************
+      ELSEIF (DYNAMIC .EQ. OUTPUT) THEN
+
+        WRITE (NOUTDG,300)
+     &   YEAR, DOY, DAS, DAP, 
+     &   SLDOT, LFNSEN, LFSENWT, LTSEN, SLNDOT, SLMDOT,
+     &   LFSNMOB, NMINELF, LFNMINE, CMINELF, LFCMINE, 
+     &   LeafTotSen_sum, LFNSEN_sum, LFSENWT_sum, LTSEN_sum, 
+     &   WaterSen_sum, SLMDOT_sum, 
+     &   LFSNMOB_sum, NMINELF_sum, LFNMINE_sum, CMINELF_sum, LFCMINE_sum
+
+  300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
+     &    50F12.6)
+
+!     still temp chp...
+
+!***********************************************************************
+!***********************************************************************
+!     Seasonal Output 
+!***********************************************************************
+      ELSE IF (DYNAMIC .EQ. SEASEND) THEN
+C-----------------------------------------------------------------------
+          CLOSE (NOUTDG)
+
+!     end temp chp
+!=========================================================================
+
 !***********************************************************************
 !***********************************************************************
 !     END OF DYNAMIC IF CONSTRUCT
@@ -1151,7 +1248,7 @@ C    1-12-2024 KJB and DP
       ENDIF
 !***********************************************************************
       RETURN
-      END ! SUBROUTINE FOR_SENMOB
+      END SUBROUTINE FOR_SENMOB
 !***********************************************************************
 !     SENES VARIABLE DEFINITIONS:
 !-----------------------------------------------------------------------

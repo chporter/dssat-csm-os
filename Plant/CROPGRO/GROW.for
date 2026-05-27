@@ -183,6 +183,7 @@ C=======================================================================
       INTEGER NOUTDG, ERRNUM, YEAR, DOY, DAS, DAP, TIMDIF
       LOGICAL FEXIST
 
+      YRDOY = CONTROL % YRDOY
       DAS   = CONTROL % DAS
       DAP = MAX(0,TIMDIF(YRPLT,YRDOY))
       IF (DAP > DAS) DAP = 0
