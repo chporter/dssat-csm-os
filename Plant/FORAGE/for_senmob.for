@@ -815,6 +815,9 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C     Calculate senescence due to water stress.
 C-----------------------------------------------------------------------
+!       chp 2026-05-25
+!       removed the comment from WSLOSS calculation line
+!       removed the CLW portion of WSLOSS modification
 !        IF (WTLF .GE. WSWTLF(5)) THEN
            WSLOSS = SENDAY * (1. - RATTP) * WTLF
 !        ELSEIF (SENDAY*(1.-RATTP) .GT. WSWTLF(5)-WTLF) THEN
@@ -823,12 +826,9 @@ C-----------------------------------------------------------------------
 !          WSLOSS=0
 !        ENDIF
 
-!     Code will never get inside the IF block because WSLOSS never
-!     gets a value. Tested for AGZG1502.ALX which has significant water stress.
-!     Why was the calculation above removed?
         IF (WSLOSS .GT. 0.0) THEN
           PORLFT = 1.0 - TABEX(SENMAX, XSENMX, VSTAGE, 4)
-          WSLOSS = MIN(WSLOSS, WTLF - CLW * PORLFT)
+          WSLOSS = MIN(WSLOSS, WTLF) ! - CLW * PORLFT)
           WSLOSS = MAX(WSLOSS, 0.0)
           SLNDOT = WSLOSS
 
