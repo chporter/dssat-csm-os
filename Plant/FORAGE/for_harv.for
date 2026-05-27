@@ -126,6 +126,9 @@ C=======================================================================
 
       TYPE(CONTROLTYPE) CONTROL
 
+!     Leaf cohorts
+      REAL WTLF_before_cut, FHLEAF_sum
+
 !     SAVE FILEMOW,TRNO,DATE,MOW,RSPLF,MVS,rsht,CUTNO
 
       PARAMETER  (ERRKEY = 'FRHARV')
@@ -391,6 +394,7 @@ C-----------------------------------------------------------------------
       MOWTODAY = .FALSE.
       MOWC = 0.0
       RSPLC = 0.0
+      WTLF_before_cut = WTLF
 
         IF(ATMOW .EQV. .TRUE.) THEN
           IF(ATTP .EQ. 'W' .OR. ATTP .EQ. 'Y') THEN
@@ -599,8 +603,11 @@ C-----------------------------------------------------------------------
 !     Eventually, we want to remove new (top) growth
       IF (FHLEAF > 0.0) THEN
         DO I = 1, NLC
-          FHLEAF_c(I) = LFDM(I) * FHLEAF / WTLF
+          FHLEAF_c(I) = FHLEAF * LFDM(I) / WTLF_before_cut
+          FHLEAF_c(I) = MAX(0.0, FHLEAF_c(I))
         ENDDO
+        FHLEAF_sum = SUM(FHLEAF_c)
+        PRINT *, YRDOY, FHLEAF, FHLEAF_sum
       ENDIF
 
 !***********************************************************************
