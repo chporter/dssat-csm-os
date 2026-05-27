@@ -1145,8 +1145,9 @@ C      ADDITIONAL DM LOSS DUE TO N MOBILIZATION? SENRTE
       DO I = 1, NLC
         LFSENWT_c(I) = SENRTE * NMINELF_c(I) / 0.16
         LFSENWT_c(I) = MIN(LFDM(I), LFSENWT_c(I))
-        LeafTotSen(I) = LeafTotSen(I) + LFSENWT_c(I)
       ENDDO
+      LFSENWT_sum = SUM(LFSENWT_c)
+      LeafTotSen = LeafTotSen + LFSENWT_c
 !     --------------------------------------------
 
       STSENWT = LFSENWT * PORPT
@@ -1175,6 +1176,8 @@ C    1-12-2024 KJB and DP
 !       LFSCMOB is always zero in current code (2026-05-11 chp)
         LFCMINE_c(I) = MAX(LFSCMOB, CMINELF_c(I))
       ENDDO
+      CMINELF_sum = SUM(CMINELF_c)
+      LFCMINE_sum = SUM(LFCMINE_c)
 !     --------------------------------------------
 
       CMINEST = CMOBMX * (DTX + DXR57)* (WCRST - STMWT * PCHOSTF)

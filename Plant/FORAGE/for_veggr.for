@@ -106,7 +106,7 @@ C========================================================================
       REAL NLEAK
       REAL NMINEA, NFIXN, TRNU
 
-      REAL TGRO(TS), CMineFactor
+      REAL TGRO(TS)
       REAL AGRSTR, CADSR, CADSRF, CMOBSRN, ! CLAIT, CMOBSR, 
      &    CMOBSRX, CRUSSR, FNINSR, FNINSRG, FRSTR,   
      &    NADSR, NGRSR, NGRSRG, PROSRG,   !PPMFAC, 

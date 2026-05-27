@@ -113,10 +113,13 @@ CHP 2025-11-20
 !     &  LFHEMICEL     !Hemicellulose content %
 
       REAL, DIMENSION(LCMax) :: LeafMassDecrease, NLDOT_c, 
-     &    NLOFF_c
+     &    NLOFF_c, WRCLDT_c
 
       REAL CUMLFDM, Excess, SenFrac, WLDOT_cohort, Loss_adjust
-      REAL RHOL, CLOFF, WRCLDT
+      REAL RHOL, CLOFF
+
+!     TEMP CHP
+      REAL CLOFF_sum, LFNSEN_sum, LTSEN_sum, LFSENWT_sum, WLIDOT_sum
 
 !     Variables read from species file:
       REAL ALPHL, PROLFF
@@ -321,6 +324,7 @@ C-GH 08/19/2025
 !------------------
 ! LEAF LOSSES
 !------------------
+!     This might be wrong (or unneccessary) for forages - need to check
       IF (SUM(FHLEAF_c) <= 0.0) THEN
 !       Calculate the loss of leaf tissue per cohort
         DO I = 1, NLC
@@ -368,25 +372,74 @@ C-GH 08/19/2025
 ! LEAF ADDITIONS
 !------------------
 !     Adjust new reserves to account for leaf losses just calculated.
-      SELECT CASE (MODEL(1:5))
-      CASE ('CRGRO')
-        DO I = 1, NLC
+      DO I = 1, NLC
+        SELECT CASE (MODEL(1:5))
+        CASE ('CRGRO')
           IF (LFDM(I) > 0.0) THEN
             Loss_adjust = (1. - MIN(1.0, LeafMassDecrease(I) / LFDM(I)))
-            LFCAD(I) = LFCAD(I) * Loss_adjust
-            LFNAD(I) = LFNAD(I) * Loss_adjust
           ENDIF
-        ENDDO
 
-      CASE ('PRFRM')
-        DO I = 1, NLC
+        CASE ('PRFRM')
           IF (LFDM(I) -  LeafTotSen(I) > 0.0) THEN
 !           CHP: This is how it's done in for_grow, but I'm not convinced it's correct.
 !           If it is correct, we should do the same thing for CRGRO 
             Loss_adjust = (1. - MIN(1.0, (LFPST(I) + LFFRZ(I)) / 
      &                                   (LFDM(I) - LeafTotSen(I))))
-            LFCAD(I) = LFCAD(I) * Loss_adjust
-            LFNAD(I) = LFNAD(I) * Loss_adjust
+          ENDIF
+        END SELECT
+
+        LFCAD(I) = LFCAD(I) * Loss_adjust
+        LFNAD(I) = LFNAD(I) * Loss_adjust
+      ENDDO
+
+!------------------
+! LEAF CH2O CHANGES
+!------------------
+!     Non-structural CH2O (~WCRLF in GROW)
+      WRCLDT_c = 0.0
+
+      SELECT CASE (MODEL(1:5))
+      CASE ('CRGRO')
+        DO I = 1, NLC
+          IF (LFDM(I) > 0.) THEN
+            WRCLDT_c(I) = 
+     &        - LFCMN(I)      !~ CRUSLF, mined CH2O
+     &        + LFCAD(I)      !new reserves
+!               leaf mass losses:
+     &        - LFNSC(I) / LFDM(I) * LeafMassDecrease(I)
+          ENDIF
+        ENDDO
+        
+      CASE ('PRFRM')
+        CLOFF_sum = 0.0 !temp chp
+        DO I = 1, NLC
+          IF (LFDM(I) > 0.) THEN
+!           RHOL =  WCRLF/WTLF
+            RHOL = LFNSC(I) / LFDM(I)
+!           CLOFF = (SLMDOT + LTSEN + LFSENWT) *  
+            CLOFF = (SLMDOT_c(I) + LTSEN_c(I) + LFSENWT_c(I)) * 
+!    &              (SENCLV * (RHOL - PCHOLFF) + PCHOLFF) 
+     &              (SENCLV * (RHOL - PCHOLFF) + PCHOLFF) 
+!    &            + (SLNDOT + WLIDOT + WLFDOT) * RHOL
+     &            + (LFWSSN(I) + LFPST(I) + LFFRZ(I)) * RHOL
+
+            IF (FHLEAF_c(I) .GT. 0.0) THEN
+!             CLOFF = CLOFF + FHLEAF * RHOL
+              CLOFF = CLOFF + FHLEAF_c(I) * RHOL
+            ENDIF
+
+            IF (CLOFF. LT. 0.0) CLOFF = 0.0
+
+!           TEMP CHP
+            CLOFF_SUM = CLOFF_SUM + CLOFF
+
+!           WRCLDT=WLDOTN*ALPHL-CRUSLF-CLOFF
+            WRCLDT_c(I) = -LFCMN(I) - CLOFF
+
+            IF (LFDM(I) .GT. 0.0.AND.FHLEAF_c(I) .EQ. 0.0) THEN
+!             WRCLDT = WRCLDT + CADLF - LFCADDM
+              WRCLDT_c(I) = WRCLDT_c(I) + LFCAD(I)
+            ENDIF
           ENDIF
         ENDDO
       END SELECT
@@ -463,75 +516,47 @@ C-GH 08/19/2025
 !     WLDOTN = total new growth today (added to new cohort below)
 
       DO I = 1, NLC
+!     ---------------------------------------------------------
+!       Leaf dry matter increase (WLDOT in GROW)
+        WLDOT_cohort = 
+     &      LFCAD(I)            !Reserve C = LCADD
+     &    + LFNAD(I)/0.16       !Reserve N = LNADD
+     &    - LFNMN(I)/0.16       !N mined = NRUSLF/0.16 
+     &    - LFCMN(I)            !C mined = CRUSLF
+     &    - LeafMassDecrease(I) !freez, pst, senes=SLDOT+WLIDOT+WLFDOT
+     &    - FHLEAF_c(I)         !harvest
+
+!       Leaf dry matter (WTLF in GROW)
+        IF (LFDM(I) + WLDOT_cohort >= 0.0) THEN
+          LFDM(I) = LFDM(I) + WLDOT_cohort
+        ELSE
+          WLDOT_cohort = LFDM(I)
+          LFDM(I) = 0.0
+        ENDIF
+
+!       Keep track of total leaf mass addition today
+        WLDOT_calc = WLDOT_calc + WLDOT_cohort
+      ENDDO
+
+      DO I = 1, NLC
         IF (LFDM(I) .GT. 0.0) THEN
 !     ---------------------------------------------------------
-!         Leaf dry matter increase (WLDOT in GROW)
-          WLDOT_cohort = 
-     &        LFCAD(I)            !Reserve C = LCADD
-     &      + LFNAD(I)/0.16       !Reserve N = LNADD
-     &      - LFNMN(I)/0.16       !N mined = NRUSLF/0.16 
-     &      - LFCMN(I)            !C mined = CRUSLF
-     &      - LeafMassDecrease(I) !freez, pst, senes=SLDOT+WLIDOT+WLFDOT
-     &      - FHLEAF_c(I)         !harvest
-
-!         Leaf dry matter (WTLF in GROW)
-          LFDM(I) = LFDM(I) + WLDOT_cohort
-
-!         Keep track of total leaf mass addition today
-          WLDOT_calc = WLDOT_calc + WLDOT_cohort
-
-!     ---------------------------------------------------------
 !         Leaf area
-!         For now, use whole leaf SLA for each cohort. But I think this
+!         For now, use whole leaf SLA for each cohort. But this
 !           should be replaced by a cohort SLA when everything is working
 !           as it is in GROW.
           LFAREA(I) = LFAREA(I) 
      &      - LeafMassDecrease(I) * SLA_calc
      &      - LFNMN(I) / 0.16 * SLA_calc
      &      + LFNAD(I) / 0.16 * SLA_calc
+     &      - FHLEAF_c(I) * SLA_calc
 
           LFSLA(I) = LFAREA(I) / LFDM(I)
 
 !     ---------------------------------------------------------
-!         Non-structural CH2O (~WCRLF in GROW)
-          SELECT CASE (MODEL(1:5))
-          CASE ('CRGRO')
-            LFNSC(I) = LFNSC(I) 
-     &        - LFCMN(I)      !~ CRUSLF, mined CH2O
-     &        + LFCAD(I)      !new reserves
-!               leaf mass losses:
-     &        - LFNSC(I) / LFDM(I) * LeafMassDecrease(I)
-            IF (LFNSC(I) < 0.0) THEN
-              LFNSC(I) = 0.0
-            ENDIF
-
-          CASE ('PRFRM')
-!           RHOL =  WCRLF/WTLF
-            RHOL = LFNSC(I) / LFDM(I)
-!           CLOFF = (SLMDOT + LTSEN + LFSENWT) *  
-            CLOFF = (SLMDOT_c(I) + LTSEN_c(I) + LFSENWT_c(I)) * 
-!    &              (SENCLV * (RHOL - PCHOLFF) + PCHOLFF) 
-     &              (SENCLV * (RHOL - PCHOLFF) + PCHOLFF) 
-!    &            + (SLNDOT + WLIDOT + WLFDOT) * RHOL
-     &            + (LFWSSN(I) + LFPST(I) + LFFRZ(I)) * RHOL
-!
-            IF (FHLEAF_c(I) .GT. 0.0) THEN
-!             CLOFF = CLOFF + FHLEAF * RHOL
-              CLOFF = CLOFF + FHLEAF_c(I) * RHOL
-            ENDIF
-
-            IF (CLOFF. LT. 0.0) THEN
-              CLOFF = 0.0
-            ENDIF
-
-!           WRCLDT=WLDOTN*ALPHL-CRUSLF-CLOFF
-            WRCLDT = -LFCMN(I) - CLOFF
-
-            IF (LFDM(I) .GT. 0.0.AND.FHLEAF_c(I) .EQ. 0.0) THEN
-!             WRCLDT = WRCLDT + CADLF - LFCADDM
-              WRCLDT = WRCLDT + LFCAD(I)
-            ENDIF
-          END SELECT
+!         Non-structural mobile CH2O (~WCRLF in GROW)
+          LFNSC(I) = LFNSC(I) + WRCLDT_c(I)
+          IF (LFNSC(I) < 0.0) LFNSC(I) = 0.0
 
 !     ---------------------------------------------------------
 !         Leaf N
@@ -550,6 +575,13 @@ C-GH 08/19/2025
 !         ADF = function of LFLIGNIN, LFCELLUL, LFHEMICEL
 !         NDF = function of LFLIGNIN, LFCELLUL, LFHEMICEL
 
+        ELSE
+          LFAREA(I)   = 0.0
+          LFSLA(I)    = 0.0
+          LFNSC(I)    = 0.0
+          LeafNTot(I) = 0.0
+          LFSN(I)     = 0.0
+          LFNSN(I)    = 0.0
         ENDIF
       ENDDO
 
@@ -612,14 +644,33 @@ C-GH 08/19/2025
 
 !------------------------------------
 !     Total states over all cohorts
-      WTLF_calc  = SUM(LFDM(1:LCMax))   !Leaf mass g/m2
-      AREALF_calc= SUM(LFAREA(1:LCMax)) !Lf area (cm2[leaf]/m2[ground])
-      WCRLF_calc = SUM(LFNSC(1:LCMax))  !CH2O reserves
-      WNRLF_calc = SUM(LFNSN(1:LCMax))  !Non-structural N
-      LFSN_calc  = SUM(LFSN(1:LCMax))   !Structural N
+      WTLF_calc  = SUM(LFDM(1:LCMax))     !Leaf mass g/m2
+      AREALF_calc= SUM(LFAREA(1:LCMax))   !Lf area index
+      WCRLF_calc = SUM(LFNSC(1:LCMax))    !CH2O reserves
+      WTNLF_calc = SUM(LeafNTot(1:LCMax)) !Leaf N
+      WNRLF_calc = SUM(LFNSN(1:LCMax))    !Non-structural N
+      LFSN_calc  = SUM(LFSN(1:LCMax))     !Structural N
 
-!     Leaf N is sum of structural and non-structural N
-      WTNLF_calc = LFSN_calc + WNRLF_calc
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!     TEMP CHP
+!!     Force all state variables to match whole leaf values
+!      IF (WTLF_calc > 0.0) LFDM  = LFDM  * WTLF / WTLF_calc
+!      IF (WCRLF_calc > 0.0) LFNSC = LFNSC * WCRLF / WCRLF_calc
+!      IF (WTNLF_calc > 0.0) LeafNTot = LeafNTot * WTNLF / WTNLF_calc
+!      IF (WNRLF_calc > 0.0) LFNSN = LFNSN * WNRLF / WNRLF_calc
+!      LFSN = LeafNTot - LFNSN
+!
+!      WTLF_calc  = SUM(LFDM(1:LCMax))     !Leaf mass g/m2
+!      WCRLF_calc = SUM(LFNSC(1:LCMax))    !CH2O reserves
+!      WTNLF_calc = SUM(LeafNTot(1:LCMax)) !Leaf N
+!      WNRLF_calc = SUM(LFNSN(1:LCMax))    !Non-structural N
+!      LFSN_calc  = SUM(LFSN(1:LCMax))     !Structural N
+!!     END TEMP CHP
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+!!     Leaf N is sum of structural and non-structural N
+!      WTNLF_calc = LFSN_calc + WNRLF_calc
 
       IF (WTLF_calc > 0.0) THEN
         PLEAFN_calc = WTNLF_calc / WTLF_calc * 100.
