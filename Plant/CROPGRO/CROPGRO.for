@@ -182,6 +182,9 @@ C=======================================================================
 !     K model (not yet implemented)
       REAL KSTRES
 
+!     Leaf cohorts
+      REAL, DIMENSION(LCMax) :: PCNLeaf
+
 !-----------------------------------------------------------------------
 !     Define constructed variable types based on definitions in
 !     ModuleDefs.for.
@@ -423,6 +426,7 @@ C-----------------------------------------------------------------------
      &  DTX, F, FILECC, NGRLF,                !Input
      &  WLDOTN,                               !Input
      &  YRPLT,                                !Input
+     &  PCNLeaf,                              !Output
      &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
 
       CALL OPGROW(CONTROL, ISWITCH, SoilProp, 
@@ -678,6 +682,7 @@ C-GH Add leaf Cohorts
      &  DTX, F, FILECC, NGRLF,                !Input
      &  WLDOTN,                               !Input
      &  YRPLT,                                !Input
+     &  PCNLeaf,                              !Output
      &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
 
 !-----------------------------------------------------------------------
@@ -898,6 +903,7 @@ C-GH
      &  DTX, F, FILECC, NGRLF,                !Input
      &  WLDOTN,                               !Input
      &  YRPLT,                                !Input
+     &  PCNLeaf,                              !Output
      &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
 
        WLDOTN=0
@@ -1323,6 +1329,7 @@ C----------------------------------
      &  DTX, F, FILECC, NGRLF,                !Input
      &  WLDOTN,                               !Input
      &  YRPLT,                                !Input
+     &  PCNLeaf,                              !Output
      &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
 
       IF ((WTLF+STMWT).GT. 0.0001) THEN
@@ -1380,6 +1387,7 @@ C----------------------------------
      &  DTX, F, FILECC, NGRLF,                !Input
      &  WLDOTN,                               !Input
      &  YRPLT,                                !Input
+     &  PCNLeaf,                              !Output
      &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
 
         CALL OPGROW(CONTROL, ISWITCH, SoilProp, 

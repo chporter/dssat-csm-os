@@ -285,6 +285,8 @@ C TF/DP 2022-01-31 Simple version AutoMOW
       INTEGER HMMOW, HRSPL, HMVS
       CHARACTER*1 ATTP
 
+!     Leaf cohorts
+      REAL, DIMENSION(LCMax) :: PCNLeaf
 
 !     Arrays which contain data for printing in SUMMARY.OUT file
       INTEGER, PARAMETER :: SUMNUM = 3
@@ -479,6 +481,7 @@ C-----------------------------------------------------------------------
      &    WCRRT,WCRSH, WCRSR, WCRST, WNRLF, WNRRT, WNRSH,       !Input
      &    WNRSR,WNRST, WTLF, XLAI, XPOD,                        !Input
      &    YRDOY, YRSIM, TGRO,                                   !Input
+     &    PCNLEAF,                                              !Input
      &    CMINELF, CMINEP, CMINERT, CMINESH, CMINESR,           !Output
      &    CMINEST, CMOBMX, CMOBSR, LAIMOBR, LFCMINE,            !Output
      &    LFSCMOB, LFSENWT, LFSNMOB, LTSEN, NMINELF,            !Output
@@ -674,6 +677,7 @@ C-----------------------------------------------------------------------
      &  DTX, F, FILECC, NGRLF,                !Input
      &  WLDOTN,                               !Input
      &  YRPLT,                                !Input
+     &  PCNLeaf,                              !Output
      &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
 
       CALL FOR_OPMOB(CONTROL, ISWITCH, 
@@ -977,6 +981,7 @@ C-----------------------------------------------------------------------
      &    WCRRT,WCRSH, WCRSR, WCRST, WNRLF, WNRRT, WNRSH,       !Input
      &    WNRSR,WNRST, WTLF, XLAI, XPOD,                        !Input
      &    YRDOY, YRSIM, TGRO,                                   !Input
+     &    PCNLEAF,                                              !Input
      &    CMINELF, CMINEP, CMINERT, CMINESH, CMINESR,           !Output
      &    CMINEST, CMOBMX, CMOBSR, LAIMOBR, LFCMINE,            !Output
      &    LFSCMOB, LFSENWT, LFSNMOB, LTSEN, NMINELF,            !Output
@@ -1103,6 +1108,7 @@ C-----------------------------------------------------------------------
      &  DTX, F, FILECC, NGRLF,                !Input
      &  WLDOTN,                               !Input
      &  YRPLT,                                !Input
+     &  PCNLeaf,                              !Output
      &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
 
       CALL FOR_OPMOB(CONTROL, ISWITCH, 
@@ -1461,6 +1467,7 @@ C-GH
      &  DTX, F, FILECC, NGRLF,                !Input
      &  WLDOTN,                               !Input
      &  YRPLT,                                !Input
+     &  PCNLeaf,                              !Output
      &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
 
        WLDOTN=0
@@ -1521,6 +1528,7 @@ C-----------------------------------------------------------------------
      &    WCRRT,WCRSH, WCRSR, WCRST, WNRLF, WNRRT, WNRSH,       !Input
      &    WNRSR,WNRST, WTLF, XLAI, XPOD,                        !Input
      &    YRDOY, YRSIM, TGRO,                                   !Input
+     &    PCNLEAF,                                              !Input
      &    CMINELF, CMINEP, CMINERT, CMINESH, CMINESR,           !Output
      &    CMINEST, CMOBMX, CMOBSR, LAIMOBR, LFCMINE,            !Output
      &    LFSCMOB, LFSENWT, LFSNMOB, LTSEN, NMINELF,            !Output
@@ -2079,6 +2087,7 @@ C----------------------------------
      &  DTX, F, FILECC, NGRLF,                !Input
      &  WLDOTN,                               !Input
      &  YRPLT,                                !Input
+     &  PCNLeaf,                              !Output
      &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
 
       FHWAH= 0.0
@@ -2182,6 +2191,7 @@ C-----------------------------------------------------------------------
      &  DTX, F, FILECC, NGRLF,                !Input
      &  WLDOTN,                               !Input
      &  YRPLT,                                !Input
+     &  PCNLeaf,                              !Output
      &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
 
       CALL FOR_OPGROW(CONTROL, ISWITCH, 

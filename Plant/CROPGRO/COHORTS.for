@@ -10,8 +10,8 @@ C=======================================================================
      &  CumLeafDM,    !Cumulative leaf growth (g[leaf]/m2) = CLW
      &  CohortAge,    !Leaf age for (thermal days)
      &  LFNSC,        !Leaf non-structural (mobile) CH2O (g/m2) = WCRLF
-     &  LFNSN,        !Leaf non-structural (mobile) N (g/m2) = WNRLF
-     &  PCNLeaf       !Leaf N%
+     &  LFNSN         !Leaf non-structural (mobile) N (g/m2) = WNRLF
+!     &  PCNLeaf       !Leaf N%
 
 !     Leaf cohort processes, calculated by other routines
       REAL, DIMENSION(LCMax) ::  
@@ -64,6 +64,7 @@ C=======================================================================
      &  DTX, F, FILECC, NGRLF,                !Input
      &  WLDOTN,                               !Input
      &  YRPLT,                                !Input
+     &  PCNLeaf,                              !Output
      &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
 
       USE ModuleData
@@ -74,6 +75,8 @@ C=======================================================================
       REAL, INTENT(IN) :: DTX, F, NGRLF, WLDOTN
       INTEGER, INTENT(IN) :: YRPLT
       CHARACTER*92, INTENT(IN) :: FILECC
+
+      REAL, DIMENSION(LCMax) :: PCNLeaf
 
 !     Eventually, these will be output variables.
       REAL, INTENT(IN) :: WTLF, WCRLF, WNRLF, WTNLF, XLAI
@@ -101,7 +104,6 @@ CHP 2025-11-20
       REAL, DIMENSION(LCMax) :: 
      &  LeafNTot,     !Leaf N total (g[N]]/m2) = WTNLF
      &  LFSN,         !Leaf structural (non-mobile) N (g[N]]/m2)
-     &  PCNLeaf,      !Leaf N %
      &  LFAREA,       !Leaf area (cm2[leaf]/m2)
      &  LFAREAH,      !Healthy leaf area (cm2[leaf]/m2)
      &  LFSLA         !Specific leaf area (cm2/g)
