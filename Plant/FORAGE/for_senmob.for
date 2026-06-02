@@ -132,6 +132,7 @@ C-----------------------------------------------------------------------
      &    SLMDOT_sum, WaterSen_sum, LeafTotSen_SUM, LFSENWT_sum,
      &    CMINELF_sum, LFCMINE_sum 
       REAL, DIMENSION(LCMax) :: PCNLeaf
+      REAL WtLeaf
 
 !=========================================================================
 !    TEMP CHP Add printout for SENESMOB variables
@@ -760,9 +761,14 @@ C-----------------------------------------------------------------------
         ENDIF
 
 !       Handle leaf cohorts
-        DO I = 1, NLC
-          LFNSEN_c(I) = LFNSEN * LFDM(I) / WTLF
-        ENDDO
+        WtLeaf = SUM(LFDM)
+        IF (WtLeaf > 0.0) THEN
+          DO I = 1, NLC
+            LFNSEN_c(I) = LFNSEN * LFDM(I) / WtLeaf
+          ENDDO
+        ELSE
+          LFNSEN_c = 0.0
+        ENDIF
 
         SLMDOT = LFNSEN  
         SLMDOT_c = LFNSEN_c
@@ -792,9 +798,11 @@ C-----------------------------------------------------------------------
 !         Handle leaf cohorts
 !         Probably want to modify this calculation to use age of cohorts
 !         to estimate location in the canopy.
-          DO I = 1, NLC
-            LTSEN_c(I) = LTSEN * LFDM(I) / WTLF
-          ENDDO
+          IF (WtLeaf > 0.0) THEN
+            DO I = 1, NLC
+              LTSEN_c(I) = LTSEN * LFDM(I) / WtLeaf
+            ENDDO
+          ENDIF
         ENDIF
 
         LTSEN_sum = SUM(LTSEN_c)

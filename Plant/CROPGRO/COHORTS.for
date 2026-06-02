@@ -1,7 +1,7 @@
 C=======================================================================
       MODULE COHORTS_MOD
 C=======================================================================
-      INTEGER, PARAMETER :: LCMax = 1000 !maximum number of leaf cohorts
+      INTEGER, PARAMETER :: LCMax = 10000 !maximum # of leaf cohorts
       INTEGER NLC     !current number of leaf cohorts
 
 !     Leaf cohort state variables used in other routines

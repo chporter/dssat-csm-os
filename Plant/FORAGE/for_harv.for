@@ -610,8 +610,23 @@ C-----------------------------------------------------------------------
           FHLEAF_c(I) = FHLEAF * LFDM(I) / WTLF_before_cut
           FHLEAF_c(I) = MAX(0.0, FHLEAF_c(I))
         ENDDO
+
+!!       Remove newest cohorts for mow (UNTESTED)
+!        TotalRemoved = 0.0
+!        DO I = NLC, 1, -1
+!          TotalRemoved = TotalRemoved + LFDM(I)
+!          FHLEAF_c(I) = LFDM(I)
+!          IF (TotalRemoved >= FHLEAF) THEN
+!            FHLEAF_c(I) = TotalRemoved - FHLEAF
+!            EXIT
+!          ELSE
+!            CYCLE
+!          ENDIF
+!        ENDDO
+
+
         FHLEAF_sum = SUM(FHLEAF_c)
-        PRINT *, YRDOY, FHLEAF, FHLEAF_sum
+!       PRINT *, YRDOY, FHLEAF, FHLEAF_sum
       ENDIF
 
 !***********************************************************************
