@@ -2094,17 +2094,6 @@ C-----------------------------------------------------------------------
      &  VSTAGE, DWTCO, DWTLO, DWTSO,
      &  PWTCO, PWTLO, PWTSO)                         !Input/Output
 
-C----------------------------------
-C     CALL COHORT MODEL
-C----------------------------------
-!      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
-      CALL COHORTS(DYNAMIC, 
-     &  DTX, F, FILECC, NGRLF,                !Input
-     &  WLDOTN,                               !Input
-     &  YRPLT,                                !Input
-     &  PCNLeaf,                              !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
-
       FHWAH= 0.0
       FHTOTN = 0.0
       FHLPH = 0.0
@@ -2130,6 +2119,18 @@ C----------------------------------
 !      IF (FHWAH > 1.E-3) THEN
 !        WRITE(3333,"('FHWAH,FHTOTN',2F10.2)") FHWAH, FHTOTN
 !      ENDIF
+
+C----------------------------------
+C     CALL COHORT MODEL
+C----------------------------------
+!      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
+      CALL COHORTS(DYNAMIC, 
+     &  DTX, F, FILECC, NGRLF,                !Input
+     &  WLDOTN,                               !Input
+     &  YRPLT,                                !Input
+     &  PCNLeaf,                              !Output
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
+
       CONTINUE
 !-----------------------------------------------------------------------
 !     End of DAS > NVEG0 if construct

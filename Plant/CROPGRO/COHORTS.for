@@ -527,7 +527,7 @@ C-GH 08/19/2025
      &    - FHLEAF_c(I)         !harvest
 
 !       Leaf dry matter (WTLF in GROW)
-        IF (LFDM(I) + WLDOT_cohort >= 0.0) THEN
+        IF (LFDM(I) + WLDOT_cohort >= 1.E-10) THEN
           LFDM(I) = LFDM(I) + WLDOT_cohort
         ELSE
           WLDOT_cohort = LFDM(I)
