@@ -355,6 +355,7 @@ C   FO -  05/07/2020 Add new Y4K subroutine call to convert YRDOY
 C-----------------------------------------------------------------------
         MOWGDD = 0.0
         CUTNO = 0
+        FHLEAF_c = 0.0
 
         CALL PUT('MHARVEST','ISH_date',-99)
         CALL PUT('MHARVEST','ISH_wt',  -99.)
@@ -394,7 +395,6 @@ C-----------------------------------------------------------------------
       MOWTODAY = .FALSE.
       MOWC = 0.0
       RSPLC = 0.0
-      WTLF_before_cut = WTLF
 
         IF(ATMOW .EQV. .TRUE.) THEN
           IF(ATTP .EQ. 'W' .OR. ATTP .EQ. 'Y') THEN
@@ -408,6 +408,7 @@ C-----------------------------------------------------------------------
           ENDIF
         ENDIF
 
+        FHLEAF_c = 0.0
         fhtot = 0
         fhlfn = 0
         fhstn = 0
@@ -431,6 +432,7 @@ C-----------------------------------------------------------------------
       DWTSO = WTSO - PWTSO
       DWTSO = WTSO - PWTSO
       DWTSO = WTSO - PWTSO
+      FHLEAF_c = 0.0
 !----------------------------------------------------------------------
 
       IF (.NOT.ALLOCATED(MOW) .AND. ATMOW .EQV. .FALSE.) THEN
@@ -535,40 +537,41 @@ C-----------------------------------------------------------------------
         
         fhcrlf = fhleaf*rhol
         fhcrst = fhstem*rhos
-        
+
         fhpctn = fhtotn/fhtot*100
         fhplig = (fhleaf*pliglf+fhstem*pligst)/fhtot*100
         fhpcho = (fhcrlf+fhcrst)/fhtot*100
         fhpctlf = fhleaf/fhtot*100
-        
+
+        WTLF_before_cut = WTLF
         WTLF = WTLF - FHLEAF
         STMWT = STMWT - FHSTEM
         TOPWT = TOPWT - FHLEAF - FHSTEM
         TOTWT = TOTWT - FHLEAF - FHSTEM
-        
+
         WCRLF = WTLF*RHOL
         WCRST = STMWT*RHOS
-        
+
         WTNLF = WTLF*PCNL/100.
         WTNST = STMWT*PCNST/100.
         WTNCAN = WTNCAN - FHLEAF*PCNL/100. - FHSTEM*PCNST/100.
-        
+
         IF ((WTLF - WCRLF) .GT. 0.0) THEN
           WNRLF = MAX (WTNLF - PROLFF*0.16*(WTLF-WCRLF), 0.0)
         ELSE
           WNRLF = 0.0
         ENDIF
-        
+
         IF ((STMWT - WCRST) .GT. 0.0) THEN
           WNRST = MAX (WTNST - PROSTF*0.16*(STMWT-WCRST), 0.0)
         ELSE
           WNRST = 0.0
         ENDIF
-        
+
         AREALF = WTLF*SLA
         XLAI = AREALF/10000.
         XHLAI = XLAI
-        
+
         VSTAGE = FHVSTG
         vstagp = vstage
 
@@ -577,6 +580,7 @@ C-----------------------------------------------------------------------
         CALL PUT('MHARVEST','ISH_wt', fhtot*10.)
 
       ELSE
+        FHLEAF = 0.0
         fhtot = 0
         fhlfn = 0
         fhstn = 0
