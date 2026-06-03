@@ -139,7 +139,8 @@ C-----------------------------------------------------------------------
       EXTERNAL YR_DOY, HEADER
       TYPE (ControlType) CONTROL
       CHARACTER*9 OUTSN  !SENES.OUT
-      INTEGER NOUTDG, ERRNUM, YEAR, DOY, DAP, YRPLT
+      CHARACTER*10 OUTSN2  !SENES2.OUT
+      INTEGER NOUTDG, NOUTDG2, ERRNUM, YEAR, DOY, DAP, YRPLT
       LOGICAL FEXIST
       CALL GET(CONTROL)
       DAS   = CONTROL % DAS
@@ -150,7 +151,7 @@ C-----------------------------------------------------------------------
 !     end temp chp
 !=========================================================================
 
-***********************************************************************
+!***********************************************************************
 !***********************************************************************
 !     Run Initialization - Called once per simulation
 !***********************************************************************
@@ -388,6 +389,9 @@ C    Find and Read Surviving section  Added by Diego
           OUTSN  = 'SENES.OUT'
           CALL GETLUN('OUTSN',  NOUTDG)
 
+          OUTSN2  = 'SENES2.OUT'
+          CALL GETLUN('OUTSN2',  NOUTDG2)
+
 !     end temp chp
 !=========================================================================
 
@@ -519,7 +523,29 @@ C    Find and Read Surviving section  Added by Diego
      &   '    WatSen_c    SLMDOT_c     Nmoba_c     Nmobp_c',
      &   '    Nmobmp_c    Cminep_c    Cminempc')
 
+
+
+!       Initialize daily SENESMOB output file      
+        INQUIRE (FILE = OUTSN2, EXIST = FEXIST)
+        IF (FEXIST) THEN
+          OPEN (UNIT = NOUTDG2, FILE = OUTSN2, STATUS = 'OLD',
+     &      IOSTAT = ERRNUM, POSITION = 'APPEND')
+        ELSE
+          OPEN (UNIT = NOUTDG2, FILE = OUTSN2, STATUS = 'NEW',
+     &      IOSTAT = ERRNUM)
+          WRITE(NOUTDG2,'("*SENESMOB OUTPUT FILE2")')
+        ENDIF
+
+        !Write headers
+        CALL HEADER(SEASINIT, NOUTDG2, CONTROL % RUN)
+        WRITE (NOUTDG2,210)
+  210   FORMAT('@YEAR DOY   DAS   DAP',
+     &   '      TotSen      NatSen     NMobSen    LoLitSen',
+     &   '    WaterSen      SLMDOT      Nmob_a      Nmob_p',
+     &   '     Nmob_mp     Cmine_p    Cmine_mp')
+
 !     end temp chp
+
 !=========================================================================
 
 !***********************************************************************
@@ -878,7 +904,6 @@ C-----------------------------------------------------------------------
         SSDOT = MIN(SSDOT, 0.1 * STMWT)
         SSNDOT = SSDOT - (SSMDOT + STSENWT + STLTSEN)
 
-C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C     This section calculates senescence of leaves and petioles
 C     after R7.
@@ -1239,6 +1264,11 @@ C    1-12-2024 KJB and DP
   300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
      &    50F12.6)
 
+        WRITE (NOUTDG2,300)
+     &   YEAR, DOY, DAS, DAP, 
+     &   SLDOT, LFNSEN, LFSENWT, LTSEN, SLNDOT, SLMDOT,
+     &   LFSNMOB, NMINELF, LFNMINE, CMINELF, LFCMINE 
+
 !     still temp chp...
 
 !***********************************************************************
@@ -1248,6 +1278,7 @@ C    1-12-2024 KJB and DP
       ELSE IF (DYNAMIC .EQ. SEASEND) THEN
 C-----------------------------------------------------------------------
           CLOSE (NOUTDG)
+          CLOSE (NOUTDG2)
 
 !     end temp chp
 !=========================================================================
