@@ -1,5 +1,5 @@
 C=======================================================================
-      MODULE LeafCohorts_MOD
+      MODULE COHORTS_MOD
 C=======================================================================
       INTEGER, PARAMETER :: LCMax = 10000 !maximum # of leaf cohorts
       INTEGER NLC     !current number of leaf cohorts
@@ -8,16 +8,17 @@ C=======================================================================
       REAL, DIMENSION(LCMax) ::  
      &  LFDM,         !Leaf dry matter (g[leaf]/m2) = WTLF
      &  CumLeafDM,    !Cumulative leaf growth (g[leaf]/m2) = CLW
-     &  LeafCohortAge,!Leaf age (thermal days)
+     &  CohortAge,    !Leaf age for (thermal days)
      &  LFNSC,        !Leaf non-structural (mobile) CH2O (g/m2) = WCRLF
      &  LFNSN         !Leaf non-structural (mobile) N (g/m2) = WNRLF
-!    &  PCNLeaf       !Leaf N%
+!     &  PCNLeaf       !Leaf N%
 
 !     Leaf cohort processes, calculated by other routines
       REAL, DIMENSION(LCMax) ::  
 
 !       calculated in FREEZE, for_freeze
      &  LFFRZ,      !leaf mass frozen today (g[leaf]/m2) = WLFDOT
+
 
 !       calculated in VEGGR, for_veggr
      &  LFCMN,      !leaf non-struc CH2O mined (g[CH2O]/m2) = CRUSLF
@@ -51,7 +52,7 @@ C=======================================================================
 
       CONTAINS
 C=======================================================================
-C  LeafCohorts, Subroutine, K.J. Boote, P. Alderman, C.H. Porter
+C  COHORTS, Subroutine, K.J. Boote, P. Alderman
 C-----------------------------------------------------------------------
 C  Daily leaf cohorts
 C-----------------------------------------------------------------------
@@ -60,7 +61,7 @@ C  01/01/1853 (?) KJB, PA Written
 C  11/--/2025 GH, CHP  Revised.
 C=======================================================================
 
-      SUBROUTINE LeafCohorts(DYNAMIC, 
+      SUBROUTINE COHORTS(DYNAMIC, 
      &  DTX, F, FILECC, NGRLF,                !Input
      &  WLDOTN,                               !Input
      &  YRPLT,                                !Input
@@ -165,7 +166,7 @@ CHP 2025-11-20
       ELSEIF (DYNAMIC .EQ. SEASINIT) THEN
 !-----------------------------------------------------------------------
       NLC       = 0   !Number of leaf cohorts
-      LeafCohortAge = 0.0 !Leaf age for (thermal days)
+      CohortAge = 0.0 !Leaf age for (thermal days)
       LFDM      = 0.0 !Leaf dry matter (g[leaf]/m2) = WTLF
       CumLeafDM = 0.0 !Cumulative leaf growth (g[leaf]/m2) = CLW
       LFNSC     = 0.0 !Leaf non-structural (mobile) CH2O (g/m2) = WCRLF
@@ -253,7 +254,7 @@ C-GH 08/19/2025
 !     Initialize first cohort upon emergence
 !-------------------------------------
       NLC = 1                             !Number of leaf cohorts
-      LeafCohortAge(1) = DTX                  !age (ptd)
+      CohortAge(1) = DTX                  !age (ptd)
       LFDM(1)  = WLDOTN                   !dry matter (g/m2)
       CumLeafDM(1) = WLDOTN               !cumulative addition (g/m2)
       LFNSC(1) = WLDOTN * ALPHL           !mobile CH2O (g/m2)
@@ -609,7 +610,7 @@ C-GH 08/19/2025
 
 !-------------------------------------------------------------------
       DO I = 1, NLC
-        LeafCohortAge(I) = LeafCohortAge(I) + DTX  !cohort age in p-t-d
+        CohortAge(I) = CohortAge(I) + DTX  !cohort age in p-t-d
         LeafNTot(I) = LFNSN(I) + LFSN(I)
         IF (LFDM(I) > 0.0) THEN
           PCNLeaf(I) = LeafNTot(I) / LFDM(I) * 100.  ! % N 
@@ -728,7 +729,7 @@ C-GH 08/19/2025
 
 310   FORMAT (1X,I4, 1X,I3, 2I6, 30F12.6)
 
-      write (CHRTOUT1,320) YEAR,DOY,LeafCohortAge(1:50)
+      write (CHRTOUT1,320) YEAR,DOY,CohortAge(1:50)
 320   format (1X,I4,1X,I3,50F6.1)
 
       write (CHRTOUT2,330) YEAR,DOY,LFDM(1:50)
@@ -752,7 +753,7 @@ C-GH 08/19/2025
       ENDIF
 !-----------------------------------------------------------------------
       RETURN
-      END SUBROUTINE LeafCohorts
+      END SUBROUTINE COHORTS
 !=======================================================================
 
 
@@ -1072,5 +1073,5 @@ C-GH 08/19/2025
 !***********************************************************************
 
 C=======================================================================
-      END MODULE LeafCohorts_MOD
+      END MODULE COHORTS_MOD
 C=======================================================================

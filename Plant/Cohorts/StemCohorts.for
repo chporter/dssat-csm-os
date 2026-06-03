@@ -1,66 +1,65 @@
 C=======================================================================
-      MODULE COHORTS_MOD
+      MODULE StemCohorts_MOD
 C=======================================================================
-      INTEGER, PARAMETER :: LCMax = 10000 !maximum # of leaf cohorts
-      INTEGER NLC     !current number of leaf cohorts
+      INTEGER, PARAMETER :: SCMax = 10000 !maximum # of Stem cohorts
+      INTEGER NLC     !current number of Stem cohorts
 
-!     Leaf cohort state variables used in other routines
-      REAL, DIMENSION(LCMax) ::  
-     &  LFDM,         !Leaf dry matter (g[leaf]/m2) = WTLF
-     &  CumLeafDM,    !Cumulative leaf growth (g[leaf]/m2) = CLW
-     &  CohortAge,    !Leaf age for (thermal days)
-     &  LFNSC,        !Leaf non-structural (mobile) CH2O (g/m2) = WCRLF
-     &  LFNSN         !Leaf non-structural (mobile) N (g/m2) = WNRLF
-!     &  PCNLeaf       !Leaf N%
+!     Stem cohort state variables used in other routines
+      REAL, DIMENSION(SCMax) ::  
+     &  STDM,         !Stem dry matter (g[leaf]/m2) = WTLF
+     &  CumStemDM,    !Cumulative leaf growth (g[leaf]/m2) = CLW
+     &  StemCohortAge,!Stem age (thermal days)
+     &  STNSC,        !Stem non-structural (mobile) CH2O (g/m2) = WCRLF
+     &  STNSN         !Stem non-structural (mobile) N (g/m2) = WNRLF
+!    &  PCNStem       !Stem N%
 
-!     Leaf cohort processes, calculated by other routines
-      REAL, DIMENSION(LCMax) ::  
+!     Stem cohort processes, calculated by other routines
+      REAL, DIMENSION(SCMax) ::  
 
 !       calculated in FREEZE, for_freeze
-     &  LFFRZ,      !leaf mass frozen today (g[leaf]/m2) = WLFDOT
+     &  STFRZ,      !Stem mass frozen today (g[leaf]/m2) = WLFDOT
 
 !       calculated in VEGGR, for_veggr
-     &  LFCMN,      !leaf non-struc CH2O mined (g[CH2O]/m2) = CRUSLF
+     &  STCMN,      !Stem non-struc CH2O mined (g[CH2O]/m2) = CRUSLF
 
 !       Calculated LeafCohortPest
-     &  LFPST,      !leaf pest damage today (g[leaf]/m2) = WLIDOT
+     &  STPST,      !Stem pest damage today (g[leaf]/m2) = WLIDOT
 
 !       calculated in MOBIL, for_mobil, for_veggr
-     &  LFNMN,      !Leaf non-struc N mined today (g[N]]/m2) = NRUSLF
+     &  STNMN,      !Stem non-struc N mined today (g[N]]/m2) = NRUSLF
 
 !       calculated in SENES, for_senmob
-     &  LeafTotSen, !Total leaf senescense today (g[leaf]/m2) = SLDOT
-     &  LFNMNSN,    !Leaf senescence due to N mining (g[leaf]/m2)
-     &  LFWSSN,     !leaf water stress senescence today (g[leaf]/m2)
+     &  StemTotSen, !Total Stem senescense today (g[leaf]/m2) = SLDOT
+     &  STNMNSN,    !Stem senescence due to N mining (g[leaf]/m2)
+     &  STWSSN,     !Stem water stress senescence today (g[leaf]/m2)
 
 !       calculated in GROW and for_grow, adjusted in COHORTS
-     &  LFCAD,      !leaf non-struc CH2O stored  (g[CH2O]/m2) = CADLF
-     &  LFNAD,      !Leaf non-struc N stored today (g[N]]/m2) = NADLF
+     &  STCAD,      !Stem non-struc CH2O stored  (g[CH2O]/m2) = CADLF
+     &  STNAD,      !Stem non-struc N stored today (g[N]]/m2) = NADLF
 
 !       calculated in for_senmob
-     &  LFCMINE_c,  !Max potential CH2O mining today
-     &  LFSNMOB_c,  !Leaf N mobilized by natural senescence (g[N]/m2)
-     &  LTSEN_c,    !Low light senescence
+     &  STCMINE_c,  !Max potential CH2O mining today
+     &  STSNMOB_c,  !Stem N mobilized by natural senescence (g[N]/m2)
+     &  STSEN_c,    !Low light senescence
 !       is LFSENWT_c the same as LFNMNSN?
-     &  LFSENWT_c,  !Leaf senescence due to N mobilization
-     &  LFNSEN_c,   !natural senescence
-     &  SLMDOT_c,   !Leaf senescence with N mobilization 
+     &  STSENWT_c,  !Stem senescence due to N mobilization
+     &  STNSEN_c,   !natural senescence
+     &  SSMDOT_c,   !Stem senescence with N mobilization 
 
 !       calculated in for_harv
-     &  FHLEAF_c    !Forage harvest
+     &  FHSTEM_c    !Forage harvest
 
       CONTAINS
 C=======================================================================
-C  COHORTS, Subroutine, K.J. Boote, P. Alderman
+C  StemCohorts, Subroutine, C.H. Porter
 C-----------------------------------------------------------------------
 C  Daily leaf cohorts
 C-----------------------------------------------------------------------
 C  REVISION       HISTORY
-C  01/01/1853 (?) KJB, PA Written
-C  11/--/2025 GH, CHP  Revised.
+C  06/04/2026     CHP Written, based on LeafCohorts
 C=======================================================================
 
-      SUBROUTINE COHORTS(DYNAMIC, 
+      SUBROUTINE LeafCohorts(DYNAMIC, 
      &  DTX, F, FILECC, NGRLF,                !Input
      &  WLDOTN,                               !Input
      &  YRPLT,                                !Input
@@ -1072,5 +1071,5 @@ C-GH 08/19/2025
 !***********************************************************************
 
 C=======================================================================
-      END MODULE COHORTS_MOD
+      END MODULE LeafCohorts_MOD
 C=======================================================================
