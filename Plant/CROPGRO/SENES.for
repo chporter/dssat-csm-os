@@ -62,9 +62,11 @@ C-----------------------------------------------------------------------
       REAL SWFCAB(NSWAB)
 
       REAL, DIMENSION(LCMax) :: NatSen_c, NMobSen_c, LoLitSen_c, 
-     &    WaterSen_c,  R7Sen_c
+     &    WaterSen_c,  R7Sen_c, SSNDOT_c
       REAL LeafTotSen_sum, NatSen_sum, NMobSen_sum, LoLitSen_sum, 
      &    WaterSen_sum, R7Sen_sum
+      REAL StemTotSen_sum
+
 
       TYPE (ControlType) CONTROL
 
@@ -199,9 +201,14 @@ C-----------------------------------------------------------------------
       SLNDOT = 0.0
       SSNDOT = 0.0
       RATTP  = 1.0
+
+!     Cohorts
       LeafTotSen = 0.0
       LFNMNSN = 0.0   
       LFWSSN = 0.0    
+      StemTotSen = 0.0
+      STNMNSN = 0.0   
+      STWSSN = 0.0    
 
       DO I = 1,5
         SWFCAB(I) = 1.0
@@ -268,7 +275,7 @@ C-----------------------------------------------------------------------
 !     end temp chp
 !=========================================================================
 
-!     Cohort data
+!     Leaf cohort data
       LeafTotSen = 0.0  !=SLDOT
       LFNMNSN = 0.0     
       LFWSSN = 0.0      !=SLNDOT
@@ -285,6 +292,14 @@ C-----------------------------------------------------------------------
       LoLitSen_sum = 0.0
       WaterSen_sum = 0.0
       R7Sen_sum = 0.0
+
+!     Stem cohort data
+      StemTotSen = 0.0  !=SSDOT
+      STNMNSN = 0.0     
+      STWSSN = 0.0      !=SSNDOT
+
+!     Sum of cohort data
+      StemTotSen_sum = 0.0
 
 !=========================================================================
 
@@ -408,6 +423,14 @@ C-----------------------------------------------------------------------
         SSNDOT = SLNDOT * PORPT
         SSNDOT = MIN(SSDOT,SSNDOT)
 
+!       Stem cohorts
+        DO I = 1, NLC
+          StemTotSen(I) = LeafTotSen(I) * PORPT
+          StemTotSen(I) = MIN(StemTotSen(I), 0.1 * STDM(I))
+          SSNDOT_c(I) = WaterSen_c(I) * PORPT
+          SSNDOT_c(I) = MIN(StemTotSen(I), SSNDOT_c(I))
+        ENDDO
+
 !=========================================================================
 !     TEMP CHP Add printout for SENES variables
 
@@ -437,6 +460,9 @@ C-----------------------------------------------------------------------
           SSDOT = SLDOT * PORPT
           SSNDOT = SSDOT
 
+          StemTotSen = LeafTotSen * PORPT
+          SSNDOT_c = StemTotSen
+
         ELSE
           SLDOT = 0.0
           LeafTotSen = 0.0
@@ -444,6 +470,8 @@ C-----------------------------------------------------------------------
           WaterSen_c = 0.0
           SSDOT = 0.0
           SSNDOT = 0.0
+          StemTotSen = 0.0
+          SSNDOT_c = 0.0
         ENDIF
 
         R7Sen = SLDOT
@@ -455,7 +483,9 @@ C-----------------------------------------------------------------------
       ENDIF
 
       LFWSSN = WaterSen_c
+      STWSSN = SSNDOT_c
       LeafTotSen_SUM = SUM(LeafTotSen)
+      StemTotSen_sum = SUM(StemTotSen)
 
 !=========================================================================
 !     TEMP CHP Add printout for SENES variables

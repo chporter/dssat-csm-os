@@ -23,7 +23,8 @@ C                        specify distribution of storage organ dry mass
 C                        between soil surface layer and soil layer 1
 C                        used to distribute senesced material for CENTURY model
 !  06/15/2022 CHP Added CropStatus
-!  04/30/2026 chp Added leaf cohorts
+!  04/30/2026 CHP Added leaf cohorts
+!  06/08/2026 CHP Added stem cohorts
 C-----------------------------------------------------------------------
 C  Called by:  CROPGRO
 C  Calls:      FOR_IPGROW, FOR_STRESS
@@ -94,7 +95,7 @@ C=======================================================================
         ! parameters, hourly weather data.
       USE COHORTS_MOD
       IMPLICIT NONE
-      EXTERNAL FOR_IPGROW, ERROR, FOR_STRESS
+      EXTERNAL FOR_IPGROW, ERROR, FOR_STRESS, PestCohorts
 
 !     TEMP CHP
       EXTERNAL TIMDIF, YR_DOY, GETLUN, HEADER
@@ -805,9 +806,11 @@ C--------------------------------------------
         WLDOT=WLDOT-FHLEAF
       ENDIF
 
-!     Calculate net addition to leaves today per cohort
-      CALL LeafCohortPest(WLIDOT, WTLF) !Calculates LFPST for cohorts
+!     Calculates LFPST and STPST, cohort arrays
+      CALL PestCohorts(
+     &  WLIDOT, WSIDOT, WTLF, STMWT)   !Input
 
+!     Calculate net addition to leaves today per cohort
       LCADD = 0.0
       LNADD = 0.0
       LFCAD = 0.0

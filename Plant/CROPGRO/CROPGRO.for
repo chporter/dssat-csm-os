@@ -422,7 +422,7 @@ C-----------------------------------------------------------------------
      &  ShutMob, RootMob, ShelMob,                        !Output
      &  TOSHMINE,TOCHMINE,HPODWT,HSDWT,HSHELWT)           !Output
       
-      CALL COHORTS(DYNAMIC, 
+      CALL LeafCohorts(DYNAMIC, 
      &  DTX, F, FILECC, NGRLF,                !Input
      &  WLDOTN,                               !Input
      &  YRPLT,                                !Input
@@ -678,7 +678,7 @@ C-----------------------------------------------------------------------
 
 C-----------------------------------------------------------------------
 C-GH Add leaf Cohorts
-      CALL COHORTS(DYNAMIC, 
+      CALL LeafCohorts(DYNAMIC, 
      &  DTX, F, FILECC, NGRLF,                !Input
      &  WLDOTN,                               !Input
      &  YRPLT,                                !Input
@@ -899,7 +899,7 @@ C-GH
       NGRLF=WTNLF
 !       write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
 
-      CALL COHORTS(EMERG, 
+      CALL LeafCohorts(EMERG, 
      &  DTX, F, FILECC, NGRLF,                !Input
      &  WLDOTN,                               !Input
      &  YRPLT,                                !Input
@@ -1325,7 +1325,7 @@ C----------------------------------
 C     CALL COHORT MODEL
 C----------------------------------
 !      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
-      CALL COHORTS(DYNAMIC, 
+      CALL LeafCohorts(DYNAMIC, 
      &  DTX, F, FILECC, NGRLF,                !Input
      &  WLDOTN,                               !Input
      &  YRPLT,                                !Input
@@ -1383,7 +1383,7 @@ C----------------------------------
      &    WTSHE, WTSHMT, FLWN,                            !Output 
      &    TOSHMINE,TOCHMINE,HPODWT,HSDWT,HSHELWT)         !Output
 
-        CALL COHORTS(DYNAMIC, 
+        CALL LeafCohorts(DYNAMIC, 
      &  DTX, F, FILECC, NGRLF,                !Input
      &  WLDOTN,                               !Input
      &  YRPLT,                                !Input

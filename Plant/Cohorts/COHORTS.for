@@ -1,42 +1,62 @@
 C=======================================================================
       MODULE COHORTS_MOD
 C=======================================================================
-      INTEGER, PARAMETER :: LCMax = 10000 !maximum # of leaf cohorts
-      INTEGER NLC     !current number of leaf cohorts
+      INTEGER, PARAMETER :: LCMax = 10000 !max # of leaf/stem cohorts
+      INTEGER NLC     !current number of leaf (and stem) cohorts
 
-!     Leaf cohort state variables used in other routines
+!     STATE VARIABLES: Leaf cohorts
       REAL, DIMENSION(LCMax) ::  
      &  LFDM,         !Leaf dry matter (g[leaf]/m2) = WTLF
      &  CumLeafDM,    !Cumulative leaf growth (g[leaf]/m2) = CLW
-     &  CohortAge,    !Leaf age for (thermal days)
      &  LFNSC,        !Leaf non-structural (mobile) CH2O (g/m2) = WCRLF
-     &  LFNSN         !Leaf non-structural (mobile) N (g/m2) = WNRLF
-!     &  PCNLeaf       !Leaf N%
+     &  LFNSN,        !Leaf non-structural (mobile) N (g/m2) = WNRLF
+!    &  PCNLeaf       !Leaf N%
+     &  PCNStem       !Stem N%
 
-!     Leaf cohort processes, calculated by other routines
+!     STATE VARIABLES: Stem cohorts
       REAL, DIMENSION(LCMax) ::  
+     &  STDM,         !Stem dry matter (g[stem]/m2) = WTLF
+     &  STNSC,        !Stem non-structural (mobile) CH2O (g/m2) = WCRLF
+     &  STNSN         !Stem non-structural (mobile) N (g/m2) = WNRLF
+!    &  PCNStem       !Stem N%
 
+!     STATE VARIABLES: Leaf and stem cohorts
+      REAL, DIMENSION(LCMax) ::  
+     &  CohortAge     !Leaf/stem age for (thermal days)
+
+!     RATE VARIABLES: Leaf and stem cohorts
+      REAL, DIMENSION(LCMax) ::  
 !       calculated in FREEZE, for_freeze
      &  LFFRZ,      !leaf mass frozen today (g[leaf]/m2) = WLFDOT
-
+     &  STFRZ,      !stem mass frozen today (g[stem]/m2) = WSFDOT
 
 !       calculated in VEGGR, for_veggr
      &  LFCMN,      !leaf non-struc CH2O mined (g[CH2O]/m2) = CRUSLF
+     &  STCMN,      !Stem non-struc CH2O mined (g[CH2O]/m2) = CRUSLF
 
 !       Calculated LeafCohortPest
      &  LFPST,      !leaf pest damage today (g[leaf]/m2) = WLIDOT
+     &  STPST,      !Stem pest damage today (g[stem]/m2) = WLIDOT
 
 !       calculated in MOBIL, for_mobil, for_veggr
      &  LFNMN,      !Leaf non-struc N mined today (g[N]]/m2) = NRUSLF
+     &  STNMN,      !Stem non-struc N mined today (g[N]]/m2) = NRUSLF
 
 !       calculated in SENES, for_senmob
      &  LeafTotSen, !Total leaf senescense today (g[leaf]/m2) = SLDOT
      &  LFNMNSN,    !Leaf senescence due to N mining (g[leaf]/m2)
      &  LFWSSN,     !leaf water stress senescence today (g[leaf]/m2)
 
+     &  StemTotSen, !Total Stem senescense today (g[stem]/m2) = SSDOT
+     &  STNMNSN,    !Stem senescence due to N mining (g[stem]/m2)
+     &  STWSSN,     !Stem water stress senescence today (g[stem]/m2)
+
 !       calculated in GROW and for_grow, adjusted in COHORTS
      &  LFCAD,      !leaf non-struc CH2O stored  (g[CH2O]/m2) = CADLF
      &  LFNAD,      !Leaf non-struc N stored today (g[N]]/m2) = NADLF
+
+     &  STCAD,      !Stem non-struc CH2O stored  (g[CH2O]/m2) = CADST
+     &  STNAD,      !Stem non-struc N stored today (g[N]]/m2) = NADST
 
 !       calculated in for_senmob
      &  LFCMINE_c,  !Max potential CH2O mining today
@@ -47,67 +67,94 @@ C=======================================================================
      &  LFNSEN_c,   !natural senescence
      &  SLMDOT_c,   !Leaf senescence with N mobilization 
 
+     &  STCMINE_c,  !Max potential CH2O mining today
+     &  STSNMOB_c,  !Stem N mobilized by natural senescence (g[N]/m2)
+!       is LFSENWT_c the same as STNMNSN?
+     &  STSENWT_c,  !Stem senescence due to N mobilization
+     &  STNSEN_c,   !natural senescence
+     &  SSMDOT_c,   !Stem senescence with N mobilization 
+     &  STLTSEN_c,  !Stem low light senescence
+
 !       calculated in for_harv
-     &  FHLEAF_c    !Forage harvest
+     &  FHLEAF_c,   !Forage harvest
+     &  FHSTEM_c    !Forage harvest
 
       CONTAINS
 C=======================================================================
 C  COHORTS, Subroutine, K.J. Boote, P. Alderman
 C-----------------------------------------------------------------------
-C  Daily leaf cohorts
+C  Daily leaf and stem cohorts
 C-----------------------------------------------------------------------
 C  REVISION       HISTORY
 C  01/01/1853 (?) KJB, PA Written
-C  11/--/2025 GH, CHP  Revised.
+C  11/--/2025 GH, CHP  Revised
+C  06/07/2026 CHP added stem cohorts
 C=======================================================================
 
       SUBROUTINE COHORTS(DYNAMIC, 
-     &  DTX, F, FILECC, NGRLF,                !Input
-     &  WLDOTN,                               !Input
+     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
+     &  WLDOTN, WSDOTN,                       !Input
      &  YRPLT,                                !Input
-     &  PCNLeaf,                              !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
+     &  PCNLeaf, PCNStem,                     !Output
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !OUTPUT (eventually)
+     &  STMWT, WCRST, WNRST, WTNST)           !OUTPUT (eventually)
 
       USE ModuleData
       IMPLICIT NONE
       SAVE
-      EXTERNAL YR_DOY, GETLUN, HEADER, TIMDIF
+      EXTERNAL YR_DOY, GETLUN, HEADER, TIMDIF, IPCOHO, OPCOHORTS
 
-      REAL, INTENT(IN) :: DTX, F, NGRLF, WLDOTN
+      INTEGER, INTENT(IN) :: DYNAMIC
+      REAL, INTENT(IN) :: DTX, F, NGRLF, NGRST, WLDOTN, WSDOTN
       INTEGER, INTENT(IN) :: YRPLT
       CHARACTER*92, INTENT(IN) :: FILECC
 
       REAL, DIMENSION(LCMax) :: PCNLeaf
+      REAL, DIMENSION(LCMax) :: PCNStem
 
 !     Eventually, these will be output variables.
       REAL, INTENT(IN) :: WTLF, WCRLF, WNRLF, WTNLF, XLAI
+      REAL, INTENT(IN) :: STMWT, WCRST, WNRST, WTNST
+
       REAL AREALF_calc, SLA_calc, SLAAD_calc, LAIMX_calc
-C-GH 08/19/2025
+
       REAL WTLF_calc, WNRLF_calc, WCRLF_calc, XLAI_calc, 
      &     WTNLF_calc, PLEAFN_calc
-CHP 2025-11-20
+
       REAL WLDOT_calc, SLDOT_calc, WLFDOT_calc, NRUSLF_calc, 
      &  CRUSLF_calc, WLIDOT_calc, WatSen_calc, LfMineSen_calc, 
      &  LCADD_calc, LNADD_calc, NLDOT_calc, NLOFF_calc,
      &  LFSN_calc
 
+      REAL WSDOT_calc, SSDOT_calc, NRUSST_calc, 
+     &  CRUSST_calc, WSIDOT_calc, STMineSen_calc, 
+     &  SCADD_calc, SNADD_calc, NSDOT_calc, NSOFF_calc,
+     &  STSN_calc
+
+      REAL WTST_calc,
+     &  WTNST_calc, WNRST_calc, WSFDOT_calc, 
+     &  WatSenStem_calc
+
       CHARACTER (len=8) MODEL
-      CHARACTER*11 COHORTOUT
-      character*12 COHORTOUT1, COHORTOUT2
-      LOGICAL FEXIST
 
-      INTEGER DYNAMIC
       INTEGER YRDOY, YEAR, DOY, DAS, DAP, TIMDIF
-      INTEGER I, ERRNUM
-      INTEGER CHRTOUT, CHRTOUT1, CHRTOUT2
+      INTEGER I, FirstCohortDAS
 
-!     Cohort state variables, not exported (yet?)
+      INTEGER, DIMENSION(LCMax) :: CohortAgeDays
+
+!     Leaf Cohort state variables, not exported (yet?)
       REAL, DIMENSION(LCMax) :: 
      &  LeafNTot,     !Leaf N total (g[N]]/m2) = WTNLF
      &  LFSN,         !Leaf structural (non-mobile) N (g[N]]/m2)
      &  LFAREA,       !Leaf area (cm2[leaf]/m2)
      &  LFAREAH,      !Healthy leaf area (cm2[leaf]/m2)
      &  LFSLA         !Specific leaf area (cm2/g)
+
+!     Stem Cohort state variables, not exported (yet?)
+      REAL, DIMENSION(LCMax) :: 
+     &  StemNTot,      !stem N total (g[N]]/m2) = WTNLF
+     &  STSN           !stem structural (non-mobile) N (g[N]]/m2)
+
 !!       Composition and quality
 !     &  LFLIGNIN,     !Lignin content %
 !     &  LFCELLUL,     !Cellulose content %
@@ -115,15 +162,17 @@ CHP 2025-11-20
 
       REAL, DIMENSION(LCMax) :: LeafMassDecrease, NLDOT_c, 
      &    NLOFF_c, WRCLDT_c
+      REAL, DIMENSION(LCMax) :: StemMassDecrease, NSDOT_c, 
+     &    NSOFF_c, WRCSDT_c
 
       REAL CUMLFDM, Excess, SenFrac, WLDOT_cohort, Loss_adjust
-      REAL RHOL, CLOFF
+      REAL RHOL, CLOFF, WSDOT_cohort
 
 !     TEMP CHP
-      REAL CLOFF_sum, LFNSEN_sum, LTSEN_sum, LFSENWT_sum, WLIDOT_sum
+      REAL CLOFF_sum !, LFNSEN_sum, LTSEN_sum, LFSENWT_sum, WLIDOT_sum
 
 !     Variables read from species file:
-      REAL ALPHL, PROLFF
+      REAL ALPHL, ALPHS, PROLFF, PROSTF
 !     These variables are no longer used in this routine.
 !     Need to remove from species file read routine.
       REAL NVSMOB, SENDAY, TCMP
@@ -131,7 +180,7 @@ CHP 2025-11-20
 !     Not currently used, but will be needed for shading 
 !     Keep here or move to MOBIL?
       REAL ICMP, MAXNMINE, NMOBMX
-      REAL SENCLV, SENNLV, PCHOLFF !forage species file
+      REAL SENCLV, SENNLV, PCHOLFF, PCHOSTF !forage species file
 
 !     Date info for output files
       TYPE (ControlType) CONTROL
@@ -150,14 +199,23 @@ CHP 2025-11-20
 !***********************************************************************
       IF (DYNAMIC .EQ. RUNINIT) THEN
 !-----------------------------------------------------------------------
-      COHORTOUT = 'COHORTS.OUT'
-      CALL GETLUN('COHORTOUT',  CHRTOUT)
-
-      COHORTOUT1 = "COHORTS1.OUT"
-      CALL GETLUN('COHORTOUT1', CHRTOUT1)
-
-      COHORTOUT2 = "COHORTS2.OUT"
-      CALL GETLUN('COHORTOUT2', CHRTOUT2)
+      CALL OpCohorts(DYNAMIC, YRPLT, 
+!       Leaf output:
+     &  WTLF_calc, XLAI_calc, WCRLF_calc, PLEAFN_calc, 
+     &  WTNLF_calc, WNRLF_calc, LFSN_calc, 
+     &  WLDOT_calc, LCADD_calc, LNADD_calc, 
+     &  CRUSLF_calc, NRUSLF_calc, 
+     &  WLIDOT_calc, WLFDOT_calc, SLDOT_calc, 
+     &  WatSen_calc, LfMineSen_calc, 
+     &  NLOFF_calc, NLDOT_calc,
+!       Stem output:
+     &  WTST_calc,
+     &  WTNST_calc, WNRST_calc, STSN_calc, 
+     &  WSDOT_calc, SCADD_calc, SNADD_calc, 
+     &  CRUSST_calc, NRUSST_calc, 
+     &  WSIDOT_calc, WSFDOT_calc, SSDOT_calc, 
+     &  WatSenStem_calc, STMineSen_calc, 
+     &  NSOFF_calc, NSDOT_calc)
 
 !***********************************************************************
 !***********************************************************************
@@ -165,8 +223,10 @@ CHP 2025-11-20
 !***********************************************************************
       ELSEIF (DYNAMIC .EQ. SEASINIT) THEN
 !-----------------------------------------------------------------------
-      NLC       = 0   !Number of leaf cohorts
-      CohortAge = 0.0 !Leaf age for (thermal days)
+      NLC       = 0   !Number of cohorts
+      CohortAge = 0.0 !Cohort age for (photo-thermal days)
+      CohortAgeDays = 0.0 !Cohort age (days)
+
       LFDM      = 0.0 !Leaf dry matter (g[leaf]/m2) = WTLF
       CumLeafDM = 0.0 !Cumulative leaf growth (g[leaf]/m2) = CLW
       LFNSC     = 0.0 !Leaf non-structural (mobile) CH2O (g/m2) = WCRLF
@@ -179,9 +239,52 @@ CHP 2025-11-20
 
       CUMLFDM = 0.0 !Not used by could be compared with CumLeafDM
 
+      STDM      = 0.0 !stem dry matter (g[stem]/m2) = WTLF
+      STNSC     = 0.0 !stem non-structural (mobile) CH2O (g/m2) = WCRLF
+      LeafNTot  = 0.0 !stem N total (g[N]]/m2) = WTNLF
+      STNSN     = 0.0 !stem non-structural (mobile) N (g/m2) = WNRLF
+      LFSN      = 0.0 !stem structural (non-mobile) N (g[N]]/m2)
+      LFAREA    = 0.0 !stem area (cm2[stem]/m2)
+      LFAREAH   = 0.0 !healthy stem area (cm2[stem]/m2)
+      FHSTEM_c  = 0.0 !harvested stem mass
+
 !      LFLIGNIN  = 0.0 !Lignin content %
 !      LFCELLUL  = 0.0 !Cellulose content %
 !      LFHEMICEL = 0.0 !Hemicellulose content %
+
+!     Zero out rate arrays
+      LFFRZ = 0.0
+      STFRZ = 0.0
+      LFCMN = 0.0
+      STCMN = 0.0
+      LFPST = 0.0
+      STPST = 0.0
+      LFNMN = 0.0
+      STNMN = 0.0
+      LeafTotSen = 0.0
+      LFNMNSN = 0.0
+      LFWSSN = 0.0
+      StemTotSen = 0.0
+      STNMNSN = 0.0
+      STWSSN = 0.0
+      LFCAD = 0.0
+      LFNAD = 0.0
+      STCAD = 0.0
+      STNAD = 0.0
+      LFCMINE_c = 0.0
+      LFSNMOB_c = 0.0
+      LTSEN_c = 0.0
+      LFSENWT_c = 0.0
+      LFNSEN_c = 0.0
+      SLMDOT_c = 0.0
+      STCMINE_c = 0.0
+      STSNMOB_c = 0.0
+      STLTSEN_c  = 0.0
+      STSENWT_c = 0.0
+      STNSEN_c = 0.0
+      SSMDOT_c = 0.0
+      FHLEAF_c = 0.0
+      FHSTEM_c  = 0.0
 
 C-GH 08/19/2025
       WTLF_calc = 0.0
@@ -192,57 +295,30 @@ C-GH 08/19/2025
 
 !     Read parameters from species file
       CALL IPCOHO(
-     &  FILECC, MODEL,                          !Input
-     &  ALPHL, ICMP, MAXNMINE, NMOBMX, NVSMOB,  !Output
-     &  PCHOLFF, PROLFF, SENDAY, SENMAX,        !Output
-     &  SENCLV, SENNLV, TCMP, XSENMX)           !Output
+     &  FILECC, MODEL,                            !Input
+     &  ALPHL, ALPHS, ICMP, MAXNMINE,             !Output
+     &  NMOBMX, NVSMOB,                           !Output
+     &  PCHOLFF, PCHOSTF, PROLFF, PROSTF,         !Output
+     &  SENDAY, SENMAX, SENCLV, SENNLV,           !Output
+     &  TCMP, XSENMX)                             !Output
 
-!     Initialize COHORT.OUT file
-      INQUIRE (FILE = COHORTOUT, EXIST = FEXIST)
-      IF (FEXIST) THEN
-        OPEN (UNIT = CHRTOUT, FILE = COHORTOUT, STATUS = 'OLD',
-     &    IOSTAT = ERRNUM, POSITION = 'APPEND')
-      ELSE
-        OPEN (UNIT = CHRTOUT, FILE = COHORTOUT, STATUS = 'NEW',
-     &    IOSTAT = ERRNUM)
-        WRITE(CHRTOUT,'("*Leaf cohort output file")')
-      ENDIF
-
-!     Write headers
-      CALL HEADER(SEASINIT, CHRTOUT, CONTROL % RUN)
-      WRITE (CHRTOUT,200)
-  200 FORMAT('@YEAR DOY   DAS   DAP',
-     &  '       LWADc       LAIDc      WCRLFc      LeafNc',
-     &  '      WTNLFc      WNRLFc       LFSNc',
-     &  '      WLDOTc      LCADDc      LNADDc',
-     &  '     CRUSLFc     NRUSLFc',
-     &  '     WLIDOTc     WLFDOTc      SLDOTc',
-     &  '      WatSen      NMinSn',
-     &  '      NLOFFc      NLDOTc',
-     &  '       NGRLF      WLDOTN')
-
-!     Initialize 2nd cohort output file
-      INQUIRE (FILE = COHORTOUT1, EXIST = FEXIST)
-      IF (FEXIST) THEN
-        OPEN (UNIT = CHRTOUT1, FILE = COHORTOUT1, STATUS = 'OLD',
-     &    IOSTAT = ERRNUM, POSITION = 'APPEND')
-      ELSE
-        OPEN (UNIT = CHRTOUT1, FILE = COHORTOUT1, STATUS = 'NEW',
-     &    IOSTAT = ERRNUM)
-        WRITE(CHRTOUT1,'("*COHORT OUTPUT FILE1")') 
-      ENDIF
-
-!     Initialize 3RD cohort output file
-      INQUIRE (FILE = COHORTOUT2, EXIST = FEXIST)
-      IF (FEXIST) THEN
-        OPEN (UNIT = CHRTOUT2, FILE = COHORTOUT2, STATUS = 'OLD',
-     &    IOSTAT = ERRNUM, POSITION = 'APPEND')
-      ELSE
-        OPEN (UNIT = CHRTOUT2, FILE = COHORTOUT2, STATUS = 'NEW',
-     &    IOSTAT = ERRNUM)
-        WRITE(CHRTOUT2,'(A19)') "*COHORT OUTPUT FILE2"
-      ENDIF
-      WRITE(CHRTOUT2,'("@YEAR DOY   LFWT            ")')
+      CALL OpCohorts(DYNAMIC, YRPLT, 
+!       Leaf output:
+     &  WTLF_calc, XLAI_calc, WCRLF_calc, PLEAFN_calc, 
+     &  WTNLF_calc, WNRLF_calc, LFSN_calc, 
+     &  WLDOT_calc, LCADD_calc, LNADD_calc, 
+     &  CRUSLF_calc, NRUSLF_calc, 
+     &  WLIDOT_calc, WLFDOT_calc, SLDOT_calc, 
+     &  WatSen_calc, LfMineSen_calc, 
+     &  NLOFF_calc, NLDOT_calc,
+!       Stem output:
+     &  WTST_calc,
+     &  WTNST_calc, WNRST_calc, STSN_calc, 
+     &  WSDOT_calc, SCADD_calc, SNADD_calc, 
+     &  CRUSST_calc, NRUSST_calc, 
+     &  WSIDOT_calc, WSFDOT_calc, SSDOT_calc, 
+     &  WatSenStem_calc, STMineSen_calc, 
+     &  NSOFF_calc, NSDOT_calc)
 
 !***********************************************************************
 !***********************************************************************
@@ -253,8 +329,13 @@ C-GH 08/19/2025
 !-----------------------------------------------------------------------
 !     Initialize first cohort upon emergence
 !-------------------------------------
-      NLC = 1                             !Number of leaf cohorts
+!     Cohorts
+      NLC = 1                             !Number of cohorts
       CohortAge(1) = DTX                  !age (ptd)
+      FirstCohortDAS = DAS                !DAS on day of first cohort
+      CohortAgeDays(1) = 1                !Cohort age in days
+
+!     Leaf Cohorts
       LFDM(1)  = WLDOTN                   !dry matter (g/m2)
       CumLeafDM(1) = WLDOTN               !cumulative addition (g/m2)
       LFNSC(1) = WLDOTN * ALPHL           !mobile CH2O (g/m2)
@@ -281,6 +362,24 @@ C-GH 08/19/2025
       ELSE
         LFSLA(1)   = 0.0
       ENDIF
+
+!     Stem Cohorts
+      STDM(1)  = WSDOTN                   !dry matter (g/m2)
+      STNSC(1) = WSDOTN * ALPHS           !mobile CH2O (g/m2)   <<< ????
+      StemNTot(1) = NGRST                 !total stem N (g/m2)   <<< ????
+!     structural N (g/m2) based on structural C
+      STSN(1)  = PROSTF * 0.16 * (STDM(1) - STNSC(1))     !<<< ????
+      STNSN(1) = NGRST - LFSN(1)          !mobile N (g/m2)   !<<< ????
+      IF (STDM(1) > 0.0) THEN
+        PCNStem(1) = StemNTot(1) / STDM(1) * 100.  ! % N
+      ELSE
+        PCNStem(1) = 0.0
+      ENDIF
+
+!!     Composition
+!      STLIGNIN  = function of ??
+!      STCELLUL  = function of ??
+!      STHEMICEL = function of ??
 
 !***********************************************************************
 !***********************************************************************
@@ -575,7 +674,6 @@ C-GH 08/19/2025
 !         LFHEMICEL = function of ??
 !         ADF = function of LFLIGNIN, LFCELLUL, LFHEMICEL
 !         NDF = function of LFLIGNIN, LFCELLUL, LFHEMICEL
-
         ELSE
           LFAREA(I)   = 0.0
           LFSLA(I)    = 0.0
@@ -586,21 +684,91 @@ C-GH 08/19/2025
         ENDIF
       ENDDO
 
+
+
+!     ---------------------------------------------------------
+!     ---------------------------------------------------------
+!     Calculate total change to stem mass per cohort
+      WSDOT_calc = WSDOTN
+!     WSDOTN = total new stem growth today (added to new cohort below)
+
+      DO I = 1, NLC
+!       Stem dry matter increase (WSDOT in GROW)
+        WSDOT_cohort = 
+!     &      STCAD(I)            !Reserve C = LCADD
+!     &    + STNAD(I)/0.16       !Reserve N = LNADD
+     &    - STNMN(I)/0.16       !N mined = NRUSST/0.16 
+     &    - STCMN(I)            !C mined = CRUSST
+     &    - StemMassDecrease(I) !freez, pst, senes=SSDOT+WSIDOT+WSFDOT
+     &    - FHSTEM_c(I)         !harvest
+
+!       Stem dry matter (STMWT in GROW)
+        IF (STDM(I) + WSDOT_cohort >= 1.E-10) THEN
+          STDM(I) = STDM(I) + WSDOT_cohort
+        ELSE
+          WSDOT_cohort = STDM(I)
+          STDM(I) = 0.0
+        ENDIF
+
+!       Keep track of total stem mass addition today
+        WSDOT_calc = WSDOT_calc + WSDOT_cohort
+      ENDDO
+
+      DO I = 1, NLC
+        IF (STDM(I) .GT. 0.0) THEN
+!     ---------------------------------------------------------
+!         Non-structural mobile CH2O (~WCRLF in GROW)
+          STNSC(I) = STNSC(I) + WRCSDT_c(I)
+          IF (STNSC(I) < 0.0) STNSC(I) = 0.0
+
+!     ---------------------------------------------------------
+!         Stem N
+          StemNTot(I) = StemNTot(I) + NSDOT_c(I) 
+
+!         Structural N (WTNST minus WNRST in GROW)
+          STSN(I) = MIN(StemNTot(I), PROSTF*0.16 * (STDM(I) - STNSC(I)))
+
+!         Non-structural N (WNRLF in GROW)
+          STNSN(I) = StemNTot(I) - STSN(I)
+
+!!        Composition
+!         LFLIGNIN = function of ??
+!         LFCELLUL = function of ??
+!         LFHEMICEL = function of ??
+!         ADF = function of LFLIGNIN, LFCELLUL, LFHEMICEL
+!         NDF = function of LFLIGNIN, LFCELLUL, LFHEMICEL
+        ELSE
+          STNSC(I)    = 0.0
+          StemNTot(I) = 0.0
+          STSN(I)     = 0.0
+          STNSN(I)    = 0.0
+        ENDIF
+      ENDDO
+
 !-------------------------------------------------------------------
 !     Today's new cohort
 !-------------------------------------------------------------------
-      IF (WLDOTN > 0.0) THEN
+      IF (WLDOTN > 0.0 .OR. WSDOTN > 0.0) THEN
         NLC = NLC + 1  !today's new cohort
 
-!       New growth for today's cohort
+!       New growth for today's leaf cohort
         LFDM(NLC)  = WLDOTN             !leaf dry mass
         CumLeafDM(NLC) = WLDOTN         !cum leaf mass added
         LFAREA(NLC)= WLDOTN * F         !leaf area
         LFNSC(NLC) = WLDOTN * ALPHL     !non-struct CH2O
 
-!       struct N (non-mobile):
+!       Leaf struct and mobile N:
         LFSN(NLC)  = PROLFF * 0.16 * (WLDOTN - LFNSC(NLC))  
         LFNSN(NLC) = NGRLF - LFSN(NLC)  !non-struct N (mobile)
+
+!       New growth for today's stem cohort
+        STDM(NLC)  = WSDOTN             !leaf dry mass
+        STNSC(NLC) = WSDOTN * ALPHS     !non-struct CH2O
+        StemNTot(NLC) = NGRST                 !total stem N (g/m2)   <<< ????
+
+!       Stem struct and mobile N:
+        STSN(NLC)  = PROSTF * 0.16 * (WSDOTN - STNSC(NLC))  
+        STNSN(NLC) = NGRST - STSN(NLC)  !non-struct N (mobile)
 
 !!        Composition
 !         LFLIGNIN = function of ??
@@ -611,11 +779,20 @@ C-GH 08/19/2025
 !-------------------------------------------------------------------
       DO I = 1, NLC
         CohortAge(I) = CohortAge(I) + DTX  !cohort age in p-t-d
+        CohortAgeDays(I) = CohortAgeDays(I) + 1
+
         LeafNTot(I) = LFNSN(I) + LFSN(I)
         IF (LFDM(I) > 0.0) THEN
           PCNLeaf(I) = LeafNTot(I) / LFDM(I) * 100.  ! % N 
         ELSE
           PCNLeaf(I) = 0.0
+        ENDIF
+
+        StemNTot(I) = STNSN(I) + STSN(I)
+        IF (STDM(I) > 0.0) THEN
+          PCNStem(I) = StemNTot(I) / STDM(I) * 100.  ! % N 
+        ELSE
+          PCNStem(I) = 0.0
         ENDIF
       ENDDO
 
@@ -631,7 +808,7 @@ C-GH 08/19/2025
 !***********************************************************************
       IF (DYNAMIC .EQ. SEASINIT .OR. DYNAMIC .EQ. INTEGR) THEN
 !-----------------------------------------------------------------------
-!     Total rates over all cohorts
+!     Total rates over all leaf cohorts
       CRUSLF_calc = SUM(LFCMN(1:LCMax))      !CH2O mined in VEGGR
       NRUSLF_calc = SUM(LFNMN(1:LCMax)) / 0.16 !N mined in MOBIL
       WLFDOT_calc = SUM(LFFRZ(1:LCMax))      !Freeze in FREEZE
@@ -644,7 +821,7 @@ C-GH 08/19/2025
       NLDOT_calc  = SUM(NLDOT_c(1:LCMax)) + NGRLF !Total N added today
 
 !------------------------------------
-!     Total states over all cohorts
+!     Total states over all leaf cohorts
       WTLF_calc  = SUM(LFDM(1:LCMax))     !Leaf mass g/m2
       AREALF_calc= SUM(LFAREA(1:LCMax))   !Lf area index
       WCRLF_calc = SUM(LFNSC(1:LCMax))    !CH2O reserves
@@ -692,60 +869,37 @@ C-GH 08/19/2025
 
 
 
-!!     temp chp
-!      LFNSEN_sum = SUM(LFNSEN_c)
-!      LTSEN_sum = SUM(LTSEN_c)
-!      LFSENWT_sum = SUM(LFSENWT_c)
-!      if (wtlf_calc > 0) then
-!        RHOL = WCRLF_calc / WTLF_calc
-!      else
-!        RHOL = 0.0
-!      endif
-!      WLIDOT_sum  = SUM(LFPST)
-
-!     write(5567,'(I7,50F10.4)') YRDOY, CLOFF, SLMDOT, LTSEN, LFSENWT, 
-      write(5568,'(I7,50F10.4)') YRDOY, CLOFF_SUM, LFNSEN_sum, 
-     &    LTSEN_sum, LFSENWT_sum, 
-!    &    SENCLV, RHOL, PCHOLFF, SLNDOT, WLIDOT, WLFDOT
-     &    SENCLV, RHOL, PCHOLFF, WatSen_calc, WLIDOT_sum, WLFDOT_calc
+!!     write(5567,'(I7,50F10.4)') YRDOY, CLOFF, SLMDOT, LTSEN, LFSENWT, 
+!      write(5568,'(I7,50F10.4)') YRDOY, CLOFF_SUM, LFNSEN_sum, 
+!     &    LTSEN_sum, LFSENWT_sum, 
+!!    &    SENCLV, RHOL, PCHOLFF, SLNDOT, WLIDOT, WLFDOT
+!     &    SENCLV, RHOL, PCHOLFF, WatSen_calc, WLIDOT_sum, WLFDOT_calc
 
 !***********************************************************************
 !***********************************************************************
-!     OUTPUT section - DO THIS FOR SEASINIT AND INTEGR (for now)
+!     OUTPUT section 
 !***********************************************************************
 !-----------------------------------------------------------------------
-!     ELSE IF (DYNAMIC .EQ. OUTPUT) THEN
+      ELSE IF (DYNAMIC .EQ. OUTPUT .OR. DYNAMIC .EQ. SEASEND) THEN
 !-----------------------------------------------------------------------
-      WRITE (CHRTOUT,310) YEAR, DOY, DAS, DAP,
-!       State
+      CALL OpCohorts(DYNAMIC, YRPLT, 
+!       Leaf output:
      &  WTLF_calc, XLAI_calc, WCRLF_calc, PLEAFN_calc, 
      &  WTNLF_calc, WNRLF_calc, LFSN_calc, 
-!       Rate
-     &  WLDOT_calc, LCADD_calc, LNADD_calc / 0.16, 
+     &  WLDOT_calc, LCADD_calc, LNADD_calc, 
      &  CRUSLF_calc, NRUSLF_calc, 
      &  WLIDOT_calc, WLFDOT_calc, SLDOT_calc, 
      &  WatSen_calc, LfMineSen_calc, 
-     &  NLOFF_calc, NLDOT_calc, NGRLF, WLDOTN
+     &  NLOFF_calc, NLDOT_calc,
+!       Stem output:
+     &  WTST_calc,
+     &  WTNST_calc, WNRST_calc, STSN_calc, 
+     &  WSDOT_calc, SCADD_calc, SNADD_calc, 
+     &  CRUSST_calc, NRUSST_calc, 
+     &  WSIDOT_calc, WSFDOT_calc, SSDOT_calc, 
+     &  WatSenStem_calc, STMineSen_calc, 
+     &  NSOFF_calc, NSDOT_calc)
 
-310   FORMAT (1X,I4, 1X,I3, 2I6, 30F12.6)
-
-      write (CHRTOUT1,320) YEAR,DOY,CohortAge(1:50)
-320   format (1X,I4,1X,I3,50F6.1)
-
-      write (CHRTOUT2,330) YEAR,DOY,LFDM(1:50)
-330   format (1X,I4,1X,I3,50F6.1)
-
-!***********************************************************************
-!***********************************************************************
-!     SEASON END section
-!***********************************************************************
-!-----------------------------------------------------------------------
-      ELSE IF (DYNAMIC .EQ. SEASEND) THEN
-!-----------------------------------------------------------------------
-      CLOSE(CHRTOUT)
-      close(CHRTOUT1)
-      close(CHRTOUT2)
-      
 !***********************************************************************
 !***********************************************************************
 !     END OF DYNAMIC IF CONSTRUCT
@@ -754,223 +908,6 @@ C-GH 08/19/2025
 !-----------------------------------------------------------------------
       RETURN
       END SUBROUTINE COHORTS
-!=======================================================================
-
-
-!=======================================================================
-!  LeafCohortPest, Subroutine, C.H. Porter
-!-----------------------------------------------------------------------
-!  Determines pest damage per leaf cohort.
-!  This should eventually be moved to the pest module with the type of 
-!     damage to cohorts specified in the pest coupling file.
-!-----------------------------------------------------------------------
-!  REVISION       HISTORY
-!  03-24-2026 CHP Adapted from COHORTS
-!=======================================================================
-      SUBROUTINE LeafCohortPest(
-     &  WLIDOT, WTLF)   !Input
-!       Output is LFPST, which is available through the COHORTS_mod module
-!-----------------------------------------------------------------------
-      IMPLICIT NONE
-
-      REAL WLIDOT_calc, WLIDOT, WTLF
-      INTEGER I
-
-      WLIDOT_calc = 0.0
-      LFPST = 0.0
-
-      IF (WLIDOT .GT. 0.0) THEN
-! FOR PROPORTIONAL DISTRIBUTION OF PEST DAMAGE:
-        DO I = 1, NLC
-          IF (LFDM(I) .GT. 0.0) THEN
-            LFPST(I) = LFDM(I) / WTLF * WLIDOT
-            WLIDOT_calc = WLIDOT_calc + LFPST(I)
-          ELSE
-            LFPST(I) = 0.0
-          ENDIF
-        ENDDO
-
-! FOR PEST DAMAGE TO AFFECT OLD TISSUE FIRST:
-!        LFPSTDM = WLIDOT
-!        DO I = 1, NLC
-!          IF (LFDM(I) .GT. 0.0) THEN
-!            LFPST(I) = MIN(LFDM(I), LFPSTDM)
-!            LFPST(I) = MAX(LFPST(I), 0.0)
-!            LFPSTDM = LFPSTDM - LFPST(I)
-!          ENDIF
-!        ENDDO
-
-! FOR PEST DAMAGE TO AFFECT NEW TISSUE FIRST:
-!        LFPSTDM = WLIDOT
-!        DO I = NLC, 1, -1
-!          IF (LFDM(I) .GT. 0.0) THEN
-!            LFPST(I) = MIN(LFDM(I), LFPSTDM)
-!            LFPST(I) = MAX(LFPST(I), 0.0)
-!            LFPSTDM = LFPSTDM - LFPST(I)
-!          ENDIF
-!        ENDDO
-
-      ELSE
-!       No pest damage
-        LFPST = 0.0
-      ENDIF
-
-!     from GROW:
-! NEED TO HANDLE THIS FOR COHORTS.
-!C-----------------------------------------------------------------------
-!C     Calculate "Healthy" or Non-Diseased Leaf Area Index
-!C-----------------------------------------------------------------------
-!!     AREAH  = AREALF - 2. * DISLA
-!!     KJB Remove 2. factor
-!      AREAH  = AREALF - DISLA
-!      AREAH  = MAX(0.,AREAH)
-!      XHLAI  = AREAH / 10000.
-
-!-----------------------------------------------------------------------
-      RETURN
-      END SUBROUTINE LeafCohortPest
-!=======================================================================
-
-
-!=======================================================================
-!  IPCOHO, Subroutine, C.H. Porter
-!-----------------------------------------------------------------------
-!  Reads input data for COHORTS subroutine
-!-----------------------------------------------------------------------
-!  REVISION       HISTORY
-!  11/18/2025 CHP Adapted from IPDMND.
-!=======================================================================
-      SUBROUTINE IPCOHO(
-     &  FILECC, MODEL,                          !Input
-     &  ALPHL, ICMP, MAXNMINE, NMOBMX, NVSMOB,  !Output
-     &  PCHOLFF, PROLFF, SENDAY, SENMAX,        !Output
-     &  SENCLV, SENNLV, TCMP, XSENMX)           !Output
-
-!-----------------------------------------------------------------------
-      IMPLICIT NONE
-      EXTERNAL GETLUN, ERROR, FIND, IGNORE, WARNING
-!-----------------------------------------------------------------------
-      CHARACTER*92, INTENT(IN) :: FILECC
-      REAL, INTENT(OUT) :: ALPHL, PCHOLFF, ICMP, MAXNMINE, NMOBMX, 
-     &     NVSMOB, PROLFF, SENDAY, SENCLV, SENNLV, TCMP
-      REAL, INTENT(OUT) :: SENMAX(4), XSENMX(4)
-
-      CHARACTER*6   ERRKEY
-      PARAMETER (ERRKEY = 'IPCOHO')
-      CHARACTER*6   SECTION
-      CHARACTER*8   MODEL
-      CHARACTER*80  C80
-
-      INTEGER LUNCRP,  ERR, LINC, LNUM, FOUND, ISECT
-      INTEGER II, I
-
-!-----------------------------------------------------------------------
-!     Read in values from species file
-!-----------------------------------------------------------------------
-      CALL GETLUN('FILEC', LUNCRP)
-      OPEN (LUNCRP,FILE = FILECC, STATUS = 'OLD',IOSTAT=ERR)
-      LNUM = 0
-      IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
-!-----------------------------------------------------------------------
-!    Find and Read Plant Composition Section
-!-----------------------------------------------------------------------
-      SECTION = '!*PLAN'
-      CALL FIND(LUNCRP, SECTION, LINC, FOUND) ; LNUM = LNUM + LINC
-      IF (FOUND .EQ. 0) THEN
-        CALL ERROR(SECTION, 42, FILECC, LNUM)
-      ELSE
-        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
-        READ(C80,'(12X,F6.0)',IOSTAT=ERR) PROLFF
-        IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
-
-        IF (MODEL(1:5) == 'PRFRM') THEN
-          DO I = 1, 11
-            CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
-          ENDDO
-          READ(C80,'(F6.0)',IOSTAT=ERR) PCHOLFF
-          IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
-        ENDIF
-      ENDIF
-
-!-----------------------------------------------------------------------
-!    Find and Read Carbon and Nitrogen Mining Section
-!-----------------------------------------------------------------------
-      SECTION = '!*CARB'
-      CALL FIND(LUNCRP, SECTION, LINC, FOUND) ; LNUM = LNUM + LINC
-      IF (FOUND .EQ. 0) THEN
-        CALL ERROR(SECTION, 42, FILECC, LNUM)
-      ELSE
-        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
-        READ(C80,'(18X,2F6.0)',IOSTAT=ERR) NMOBMX, NVSMOB
-        IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
-
-        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)  !Skip the next line
-        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
-        READ(C80,'(F6.0)',IOSTAT=ERR) ALPHL
-        IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
-
-        SELECT CASE (MODEL(1:5))
-        CASE ('CRGRO')
-          CALL IGNORE(LUNCRP,LNUM,ISECT,C80)  
-          READ(C80,'(F6.0)',IOSTAT=ERR) MAXNMINE
-          IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
-
-        CASE ('PRFRM')
-          DO I = 1, 7
-            CALL IGNORE(LUNCRP,LNUM,ISECT,C80)  
-          ENDDO
-          READ(C80,'(2F6.0)',IOSTAT=ERR) SENNLV, SENCLV
-          IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
-
-          CALL IGNORE(LUNCRP,LNUM,ISECT,C80)  
-          CALL IGNORE(LUNCRP,LNUM,ISECT,C80)  
-          READ(C80,'(F6.0)',IOSTAT=ERR) MAXNMINE
-          IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
-        END SELECT
-      ENDIF
-
-!-----------------------------------------------------------------------
-!    Find and Read Senescence Section
-!    NOTE: First search for Section finds '!*LEAF GROWTH PARAMETERS'
-!          Second search finds '!*LEAF SENESCENCE FACTORS'
-!-----------------------------------------------------------------------
-      SECTION = '!*LEAF'
-      CALL FIND(LUNCRP, SECTION, LINC, FOUND) ; LNUM = LNUM + LINC
-      IF (FOUND .EQ. 0) THEN
-        CALL ERROR(SECTION, 42, FILECC, LNUM)
-      ENDIF
-
-      CALL FIND(LUNCRP, SECTION, LINC, FOUND) ; LNUM = LNUM + LINC
-      IF (FOUND .EQ. 0) THEN
-        CALL ERROR(SECTION, 42, FILECC, LNUM)
-      ELSE
-        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)  
-        READ(C80,'(12X,F6.0)',IOSTAT=ERR) SENDAY
-        IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
-
-        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
-        READ(C80,'(2F6.0)',IOSTAT=ERR) ICMP, TCMP
-        IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
-
-        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
-        READ(C80,'(24X,4F6.0)',IOSTAT=ERR)
-     &      (XSENMX(II),II=1,4)
-        IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
-
-        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
-        READ(C80,'(24X,4F6.0)',IOSTAT=ERR)
-     &      (SENMAX(II),II=1,4)
-        IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
-
-      ENDIF
-
-!-----------------------------------------------------------------------
-      CLOSE(LUNCRP)
-
-!-----------------------------------------------------------------------
-      RETURN
-!-----------------------------------------------------------------------
-      END  SUBROUTINE IPCOHO
 !=======================================================================
 
 !***********************************************************************

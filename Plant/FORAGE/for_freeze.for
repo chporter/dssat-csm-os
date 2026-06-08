@@ -11,7 +11,8 @@ C  12/31/1996 GH  Deleted phenology statements.
 C  09/15/1998 CHP Modified for modular format.
 C  05/10/1999 GH  Incorporaed in CROPGRO
 !  06/15/2022 CHP Added CropStatus
-!  04/29/2026 chp Leaf cohorts
+!  04/29/2026 CHP Leaf cohorts
+!  06/05/2026 CHP Stem cohorts
 C-----------------------------------------------------------------------
 C  Called by  : CROPGRO
 C  Calls      : None
@@ -24,16 +25,7 @@ C========================================================================
      &    CropStatus, FRZDL, PSRLYRD, PSRSRFD,        !Output
      &    WLFDOT, WSFDOT, WSRFDOT)                    !Output 
 
-!      variables previously in argument list, but not used:
-!      FILEIO, RUN
-!      IDETO, NOUTDO, 
-!      NRUSSR, PSRSRFL, PSRLYR1,
-!      SRFTEMP, SSRDOT, ST, STRWT,
-!      SRLYRD, SRSRFD, , VSTAGE
-
       USE ModuleDefs     !Definitions of constructed variable types, 
-
-
 C-----------------------------------------------------------------------
       USE COHORTS_MOD
       IMPLICIT NONE
@@ -92,6 +84,13 @@ C-----------------------------------------------------------------------
 
         WSFDOT = (STMWT - SSDOT - NRUSST/0.16) * FRZDL
         WSFDOT = MIN ((STMWT - SSDOT - NRUSST/0.16), WSFDOT)
+
+!       Handle freeze damage for stem cohorts
+        STFRZ = 0.0
+        DO I = 1, NLC
+          STFRZ(I) = (STDM(I) - StemTotSen(I) - STNMN(I) / 0.16) * FRZDL
+        ENDDO
+
       ENDIF
 
       IF (TMIN .LE. FREEZ2) THEN
@@ -114,6 +113,13 @@ C       to be compatible with adjustment for senescence
 C-----------------------------------------------------------------------
 !                  VSTAGE = 0.0
         WSFDOT = STMWT - SSDOT - NRUSST/0.16
+
+!       Handle freeze damage for stem cohorts
+        STFRZ = 0.0
+        DO I = 1, NLC
+          STFRZ(I) = STDM(I) - StemTotSen(I) - STNMN(I) / 0.16
+        ENDDO
+
       ENDIF
 
       DAP   = MAX(0,TIMDIF(YRPLT,YRDOY))

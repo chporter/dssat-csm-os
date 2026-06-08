@@ -91,8 +91,8 @@ CHP 2025-11-20
      &  LFSN_calc
 
       CHARACTER (len=8) MODEL
-      CHARACTER*11 COHORTOUT
-      character*12 COHORTOUT1, COHORTOUT2
+      CHARACTER*15 COHORTOUT
+      character*16 COHORTOUT1, COHORTOUT2
       LOGICAL FEXIST
 
       INTEGER DYNAMIC
@@ -149,14 +149,14 @@ CHP 2025-11-20
 !***********************************************************************
       IF (DYNAMIC .EQ. RUNINIT) THEN
 !-----------------------------------------------------------------------
-      COHORTOUT = 'COHORTS.OUT'
-      CALL GETLUN('COHORTOUT',  CHRTOUT)
+      COHORTOUT = 'LeafCohorts.OUT'
+      CALL GETLUN('LFCOHO', CHRTOUT)
 
-      COHORTOUT1 = "COHORTS1.OUT"
-      CALL GETLUN('COHORTOUT1', CHRTOUT1)
+      COHORTOUT1 = "LeafCohorts1.OUT"
+      CALL GETLUN('LFCOHO1', CHRTOUT1)
 
-      COHORTOUT2 = "COHORTS2.OUT"
-      CALL GETLUN('COHORTOUT2', CHRTOUT2)
+      COHORTOUT2 = "LeafCohorts2.OUT"
+      CALL GETLUN('LFCOHO2', CHRTOUT2)
 
 !***********************************************************************
 !***********************************************************************

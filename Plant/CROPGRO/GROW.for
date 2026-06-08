@@ -66,7 +66,7 @@ C=======================================================================
                          ! parameters, hourly weather data.
       USE COHORTS_MOD
       IMPLICIT NONE
-      EXTERNAL IPGROW, ERROR, STRESS, LTGROW
+      EXTERNAL IPGROW, ERROR, STRESS, LTGROW, PestCohorts
 
 !     TEMP CHP
       EXTERNAL TIMDIF, YR_DOY, GETLUN, HEADER
@@ -572,9 +572,11 @@ C-----------------------------------------------------------------------
 !     A positive value represents leaf mass lost. (kg/ha)
       ShutMob = (NRUSLF/0.16 + CRUSLF) * 10.      !kg/ha
 
-!     Calculate net addition to leaves today per cohort
-      CALL LeafCohortPest(WLIDOT, WTLF) !Calculates LFPST for cohorts
+!     Calculate pest damage to cohorts
+      CALL PestCohorts(
+     &  WLIDOT, WSIDOT, WTLF, STMWT)   !Input
 
+!     Calculate net addition to leaves today per cohort
       LCADD = 0.0
       LNADD = 0.0
       LFCAD = 0.0

@@ -8,6 +8,7 @@ C-----------------------------------------------------------------------
 C  REVISION       HISTORY
 C  09/23/2005 SJR Created from parts of CROPGRO, DEMAND, ROOTS, SENES 
 !  05/06/2026 CHP Added leaf cohorts
+!  06/08/2026 CHP Added stem cohorts
 C-----------------------------------------------------------------------
 C  Called : CROPGRO
 C  Calls  : ERROR, FIND, IGNORE
@@ -125,7 +126,7 @@ C-----------------------------------------------------------------------
       REAL,dimension(4) :: XMOSWF
       REAL,dimension(4) :: YMOSWF
 
-!     Leaf cohorts
+!     Leaf and stem cohorts
       REAL, DIMENSION(LCMax) :: CMINELF_c, LFNMINE_c, 
      &    NMINELF_c, WaterSen_c
       REAL LFNMINE_sum, LFNSEN_sum, LFSNMOB_sum, LTSEN_sum, NMINELF_sum,
@@ -133,6 +134,12 @@ C-----------------------------------------------------------------------
      &    CMINELF_sum, LFCMINE_sum 
       REAL, DIMENSION(LCMax) :: PCNLeaf
       REAL WtLeaf
+
+      REAL, DIMENSION(LCMax) :: STNMINE_c, !CMINEST_c, 
+     &    NMINEST_c, SSNDOT_c
+      REAL STNMINE_sum, STSNMOB_sum, !STLTSEN_sum, !STNSEN_sum, 
+     &    NMINEST_sum !SSMDOT_sum, SSNDOT_sum, StemTotSen_sum, 
+     &    !STSENWT_sum, CMINEST_sum, STCMINE_sum 
 
 !=========================================================================
 !    TEMP CHP Add printout for SENESMOB variables
@@ -886,23 +893,51 @@ C-----------------------------------------------------------------------
         SSMDOT = SLMDOT * PORPT
         SSMDOT = MIN(SSMDOT,0.1*STMWT)
 
+!       Handle stem cohorts
+        DO I = 1, NLC
+          SSMDOT_c(I) = SLMDOT_c(I) * PORPT
+          SSMDOT_c(I) = MIN(SSMDOT_c(I), 0.1 * STDM(I))
+        ENDDO
+
 C-----------------------------------------------------------------------
 C     10/04/05 SJR Link to SENMOB where natural senescence was already 
 C                         calculated.  Calculate SSDOT in same way as SLDOT.
 C-----------------------------------------------------------------------
         SSDOT = SSMDOT
-        SSDOT = SSDOT + LFSENWT * PORPT
-        SSDOT = MIN(SSDOT,0.1*STMWT)
-        STSENWT = SSDOT - SSMDOT
+        StemTotSen = SSMDOT_c
 
+!       CHP 2026-06-08
+!       LFSENWT has a value of zero at this point
+!       so STSENWT here is also zero. 
+!       This is calculated later so comment this code out.
+!        SSDOT = SSDOT + LFSENWT * PORPT
+!        SSDOT = MIN(SSDOT,0.1*STMWT)
+!        STSENWT = SSDOT - SSMDOT
+
+!       Low light senescence of stems
         SSDOT = SSDOT + LTSEN * PORPT
         SSDOT = MIN(SSDOT,0.1*STMWT)
-        STLTSEN = SSDOT - (SSMDOT + STSENWT)
+!       STLTSEN = SSDOT - (SSMDOT + STSENWT)
+        STLTSEN = SSDOT - SSMDOT
 
+        DO I = 1, NLC
+          StemTotSen(I) = StemTotSen(I) + LTSEN_c(I) * PORPT
+          StemTotSen(I) = MIN(StemTotSen(I), 0.1 * STDM(I))
+          STLTSEN_c(I) = StemTotSen(I) - SSMDOT_c(I)
+        ENDDO
+
+!       Water stress senescence of stems
         SSNDOT = SLNDOT * PORPT
         SSDOT = SSDOT + SSNDOT
         SSDOT = MIN(SSDOT, 0.1 * STMWT)
         SSNDOT = SSDOT - (SSMDOT + STSENWT + STLTSEN)
+
+        DO I = 1, NLC
+          SSNDOT_c(I) = WaterSen_c(I) * PORPT
+          StemTotSen(I) = StemTotSen(I) + SSNDOT_c(I)
+          StemTotSen(I) = MIN(StemTotSen(I), 0.1 * STDM(I))
+          SSNDOT_c(I) = StemTotSen(I) - (SSMDOT_c(I) + STLTSEN_c(I))
+        ENDDO
 
 C-----------------------------------------------------------------------
 C     This section calculates senescence of leaves and petioles
@@ -917,10 +952,12 @@ C-----------------------------------------------------------------------
 !          SSMDOT = SLMDOT * PORPT
 !          SSNDOT = SSDOT
           SSMDOT = 0.0
+          SSMDOT_c = 0.0
         ELSE
           SLMDOT = 0.0
           SLMDOT_c = 0.0
           SSMDOT = 0.0
+          SSMDOT_c = 0.0
 !          SLNDOT = 0.0
 !          SSNDOT = 0.0
         ENDIF
@@ -957,6 +994,14 @@ C-----------------------------------------------------------------------
         STSNMOB = SSMDOT * (PCNST/100 - 
      &    (SENNSV * (PCNST / 100 - PROSTF*0.16) + PROSTF*0.16)) 
      &    + STLTSEN * (PCNST / 100 - PROSTF * 0.16)
+
+!       Stem cohorts
+        DO I = 1, NLC
+          STSNMOB_c(I) = SSMDOT_c(I) * (PCNStem(I)/100.
+     &    - (SENNSV * (PCNStem(I) / 100. - PROSTF*0.16) + PROSTF*0.16)) 
+     &    + STLTSEN_c(I) * (PCNStem(I) / 100. - PROSTF * 0.16)
+        ENDDO
+        STSNMOB_sum = SUM(STSNMOB_c)
 
         SRSNMOB = SSRMDOT * (PCNSR / 100 - 
      &    (SENNSRV * (PCNSR / 100 - PROSRF*0.16) + PROSRF*0.16))
@@ -1150,6 +1195,19 @@ C-----------------------------------------------------------------------
       NMINEST = NMOBR * WNRST
       STNMINE = STSNMOB + NMINEST
       STSNMOB = STNMINE
+
+!     --------------------------------------------
+!     Handle stem cohorts
+      DO I = 1, NLC
+        NMINEST_c(I) = NMOBR * STNSN(I)
+        STNMINE_c(I) = STSNMOB_c(I) + NMINEST_c(I)
+      ENDDO
+      STSNMOB_c = STNMINE_c
+
+      NMINEST_sum = SUM(NMINEST_c)
+      STNMINE_sum = SUM(STNMINE_c)
+      STSNMOB_sum = SUM(STSNMOB_c)
+!     --------------------------------------------
 
       NMINERT = NMOBR * PPMFAC * WNRRT
       RTNMINE = RTSNMOB + NMINERT

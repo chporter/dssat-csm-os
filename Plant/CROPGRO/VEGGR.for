@@ -443,9 +443,10 @@ C-----------------------------------------------------------------------
           CRUSRT = CMineFactor * WCRRT 
           CRUSSH = CMineFactor * WCRSH 
 
-!         Handle C mining for leaf cohorts
+!         Handle C mining for leaf and stem cohorts
           DO I = 1, NLC
             LFCMN(I) = CMineFactor * LFNSC(I)
+            STCMN(I) = CMineFactor * STNSC(I)
           ENDDO 
         ENDIF
       ENDIF

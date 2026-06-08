@@ -163,7 +163,7 @@ C-----------------------------------------------------------------------
       REAL AAA, BBB, CCC, DDD,ZZZ, XXX
 
 !     Cohorts
-      REAL CRUSLF_calc
+      REAL CRUSLF_calc, CRUSST_calc
 
 !      TYPE (ControlType) CONTROL
 !      CALL GET(CONTROL)
@@ -734,11 +734,13 @@ C-----------------------------------------------------------------------
           CRUSSH = ACMINESH
 
 !         ------------------------------------------------
-!         Handle C mining for leaf cohorts
+!         Handle C mining for leaf and stem cohorts
           DO I = 1, NLC
             LFCMN(I) = CMINER * LFCMINE_c(I)
+            STCMN(I) = CMINER * STCMINE_c(I)
           ENDDO 
           CRUSLF_calc = SUM(LFCMN)
+          CRUSST_calc = SUM(STCMN)
 !         ------------------------------------------------
         ENDIF
       ENDIF

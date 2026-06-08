@@ -30,7 +30,9 @@ C=======================================================================
       REAL CNMINE, NDMNEW, NMINEA, NMINEP, NMINER, NMOBR
       REAL NRUSLF, NRUSRT, NRUSSH, NRUSST, RPRO
       REAL TRNU, WNRLF, WNRRT, WNRSH, WNRST
-      REAL LFNMN_SUM, LFNSN_SUM
+
+!     TEMP CHP
+      REAL LFNMN_SUM, LFNSN_SUM, STNMN_SUM, STNSN_SUM
 
 !***********************************************************************
 !***********************************************************************
@@ -82,6 +84,17 @@ C-----------------------------------------------------------------------
            LFNMN_SUM = LFNMN_SUM + LFNMN(I)
            LFNSN_SUM = LFNSN_SUM + LFNSN(I)
          END DO
+
+!        Handle stem cohorts
+         STNMN_SUM = 0.0
+         STNSN_SUM = 0.0
+         DO  I = 1, NLC
+           STNMN(I) = NMINER * STNSN(I)
+           STNMN_SUM = STNMN_SUM + STNMN(I)
+           STNSN_SUM = STNSN_SUM + STNSN(I)
+         END DO
+
+
 
       ENDIF
 
