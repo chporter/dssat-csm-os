@@ -132,7 +132,7 @@ C=======================================================================
      &  STSN_calc
 
       REAL WTST_calc,
-     &  WTNST_calc, WNRST_calc, WSFDOT_calc, 
+     &  WCRST_calc, WTNST_calc, WNRST_calc, WSFDOT_calc, 
      &  WatSenStem_calc
 
       CHARACTER (len=8) MODEL
@@ -165,11 +165,12 @@ C=======================================================================
       REAL, DIMENSION(LCMax) :: StemMassDecrease, NSDOT_c, 
      &    NSOFF_c, WRCSDT_c
 
-      REAL CUMLFDM, Excess, SenFrac, WLDOT_cohort, Loss_adjust
-      REAL RHOL, CLOFF, WSDOT_cohort
+      REAL CUMLFDM, Excess, SenFrac, WLDOT_cohort, 
+     &    Loss_adj_LF, Loss_adj_ST
+      REAL RHOL, RHOS, CLOFF, CSOFF, WSDOT_cohort
 
 !     TEMP CHP
-      REAL CLOFF_sum !, LFNSEN_sum, LTSEN_sum, LFSENWT_sum, WLIDOT_sum
+      REAL CLOFF_sum, CSOFF_sum 
 
 !     Variables read from species file:
       REAL ALPHL, ALPHS, PROLFF, PROSTF
@@ -180,7 +181,8 @@ C=======================================================================
 !     Not currently used, but will be needed for shading 
 !     Keep here or move to MOBIL?
       REAL ICMP, MAXNMINE, NMOBMX
-      REAL SENCLV, SENNLV, PCHOLFF, PCHOSTF !forage species file
+      REAL SENCLV, SENNLV, PCHOLFF !forage species file
+      REAL SENCSV, SENNSV, PCHOSTF !forage species file
 
 !     Date info for output files
       TYPE (ControlType) CONTROL
@@ -299,8 +301,8 @@ C-GH 08/19/2025
      &  ALPHL, ALPHS, ICMP, MAXNMINE,             !Output
      &  NMOBMX, NVSMOB,                           !Output
      &  PCHOLFF, PCHOSTF, PROLFF, PROSTF,         !Output
-     &  SENDAY, SENMAX, SENCLV, SENNLV,           !Output
-     &  TCMP, XSENMX)                             !Output
+     &  SENDAY, SENMAX, SENCLV, SENCSV,           !Output
+     &  SENNLV, SENNSV, TCMP, XSENMX)             !Output
 
       CALL OpCohorts(DYNAMIC, YRPLT, 
 !       Leaf output:
@@ -365,8 +367,8 @@ C-GH 08/19/2025
 
 !     Stem Cohorts
       STDM(1)  = WSDOTN                   !dry matter (g/m2)
-      STNSC(1) = WSDOTN * ALPHS           !mobile CH2O (g/m2)   <<< ????
-      StemNTot(1) = NGRST                 !total stem N (g/m2)   <<< ????
+      STNSC(1) = WSDOTN * ALPHS           !mobile CH2O (g/m2)
+      StemNTot(1) = NGRST                 !total stem N (g/m2)
 !     structural N (g/m2) based on structural C
       STSN(1)  = PROSTF * 0.16 * (STDM(1) - STNSC(1))     !<<< ????
       STNSN(1) = NGRST - LFSN(1)          !mobile N (g/m2)   !<<< ????
@@ -421,99 +423,213 @@ C-GH 08/19/2025
 !        ENDIF
 !     END DO
 
-!------------------
-! LEAF LOSSES
-!------------------
-!     This might be wrong (or unneccessary) for forages - need to check
-      IF (SUM(FHLEAF_c) <= 0.0) THEN
-!       Calculate the loss of leaf tissue per cohort
-        DO I = 1, NLC
-!         Leaf mass decrease (WLIDOT + WLFDOT + SLDOT in GROW)
-          LeafMassDecrease(I) = LFFRZ(I) + LFPST(I) + LeafTotSen(I)
+!------------------------------
+!     LEAF and STEM LOSSES
+!     Ensure that losses don't exceed mass, adjust as necessary
+!------------------------------
+!     Calculate the loss of leaf tissue per cohort
+      DO I = 1, NLC
+!       Leaf mass decrease (WLIDOT + WLFDOT + SLDOT in GROW)
+        LeafMassDecrease(I) = LFFRZ(I) + LFPST(I) + LeafTotSen(I)
+!       Stem mass decrease (WSIDOT + WSFDOT + SSDOT in GROW)
+        StemMassDecrease(I) = STFRZ(I) + STPST(I) + StemTotSen(I)
 
-!         Check that loss is no greater than leaf cohort mass 
-          IF (LeafMassDecrease(I) > LFDM(I)) THEN
-            LeafMassDecrease(I) = LFDM(I)
+!       Check that loss is no greater than leaf cohort mass 
+        IF (LeafMassDecrease(I) > LFDM(I)) THEN
+          LeafMassDecrease(I) = LFDM(I)
 
-!           Freeze damage occurs first
-            IF (LFFRZ(I) > LFDM(I)) THEN
-              LFFRZ(I) = LFDM(I)
-              Excess = 0.0
-            ELSE
-              Excess = LFDM(I) - LFFRZ(I)
-            ENDIF
-
-!           Next, pests get their bit
-            IF (LFPST(I) > Excess) THEN
-              LFPST(I) = Excess
-              Excess = 0.0
-            ELSE
-              Excess = Excess - LFPST(I)
-            ENDIF
-
-!           Anything leftover gets taken by senescence
-            IF (Excess > 0.0) THEN
-              SenFrac = Excess / LeafTotSen(I)
-              LeafTotSen(I) = Excess
-              LFNMNSN(I) = LFNMNSN(I) * SenFrac
-              LFWSSN(I) = LFWSSN(I) * SenFrac
-            ELSE
-              LeafTotSen(I) = 0.0
-              LFNMNSN(I) = 0.0   
-              LFWSSN(I) = 0.0    
-            ENDIF
+!         Freeze damage occurs first
+          IF (LFFRZ(I) > LFDM(I)) THEN
+            LFFRZ(I) = LFDM(I)
+            Excess = 0.0
+          ELSE
+            Excess = LFDM(I) - LFFRZ(I)
           ENDIF
-        ENDDO
-      ELSE
-!       On days with an interrim forage harvest, what should be done here?
-      ENDIF
 
-!------------------
-! LEAF ADDITIONS
-!------------------
+!         Next, pests get their bit
+          IF (LFPST(I) > Excess) THEN
+            LFPST(I) = Excess
+            Excess = 0.0
+          ELSE
+            Excess = Excess - LFPST(I)
+          ENDIF
+
+!         Anything leftover gets taken by senescence
+          IF (Excess > 0.0) THEN
+            SenFrac = Excess / LeafTotSen(I)
+            LeafTotSen(I) = Excess
+            LFNMNSN(I) = LFNMNSN(I) * SenFrac
+            LFWSSN(I) = LFWSSN(I) * SenFrac
+          ELSE
+            LeafTotSen(I) = 0.0
+            LFNMNSN(I) = 0.0   
+            LFWSSN(I) = 0.0    
+          ENDIF
+        ENDIF
+
+!       Check that loss is no greater than stem cohort mass 
+        IF (StemMassDecrease(I) > STDM(I)) THEN
+          StemMassDecrease(I) = STDM(I)
+
+!         Freeze damage occurs first
+          IF (STFRZ(I) > STDM(I)) THEN
+            STFRZ(I) = STDM(I)
+            Excess = 0.0
+          ELSE
+            Excess = STDM(I) - STFRZ(I)
+          ENDIF
+
+!         Next, pests get their bit
+          IF (STPST(I) > Excess) THEN
+            STPST(I) = Excess
+            Excess = 0.0
+          ELSE
+            Excess = Excess - STPST(I)
+          ENDIF
+
+!         Anything leftover gets taken by senescence
+          IF (Excess > 0.0) THEN
+            SenFrac = Excess / StemTotSen(I)
+            StemTotSen(I) = Excess
+            STNMNSN(I) = STNMNSN(I) * SenFrac
+            STWSSN(I) = STWSSN(I) * SenFrac
+          ELSE
+            StemTotSen(I) = 0.0
+            STNMNSN(I) = 0.0   
+            STWSSN(I) = 0.0    
+          ENDIF
+        ENDIF
+      ENDDO
+
+!------------------------------
+!     LEAF and STEM ADDITIONS
 !     Adjust new reserves to account for leaf losses just calculated.
+!------------------------------
       DO I = 1, NLC
         SELECT CASE (MODEL(1:5))
         CASE ('CRGRO')
           IF (LFDM(I) > 0.0) THEN
-            Loss_adjust = (1. - MIN(1.0, LeafMassDecrease(I) / LFDM(I)))
+            Loss_adj_LF = (1. - MIN(1.0, LeafMassDecrease(I) / LFDM(I)))
+          ENDIF
+          IF (STDM(I) > 0.0) THEN
+            Loss_adj_ST = (1. - MIN(1.0, StemMassDecrease(I) / STDM(I)))
           ENDIF
 
         CASE ('PRFRM')
           IF (LFDM(I) -  LeafTotSen(I) > 0.0) THEN
 !           CHP: This is how it's done in for_grow, but I'm not convinced it's correct.
 !           If it is correct, we should do the same thing for CRGRO 
-            Loss_adjust = (1. - MIN(1.0, (LFPST(I) + LFFRZ(I)) / 
+            Loss_adj_LF = (1. - MIN(1.0, (LFPST(I) + LFFRZ(I)) / 
      &                                   (LFDM(I) - LeafTotSen(I))))
+          ENDIF
+          IF (STDM(I) -  StemTotSen(I) > 0.0) THEN
+            Loss_adj_ST = (1. - MIN(1.0, (STPST(I) + STFRZ(I)) / 
+     &                                   (STDM(I) - StemTotSen(I))))
           ENDIF
         END SELECT
 
-        LFCAD(I) = LFCAD(I) * Loss_adjust
-        LFNAD(I) = LFNAD(I) * Loss_adjust
+        LFCAD(I) = LFCAD(I) * Loss_adj_LF
+        LFNAD(I) = LFNAD(I) * Loss_adj_LF
+        STCAD(I) = LFCAD(I) * Loss_adj_ST
+        STNAD(I) = LFNAD(I) * Loss_adj_ST
       ENDDO
 
-!------------------
-! LEAF CH2O CHANGES
-!------------------
-!     Non-structural CH2O (~WCRLF in GROW)
-      WRCLDT_c = 0.0
+!---------------------------------------------
+!     Integration of leaf and stem mass
+!---------------------------------------------
+!     Calculate total change to leaf mass per cohort
+      WLDOT_calc = WLDOTN
+      WSDOT_calc = WSDOTN
+!     WLDOTN, WSDOTN = total new growth today (added to new cohort below)
 
-      SELECT CASE (MODEL(1:5))
-      CASE ('CRGRO')
-        DO I = 1, NLC
-          IF (LFDM(I) > 0.) THEN
+      DO I = 1, NLC
+!     ---------------------------------------------------------
+!       Leaf dry matter increase (WLDOT in GROW)
+        WLDOT_cohort = 
+     &      LFCAD(I)            !Reserve C = LCADD
+     &    + LFNAD(I)/0.16       !Reserve N = LNADD
+     &    - LFNMN(I)/0.16       !N mined = NRUSLF/0.16 
+     &    - LFCMN(I)            !C mined = CRUSLF
+     &    - LeafMassDecrease(I) !freez, pst, senes=SLDOT+WLIDOT+WLFDOT
+     &    - FHLEAF_c(I)         !harvest
+
+!       Leaf dry matter (WTLF in GROW)
+        IF (LFDM(I) + WLDOT_cohort >= 1.E-10) THEN
+          LFDM(I) = LFDM(I) + WLDOT_cohort
+        ELSE
+          WLDOT_cohort = LFDM(I)
+          LFDM(I) = 0.0
+        ENDIF
+
+!       Stem dry matter increase (WSDOT in GROW)
+        WSDOT_cohort = 
+     &      STCAD(I)            !Reserve C = LCADD
+     &    + STNAD(I)/0.16       !Reserve N = LNADD
+     &    - STNMN(I)/0.16       !N mined = NRUSST/0.16 
+     &    - STCMN(I)            !C mined = CRUSST
+     &    - StemMassDecrease(I) !freez, pst, senes=SSDOT+WSIDOT+WSFDOT
+     &    - FHSTEM_c(I)         !harvest
+
+!       Stem dry matter (STMWT in GROW)
+        IF (STDM(I) + WSDOT_cohort >= 1.E-10) THEN
+          STDM(I) = STDM(I) + WSDOT_cohort
+        ELSE
+          WSDOT_cohort = STDM(I)
+          STDM(I) = 0.0
+        ENDIF
+
+!       Keep track of total leaf and stem mass addition today
+        WLDOT_calc = WLDOT_calc + WLDOT_cohort
+        WSDOT_calc = WSDOT_calc + WSDOT_cohort
+      ENDDO
+
+!---------------------------------------------
+!     Integration of leaf area
+!---------------------------------------------
+      DO I = 1, NLC
+        IF (LFDM(I) .GT. 0.0) THEN
+!     ---------------------------------------------------------
+!         Leaf area
+!         For now, use whole leaf SLA for each cohort. But this
+!           should be replaced by a cohort SLA when everything is working
+!           as it is in GROW.
+          LFAREA(I) = LFAREA(I) 
+     &      - LeafMassDecrease(I) * SLA_calc
+     &      - LFNMN(I) / 0.16 * SLA_calc
+     &      + LFNAD(I) / 0.16 * SLA_calc
+     &      - FHLEAF_c(I) * SLA_calc
+
+          LFSLA(I) = LFAREA(I) / LFDM(I)
+
+        ELSE
+          LFAREA(I)   = 0.0
+          LFSLA(I)    = 0.0
+        ENDIF
+      ENDDO
+
+!---------------------------------------------
+!     Integration of leaf and stem CH2O
+!---------------------------------------------
+!     Mobile, non-structural CH2O (WCRLF, WCRST in GROW)
+      WRCLDT_c = 0.0
+      WRCSDT_c = 0.0
+      CLOFF_sum = 0.0 !temp chp
+      CSOFF_sum = 0.0 !temp chp
+
+      DO I = 1, NLC
+!       ---------------------------
+!       Leaf cohort
+        IF (LFDM(I) .GT. 0.0) THEN
+
+          SELECT CASE (MODEL(1:5))
+          CASE ('CRGRO')
             WRCLDT_c(I) = 
      &        - LFCMN(I)      !~ CRUSLF, mined CH2O
      &        + LFCAD(I)      !new reserves
 !               leaf mass losses:
      &        - LFNSC(I) / LFDM(I) * LeafMassDecrease(I)
-          ENDIF
-        ENDDO
-        
-      CASE ('PRFRM')
-        CLOFF_sum = 0.0 !temp chp
-        DO I = 1, NLC
-          IF (LFDM(I) > 0.) THEN
+
+          CASE ('PRFRM')
 !           RHOL =  WCRLF/WTLF
             RHOL = LFNSC(I) / LFDM(I)
 !           CLOFF = (SLMDOT + LTSEN + LFSENWT) *  
@@ -536,127 +652,130 @@ C-GH 08/19/2025
 !           WRCLDT=WLDOTN*ALPHL-CRUSLF-CLOFF
             WRCLDT_c(I) = -LFCMN(I) - CLOFF
 
-            IF (LFDM(I) .GT. 0.0.AND.FHLEAF_c(I) .EQ. 0.0) THEN
+            IF (FHLEAF_c(I) .EQ. 0.0) THEN
 !             WRCLDT = WRCLDT + CADLF - LFCADDM
               WRCLDT_c(I) = WRCLDT_c(I) + LFCAD(I)
             ENDIF
-          ENDIF
-        ENDDO
-      END SELECT
+          END SELECT
 
-!------------------
-! LEAF N CHANGES
-!------------------
-      NLOFF_c = 0.0
-      NLDOT_c = 0.0
-
-      SELECT CASE (MODEL(1:5))
-      CASE ('CRGRO')
-        DO I = 1, NLC
-          IF (LFDM(I) .GT. 0.0) THEN
-!           N loss due to senescence, freeze, pest
-            NLOFF_c(I) = 
-     &        + (LFWSSN(I) + LFPST(I) + LFFRZ(I)) * PCNLeaf(I) / 100.
-     &        + (LeafTotSen(I) - LFWSSN(I)) * PROLFF * 0.16
-            NLOFF_c(I) = MIN(NLOFF_c(I), LeafNTot(I))
-
-!           Net N gain today for cohort I
-            NLDOT_c(I) = - NLOFF_c(I) - LFNMN(I) + LFNAD(I) 
-            NLDOT_c(I) = MAX(NLDOT_c(I), -LeafNTot(I))
-          ENDIF
-        ENDDO
-
-      CASE ('PRFRM')
-        DO I = 1, NLC
-          IF (LFDM(I) .GT. 0.0) THEN
-!           NLOFF      = SLMDOT *    
-            NLOFF_c(I) = LFNSEN_c(I) * 
-!    &       (SENNLV * (PCNL/100 - PROLFF * 0.16) + PROLFF * 0.16) 
-     &       (SENNLV * (PCNLeaf(I)/100. - PROLFF*0.16) + PROLFF*0.16)
-!    &       + (LTSEN + LFSENWT) * PROLFF *0.16
-     &       + (LTSEN_c(I) + LFSENWT_c(I)) * PROLFF *0.16
-!    &       + (SLNDOT + WLIDOT + WLFDOT) * PCNL/100  
-     &       + (LFWSSN(I) + LFPST(I) + LFFRZ(I)) * PCNLeaf(I)/100.
-
-            IF (FHLEAF_c(I) .GT. 0.0) THEN
-!             Harvest event today
-!             NLOFF = NLOFF + FHLEAF * PCNL/100.
-              NLOFF_c(I) = NLOFF_c(I) + FHLEAF_c(I) * PCNLeaf(I)/100.
-            ENDIF
-
-            NLOFF_c(I) = MIN(NLOFF_c(I), LeafNTot(I))
-
-!           Net N gain today for cohort I
-!           NLDOT=NGRLF-NRUSLF-NLOFF
-            NLDOT_c(I) = - NLOFF_c(I) - LFNMN(I)
-!           
-!           IF (WTLF .GT. 0.0.AND.FHLEAF.EQ.0) THEN
-            IF (LFDM(I) > 0.0 .AND. FHLEAF_C(I) == 0.0) THEN
-!             NLDOT = NLDOT + NADLF - LFNADDM
-              NLDOT_c(I) = NLDOT_c(I) + LFNAD(I)
-            ENDIF
-
-            NLDOT_c(I) = MAX(NLDOT_c(I), -LeafNTot(I))
-          ENDIF
-        ENDDO
-      END SELECT
-
-!     Notes on leaf N changes, NLDOT_c:
-!     - New N, NGRLF, is added to today's new cohort, not distributed 
-!       to cohorts and so does not show up here.
-!     - Leaf N mining: LFNMN in COHORTS ~ NRUSLF in GROW
-!     - LFNAD (new N reserves) has already been reduced by freeze, 
-!       pest, and senescence above.
-
-!---------------------------------------------
-! INTEGRATION OF ALL STATE VARIABLES
-!---------------------------------------------
-!     Calculate total change to leaf mass per cohort
-      WLDOT_calc = WLDOTN
-!     WLDOTN = total new growth today (added to new cohort below)
-
-      DO I = 1, NLC
-!     ---------------------------------------------------------
-!       Leaf dry matter increase (WLDOT in GROW)
-        WLDOT_cohort = 
-     &      LFCAD(I)            !Reserve C = LCADD
-     &    + LFNAD(I)/0.16       !Reserve N = LNADD
-     &    - LFNMN(I)/0.16       !N mined = NRUSLF/0.16 
-     &    - LFCMN(I)            !C mined = CRUSLF
-     &    - LeafMassDecrease(I) !freez, pst, senes=SLDOT+WLIDOT+WLFDOT
-     &    - FHLEAF_c(I)         !harvest
-
-!       Leaf dry matter (WTLF in GROW)
-        IF (LFDM(I) + WLDOT_cohort >= 1.E-10) THEN
-          LFDM(I) = LFDM(I) + WLDOT_cohort
-        ELSE
-          WLDOT_cohort = LFDM(I)
-          LFDM(I) = 0.0
-        ENDIF
-
-!       Keep track of total leaf mass addition today
-        WLDOT_calc = WLDOT_calc + WLDOT_cohort
-      ENDDO
-
-      DO I = 1, NLC
-        IF (LFDM(I) .GT. 0.0) THEN
-!     ---------------------------------------------------------
-!         Leaf area
-!         For now, use whole leaf SLA for each cohort. But this
-!           should be replaced by a cohort SLA when everything is working
-!           as it is in GROW.
-          LFAREA(I) = LFAREA(I) 
-     &      - LeafMassDecrease(I) * SLA_calc
-     &      - LFNMN(I) / 0.16 * SLA_calc
-     &      + LFNAD(I) / 0.16 * SLA_calc
-     &      - FHLEAF_c(I) * SLA_calc
-
-          LFSLA(I) = LFAREA(I) / LFDM(I)
-
-!     ---------------------------------------------------------
-!         Non-structural mobile CH2O (~WCRLF in GROW)
+!         Update mobile CH2O in leaf 
           LFNSC(I) = LFNSC(I) + WRCLDT_c(I)
           IF (LFNSC(I) < 0.0) LFNSC(I) = 0.0
+
+        ELSE  !LFDM(I) <= 0.0
+          LFNSC(I)    = 0.0
+        ENDIF
+
+!       ---------------------------
+!       Stem cohort
+        IF (STDM(I) .GT. 0.0) THEN
+
+          SELECT CASE (MODEL(1:5))
+          CASE ('CRGRO')
+            RHOS = STNSC(I) / STDM(I)
+            WRCSDT_c(I) = 
+     &        - STCMN(I)      !~ CRUSST, mined CH2O
+     &        - RHOS * STWSSN(I)  !Water senescence
+     &        + STCAD(I)      !new reserves
+!               stem mass losses:
+     &        - STNSC(I) / STDM(I) * StemMassDecrease(I)
+
+          CASE ('PRFRM')
+            RHOS = STNSC(I) / STDM(I)
+
+!           CSOFF = (SSMDOT + STLTSEN + STSENWT) * !for_grow (stem)
+            CSOFF = (SLMDOT_c(I) + STLTSEN_c(I) + STSENWT_c(I)) * 
+     &              (SENCSV * (RHOS - PCHOSTF) + PCHOSTF)
+!    &            + (SSNDOT + WSIDOT + WSFDOT) * RHOS    !for_grow (stem)
+     &            + (STWSSN(I) + STPST(I) + STFRZ(I)) * RHOS
+
+            IF (FHStem_c(I) .GT. 0.0) THEN
+!              CSOFF = CSOFF + FHSTEM * RHOS    !for_grow (stem)
+!              CSOFF = CSOFF + FHStem_c(I) * RHOS
+            ENDIF
+!
+            IF (CSOFF. LT. 0.0) CSOFF = 0.0
+!
+!           TEMP CHP
+            CSOFF_SUM = CSOFF_SUM + CSOFF
+          END SELECT
+
+! FROM LEAF COHORTS:
+!         WRCSDT=WSDOTN*ALPHS-CRUSST-CSOFF
+          WRCSDT_c(I) = -STCMN(I) - CSOFF
+
+          IF (FHStem_c(I) .EQ. 0.0) THEN
+!           WRCSDT = WRCSDT + CADST - STCADDM
+            WRCSDT_c(I) = WRCSDT_c(I) + LFCAD(I)
+          ENDIF
+
+!         Update mobile CH2O in stem
+          STNSC(I) = STNSC(I) + WRCSDT_c(I)
+          IF (STNSC(I) < 0.0) STNSC(I) = 0.0
+
+        ELSE  !STDM(I) <= 0.0
+          STNSC(I)    = 0.0
+        ENDIF
+      ENDDO
+
+!---------------------------------------------
+!     Integration of leaf and stem N
+!---------------------------------------------
+      NLOFF_c = 0.0
+      NLDOT_c = 0.0
+      NSOFF_c = 0.0
+      NSDOT_c = 0.0
+
+      DO I = 1, NLC
+!       ---------------------------
+!       Leaf cohort
+        IF (LFDM(I) > 0.0) THEN
+          SELECT CASE (MODEL(1:5))
+          CASE ('CRGRO')
+            IF (LFDM(I) .GT. 0.0) THEN
+!             N loss due to senescence, freeze, pest
+              NLOFF_c(I) = 
+     &          + (LFWSSN(I) + LFPST(I) + LFFRZ(I)) * PCNLeaf(I) / 100.
+     &          + (LeafTotSen(I) - LFWSSN(I)) * PROLFF * 0.16
+              NLOFF_c(I) = MIN(NLOFF_c(I), LeafNTot(I))
+
+!             Net N gain today for cohort I
+              NLDOT_c(I) = - NLOFF_c(I) - LFNMN(I) + LFNAD(I) 
+              NLDOT_c(I) = MAX(NLDOT_c(I), -LeafNTot(I))
+            ENDIF
+
+          CASE ('PRFRM')
+            IF (LFDM(I) .GT. 0.0) THEN
+!             NLOFF      = SLMDOT *    
+              NLOFF_c(I) = LFNSEN_c(I) * 
+!    &         (SENNLV * (PCNL/100 - PROLFF * 0.16) + PROLFF * 0.16) 
+     &         (SENNLV * (PCNLeaf(I)/100. - PROLFF*0.16) + PROLFF*0.16)
+!    &         + (LTSEN + LFSENWT) * PROLFF *0.16
+     &         + (LTSEN_c(I) + LFSENWT_c(I)) * PROLFF *0.16
+!    &         + (SLNDOT + WLIDOT + WLFDOT) * PCNL/100  
+     &         + (LFWSSN(I) + LFPST(I) + LFFRZ(I)) * PCNLeaf(I)/100.
+
+              IF (FHLEAF_c(I) .GT. 0.0) THEN
+!               Harvest event today
+!               NLOFF = NLOFF + FHLEAF * PCNL/100.
+                NLOFF_c(I) = NLOFF_c(I) + FHLEAF_c(I) * PCNLeaf(I)/100.
+              ENDIF
+
+              NLOFF_c(I) = MIN(NLOFF_c(I), LeafNTot(I))
+
+!             Net N gain today for cohort I
+!             NLDOT=NGRLF-NRUSLF-NLOFF
+              NLDOT_c(I) = - NLOFF_c(I) - LFNMN(I)
+
+!             IF (WTLF .GT. 0.0.AND.FHLEAF.EQ.0) THEN
+              IF (FHLEAF_C(I) == 0.0) THEN
+!               NLDOT = NLDOT + NADLF - LFNADDM
+                NLDOT_c(I) = NLDOT_c(I) + LFNAD(I)
+              ENDIF
+
+              NLDOT_c(I) = MAX(NLDOT_c(I), -LeafNTot(I))
+            ENDIF
+          END SELECT
 
 !     ---------------------------------------------------------
 !         Leaf N
@@ -667,61 +786,60 @@ C-GH 08/19/2025
 
 !         Non-structural N (WNRLF in GROW)
           LFNSN(I) = LeafNTot(I) - LFSN(I)
-
-!!        Composition
-!         LFLIGNIN = function of ??
-!         LFCELLUL = function of ??
-!         LFHEMICEL = function of ??
-!         ADF = function of LFLIGNIN, LFCELLUL, LFHEMICEL
-!         NDF = function of LFLIGNIN, LFCELLUL, LFHEMICEL
-        ELSE
-          LFAREA(I)   = 0.0
-          LFSLA(I)    = 0.0
-          LFNSC(I)    = 0.0
+        ELSE  !LFDM(I) <= 0.0
           LeafNTot(I) = 0.0
           LFSN(I)     = 0.0
           LFNSN(I)    = 0.0
         ENDIF
-      ENDDO
 
-
-
-!     ---------------------------------------------------------
-!     ---------------------------------------------------------
-!     Calculate total change to stem mass per cohort
-      WSDOT_calc = WSDOTN
-!     WSDOTN = total new stem growth today (added to new cohort below)
-
-      DO I = 1, NLC
-!       Stem dry matter increase (WSDOT in GROW)
-        WSDOT_cohort = 
-!     &      STCAD(I)            !Reserve C = LCADD
-!     &    + STNAD(I)/0.16       !Reserve N = LNADD
-     &    - STNMN(I)/0.16       !N mined = NRUSST/0.16 
-     &    - STCMN(I)            !C mined = CRUSST
-     &    - StemMassDecrease(I) !freez, pst, senes=SSDOT+WSIDOT+WSFDOT
-     &    - FHSTEM_c(I)         !harvest
-
-!       Stem dry matter (STMWT in GROW)
-        IF (STDM(I) + WSDOT_cohort >= 1.E-10) THEN
-          STDM(I) = STDM(I) + WSDOT_cohort
-        ELSE
-          WSDOT_cohort = STDM(I)
-          STDM(I) = 0.0
-        ENDIF
-
-!       Keep track of total stem mass addition today
-        WSDOT_calc = WSDOT_calc + WSDOT_cohort
-      ENDDO
-
-      DO I = 1, NLC
+!       ---------------------------
+!       Stem cohort
         IF (STDM(I) .GT. 0.0) THEN
-!     ---------------------------------------------------------
-!         Non-structural mobile CH2O (~WCRLF in GROW)
-          STNSC(I) = STNSC(I) + WRCSDT_c(I)
-          IF (STNSC(I) < 0.0) STNSC(I) = 0.0
 
-!     ---------------------------------------------------------
+!     FROM LEAF COHORTS:
+          SELECT CASE (MODEL(1:5))
+          CASE ('CRGRO')
+!           N loss due to senescence, freeze, pest
+            NSOFF_c(I) = 
+     &        + (STWSSN(I) + STPST(I)) * PCNStem(I) / 100.
+     &        + (StemTotSen(I) - STWSSN(I)) * PROSTF * 0.16
+            NSOFF_c(I) = MIN(NSOFF_c(I), StemNTot(I))
+
+!           Net N gain today for cohort I
+            NSDOT_c(I) = - NSOFF_c(I) - STNMN(I) + STNAD(I) 
+            NSDOT_c(I) = MAX(NSDOT_c(I), -StemNTot(I))
+
+          CASE ('PRFRM')
+!
+!           NSOFF  = SSMDOT * 
+            NSOFF_c(I) = SSMDOT_c(I) * 
+!    &         (SENNSV * (PCNST/100 - PROSTF * 0.16) + PROSTF * 0.16) 
+     &         (SENNSV * (PCNStem(I)/100. - PROSTF*0.16) + PROSTF*0.16)
+!    &         + (STLTSEN + STSENWT) * PROSTF *0.16
+     &         + (STLTSEN_c(I) + STSENWT_c(I)) * PROSTF *0.16
+!    &         + (SSNDOT + WSIDOT + WSFDOT) * PCNST/100  
+     &         + (STWSSN(I) + STPST(I) + STFRZ(I)) * PCNStem(I)/100.
+
+!           I think that this was not done in for_grow
+            IF (FHStem_c(I) .GT. 0.0) THEN
+!             Harvest event today
+              NSOFF_c(I) = NSOFF_c(I) + FHStem_c(I) * PCNStem(I)/100.
+            ENDIF
+
+            NSOFF_c(I) = MIN(NSOFF_c(I), StemNTot(I))
+
+!           Net N gain today for cohort I
+!           NSDOT=NGRST-NRUSST-NSOFF
+            NLDOT_c(I) = - NLOFF_c(I) - LFNMN(I)
+
+            IF (FHSTEM_c(I) .EQ. 0.0) THEN
+!             NSDOT = NSDOT + NADST - STNADDM
+              NSDOT_c(I) = NSDOT_c(I) + STNAD(I)
+            ENDIF
+
+            NLDOT_c(I) = MAX(NLDOT_c(I), -LeafNTot(I))
+          END SELECT
+
 !         Stem N
           StemNTot(I) = StemNTot(I) + NSDOT_c(I) 
 
@@ -731,14 +849,7 @@ C-GH 08/19/2025
 !         Non-structural N (WNRLF in GROW)
           STNSN(I) = StemNTot(I) - STSN(I)
 
-!!        Composition
-!         LFLIGNIN = function of ??
-!         LFCELLUL = function of ??
-!         LFHEMICEL = function of ??
-!         ADF = function of LFLIGNIN, LFCELLUL, LFHEMICEL
-!         NDF = function of LFLIGNIN, LFCELLUL, LFHEMICEL
-        ELSE
-          STNSC(I)    = 0.0
+        ELSE  !STDM(I) <= 0.0
           StemNTot(I) = 0.0
           STSN(I)     = 0.0
           STNSN(I)    = 0.0
@@ -748,6 +859,7 @@ C-GH 08/19/2025
 !-------------------------------------------------------------------
 !     Today's new cohort
 !-------------------------------------------------------------------
+!     If there is any new leaf OR new stem mass today, add a new cohort
       IF (WLDOTN > 0.0 .OR. WSDOTN > 0.0) THEN
         NLC = NLC + 1  !today's new cohort
 
@@ -756,24 +868,16 @@ C-GH 08/19/2025
         CumLeafDM(NLC) = WLDOTN         !cum leaf mass added
         LFAREA(NLC)= WLDOTN * F         !leaf area
         LFNSC(NLC) = WLDOTN * ALPHL     !non-struct CH2O
-
-!       Leaf struct and mobile N:
-        LFSN(NLC)  = PROLFF * 0.16 * (WLDOTN - LFNSC(NLC))  
+        LFSN(NLC)  = PROLFF * 0.16 * (WLDOTN - LFNSC(NLC))  !struc N
         LFNSN(NLC) = NGRLF - LFSN(NLC)  !non-struct N (mobile)
 
 !       New growth for today's stem cohort
-        STDM(NLC)  = WSDOTN             !leaf dry mass
+        STDM(NLC)  = WSDOTN             !stem dry mass
         STNSC(NLC) = WSDOTN * ALPHS     !non-struct CH2O
-        StemNTot(NLC) = NGRST                 !total stem N (g/m2)   <<< ????
-
-!       Stem struct and mobile N:
-        STSN(NLC)  = PROSTF * 0.16 * (WSDOTN - STNSC(NLC))  
+        StemNTot(NLC) = NGRST           !total stem N (g/m2)
+        STSN(NLC)  = PROSTF * 0.16 * (WSDOTN - STNSC(NLC))  !struc N
         STNSN(NLC) = NGRST - STSN(NLC)  !non-struct N (mobile)
 
-!!        Composition
-!         LFLIGNIN = function of ??
-!         LFCELLUL = function of ??
-!         LFHEMICEL = function of ??
       ENDIF
 
 !-------------------------------------------------------------------
@@ -794,7 +898,15 @@ C-GH 08/19/2025
         ELSE
           PCNStem(I) = 0.0
         ENDIF
+
+!!        Composition
+!         LFLIGNIN = function of ??
+!         LFCELLUL = function of ??
+!         LFHEMICEL = function of ??
+!         ADF = function of LFLIGNIN, LFCELLUL, LFHEMICEL
+!         NDF = function of LFLIGNIN, LFCELLUL, LFHEMICEL
       ENDDO
+
 
 !***********************************************************************
 !***********************************************************************
@@ -821,13 +933,33 @@ C-GH 08/19/2025
       NLDOT_calc  = SUM(NLDOT_c(1:LCMax)) + NGRLF !Total N added today
 
 !------------------------------------
-!     Total states over all leaf cohorts
+!     Total states over all stem cohorts
       WTLF_calc  = SUM(LFDM(1:LCMax))     !Leaf mass g/m2
       AREALF_calc= SUM(LFAREA(1:LCMax))   !Lf area index
       WCRLF_calc = SUM(LFNSC(1:LCMax))    !CH2O reserves
       WTNLF_calc = SUM(LeafNTot(1:LCMax)) !Leaf N
       WNRLF_calc = SUM(LFNSN(1:LCMax))    !Non-structural N
       LFSN_calc  = SUM(LFSN(1:LCMax))     !Structural N
+
+!     Total rates over all stem cohorts
+      CRUSST_calc = SUM(STCMN(1:LCMax))      !CH2O mined in VEGGR
+      NRUSST_calc = SUM(STNMN(1:LCMax)) / 0.16 !N mined in MOBIL
+      WSFDOT_calc = SUM(STFRZ(1:LCMax))      !Freeze in FREEZE
+      SSDOT_calc  = SUM(StemTotSen(1:LCMax)) !Total senes in SENES
+      WatSenStem_calc = SUM(STWSSN(1:LCMax)) !Water senes in SENES
+      StMineSen_calc = SUM(STNMNSN(1:LCMax)) !N mining senes 
+      SCADD_calc  = SUM(STCAD(1:LCMax))      !mobile CH2O in GROW
+      SNADD_calc  = SUM(STNAD(1:LCMax))      !mobile N in GROW
+      NSOFF_calc  = SUM(NSOFF_c(1:LCMax))    !N loss senes,freez,pest
+      NSDOT_calc  = SUM(NSDOT_c(1:LCMax)) + NGRST !Total N added today
+
+!------------------------------------
+!     Total states over all leaf cohorts
+      WTST_calc  = SUM(STDM(1:LCMax))     !Stem mass g/m2
+      WCRST_calc = SUM(STNSC(1:LCMax))    !CH2O reserves
+      WTNST_calc = SUM(StemNTot(1:LCMax)) !Stem N
+      WNRST_calc = SUM(STNSN(1:LCMax))    !Non-structural N
+      STSN_calc  = SUM(STSN(1:LCMax))     !Structural N
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!     TEMP CHP
@@ -847,9 +979,6 @@ C-GH 08/19/2025
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-!!     Leaf N is sum of structural and non-structural N
-!      WTNLF_calc = LFSN_calc + WNRLF_calc
-
       IF (WTLF_calc > 0.0) THEN
         PLEAFN_calc = WTNLF_calc / WTLF_calc * 100.
       ELSE
@@ -866,8 +995,6 @@ C-GH 08/19/2025
         SLAAD_calc  = 0.0
       ENDIF
       LAIMX_calc = MAX(LAIMX_calc, XLAI_calc)
-
-
 
 !!     write(5567,'(I7,50F10.4)') YRDOY, CLOFF, SLMDOT, LTSEN, LFSENWT, 
 !      write(5568,'(I7,50F10.4)') YRDOY, CLOFF_SUM, LFNSEN_sum, 

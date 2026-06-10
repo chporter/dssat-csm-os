@@ -678,12 +678,13 @@ C-----------------------------------------------------------------------
      &  VSTAGE, DWTCO, DWTLO, DWTSO,
      &  PWTCO, PWTLO, PWTSO)                         !Input/Output
 
-      CALL LeafCohorts(DYNAMIC, 
-     &  DTX, F, FILECC, NGRLF,                !Input
-     &  WLDOTN,                               !Input
+      CALL COHORTS(DYNAMIC, 
+     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
+     &  WLDOTN, WSDOTN,                       !Input
      &  YRPLT,                                !Input
-     &  PCNLeaf,                              !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
+     &  PCNLeaf, PCNStem,                     !Output
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !OUTPUT (eventually)
+     &  STMWT, WCRST, WNRST, WTNST)           !OUTPUT (eventually)
 
       CALL FOR_OPMOB(CONTROL, ISWITCH, 
      &  YRPLT, MDATE, DAS, YRDOY, DTX, DXR57, PGAVL, NAVL, PG, PPMFAC, 
@@ -1114,12 +1115,13 @@ C-----------------------------------------------------------------------
      &    SRCADDOT, SRNADDOT)                             !Output
 !ENDIF
 
-      CALL LeafCohorts(DYNAMIC, 
-     &  DTX, F, FILECC, NGRLF,                !Input
-     &  WLDOTN,                               !Input
+      CALL COHORTS(DYNAMIC, 
+     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
+     &  WLDOTN, WSDOTN,                       !Input
      &  YRPLT,                                !Input
-     &  PCNLeaf,                              !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
+     &  PCNLeaf, PCNStem,                     !Output
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !OUTPUT (eventually)
+     &  STMWT, WCRST, WNRST, WTNST)           !OUTPUT (eventually)
 
       CALL FOR_OPMOB(CONTROL, ISWITCH, 
      &  YRPLT, MDATE, DAS, YRDOY, DTX, DXR57, PGAVL, NAVL, PG, PPMFAC, 
@@ -1473,12 +1475,13 @@ C-GH
       NGRLF=WTNLF
 !       write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
 
-      CALL LeafCohorts(EMERG, 
-     &  DTX, F, FILECC, NGRLF,                !Input
-     &  WLDOTN,                               !Input
+      CALL COHORTS(DYNAMIC, 
+     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
+     &  WLDOTN, WSDOTN,                       !Input
      &  YRPLT,                                !Input
-     &  PCNLeaf,                              !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
+     &  PCNLeaf, PCNStem,                     !Output
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !OUTPUT (eventually)
+     &  STMWT, WCRST, WNRST, WTNST)           !OUTPUT (eventually)
 
        WLDOTN=0
        NGRLF=0
@@ -2124,12 +2127,13 @@ C----------------------------------
 C     CALL COHORT MODEL
 C----------------------------------
 !      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
-      CALL LeafCohorts(DYNAMIC, 
-     &  DTX, F, FILECC, NGRLF,                !Input
-     &  WLDOTN,                               !Input
+      CALL COHORTS(DYNAMIC, 
+     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
+     &  WLDOTN, WSDOTN,                       !Input
      &  YRPLT,                                !Input
-     &  PCNLeaf,                              !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
+     &  PCNLeaf, PCNStem,                     !Output
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !OUTPUT (eventually)
+     &  STMWT, WCRST, WNRST, WTNST)           !OUTPUT (eventually)
 
       CONTINUE
 !-----------------------------------------------------------------------
@@ -2230,12 +2234,13 @@ C-----------------------------------------------------------------------
      &  WCRSH, WRCSHD, SHCMINE, CRUSSH, CHORECOVER, NLKSPENT, NLKNUSED,
      &  NLKCHK, TNLKCHK, CMOBSR, LAIMOBR, VNMOBR)     
 
-        CALL LeafCohorts(DYNAMIC, 
-     &  DTX, F, FILECC, NGRLF,                !Input
-     &  WLDOTN,                               !Input
+      CALL COHORTS(DYNAMIC, 
+     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
+     &  WLDOTN, WSDOTN,                       !Input
      &  YRPLT,                                !Input
-     &  PCNLeaf,                              !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
+     &  PCNLeaf, PCNStem,                     !Output
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !OUTPUT (eventually)
+     &  STMWT, WCRST, WNRST, WTNST)           !OUTPUT (eventually)
 
       CALL FOR_OPGROW(CONTROL, ISWITCH, 
      &    CADLF, CADST, CANHT, CANWH, CMINEA, DWNOD,  

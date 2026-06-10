@@ -11,8 +11,8 @@
      &  ALPHL, ALPHS, ICMP, MAXNMINE,             !Output
      &  NMOBMX, NVSMOB,                           !Output
      &  PCHOLFF, PCHOSTF, PROLFF, PROSTF,         !Output
-     &  SENDAY, SENMAX, SENCLV, SENNLV,           !Output
-     &  TCMP, XSENMX)                             !Output
+     &  SENDAY, SENMAX, SENCLV, SENCSV,           !Output
+     &  SENNLV, SENNSV, TCMP, XSENMX)             !Output
 
 !-----------------------------------------------------------------------
       IMPLICIT NONE
@@ -21,7 +21,8 @@
       CHARACTER*92, INTENT(IN) :: FILECC
       REAL, INTENT(OUT) :: ALPHL, ALPHS, PCHOLFF, PCHOSTF, ICMP, 
      &  MAXNMINE, NMOBMX, NVSMOB, 
-     &  PROLFF, PROSTF, SENDAY, SENCLV, SENNLV, TCMP
+     &  PROLFF, PROSTF, SENDAY, 
+     &  SENCLV, SENCSV, SENNLV, SENNSV, TCMP
       REAL, INTENT(OUT) :: SENMAX(4), XSENMX(4)
 
       CHARACTER*6   ERRKEY
@@ -88,7 +89,7 @@
           DO I = 1, 7
             CALL IGNORE(LUNCRP,LNUM,ISECT,C80)  
           ENDDO
-          READ(C80,'(2F6.0)',IOSTAT=ERR) SENNLV, SENCLV
+          READ(C80,'(4F6.0)',IOSTAT=ERR) SENNLV, SENCLV, SENNSV, SENCSV
           IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
 
           CALL IGNORE(LUNCRP,LNUM,ISECT,C80)  

@@ -422,12 +422,13 @@ C-----------------------------------------------------------------------
      &  ShutMob, RootMob, ShelMob,                        !Output
      &  TOSHMINE,TOCHMINE,HPODWT,HSDWT,HSHELWT)           !Output
       
-      CALL LeafCohorts(DYNAMIC, 
-     &  DTX, F, FILECC, NGRLF,                !Input
-     &  WLDOTN,                               !Input
+      CALL COHORTS(DYNAMIC, 
+     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
+     &  WLDOTN, WSDOTN,                       !Input
      &  YRPLT,                                !Input
-     &  PCNLeaf,                              !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
+     &  PCNLeaf, PCNStem,                     !Output
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !OUTPUT (eventually)
+     &  STMWT, WCRST, WNRST, WTNST)           !OUTPUT (eventually)
 
       CALL OPGROW(CONTROL, ISWITCH, SoilProp, 
      &    CADLF, CADST, CANHT, CANWH, CMINEA, DWNOD, GROWTH,  
@@ -678,12 +679,13 @@ C-----------------------------------------------------------------------
 
 C-----------------------------------------------------------------------
 C-GH Add leaf Cohorts
-      CALL LeafCohorts(DYNAMIC, 
-     &  DTX, F, FILECC, NGRLF,                !Input
-     &  WLDOTN,                               !Input
+      CALL COHORTS(DYNAMIC, 
+     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
+     &  WLDOTN, WSDOTN,                       !Input
      &  YRPLT,                                !Input
-     &  PCNLeaf,                              !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
+     &  PCNLeaf, PCNStem,                     !Output
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !OUTPUT (eventually)
+     &  STMWT, WCRST, WNRST, WTNST)           !OUTPUT (eventually)
 
 !-----------------------------------------------------------------------
 !     Write headings to output file GROWTH.OUT
@@ -899,12 +901,13 @@ C-GH
       NGRLF=WTNLF
 !       write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
 
-      CALL LeafCohorts(EMERG, 
-     &  DTX, F, FILECC, NGRLF,                !Input
-     &  WLDOTN,                               !Input
+      CALL COHORTS(DYNAMIC, 
+     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
+     &  WLDOTN, WSDOTN,                       !Input
      &  YRPLT,                                !Input
-     &  PCNLeaf,                              !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
+     &  PCNLeaf, PCNStem,                     !Output
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !OUTPUT (eventually)
+     &  STMWT, WCRST, WNRST, WTNST)           !OUTPUT (eventually)
 
        WLDOTN=0
        NGRLF=0
@@ -1325,12 +1328,13 @@ C----------------------------------
 C     CALL COHORT MODEL
 C----------------------------------
 !      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
-      CALL LeafCohorts(DYNAMIC, 
-     &  DTX, F, FILECC, NGRLF,                !Input
-     &  WLDOTN,                               !Input
+      CALL COHORTS(DYNAMIC, 
+     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
+     &  WLDOTN, WSDOTN,                       !Input
      &  YRPLT,                                !Input
-     &  PCNLeaf,                              !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
+     &  PCNLeaf, PCNStem,                     !Output
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !OUTPUT (eventually)
+     &  STMWT, WCRST, WNRST, WTNST)           !OUTPUT (eventually)
 
       IF ((WTLF+STMWT).GT. 0.0001) THEN
         PCNVEG = (WTNLF+WTNST)/(WTLF+STMWT)*100.
@@ -1383,12 +1387,13 @@ C----------------------------------
      &    WTSHE, WTSHMT, FLWN,                            !Output 
      &    TOSHMINE,TOCHMINE,HPODWT,HSDWT,HSHELWT)         !Output
 
-        CALL LeafCohorts(DYNAMIC, 
-     &  DTX, F, FILECC, NGRLF,                !Input
-     &  WLDOTN,                               !Input
+      CALL COHORTS(DYNAMIC, 
+     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
+     &  WLDOTN, WSDOTN,                       !Input
      &  YRPLT,                                !Input
-     &  PCNLeaf,                              !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI)      !OUTPUT (eventually)
+     &  PCNLeaf, PCNStem,                     !Output
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !OUTPUT (eventually)
+     &  STMWT, WCRST, WNRST, WTNST)           !OUTPUT (eventually)
 
         CALL OPGROW(CONTROL, ISWITCH, SoilProp, 
      &    CADLF, CADST, CANHT, CANWH, CMINEA, DWNOD, GROWTH,  

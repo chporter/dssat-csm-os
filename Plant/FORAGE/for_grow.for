@@ -199,7 +199,7 @@ C=======================================================================
 
       REAL RMIN, SDLIP, WLFI, WSTI, WRTI
       REAL CLW, CSW
-      REAL LCADD, LNADD
+      REAL LCADD, LNADD, SCADD, SNADD
 
 !     Surface and soil residue due to daily senescence of plant matter
 !      REAL SENCLN(0:NL, 3), SENRT(NL), SENNOD(NL)
@@ -897,6 +897,18 @@ C--------------------------------------------
         WSDOT = WSDOT + CADST - STCADDM +(NADST - STNADDM)/0.16
       ENDIF
 
+      SCADD = CADST - STCADDM 
+      SNADD = (NADST - STNADDM)/0.16
+
+!     Handle new reserves for stem cohorts. These will be adjusted for 
+!       losses in the COHORTS subroutine.
+      DO I = 1, NLC
+        IF (STDM(I) > 0.0) THEN
+          STCAD(I) = STDM(I) / STMWT * CADST
+          STNAD(I) = STDM(I) / STMWT * NADST
+        ENDIF
+      ENDDO
+
 C--------------------------------------------
 
       IF (WSDOT .LT. 0.0) THEN
@@ -976,21 +988,21 @@ C-----------------------------------------------------------------------
 
 
         IF (-TPSRSRFL .GT. STRWT*PSRSRFL) THEN
-        TPSRLYR1 = TPSRLYR1 + (TPSRSRFL+(STRWT*PSRSRFL))
-        TPSRSRFL = -STRWT * PSRSRFL
-        IF (-TPSRLYR1 .GE. STRWT*PSRLYR1) THEN
-        TPSRLYR1 = -STRWT * PSRLYR1
-        TPSRSRFL = -STRWT * PSRSRFL
-        ENDIF
+          TPSRLYR1 = TPSRLYR1 + (TPSRSRFL+(STRWT*PSRSRFL))
+          TPSRSRFL = -STRWT * PSRSRFL
+          IF (-TPSRLYR1 .GE. STRWT*PSRLYR1) THEN
+            TPSRLYR1 = -STRWT * PSRLYR1
+            TPSRSRFL = -STRWT * PSRSRFL
+          ENDIF
         ENDIF
 
         IF (-TPSRLYR1 .GT. STRWT*PSRLYR1) THEN
-        TPSRSRFL = TPSRSRFL + (TPSRLYR1+(STRWT*PSRLYR1))
-        TPSRLYR1 = -STRWT * PSRLYR1
-        IF (-TPSRSRFL .GE. STRWT*PSRSRFL) THEN
-        TPSRLYR1 = -STRWT * PSRLYR1
-        TPSRSRFL = -STRWT * PSRSRFL
-        ENDIF
+          TPSRSRFL = TPSRSRFL + (TPSRLYR1+(STRWT*PSRLYR1))
+          TPSRLYR1 = -STRWT * PSRLYR1
+          IF (-TPSRSRFL .GE. STRWT*PSRSRFL) THEN
+            TPSRLYR1 = -STRWT * PSRLYR1
+            TPSRSRFL = -STRWT * PSRSRFL
+          ENDIF
         ENDIF
 
       ENDIF
@@ -1072,11 +1084,11 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
       IF (GROWTH .GT. 0.0) THEN
         IF (XPODF .EQ. 'PD') THEN
-        XPOD = 0.17 * (WSDDTN+WSHDTN)/GROWTH + 0.83 * XPOD
+          XPOD = 0.17 * (WSDDTN+WSHDTN)/GROWTH + 0.83 * XPOD
         ELSE IF (XPODF .EQ. 'SD') THEN
-        XPOD = 0.17 * (WSDDTN)/GROWTH + 0.83 * XPOD
+          XPOD = 0.17 * (WSDDTN)/GROWTH + 0.83 * XPOD
         ELSE
-        CALL ERROR(ERRKEY,1,'      ',0)
+          CALL ERROR(ERRKEY,1,'      ',0)
         ENDIF
       ENDIF
 C-----------------------------------------------------------------------
@@ -1562,6 +1574,8 @@ C-----------------------------------------------------------------------
         NSOFF = 0.0
       ENDIF
 
+!     chp 2026-06-10
+!     NSOFF does not include harvest amount
 
 C-----------------------------------------------------------------------
 C     Net growth rate of nitrogen in the stem
@@ -1575,6 +1589,7 @@ C--------------------------------------------
       ELSE
         NSDOT=NGRST-NRUSST-NSOFF
       ENDIF
+
 !      IF (FHSTEM.GT.0)THEN
 !        IF (STMWT .GT. 0)THEN
 !          NSOFF=NSOFF

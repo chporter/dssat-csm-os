@@ -135,11 +135,11 @@ C-----------------------------------------------------------------------
       REAL, DIMENSION(LCMax) :: PCNLeaf
       REAL WtLeaf
 
-      REAL, DIMENSION(LCMax) :: STNMINE_c, !CMINEST_c, 
+      REAL, DIMENSION(LCMax) :: STNMINE_c, CMINEST_c, 
      &    NMINEST_c, SSNDOT_c
       REAL STNMINE_sum, STSNMOB_sum, !STLTSEN_sum, !STNSEN_sum, 
-     &    NMINEST_sum !SSMDOT_sum, SSNDOT_sum, StemTotSen_sum, 
-     &    !STSENWT_sum, CMINEST_sum, STCMINE_sum 
+     &    NMINEST_sum, StemTotSen_sum, !SSMDOT_sum, SSNDOT_sum, 
+     &    STSENWT_sum, CMINEST_sum, STCMINE_sum 
 
 !=========================================================================
 !    TEMP CHP Add printout for SENESMOB variables
@@ -1235,7 +1235,7 @@ C      ADDITIONAL DM LOSS DUE TO N MOBILIZATION? SENRTE
 !     Handle leaf cohorts
       DO I = 1, NLC
         LFSENWT_c(I) = SENRTE * NMINELF_c(I) / 0.16
-        LFSENWT_c(I) = MIN(LFDM(I), LFSENWT_c(I))
+        LFSENWT_c(I) = MIN(LFDM(I) - LeafTotSen(I), LFSENWT_c(I))
       ENDDO
       LFSENWT_sum = SUM(LFSENWT_c)
       LeafTotSen = LeafTotSen + LFSENWT_c
@@ -1244,6 +1244,16 @@ C      ADDITIONAL DM LOSS DUE TO N MOBILIZATION? SENRTE
       STSENWT = LFSENWT * PORPT
       SSDOT = SSDOT + STSENWT
       SSDOT = MIN(STMWT, SSDOT)
+
+!     --------------------------------------------
+!     Handle stem cohorts
+      DO I = 1, NLC
+        STSENWT_c(I) = LFSENWT_c(I) * PORPT
+        STSENWT_c(I) = MIN(STDM(I) - StemTotSen(I), STSENWT_c(I))
+      ENDDO
+      STSENWT_sum = SUM(STSENWT_c)
+      StemTotSen = StemTotSen + STSENWT_c
+!     --------------------------------------------
 
 C-----------------------------------------------------------------------
 C      Calculate potential CH2O mobilization for the day
@@ -1279,6 +1289,18 @@ C    1-12-2024 KJB and DP
 
       STCMINE = MAX(STSCMOB, CMINEST)
 
+!     --------------------------------------------
+!     Handle stem cohorts
+      DO I = 1, NLC
+        CMINEST_c(I) = CMOBMX * (DTX + DXR57) 
+     &   * (STNSC(I) - STDM(I) * PCHOSTF) * MOBTEM * MOBSWF
+!       STSCMOB is always zero in current code (2026-06-09 chp)
+        STCMINE_c(I) = MAX(STSCMOB, CMINEST_c(I))
+      ENDDO
+      CMINEST_sum = SUM(CMINEST_c)
+      STCMINE_sum = SUM(STCMINE_c)
+!     --------------------------------------------
+
       CMINERT = CMOBMX * (DTX + DXR57)* PPMFAC *
      &    (WCRRT - RTWT * PCHORTF)
      & * MOBTEM * MOBSWF
@@ -1300,7 +1322,9 @@ C    1-12-2024 KJB and DP
       CMINEO = CMINELF + CMINEST + CMINERT + CMINESR + SHCMINE
 
       LFWSSN = WaterSen_c
+      STWSSN = SSNDOT_c
       LeafTotSen_SUM = SUM(LeafTotSen)
+      StemTotSen_sum = SUM(StemTotSen)
 
 !=========================================================================
 !     TEMP CHP Add printout for SENES variables

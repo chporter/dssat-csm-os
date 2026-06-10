@@ -26,6 +26,7 @@ C=======================================================================
      &  NSOFF_calc, NSDOT_calc)
 
       USE ModuleDefs
+      USE ModuleData
       USE COHORTS_MOD
       IMPLICIT NONE
       SAVE
@@ -50,13 +51,12 @@ C=======================================================================
       CHARACTER*11 LCOUT
       CHARACTER*12 LCOUT1, LCOUT2
       CHARACTER*15 SCOUT
-      CHARACTER*16 SCOUT1, SCOUT2
       LOGICAL FEXIST
 
       INTEGER YRDOY, YEAR, DOY, DAS, DAP, TIMDIF
       INTEGER I, ERRNUM
       INTEGER LCLUN, LCLUN1, LCLUN2
-      INTEGER SCLUN, SCLUN1, SCLUN2
+      INTEGER SCLUN
 
 !     Date info for output files
       TYPE (ControlType) CONTROL
