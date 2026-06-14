@@ -17,7 +17,7 @@ C=======================================================================
      &  WatSen_calc, LfMineSen_calc, 
      &  NLOFF_calc, NLDOT_calc,
 !       Stem output:
-     &  WTST_calc,
+     &  WTST_calc, WCRST_calc, PStemN_calc,
      &  WTNST_calc, WNRST_calc, STSN_calc, 
      &  WSDOT_calc, SCADD_calc, SNADD_calc, 
      &  CRUSST_calc, NRUSST_calc, 
@@ -41,16 +41,16 @@ C=======================================================================
      &  LCADD_calc, LNADD_calc, NLDOT_calc, NLOFF_calc,
      &  LFSN_calc
 
-      REAL, INTENT(IN) ::  WTST_calc, WTNST_calc, WNRST_calc, 
+      REAL, INTENT(IN) ::  WTST_calc, WNRST_calc, WCRST_calc, 
+     &  WTNST_calc, PStemN_calc, 
      &  WSDOT_calc, SSDOT_calc, WSFDOT_calc, NRUSST_calc, 
      &  CRUSST_calc, WSIDOT_calc, WatSenStem_calc, STMineSen_calc, 
      &  SCADD_calc, SNADD_calc, NSDOT_calc, NSOFF_calc,
      &  STSN_calc
 
       CHARACTER (len=8) MODEL
-      CHARACTER*11 LCOUT
-      CHARACTER*12 LCOUT1, LCOUT2
-      CHARACTER*15 SCOUT
+      CHARACTER*15 LCOUT, SCOUT
+      CHARACTER*16 LCOUT1, LCOUT2
       LOGICAL FEXIST
 
       INTEGER YRDOY, YEAR, DOY, DAS, DAP, TIMDIF
@@ -116,8 +116,7 @@ C=======================================================================
      &  '     CRUSLFc     NRUSLFc',
      &  '     WLIDOTc     WLFDOTc      SLDOTc',
      &  '      WatSen      NMinSn',
-     &  '      NLOFFc      NLDOTc',
-     &  '       NGRLF      WLDOTN')
+     &  '      NLOFFc      NLDOTc')
 
 !-----------------------------------------------------------------------
 !     Initialize 2nd leaf cohort output file
@@ -160,17 +159,16 @@ C=======================================================================
       ENDIF
 
 !     Write headers
-      CALL HEADER(SEASINIT, LCLUN, CONTROL % RUN)
-      WRITE (LCLUN,210)
+      CALL HEADER(SEASINIT, SCLUN, CONTROL % RUN)
+      WRITE (SCLUN,210)
   210 FORMAT('@YEAR DOY   DAS   DAP',
-     &  '       SWADc',
+     &  '       SWADc      WCRSTc      StemNc',
      &  '      WTNSTc      WNRSTc       STSNc',
      &  '      WSDOTc      SCADDc      SNADDc',
      &  '     CRUSSTc     NRUSSTc',
      &  '     WSIDOTc     WSFDOTc      SSDOTc',
      &  '    WatSenST      NMinSn',
-     &  '      NSOFFc      NSDOTc',
-     &  '       NGRST      WSDOTN')
+     &  '      NSOFFc      NSDOTc')
 
 !***********************************************************************
 !***********************************************************************
@@ -198,9 +196,9 @@ C=======================================================================
       write (LCLUN2,330) YEAR,DOY,LFDM(1:50)
 330   format (1X,I4,1X,I3,50F7.2)
 
-      WRITE (LCLUN,410) YEAR, DOY, DAS, DAP,
+      WRITE (SCLUN,410) YEAR, DOY, DAS, DAP,
 !       State
-     &  WTST_calc, 
+     &  WTST_calc, WCRST_calc, PStemN_calc, 
      &  WTNST_calc, WNRST_calc, STSN_calc, 
 !       Rate
      &  WSDOT_calc, SCADD_calc, SNADD_calc / 0.16, 

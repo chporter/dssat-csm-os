@@ -30,6 +30,7 @@ C  09/28/2005 SJR Added SENMOB to senesce organs earlier in the day.
 !  01/26/2023 CHP Reduce compile warnings: add EXTERNAL stmts, remove 
 !                 unused variables, shorten lines. 
 !  05/12/2026 CHP added leaf cohorts
+!  06/12/2026 CHP added stem cohorts
 C=======================================================================
 
       subroutine FORAGE(CONTROL, ISWITCH, 
@@ -1473,9 +1474,11 @@ C-----------------------------------------------------------------------
 C-GH
       WLDOTN=WTLF
       NGRLF=WTNLF
+      WSDOTN=STMWT
+      NGRST=WTNST
 !       write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
 
-      CALL COHORTS(DYNAMIC, 
+      CALL COHORTS(EMERG, 
      &  DTX, F, FILECC, NGRLF, NGRST,         !Input
      &  WLDOTN, WSDOTN,                       !Input
      &  YRPLT,                                !Input
@@ -1483,8 +1486,10 @@ C-GH
      &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !OUTPUT (eventually)
      &  STMWT, WCRST, WNRST, WTNST)           !OUTPUT (eventually)
 
-       WLDOTN=0
-       NGRLF=0
+      WLDOTN=0
+      NGRLF=0
+      WSDOTN=0.0
+      NGRST=0.0
 
       ENDIF
 

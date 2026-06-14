@@ -23,6 +23,7 @@ C  04/01/2021 VSH/AH Added MultiHarvest code changes.
 !  06/15/2022 CHP Added CropStatus
 !  11/08/2023  FO Added lint growth for cotton.
 !  04/30/2026 chp Added leaf cohorts
+!  06/12/2026 chp Added stem cohorts
 C-----------------------------------------------------------------------
 C  Called by:  PLANT
 C  Calls:      IPGROW, STRESS
@@ -149,7 +150,8 @@ C=======================================================================
      &  SDPRO, WTFSD, WTPSD, SDWTPL
       REAL RMIN, SDLIP, WLFI, WSTI, WRTI
       REAL CLW, CSW
-      REAL LCADD, LNADD
+      REAL LCADD, LNADD, SCADD, SNADD
+      REAL STCAD_sum, STNAD_sum, STDM_sum ! temp chp
 
 !     Surface and soil residue due to daily senescence of plant matter
       REAL SENRT(NL), SENNOD(NL)
@@ -411,7 +413,6 @@ C-----------------------------------------------------------------------
      &    LTDOT)                                                 !Output
       ENDIF
 
-
 !=========================================================================
 !     TEMP CHP Add printout for GROW variables
 
@@ -436,7 +437,14 @@ C-----------------------------------------------------------------------
      &  '       WLDOT       LCADD       LNADD      CRUSLF',
      &  '      NRUSLF      WLIDOT      WLFDOT       SLDOT'
      &  '      SLNDOT       NLOFF       NLDOT',
-     &  '       NGRLF      WLDOTN')
+     &  '       NGRLF      WLDOTN',
+
+     &  '       STMWT       WCRST       PCNST',
+     &  '       WTNST       WNRST        STSN',
+     &  '       WSDOT       SCADD       SNADD      CRUSST',
+     &  '      NRUSST      WSIDOT       SSDOT',
+     &  '      SSNDOT       NSOFF       NSDOT',
+     &  '       NGRST      WSDOTN')
 
 !     end temp chp
 !=========================================================================
@@ -613,18 +621,41 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C       WSDOT = Net stem growth rate
 C-----------------------------------------------------------------------
+      SCADD = 0.0
+      SNADD = 0.0
+      STCAD = 0.0
+      STNAD = 0.0
+
       WSDOT = WSDOTN - SSDOT - WSIDOT - NRUSST / 0.16 - CRUSST
       ShutMob = ShutMob + (NRUSST / 0.16 + CRUSST) * 10.      !kg/ha
 
-      IF (STMWT > 1.E-4) THEN
+      IF (STMWT > 1.E-6) THEN
          WSDOT = WSDOT + (CADST+NADST/0.16) *
      &   (1. - MIN(1.0,(SSDOT+WSIDOT)/STMWT))
+
+        SCADD = CADST * (1. - MIN(1.0,(SSDOT+WSIDOT)/STMWT))
+        SNADD = NADST/0.16 *
+     &    (1. - MIN(1.0,(SSDOT+WSIDOT)/STMWT))
+
+!       Handle new reserves for stem cohorts. These will be adjusted for 
+!         stem losses in the COHORTS subroutine.
+        DO I = 1, NLC
+          STCAD(I) = STDM(I) / STMWT * CADST
+          STNAD(I) = STDM(I) / STMWT * NADST
+        ENDDO
+
+!       TEMP CHP
+        STCAD_sum = SUM(STCAD)
+        STNAD_sum = SUM(STNAD)/0.16
+        STDM_sum  = SUM(STDM)
+
         ADD = (CADST+NADST/0.16) *
      &    (1. - MIN(1.0,(SSDOT+WSIDOT)/STMWT))
         ShutMob = ShutMob - ADD * 10.                         !kg/ha
       ELSE
          ADD = 0.
       ENDIF
+
       IF (WSDOT < 0.0) THEN
         WSDOT = MAX(WSDOT, -STMWT)
       ENDIF
@@ -1284,10 +1315,15 @@ C-----------------------------------------------------------------------
      &   WTLF, XLAI, WCRLF, PCNL, WTNLF, WNRLF, WTNLF - WNRLF,
      &   WLDOT, LCADD, LNADD, CRUSLF, NRUSLF/0.16, 
      &   WLIDOT, WLFDOT, SLDOT, SLNDOT, 
-     &   NLOFF, NLDOT, NGRLF, WLDOTN
+     &   NLOFF, NLDOT, NGRLF, WLDOTN,
+
+     &   STMWT, WCRST, PCNST, WTNST, WNRST, WTNST - WNRST,
+     &   WSDOT, SCADD, SNADD, CRUSST, NRUSST/0.16, 
+     &   WSIDOT, SSDOT, SSNDOT, 
+     &   NSOFF, NSDOT, NGRST, WSDOTN
 
   300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
-     &    30F12.6)
+     &    50F12.6)
 
 !     still temp chp...
 

@@ -131,8 +131,8 @@ C=======================================================================
      &  SCADD_calc, SNADD_calc, NSDOT_calc, NSOFF_calc,
      &  STSN_calc
 
-      REAL WTST_calc,
-     &  WCRST_calc, WTNST_calc, WNRST_calc, WSFDOT_calc, 
+      REAL WTST_calc, PStemN_calc, WCRST_calc, 
+     &  WTNST_calc, WNRST_calc, WSFDOT_calc, 
      &  WatSenStem_calc
 
       CHARACTER (len=8) MODEL
@@ -170,7 +170,7 @@ C=======================================================================
       REAL RHOL, RHOS, CLOFF, CSOFF, WSDOT_cohort
 
 !     TEMP CHP
-      REAL CLOFF_sum, CSOFF_sum 
+      REAL CLOFF_sum, CSOFF_sum , stcad_sum
 
 !     Variables read from species file:
       REAL ALPHL, ALPHS, PROLFF, PROSTF
@@ -211,7 +211,7 @@ C=======================================================================
      &  WatSen_calc, LfMineSen_calc, 
      &  NLOFF_calc, NLDOT_calc,
 !       Stem output:
-     &  WTST_calc,
+     &  WTST_calc, WCRST_calc, PStemN_calc,
      &  WTNST_calc, WNRST_calc, STSN_calc, 
      &  WSDOT_calc, SCADD_calc, SNADD_calc, 
      &  CRUSST_calc, NRUSST_calc, 
@@ -295,6 +295,11 @@ C-GH 08/19/2025
       XLAI_calc = 0.0
       WTNLF_calc = 0.0
 
+      WTST_calc = 0.0
+      WNRST_calc = 0.0
+      WCRST_calc = 0.0
+      WTNST_calc = 0.0
+
 !     Read parameters from species file
       CALL IPCOHO(
      &  FILECC, MODEL,                            !Input
@@ -314,7 +319,7 @@ C-GH 08/19/2025
      &  WatSen_calc, LfMineSen_calc, 
      &  NLOFF_calc, NLDOT_calc,
 !       Stem output:
-     &  WTST_calc,
+     &  WTST_calc, WCRST_calc, PStemN_calc,
      &  WTNST_calc, WNRST_calc, STSN_calc, 
      &  WSDOT_calc, SCADD_calc, SNADD_calc, 
      &  CRUSST_calc, NRUSST_calc, 
@@ -533,6 +538,9 @@ C-GH 08/19/2025
         STCAD(I) = LFCAD(I) * Loss_adj_ST
         STNAD(I) = LFNAD(I) * Loss_adj_ST
       ENDDO
+
+!     temp chp
+      stcad_sum = sum(stcad)
 
 !---------------------------------------------
 !     Integration of leaf and stem mass
@@ -933,7 +941,7 @@ C-GH 08/19/2025
       NLDOT_calc  = SUM(NLDOT_c(1:LCMax)) + NGRLF !Total N added today
 
 !------------------------------------
-!     Total states over all stem cohorts
+!     Total states over all leaf cohorts
       WTLF_calc  = SUM(LFDM(1:LCMax))     !Leaf mass g/m2
       AREALF_calc= SUM(LFAREA(1:LCMax))   !Lf area index
       WCRLF_calc = SUM(LFNSC(1:LCMax))    !CH2O reserves
@@ -954,7 +962,7 @@ C-GH 08/19/2025
       NSDOT_calc  = SUM(NSDOT_c(1:LCMax)) + NGRST !Total N added today
 
 !------------------------------------
-!     Total states over all leaf cohorts
+!     Total states over all stem cohorts
       WTST_calc  = SUM(STDM(1:LCMax))     !Stem mass g/m2
       WCRST_calc = SUM(STNSC(1:LCMax))    !CH2O reserves
       WTNST_calc = SUM(StemNTot(1:LCMax)) !Stem N
@@ -978,11 +986,16 @@ C-GH 08/19/2025
 !!     END TEMP CHP
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-
       IF (WTLF_calc > 0.0) THEN
         PLEAFN_calc = WTNLF_calc / WTLF_calc * 100.
       ELSE
         PLEAFN_calc = 0.0
+      ENDIF
+
+      IF (STMWT > 0.0) THEN
+        PStemN_calc = WTNST_calc / STMWT * 100.
+      ELSE
+        PStemN_calc = 0.0
       ENDIF
 
 !     Export a single SLA, XLAI, XHLAI, LAIMX for all leaves
@@ -1019,7 +1032,7 @@ C-GH 08/19/2025
      &  WatSen_calc, LfMineSen_calc, 
      &  NLOFF_calc, NLDOT_calc,
 !       Stem output:
-     &  WTST_calc,
+     &  WTST_calc, WCRST_calc, PStemN_calc,
      &  WTNST_calc, WNRST_calc, STSN_calc, 
      &  WSDOT_calc, SCADD_calc, SNADD_calc, 
      &  CRUSST_calc, NRUSST_calc, 

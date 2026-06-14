@@ -897,8 +897,10 @@ C-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------     
 C-GH
-      WLDOTN=WTLF
-      NGRLF=WTNLF
+      WLDOTN = WTLF
+      NGRLF  = WTNLF
+      WSDOTN = STMWT
+      NGRST  = WTNST
 !       write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
 
       CALL COHORTS(DYNAMIC, 
@@ -909,8 +911,10 @@ C-GH
      &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !OUTPUT (eventually)
      &  STMWT, WCRST, WNRST, WTNST)           !OUTPUT (eventually)
 
-       WLDOTN=0
-       NGRLF=0
+      WLDOTN = 0.0
+      NGRLF  = 0.0
+      WSDOTN = 0.0
+      NGRST  = 0.0
 
 !-----------------------------------------------------------------------
         IF (ISWPHO .EQ. 'Y' .OR. ISWPHO .EQ. 'H') THEN
