@@ -179,9 +179,6 @@ C-GH  IF (CROP .EQ. 'FA' .OR. IDETG .EQ. 'N') RETURN
      &  'WCRSH WCSHD SHCMN CRUSH  CHORC  NLKSP  NLKNU  ',
      &  'LKCHK   TLKCK CMBSR LAIMB VNMOB')     
 
-  
-
-
 !***********************************************************************
 !***********************************************************************
 !     DAILY OUTPUT

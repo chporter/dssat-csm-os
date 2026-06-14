@@ -173,17 +173,12 @@ C-----------------------------------------------------------------------
         READ(CHAR,'(12X,F6.0)',IOSTAT=ERR)
      &    PRORTF
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
-  
+
         CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)
-  
         CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)
-  
         CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)
-  
         CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)
-  
         CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)
-  
         CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)
 
         CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)
@@ -229,7 +224,6 @@ C-----------------------------------------------------------------------
      &    (NRMOB(II),II=1,4), TYPNMOB
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
 
-
         CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)
         CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)
         CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)
@@ -243,9 +237,6 @@ C-----------------------------------------------------------------------
         READ(CHAR,'(4(1X,F5.2))',IOSTAT=ERR)
      &    SENNSV, SENCSV, SENNSRV, SENCSRV
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
-
-
-
       ENDIF
 
 !-----------------------------------------------------------------------
@@ -319,7 +310,6 @@ C    Find and Read Roots section
         CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)
         READ(CHAR,'(12X,2F6.0)',IOSTAT=ERR) PORMIN, RTEXF
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
-
       ENDIF
 
 C-----------------------------------------------------------------------
@@ -359,8 +349,6 @@ C    Find and Read Surviving section  Added by Diego
          READ(CHAR,'(6F6.0)',IOSTAT=ERR) (YMOSWF(I),I=1,4)
          IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
         ENDIF
-
-
 
       CLOSE (LUNCRP)
 
@@ -458,9 +446,9 @@ C    Find and Read Surviving section  Added by Diego
 !      WSWTLF(1)=WTLF
       RATTP = SWFCAB(NSWAB)
 
-      SSDOT = 0.0
-      SLDOT = 0.0
-      SLNDOT = 0.0
+      SSDOT = 0.0   !stem
+      SLDOT = 0.0   !leaf
+      SLNDOT = 0.0  !leaf N
 
       SSNDOT = 0.0
 
@@ -529,18 +517,14 @@ C-----------------------------------------------------------------------
         L1 = L
         TRTDY = TRTDY + RLV(L) * DLAYR(L)
         RLSEN(L) = 0.0
-
-
         RNDOT(L) = 0.0
         RLNSEN(L) = 0.0
-
       ENDDO
 
       SRNDOT = 0.0
 !      TRLDF  = 0.0
       SUMEX = 0.0
       SUMRL = 0.0
-
 
       IF (RTWT .GE. 0.0001) THEN
 !       RFAC3 = TRTDY * 10000.0 / (RTWT - WRDOTN)
@@ -551,21 +535,14 @@ C-----------------------------------------------------------------------
       RFAC3 = RFAC1
       ENDIF
 
-
-
-
       DO L = 1,L1
-
         RLSEN(L) = RLV(L) * RTSEN * DTX
         SWDF = 1.0
         SWEXF = 1.0
 
-
-
 C-----------------------------------------------------------------------
 C     Calculate water-stress factors only when H2O optionis "on"      
 C-----------------------------------------------------------------------
-      
       IF (ISWWAT .EQ. 'Y') THEN
 
         IF (SAT(L)-SW(L) .LT. PORMIN) THEN
@@ -587,7 +564,6 @@ C-----------------------------------------------------------------------
       ENDIF
 
 C-----------------------------------------------------------------------
-
         RTSURV = MIN(1.0,(1.-RTSDF*(1.-SWDF)),(1.-RTEXF*(1.-SWEXF)))
 C-----------------------------------------------------------------------
         IF ((RLV(L) - RLSEN(L)) .GT. RLDSM) THEN
@@ -602,19 +578,19 @@ C-----------------------------------------------------------------------
 
       ENDDO
 
-
-
 C-----------------------------------------------------------------------
 C     Calculate root senescence, growth, maintenance and growth
 C     respiration, and update root length density for each layer.
 !-----------------------------------------------------------------------
- 
 !     SRDOT = (TRTDY + RLNEW - TRLV) * 10000.0 / RFAC3
 !     Sum RLSEN for total root senescence today. chp 11/13/00  
       SRMDOT = TRLSEN / RFAC3 * 10000.     !g/m2
       SRNDOT = TRLNSEN / RFAC3 * 10000. !g/m2
       SRDOT = SRMDOT + SRNDOT     
 
+C-----------------------------------------------------------------------
+C-----------------------------------------------------------------------
+C     Calculate STORAGE ORGAN senescence
 C-----------------------------------------------------------------------
 C     This section calculates natural senescence of storage organ tissue
 C      Thought about moving this below the IF...Then line but did not
@@ -633,8 +609,10 @@ C-----------------------------------------------------------------------
         SSRDOT = SSRMDOT + SSRNDOT
         SSRDOT = MIN(STRWT,SSRDOT)
 
-
-
+C-----------------------------------------------------------------------
+C-----------------------------------------------------------------------
+C     Calculate LEAF senescence
+C-----------------------------------------------------------------------
       IF (DAS .LE. NR7 .AND. VSTAGE .GE. 1.0) THEN
 C-----------------------------------------------------------------------
 C     This section calculates natural senescence prior to the
@@ -657,11 +635,13 @@ C-----------------------------------------------------------------------
 !     &  (1-EXP(-KCAN * XLAI))) THEN
 !            LFNSEN = WTLF * (1 - RHOL) * LFSEN * DTX * 
         IF (WTLF .GT. WTLF * LFSEN * DTX) THEN
-        LFNSEN = WTLF * LFSEN * DTX
+          LFNSEN = WTLF * LFSEN * DTX
         ELSE
-        LFNSEN = WTLF
+          LFNSEN = WTLF
         ENDIF
+
        SLMDOT = LFNSEN  
+
 C-----------------------------------------------------------------------
 C     This section calculates senescence due to low light in lower
 C     canopy.  First compute LAI at which light compensation is reached
@@ -691,8 +671,11 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C     Calculate senescence due to water stress.
 C-----------------------------------------------------------------------
+!       chp 2026-05-25
+!       removed the comment from WSLOSS calculation line
+!       removed the CLW portion of WSLOSS modification
 !        IF (WTLF .GE. WSWTLF(5)) THEN
-!          WSLOSS = SENDAY * (1. - RATTP) * WTLF
+           WSLOSS = SENDAY * (1. - RATTP) * WTLF
 !        ELSEIF (SENDAY*(1.-RATTP) .GT. WSWTLF(5)-WTLF) THEN
 !          WSLOSS=SENDAY*(1.-RATTP)*(WSWTLF(5)-WTLF/WSWTLF(5))
 !        ELSE
@@ -700,19 +683,18 @@ C-----------------------------------------------------------------------
 !        ENDIF
 
         IF (WSLOSS .GT. 0.0) THEN
-        PORLFT = 1.0 - TABEX(SENMAX, XSENMX, VSTAGE, 4)
-        WSLOSS = MIN(WSLOSS, WTLF - CLW * PORLFT)
-        WSLOSS = MAX(WSLOSS, 0.0)
-        SLNDOT = WSLOSS
+          PORLFT = 1.0 - TABEX(SENMAX, XSENMX, VSTAGE, 4)
+          WSLOSS = MIN(WSLOSS, WTLF) ! - CLW * PORLFT)
+          WSLOSS = MAX(WSLOSS, 0.0)
+          SLNDOT = WSLOSS
+
         ENDIF
 
         SLDOT = SLDOT + SLNDOT
         SLDOT = MIN(WTLF,SLDOT)
 
 
-
-
-
+C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C     Calculate Stem senescence.
 C-----------------------------------------------------------------------
@@ -766,6 +748,8 @@ C-----------------------------------------------------------------------
       ENDIF
 
 C-----------------------------------------------------------------------
+C     N AND CH2O MOBILIZATION
+C-----------------------------------------------------------------------
 C     Calculate N available from today's senescence.
 C      Only Age, low-light and N-mobilization-based senescece are lost at
 C      less than current N and CH2O concentration.
@@ -797,9 +781,6 @@ C     TAKE OUT FROM HERE TO
 !        SSDOT = SSDOT + STSENWT
 !        SSDOT = MIN(STMWT, SSDOT)
 
-
-
-
 !            LFSNMOB = LFSNMOB + LFSENWT * (PCNL/100 - 
 !     &              (SENNLV * (PCNL / 100 - PROLFF*0.16) + PROLFF*0.16)) 
 
@@ -826,6 +807,7 @@ C-----------------------------------------------------------------------
 !            SRSCMOB = SSRMDOT * ((WCRSR / STRWT) - PCHOSRF)
 !            RTSCMOB = SRMDOT * ((WCRRT / RTWT) - PCHORTF)
 
+!       CHP 2026-05-11 - These values are always zero.
         TSCMOB = LFSCMOB + STSCMOB + SRSCMOB + RTSCMOB 
 
 C-----------------------------------------------------------------------
@@ -980,14 +962,15 @@ C-----------------------------------------------------------------------
 !      TSNMOB = LFNMINE + STNMINE + RTNMINE + SRNMINE + SHNMINE
 C      ADDITIONAL DM LOSS DUE TO N MOBILIZATION? SENRTE
 
-        LFSENWT = SENRTE * NMINELF / 0.16
-        LFSENWT = MIN(WTLF,LFSENWT)
-        SLDOT = SLDOT + LFSENWT
-        SLDOT = MIN(WTLF,SLDOT)
+      LFSENWT = SENRTE * NMINELF / 0.16
+      LFSENWT = MIN(WTLF,LFSENWT)
+      SLDOT = SLDOT + LFSENWT
+      SLDOT = MIN(WTLF,SLDOT)
 
-        STSENWT = LFSENWT * PORPT
-        SSDOT = SSDOT + STSENWT
-        SSDOT = MIN(STMWT, SSDOT)
+
+      STSENWT = LFSENWT * PORPT
+      SSDOT = SSDOT + STSENWT
+      SSDOT = MIN(STMWT, SSDOT)
 
 
 
@@ -1041,7 +1024,7 @@ C    1-12-2024 KJB and DP
       ENDIF
 !***********************************************************************
       RETURN
-      END ! SUBROUTINE FOR_SENMOB
+      END SUBROUTINE FOR_SENMOB
 !***********************************************************************
 !     SENES VARIABLE DEFINITIONS:
 !-----------------------------------------------------------------------

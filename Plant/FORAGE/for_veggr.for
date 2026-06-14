@@ -475,36 +475,34 @@ C     NAVL IS between lower and maximum N limit in this case,
 C       leaf expansion occurs as normal, but N concentration is reduced
 C-----------------------------------------------------------------------
         IF (NGRVEG .GT. 0.0 .AND. NAVL .LT. NGRVEG) THEN
-        NGRLF = MIN(NAVL * NGRLF / NGRVEG, NGRLF)
-        NGRST = MIN(NAVL * NGRST / NGRVEG, NGRST)
-        NGRRT = MIN(NAVL * NGRRT / NGRVEG, NGRRT)
-        NGRSR = MIN(NAVL * NGRSR / NGRVEG, NGRSR)
+          NGRLF = MIN(NAVL * NGRLF / NGRVEG, NGRLF)
+          NGRST = MIN(NAVL * NGRST / NGRVEG, NGRST)
+          NGRRT = MIN(NAVL * NGRRT / NGRVEG, NGRRT)
+          NGRSR = MIN(NAVL * NGRSR / NGRVEG, NGRSR)
         ENDIF
 C-----------------------------------------------------------------------
 C     Compute protein fraction of new vegetative tissue growth
 C-----------------------------------------------------------------------
         IF (WLDOTN .GT. 0.0) THEN
-        PROLFT = NGRLF * (100./16.)/WLDOTN
+          PROLFT = NGRLF * (100./16.)/WLDOTN
         ELSE
-        PROLFT = 0.0
+          PROLFT = 0.0
         ENDIF
         IF (WSDOTN .GT. 0.0) THEN
-        PROSTT = NGRST * (100./16.)/WSDOTN
+          PROSTT = NGRST * (100./16.)/WSDOTN
         ELSE
-        PROSTT = 0.0
+          PROSTT = 0.0
         ENDIF
         IF (WRDOTN .GT. 0.0) THEN
-        PRORTT = NGRRT * (100./16.)/WRDOTN
+          PRORTT = NGRRT * (100./16.)/WRDOTN
         ELSE
-        PRORTT = 0.0
+          PRORTT = 0.0
         ENDIF
         IF (WSRDOTN .GT. 0.0) THEN
-        PROSRT = NGRSR * (100./16.)/WSRDOTN
+          PROSRT = NGRSR * (100./16.)/WSRDOTN
         ELSE
-        PROSRT = 0.0
+          PROSRT = 0.0
         ENDIF
-
-
 
 C-----------------------------------------------------------------------
 C     Recompute respiration costs if expansion occurs at low N-conc.,
@@ -628,10 +626,8 @@ C            relative to that added to leaf + stem
         LSTR = LSTR * (WTLF - SLDOT ) / 
      &    (LSTR * (WTLF - SLDOT )
      &    + (STMWT - SSDOT) )
-
-
-
       ENDIF
+
       IF (PGLEFT .GE. CMINEP) THEN
         CADSR = (PGLEFT-CMINEP)/PCH2O * LSTSR
         CADLF = (PGLEFT-CMINEP)/PCH2O * LSTR*(1-LSTSR)
@@ -662,11 +658,9 @@ C-----------------------------------------------------------------------
 !     &              (WCRSR - STRWT * PCHOSRF)
 !        ENDIF
 
-
-
 !      IF (CMINEP .GT. 0) THEN
         CMINEA = CMINEP - PGLEFT
-!        CMINEA = MAX(TSCMOB,CMINEP - PGLEFT)
+!       CMINEA = MAX(TSCMOB,CMINEP - PGLEFT)
         IF (CMINEA .GT. CMINEP) CMINEA = CMINEP
 
 C-----------------------------------------------------------------------
@@ -721,8 +715,6 @@ C            When this was done, the CSAVEV code was returned to the
 C            original code from DSSAT4 for consistenc between the model
 C            versions.
 C-----------------------------------------------------------------------
-
-
       CADLF = CADLF + CADVG/PCH2O * LFCDEBT
       CADST = CADST + CADVG/PCH2O * STCDEBT 
       CADRT = CADRT + CADVG/PCH2O * RTCDEBT
@@ -908,8 +900,6 @@ C-----------------------------------------------------------------------
      &    PROSRR * 0.16 - 
      &    (WTNSR -(SSRDOT * PCNSR/100 - SRSNMOB))) 
 
-
-
       ELSE
         NADRAT = 0.0
         NADLF = 0.0
@@ -918,9 +908,6 @@ C-----------------------------------------------------------------------
         NADSR = 0.0
         NLEAK = 0.0
       ENDIF
-
-
-
 
 C-----------------------------------------------------------------------
 C      SJR 10/20/03 Added code to fix/distribute NLEAK
@@ -983,8 +970,6 @@ C-----------------------------------------------------------------------
       ZZZ=AAA+BBB+CCC+DDD
 
       XXX=PNMLF+PNMST+PNMRT+PNMSR+PNMSH
-
-
 
 C-----------------------------------------------------------------------
 C     Subroutine FOR_CANOPY calculates height and width of the FOR_CANOPY as a
@@ -1120,10 +1105,10 @@ C      Add new growth to WxDOTN
       WSRDOTN = WSRDOTN + (NLKNG1 + NLKNG2 + NLKNG3) * FRSTR      
 
 C      Add N in new growth to NGRxx
-      NGRLF = NGRLF + (NLKNG1 + NLKNG2) * FRLF *FNINL + NLKRTRN3 * FRLF            
+      NGRLF = NGRLF + (NLKNG1 + NLKNG2) * FRLF *FNINL + NLKRTRN3 * FRLF
       NGRST = NGRST + (NLKNG1 + NLKNG2) * FRSTM *FNINS + 
      &    NLKRTRN3 * FRSTM            
-      NGRRT = NGRRT + (NLKNG1 + NLKNG2) * FRRT *FNINR + NLKRTRN3 * FRRT            
+      NGRRT = NGRRT + (NLKNG1 + NLKNG2) * FRRT *FNINR + NLKRTRN3 * FRRT
       NGRSR = NGRSR + (NLKNG1 + NLKNG2) * FRSTR *FNINSR + 
      &    NLKRTRN3 * FRSTR            
 
@@ -1131,31 +1116,30 @@ C      Adjust NRUSxx for N "returned" for CH2O
 C      Adjust ANMINExx for N "returned" for CH2O
       ANMINETOT = ANMINELF + ANMINEST + ANMINERT + ANMINESR
       IF (ANMINETOT .GT. 0.0) THEN
-      ANMINELF = ANMINELF - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
-     &    ANMINELF/ANMINETOT
-      ANMINEST = ANMINEST - NLKNG1 * (AGRVGI / (RPRO * 0.16)) *  
-     &    ANMINEST/ANMINETOT
-      ANMINERT = ANMINERT - NLKNG1 * (AGRVGI / (RPRO * 0.16)) *  
-     &    ANMINERT/ANMINETOT
-      ANMINESR = ANMINESR - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
-     &    ANMINESR/ANMINETOT
-
-
-      ANMINETOT = ANMINELF + ANMINEST + ANMINERT + ANMINESR
-
-      NRUSLF = NRUSLF - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
-     &    ANMINELF/ANMINETOT
-      NRUSST = NRUSST - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
-     &    ANMINEST/ANMINETOT
-      NRUSRT = NRUSRT - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
-     &    ANMINERT/ANMINETOT
-      NRUSSR = NRUSSR - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
-     &    ANMINESR/ANMINETOT
+        ANMINELF = ANMINELF - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
+     &      ANMINELF/ANMINETOT
+        ANMINEST = ANMINEST - NLKNG1 * (AGRVGI / (RPRO * 0.16)) *  
+     &      ANMINEST/ANMINETOT
+        ANMINERT = ANMINERT - NLKNG1 * (AGRVGI / (RPRO * 0.16)) *  
+     &      ANMINERT/ANMINETOT
+        ANMINESR = ANMINESR - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
+     &      ANMINESR/ANMINETOT
+        
+        
+        ANMINETOT = ANMINELF + ANMINEST + ANMINERT + ANMINESR
+        
+        NRUSLF = NRUSLF - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
+     &      ANMINELF/ANMINETOT
+        NRUSST = NRUSST - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
+     &      ANMINEST/ANMINETOT
+        NRUSRT = NRUSRT - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
+     &      ANMINERT/ANMINETOT
+        NRUSSR = NRUSSR - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
+     &      ANMINESR/ANMINETOT
       ENDIF
 
 C      Calculate how much NLEAK was used as N and how much was 
 C      returned for CH2O
-
       CHORECOVER = NLKNG1 * AGRVGI + NLKNG2 * AGRVGI
       AGRVG = (OCH2OCOST + CHORECOVER) / 
      &    (WLDOTN + WSDOTN + WRDOTN + WSRDOTN)

@@ -2160,6 +2160,21 @@ C-----------------------------------------------------------------------
      &    FRLF, FRSTM, FRRT,
      &    FHWAH, FHLPH, DWTCO, DWTLO, DWTSO,fhpctn,RHOR)
 
+      call forage_harvest(CONTROL,FILECC, ATMOW, ATTP,
+     &    RHOL,RHOS,PCNL,PCNST,SLA,RTWT,STRWT,       !Input
+     &    WTLF,STMWT,TOPWT,TOTWT,WCRLF,WCRST,        !Input/Output
+     &    WTNLF,WTNST,WNRLF,WNRST,WTNCAN,            !Input/Output
+     &    AREALF,XLAI,XHLAI,VSTAGE,vstagp,canht,     !Input/Output
+     &    FHWAH,FHTOTN, FHLPH,fhpctn,FREQ,
+     &    MOWC,RSPLC,HMFRQ,HMGDD,HMCUT,HMMOW,HRSPL,
+     &    DWTCO, DWTLO, DWTSO, PWTCO, PWTLO, PWTSO,
+     &    HMVS, WTCO, WTLO, WTSO, TAVG, MOWGDD,
+     &    MOWCOUNT, TGMIN, VTO1, VTB1, MOWREF, 
+     &    RSREF, YFREQ, YRSREF, YCUTHT, YCHMOW,
+     &    XCUTHT, XCHMOW, XFRGDD, XFREQ, CUTDAY,
+     &    PROLFF, PROSTF, pliglf, pligst)
+
+
 !     !!   ! Write to Overview.out and summary.out files.
 !     !!   CALL FOR_OPHARV (CONTROL, ISWITCH, 
 !!!    !!&  SDRATE, SDWT, SDWTAM, SEEDNO, STGDOY, STMWT,    !Input
@@ -2172,7 +2187,7 @@ C-----------------------------------------------------------------------
 !       Call PlantNBal only for seasonal output.
       IF (DYNAMIC .EQ. SEASEND) THEN
 
-      CALL FOR_DORMANCY( CONTROL,
+        CALL FOR_DORMANCY( CONTROL,
      &    DAYL, TMIN,                                        !Input
      &    DRMST, FREEZ2, FRZDC, PPGFAC, PPTFAC, PPMFAC,      !Output
      &    FNPGD, FNPMD, FNPTD, FRZDHD, FRZHRD, HARD1,        !Output
