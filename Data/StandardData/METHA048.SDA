@@ -1,0 +1,10 @@
+*METHA048.SDA Coefficients - DSCSM048 Model 2020-07-21
+======================================================
+Descriptive text here.
+BRAD         = Soil buffer regeneration rate after drainage events
+WFPS_methane = Water-filled porosity threshold above which methane production occurs
+
+@EXPER          BRAD  WFPS_methane
+DEFAULT         0.07          0.70
+CNJZ1302.RIX    0.50          0.30
+ETBG2021.RIX    0.07          0.30

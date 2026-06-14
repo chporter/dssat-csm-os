@@ -30,6 +30,11 @@ C========================================================================
      &    SSNDOT, SSDOT, SSRDOT, SSRMDOT, SSRNDOT, STCMINE,     !Output
      &    STSCMOB, STSNMOB, STLTSEN, STSENWT, TSCMOB,           !Output
      &    TSNMOB, VNMOBR,                                       !Output
+!=========================================================================
+!     TEMP CHP Add printout for SENES variables
+     &    YRPLT,  !temporary input
+!     END TEMP CHP
+!=========================================================================
      &    DYNAMIC)                                              !Control
 
 !     2023-01-20 CHP Remove unused variables from argument list:
@@ -39,6 +44,7 @@ C-----------------------------------------------------------------------
       USE ModuleDefs     !Definitions of constructed variable types, 
         ! which contain control information, soil
         ! parameters, hourly weather data.
+      USE ModuleData
       IMPLICIT NONE
       EXTERNAL GETLUN, FIND, ERROR, IGNORE, TIMDIF, TABEX, CURV
       SAVE
@@ -120,6 +126,22 @@ C-----------------------------------------------------------------------
 
       REAL,dimension(4) :: XMOSWF
       REAL,dimension(4) :: YMOSWF
+
+!=========================================================================
+!    TEMP CHP Add printout for SENESMOB variables
+      EXTERNAL YR_DOY, HEADER
+      TYPE (ControlType) CONTROL
+      CHARACTER*10 OUTSN2  !SENES2.OUT
+      INTEGER NOUTDG2, ERRNUM, YEAR, DOY, DAP, YRPLT
+      LOGICAL FEXIST
+      CALL GET(CONTROL)
+      DAS   = CONTROL % DAS
+      YRDOY = CONTROL % YRDOY
+      CALL YR_DOY(YRDOY, YEAR, DOY) 
+      DAP = MAX(0,TIMDIF(YRPLT,YRDOY))
+      IF (DAP > DAS) DAP = 0
+!     end temp chp
+!=========================================================================
 
 !***********************************************************************
 !***********************************************************************
@@ -364,6 +386,16 @@ C    Find and Read Surviving section  Added by Diego
 
       CLOSE (LUNCRP)
 
+
+!=========================================================================
+!     TEMP CHP Add printout for for_senmob variables
+
+          OUTSN2  = 'SENES2.OUT'
+          CALL GETLUN('OUTSN2',  NOUTDG2)
+
+!     end temp chp
+!=========================================================================
+
 !***********************************************************************
 !***********************************************************************
 !     Seasonal initialization - run once per season
@@ -437,6 +469,33 @@ C    Find and Read Surviving section  Added by Diego
       DO I = 1,5
         SWFCAB(I) = 1.0
       ENDDO
+
+
+!=========================================================================
+!     TEMP CHP Add printout for SENESMOB variables
+
+!       Initialize daily SENESMOB output file      
+        INQUIRE (FILE = OUTSN2, EXIST = FEXIST)
+        IF (FEXIST) THEN
+          OPEN (UNIT = NOUTDG2, FILE = OUTSN2, STATUS = 'OLD',
+     &      IOSTAT = ERRNUM, POSITION = 'APPEND')
+        ELSE
+          OPEN (UNIT = NOUTDG2, FILE = OUTSN2, STATUS = 'NEW',
+     &      IOSTAT = ERRNUM)
+          WRITE(NOUTDG2,'("*SENESMOB OUTPUT FILE2")')
+        ENDIF
+
+        !Write headers
+        CALL HEADER(SEASINIT, NOUTDG2, CONTROL % RUN)
+
+        WRITE (NOUTDG2,210)
+  210   FORMAT('@YEAR DOY   DAS   DAP',
+     &   '      TotSen      NatSen     NMobSen    LoLitSen',
+     &   '    WaterSen      SLMDOT      Nmob_a      Nmob_p',
+     &   '     Nmob_mp     Cmine_p    Cmine_mp')
+
+!     end temp chp
+!=========================================================================
 
 !***********************************************************************
 !***********************************************************************
@@ -1033,6 +1092,37 @@ C    1-12-2024 KJB and DP
 
       CMINEP = LFCMINE + STCMINE + RTCMINE + SRCMINE + SHCMINE
       CMINEO = CMINELF + CMINEST + CMINERT + CMINESR + SHCMINE
+
+
+!=========================================================================
+!     TEMP CHP Add printout for SENES variables
+
+!***********************************************************************
+!***********************************************************************
+!     Daily output
+!***********************************************************************
+      ELSEIF (DYNAMIC .EQ. OUTPUT) THEN
+
+        WRITE (NOUTDG2,300)
+     &   YEAR, DOY, DAS, DAP, 
+     &   SLDOT, LFNSEN, LFSENWT, LTSEN, SLNDOT, SLMDOT,
+     &   LFSNMOB, NMINELF, LFNMINE, CMINELF, LFCMINE 
+
+  300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
+     &    50F12.6)
+
+!     still temp chp...
+
+!***********************************************************************
+!***********************************************************************
+!     Seasonal Output 
+!***********************************************************************
+      ELSE IF (DYNAMIC .EQ. SEASEND) THEN
+C-----------------------------------------------------------------------
+          CLOSE (NOUTDG2)
+
+!     end temp chp
+!=========================================================================
 
 !***********************************************************************
 !***********************************************************************

@@ -487,6 +487,11 @@ C-----------------------------------------------------------------------
      &    SSNDOT, SSDOT, SSRDOT, SSRMDOT, SSRNDOT, STCMINE,     !Output
      &    STSCMOB, STSNMOB, STLTSEN, STSENWT, TSCMOB,           !Output
      &    TSNMOB, VNMOBR,                                       !Output
+!=========================================================================
+!     TEMP CHP Add printout for SENES variables
+     &    YRPLT,  !temporary input
+!     END TEMP CHP
+!=========================================================================
      &    RUNINIT)                                              !Control
 
 !-----------------------------------------------------------------------
@@ -979,6 +984,11 @@ C-----------------------------------------------------------------------
      &    SSNDOT, SSDOT, SSRDOT, SSRMDOT, SSRNDOT, STCMINE,     !Output
      &    STSCMOB, STSNMOB, STLTSEN, STSENWT, TSCMOB,           !Output
      &    TSNMOB, VNMOBR,                                       !Output
+!=========================================================================
+!     TEMP CHP Add printout for SENES variables
+     &    YRPLT,  !temporary input
+!     END TEMP CHP
+!=========================================================================
      &    SEASINIT)                                             !Control
 !-----------------------------------------------------------------------
       IF (ISWNIT .EQ. 'Y') THEN
@@ -1501,6 +1511,11 @@ C-----------------------------------------------------------------------
      &    SSNDOT, SSDOT, SSRDOT, SSRMDOT, SSRNDOT, STCMINE,     !Output
      &    STSCMOB, STSNMOB, STLTSEN, STSENWT, TSCMOB,           !Output
      &    TSNMOB, VNMOBR,                                       !Output
+!=========================================================================
+!     TEMP CHP Add printout for SENES variables
+     &    YRPLT,  !temporary input
+!     END TEMP CHP
+!=========================================================================
      &    INTEGR)                                              !Control
 
 C-----------------------------------------------------------------------
@@ -2085,6 +2100,32 @@ C-----------------------------------------------------------------------
         STGDOY(16) = YREND
         ENDIF
 
+        CALL FOR_SENMOB(
+     &    FILECC, CLW, DLAYR, DTX, DUL, DXR57, FNINL,           !Input
+     &    FNINR, FNINS, FNINSR, ISWWAT, LL, NLAYR, NR5,         !Input 
+     &    NR7, NSTRES, PAR, PCNL, PCNRT, PCNSR, PCNST,          !Input
+     &    PPMFAC, RLV, RTWT, SAT, SLAAD, STMWT,                 !Input
+     &    STRWT, SW, SWFAC, TDUMX, TDUMX2, VSTAGE, WCRLF,       !Input
+     &    WCRRT,WCRSH, WCRSR, WCRST, WNRLF, WNRRT, WNRSH,       !Input
+     &    WNRSR,WNRST, WTLF, XLAI, XPOD,                        !Input
+     &    YRDOY, YRSIM, TGRO,                                   !Input
+     &    CMINELF, CMINEP, CMINERT, CMINESH, CMINESR,           !Output
+     &    CMINEST, CMOBMX, CMOBSR, LAIMOBR, LFCMINE,            !Output
+     &    LFSCMOB, LFSENWT, LFSNMOB, LTSEN, NMINELF,            !Output
+     &    NMINEP, NMINERT, NMINESR, NMINEST, NMOBR,             !Output
+     &    NMOBSR, PORPT, RLSEN, RTCMINE, RTSCMOB, RTSNMOB,      !Output
+     &    SHCMINE, SHNMINE, SLDOT, SLMDOT, SRCMINE,             !Output
+     &    SRDOT, SRMDOT, SRNDOT, SRSCMOB, SRSNMOB, SSMDOT,      !OutpuT
+     &    SSNDOT, SSDOT, SSRDOT, SSRMDOT, SSRNDOT, STCMINE,     !Output
+     &    STSCMOB, STSNMOB, STLTSEN, STSENWT, TSCMOB,           !Output
+     &    TSNMOB, VNMOBR,                                       !Output
+!=========================================================================
+!     TEMP CHP Add printout for SENES variables
+     &    YRPLT,  !temporary input
+!     END TEMP CHP
+!=========================================================================
+     &    DYNAMIC)                                              !Control
+
 C-----------------------------------------------------------------------
 C     CallDormancy module for daily printout.
 C-----------------------------------------------------------------------
@@ -2159,6 +2200,62 @@ C-----------------------------------------------------------------------
      &    WTNSR, WTNSRA, WTNSRO, WTSRO, XSTR,
      &    FRLF, FRSTM, FRRT,
      &    FHWAH, FHLPH, DWTCO, DWTLO, DWTSO,fhpctn,RHOR)
+!     TEMP CHP
+      CALL FOR_GROW(CONTROL, ISWITCH, DYNAMIC, SOILPROP, 
+     &  AGEFAC, CADLF, CADST, CRUSLF, CRUSRT, CRUSSH,     !Input
+     &  CRUSST, DISLA, F, FILECC, FILEGC, FRLF, FRSTM,    !Input
+     &  LFSCMOB, LFSENWT, LFSNMOB, LTSEN, NADLF, NADRT,   !Input
+     &  NADST, NDTH, NFIXN, NGRLF, NGRRT, NGRSD, NGRSH,   !Input
+     &  NGRST, NMINEA, NODGR, NOUTDO, NPLTD, NRUSLF,      !Input
+     &  NRUSRT, NRUSSH, NRUSST, POTCAR, POTLIP,           !Input
+     &  PPLTD, RTSCMOB, RTSNMOB, SDIDOT, SDPROR,          !Input
+     &  SENNOD, SENRT, SLDOT, SLMDOT, SLNDOT,             !Input
+     &  SLNADDOT, SRDOT, SRMDOT, SRNADDOT,                !Input
+     &  SRNDOT, SRSCMOB, SRSNMOB, SSDOT, SSMDOT,          !Input
+     &  SSNADDOT, SSNDOT, SSRMDOT, SSRNADDOT,             !Input
+     &  STSCMOB, STLTSEN, STSENWT, STSNMOB, TRNH4U,       !Input
+     &  TRNO3U, TRNU, TURFAC, WLDOTN, WLIDOT, WRDOTN,     !Input
+     &  WRIDOT, WSDDTN, WSDOTN, WSHDTN, WSIDOT, WTABRT,   !Input
+     &  WTSHMT, YRNR1, MDATE, YRPLT,                      !Input
+     &  FHLEAF,FHSTEM,FHVSTG,                             !Input
+
+     &  SWIDOT, WLFDOT, WSHIDT, WTNFX, XHLAI,             !Input/Output
+
+     &  AREALF, BETN, CANNAA, CANWAA, CLW, CropStatus,    !Output
+     &  CSW, DWNOD, DWNODA, GROWTH, GRWRES, LAIMX, PCCSD, !Output
+     &  PCLSD, PCNL, PCNRT, PCNSD, PCNSH, PCNST, PLTPOP,  !Output
+     &  PLIGLF, PLIGNO, PLIGRT, PLIGSD, PLIGSH, PLIGST,   !Output
+     &  PODWT, PUNCSD, PUNCTR, RHOL, RHOS, RNITP,         !Output
+     &  ROWSPC, RTWT, SDNPL, SDRATE, SDWT, SDWTAM,        !Output
+     &  SEEDNI, SEEDNO, SENESCE, SHELWT, SLA,             !Output
+     &  SLAAD, STMWT, TOPWT, TOTWT, WCRLF, WCRRT, WCRSH,  !Output
+     &  WCRST, WNRLF, WNRRT, WNRSH, WNRST, WTCO,          !Output
+     &  WTLF, WTLO, WTMAIN, WTNCAN, WTNEW, WTNLA, WTNLF,  !Output
+     &  WTNLO, WTNNA, WTNNAG, WTNNO, WTNNOD, WTNOO,       !Output
+     &  WTNRA, WTNRO, WTNRT, WTNSA, WTNSD, WTNSDA,        !Output
+     &  WTNSDO, WTNSH, WTNSHA, WTNSHO, WTNSO, WTNST,      !Output
+     &  WTNUP, WTRO, WTSDO, WTSHO, WTSO, XLAI, XPOD,      !Output
+
+     &  CADRT, CADSH, NADSH,                              !Input
+     &  CADSR, CRUSSR, FRSTR, NADSR, NGRSR, NRUSSR,       !Input
+     &  PSRLYRD, PSRSRFD, PSRSRFL, PSRLYR1, SSRDOT,       !Input
+     &  SSRNDOT, STRSRFL, STRLYR1, WSRDOTN, WSRIDOT,      !Input
+     &  WSFDOT, WSRFDOT,                                  !Input/Output
+     &  CSRW, PCNSR, PLIGSR, RHOSR, STRWT, WCRSR,         !Output
+     &  WNRSR, WTNSR, WTNSRA, WTNSRO, WTSRO,              !Output
+     
+     &  ALPHL, ALPHR, ALPHS, ALPHSH, ALPHSR, PCARSR,      !Output
+     &  PLIPSR, PMINSR, POASR, PROSRF,CPFSTR, NSRALL,     !Output
+     &  NSRDOT, NSROFF, TPSRLYR1,TPSRSRFL, WRCSRDT,       !Output
+     &  WSRDOT, WSRI,                                     !Output
+
+     &  NLALL, NRALL, NSALL,                              !Output
+     &  PCHOLFF, PCHORTF, PCHOSRF, PCHOSTF,               !Output
+     &  RHOR, WLDOT, WRCLDT, WRCRDT, WRCSDT, WRCSHD,      !Output
+     &  WRDOT, WSDOT,                                     !Output
+
+     &  VSTAGE, DWTCO, DWTLO, DWTSO,
+     &  PWTCO, PWTLO, PWTSO)                         !Input/Output
 
 !     !!   ! Write to Overview.out and summary.out files.
 !     !!   CALL FOR_OPHARV (CONTROL, ISWITCH, 

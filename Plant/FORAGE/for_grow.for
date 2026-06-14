@@ -93,6 +93,11 @@ C=======================================================================
         ! parameters, hourly weather data.
       IMPLICIT NONE
       EXTERNAL FOR_IPGROW, ERROR, FOR_STRESS
+
+!     TEMP CHP
+      EXTERNAL TIMDIF, YR_DOY, GETLUN, HEADER
+!     END TEMP CHP
+
       SAVE
 !-----------------------------------------------------------------------
 
@@ -191,6 +196,7 @@ C=======================================================================
 
       REAL RMIN, SDLIP, WLFI, WSTI, WRTI
       REAL CLW, CSW
+      REAL LCADD, LNADD   !TEMP CHP
 
 !     Surface and soil residue due to daily senescence of plant matter
 !      REAL SENCLN(0:NL, 3), SENRT(NL), SENNOD(NL)
@@ -254,7 +260,25 @@ C-----------------------------------------------------------------------
       TYPE (SoilType)    SOILPROP
       TYPE (ResidueType) SENESCE
       
+
+
+!=========================================================================
+!     TEMP CHP Add printout for GROW variables
+
+      CHARACTER*10 OUTGR  !GROW.OUT
+      INTEGER NOUTDG, ERRNUM, YEAR, DOY, DAS, DAP, TIMDIF
+      LOGICAL FEXIST
+
       YRDOY  = CONTROL % YRDOY
+      DAS   = CONTROL % DAS
+      DAP = MAX(0,TIMDIF(YRPLT,YRDOY))
+      IF (DAP > DAS) DAP = 0
+      CALL YR_DOY(YRDOY, YEAR, DOY) 
+
+!     end temp chp
+!=========================================================================
+
+
       crop   = control % crop
       trtno  = control % trtnum
       run    = control % run
@@ -333,6 +357,15 @@ C-----------------------------------------------------------------------
         PCNMIN = PROLFF * 16.0            !Moved from INCOMP
 !-----------------------------------------------------------------------
       ENDIF
+
+!=========================================================================
+!     TEMP CHP Add printout for GROW variables
+
+          OUTGR  = 'GROW.OUT'
+          CALL GETLUN('OUTGR',  NOUTDG)
+
+!     end temp chp
+!=========================================================================
 
 !***********************************************************************
 !***********************************************************************
@@ -467,6 +500,36 @@ C-----------------------------------------------------------------------
 !      IF (CROP .NE. 'FA') THEN
 !        SLA    = F                 
 !      ENDIF
+
+
+!=========================================================================
+!     TEMP CHP Add printout for GROW variables
+
+!       Initialize daily GROW output file      
+        INQUIRE (FILE = OUTGR, EXIST = FEXIST)
+        IF (FEXIST) THEN
+          OPEN (UNIT = NOUTDG, FILE = OUTGR, STATUS = 'OLD',
+     &      IOSTAT = ERRNUM, POSITION = 'APPEND')
+        ELSE
+          OPEN (UNIT = NOUTDG, FILE = OUTGR, STATUS = 'NEW',
+     &      IOSTAT = ERRNUM)
+          WRITE(NOUTDG,'("*GROW OUTPUT FILE")')
+        ENDIF
+
+        !Write headers
+        CALL HEADER(SEASINIT, NOUTDG, CONTROL % RUN)
+
+        WRITE (NOUTDG,200)
+  200   FORMAT('@YEAR DOY   DAS   DAP'
+     &  '        WTLF        XLAI       WCRLF      PLEAFN',
+     &  '       WTNLF       WNRLF        LFSN',
+     &  '       WLDOT       LCADD       LNADD      CRUSLF',
+     &  '      NRUSLF      WLIDOT      WLFDOT       SLDOT'
+     &  '      SLNDOT       NLOFF       NLDOT',
+     &  '       NGRLF      WLDOTN')
+
+!     end temp chp
+!=========================================================================
 
 !***********************************************************************
 !***********************************************************************
@@ -753,6 +816,11 @@ C-----------------------------------------------------------------------
       IF (WTLF .GT. 0.0 .AND. FHLEAF.EQ.0) THEN
         WLDOT = WLDOT + CADLF - LFCADDM +
      &    (NADLF - LFNADDM)/0.16
+
+!       TEMP CHP
+        LCADD = CADLF - LFCADDM 
+        LNADD = (NADLF - LFNADDM)/0.16
+
       ENDIF
 
       IF (WLDOT .LT. 0.0) THEN
@@ -2068,6 +2136,38 @@ C-----------------------------------------------------------------------
       SENESCE % ResE   = SenE
 
 
+
+!=========================================================================
+!     TEMP CHP Add printout for GROW variables
+
+!***********************************************************************
+!***********************************************************************
+!     Daily output
+!***********************************************************************
+      ELSEIF (DYNAMIC .EQ. OUTPUT) THEN
+
+        WRITE (NOUTDG,300)
+     &   YEAR, DOY, DAS, DAP, 
+     &   WTLF, XLAI, WCRLF, PCNL, WTNLF, WNRLF, WTNLF - WNRLF,
+     &   WLDOT, LCADD, LNADD, CRUSLF, NRUSLF/0.16, 
+     &   WLIDOT, WLFDOT, SLDOT, SLNDOT, 
+     &   NLOFF, NLDOT, NGRLF, WLDOTN
+
+  300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
+     &    30F12.6)
+
+!     still temp chp...
+
+!***********************************************************************
+!***********************************************************************
+!     Seasonal Output 
+!***********************************************************************
+      ELSE IF (DYNAMIC .EQ. SEASEND) THEN
+C-----------------------------------------------------------------------
+          CLOSE (NOUTDG)
+
+!     end temp chp
+!=========================================================================
 
 C***********************************************************************
 C***********************************************************************
