@@ -132,18 +132,22 @@ C=======================================================================
       PARAMETER (BLANK  = ' ')
 
       DYNAMIC  = CONTROL % DYNAMIC
-      FILEIO = CONTROL % FILEIO
-      YRDOY  = CONTROL % YRDOY
-      crop   = control % crop
-      trtno  = control % trtnum
-      run    = control % run
-      ename  = control % ename
+      YRDOY = CONTROL % YRDOY
 
 C***********************************************************************
 C***********************************************************************
 !     Run Initialization - Called once per simulation
 C***********************************************************************
       IF (DYNAMIC .EQ. RUNINIT) THEN
+
+!      FILEIO = CONTROL % FILEIO
+      FILEX = CONTROL % FILEX
+      PATHEX = CONTROL % PATHEX
+      YRDOY  = CONTROL % YRDOY
+      crop   = control % crop
+      trtno  = control % trtnum
+      run    = control % run
+      ename  = control % ename
 
         MOWGDD = 0.0
         MOWCOUNT = 1
@@ -168,7 +172,6 @@ C***********************************************************************
 
 !       2026-05-20 CHP Always need FileX name for forage.out, even
 !         when no mow file is read.
-        FILEX = CONTROL % FILEX
 
         IF (ATMOW .EQV. .FALSE.) THEN
           MOWFILE = FILEX(1:8) // ".MOW"

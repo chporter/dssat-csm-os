@@ -294,6 +294,7 @@ C***********************************************************************
 
       CONTROL % FILEIO  = FILEIO
       CONTROL % FILEX   = FILEX
+      CONTROL % PATHEX  = PATHEX
       CONTROL % RNMODE  = RNMODE
       CONTROL % ROTNUM  = ROTNUM
       CONTROL % TRTNUM  = TRTNUM

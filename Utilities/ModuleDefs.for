@@ -100,6 +100,7 @@ C             CHP Added TRTNUM to CONTROL variable.
         CHARACTER (len=8)  MODEL, ENAME
         CHARACTER (len=12) FILEX
         CHARACTER (len=30) FILEIO
+        CHARACTER (len=80) PATHEX
         CHARACTER (len=102)DSSATP
         CHARACTER (len=120) :: SimControl = 
      &  "                                                            "//
