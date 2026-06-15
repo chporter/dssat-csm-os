@@ -29,6 +29,7 @@ C  05/31/2005 SJR Added CH2OREF to senesce organs at minimum CH2O conc.
 C  09/28/2005 SJR Added SENMOB to senesce organs earlier in the day.
 !  01/26/2023 CHP Reduce compile warnings: add EXTERNAL stmts, remove 
 !                 unused variables, shorten lines. 
+!  06/16/2026 CHP Added MOWED variable TRUE after any mowing event.
 C=======================================================================
 
       subroutine FORAGE(CONTROL, ISWITCH, 

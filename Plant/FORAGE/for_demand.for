@@ -14,6 +14,7 @@ C  01/10/1997 GH  Added TURFAC effect on seed growth and pod addition
 C  09/15/1998 CHP Modified for modular format
 C  05/10/1999 GH  Incorporated in CROPGRO
 C  06/24/2003 SJR Modified initialization of XLEAF for grass transplant age
+!  06/16/2026 CHP Added MOWED variable, established partitioning after mowing.
 C-----------------------------------------------------------------------
 C  Called by:  CROPGRO
 C  Calls:      FOR_SDCOMP, FOR_IPDMND

@@ -11,6 +11,7 @@ C  10/15/2020 FO  Fixed path issue for MOWFILE.
 C  06/23/2021 FO  Update MOWFILE to handle paths with spaces.
 C  01/28/2022 DP/FO/TF Added AutomaticMOW
 C  01/28/2022 DP/TF  Added GDD option for AutomaticMOW
+!  06/16/2026 CHP Added MOWED variable TRUE after any mowing event.
 C-----------------------------------------------------------------------
 C  INPUT  : 
 C
