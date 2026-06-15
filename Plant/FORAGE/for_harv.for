@@ -11,6 +11,7 @@ C  10/15/2020 FO  Fixed path issue for MOWFILE.
 C  06/23/2021 FO  Update MOWFILE to handle paths with spaces.
 C  01/28/2022 DP/FO/TF Added AutomaticMOW
 C  01/28/2022 DP/TF  Added GDD option for AutomaticMOW
+!  06/16/2026 CHP Added MOWED variable TRUE after any mowing event.
 C-----------------------------------------------------------------------
 C  INPUT  : 
 C
@@ -21,18 +22,19 @@ C
 C  Calls  :
 C=======================================================================
       SUBROUTINE forage_harvest(CONTROL,FILECC, ATMOW, ATTP,
-     &              RHOL,RHOS,PCNL,PCNST,SLA,RTWT,STRWT,   !Input
-     &              WTLF,STMWT,TOPWT,TOTWT,WCRLF,WCRST,    !Input/Output
-     &              WTNLF,WTNST,WNRLF,WNRST,WTNCAN,        !Input/Output
-     &              AREALF,XLAI,XHLAI,VSTAGE,vstagp,canht, !Input/Output
-     &              fhtot,FHTOTN, fhpctlf,fhpctn,FREQ,
-     &              MOWC,RSPLC,HMFRQ,HMGDD,HMCUT, HMMOW,HRSPL,
-     &              DWTCO, DWTLO, DWTSO, PWTCO, PWTLO, PWTSO,
-     &              HMVS, WTCO, WTLO, WTSO, TAVG, MOWGDD,
-     &              MOWCOUNT, TGMIN, VTO1, VTB1, MOWREF, 
-     &              RSREF, YFREQ, YRSREF, YCUTHT, YCHMOW,
-     &              XCUTHT, XCHMOW, XFRGDD, XFREQ, CUTDAY,
-     &              PROLFF, PROSTF, pliglf, pligst)
+     &  RHOL,RHOS,PCNL,PCNST,SLA,RTWT,STRWT,   !Input
+     &  WTLF,STMWT,TOPWT,TOTWT,WCRLF,WCRST,    !Input/Output
+     &  WTNLF,WTNST,WNRLF,WNRST,WTNCAN,        !Input/Output
+     &  AREALF,XLAI,XHLAI,VSTAGE,vstagp,canht, !Input/Output
+     &  fhtot,FHTOTN, fhpctlf,fhpctn,FREQ,
+     &  MOWC,RSPLC,HMFRQ,HMGDD,HMCUT, HMMOW,HRSPL,
+     &  DWTCO, DWTLO, DWTSO, PWTCO, PWTLO, PWTSO,
+     &  HMVS, WTCO, WTLO, WTSO, TAVG, MOWGDD,
+     &  MOWCOUNT, TGMIN, VTO1, VTB1, MOWREF, 
+     &  RSREF, YFREQ, YRSREF, YCUTHT, YCHMOW,
+     &  XCUTHT, XCHMOW, XFRGDD, XFREQ, CUTDAY,
+     &  PROLFF, PROSTF, pliglf, pligst, 
+     &  MOWED)                                  !Output
 
       USE MODULEDEFS
       USE ModuleData
@@ -54,7 +56,7 @@ C=======================================================================
       integer,dimension(8) :: date_time
       INTEGER DYNAMIC,ERRNUM,PATHL  !LUNEXP,LINEXP,LNHAR,LUNIO,
 
-      LOGICAL MOWTODAY
+      LOGICAL MOWTODAY, MOWED
 
       REAL,ALLOCATABLE,DIMENSION(:) :: MOW,RSPLF,MVS,rsht
       REAL FHLEAF,FHSTEM,FHVSTG
@@ -135,12 +137,7 @@ C=======================================================================
       PARAMETER (BLANK  = ' ')
 
       DYNAMIC  = CONTROL % DYNAMIC
-      FILEIO = CONTROL % FILEIO
-      YRDOY  = CONTROL % YRDOY
-      crop   = control % crop
-      trtno  = control % trtnum
-      run    = control % run
-      ename  = control % ename
+      YRDOY = CONTROL % YRDOY
 
 C***********************************************************************
 C***********************************************************************
@@ -148,9 +145,18 @@ C***********************************************************************
 C***********************************************************************
       IF (DYNAMIC .EQ. RUNINIT) THEN
 
+      FILEX = CONTROL % FILEX
+      PATHEX = CONTROL % PATHEX
+      YRDOY  = CONTROL % YRDOY
+      crop   = control % crop
+      trtno  = control % trtnum
+      run    = control % run
+      ename  = control % ename
+
         MOWGDD = 0.0
         MOWCOUNT = 1
         MOWTODAY = .FALSE.
+        MOWED = .FALSE. !set to TRUE after the first mow
 
         CALL PUT('MHARVEST','ISH_date',-99)
         CALL PUT('MHARVEST','ISH_wt',  -99.)
@@ -171,7 +177,6 @@ C***********************************************************************
 
 !       2026-05-20 CHP Always need FileX name for forage.out, even
 !         when no mow file is read.
-        FILEX = CONTROL % FILEX
 
         IF (ATMOW .EQV. .FALSE.) THEN
           MOWFILE = FILEX(1:8) // ".MOW"
@@ -212,6 +217,12 @@ C***********************************************************************
           IF (MOWCOUNT.GT.0) THEN
             ALLOCATE(TRNO(MOWCOUNT),DATE(MOWCOUNT),MOW(MOWCOUNT))
             ALLOCATE(RSPLF(MOWCOUNT),MVS(MOWCOUNT),rsht(mowcount))
+            TRNO = 0
+            DATE = 0
+            MOW = 0.0
+            RSPLF = 0.0
+            MVS = 0.0
+            RSHT = 0.0
           ELSE
 C           MOW file has no data for this treatment
             CALL ERROR(ERRKEY,2,MOWFILE,0)
@@ -219,7 +230,7 @@ C           MOW file has no data for this treatment
             MOW (1) = -99
             RETURN
           END IF
-  
+
           I = 0
           ISECT = 0
           DO WHILE (ISECT.EQ.0)
@@ -355,7 +366,7 @@ C   FO -  05/07/2020 Add new Y4K subroutine call to convert YRDOY
 C-----------------------------------------------------------------------
         MOWGDD = 0.0
         CUTNO = 0
-        FHLEAF_c = 0.0
+        MOWED = .FALSE. !set to TRUE after the first mow
 
         CALL PUT('MHARVEST','ISH_date',-99)
         CALL PUT('MHARVEST','ISH_wt',  -99.)
@@ -436,12 +447,13 @@ C-----------------------------------------------------------------------
 !----------------------------------------------------------------------
 
       IF (.NOT.ALLOCATED(MOW) .AND. ATMOW .EQV. .FALSE.) THEN
-
         DO I=1,SIZE(MOW)
           if(date(i)==yrdoy) then
             IF (MOW(I).GE.0.and.trno(i)==trtno)then
               cutno = CUTNO + 1
               MOWTODAY = .TRUE.
+              MOWED = .TRUE.
+
               if(mow(i)/10<topwt) THEN
                 FHLEAF=0
                 FHSTEM=0
@@ -450,10 +462,11 @@ C-----------------------------------------------------------------------
                   FHLEAF=WTLF-(MOW(I)/10)*RSPLF(I)/100
                   FHSTEM=STMWT-(MOW(I)/10)*(1.0-RSPLF(I)/100)
                 ELSE
-                  FHLEAF=WTLF-(MOW(I)/10)*WTLF/(WTLF+STMWT)
-                  FHSTEM=STMWT-(MOW(I)/10)*STMWT/(WTLF+STMWT)
+                  IF (WTLF + STMWT > 0.0) THEN
+                    FHLEAF=WTLF-(MOW(I)/10)*WTLF/(WTLF+STMWT)
+                    FHSTEM=STMWT-(MOW(I)/10)*STMWT/(WTLF+STMWT)
+                  ENDIF
                 END IF
-
                 FHLEAF=MAX(FHLEAF,0.0)
                 FHSTEM=MAX(FHSTEM,0.0)
                 FHVSTG=MAX(MVS(I),0.0)
@@ -504,6 +517,8 @@ C-----------------------------------------------------------------------
         IF (MOWC .GE. 0.0) THEN
           MOWCOUNT = 1
           MOWTODAY = .TRUE.
+          MOWED = .TRUE.
+
           CUTNO = CUTNO + 1
           IF (MOWC/10. < topwt) THEN
             FHLEAF=0

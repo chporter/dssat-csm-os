@@ -14,6 +14,7 @@ C  01/10/1997 GH  Added TURFAC effect on seed growth and pod addition
 C  09/15/1998 CHP Modified for modular format
 C  05/10/1999 GH  Incorporated in CROPGRO
 C  06/24/2003 SJR Modified initialization of XLEAF for grass transplant age
+!  06/16/2026 CHP Added MOWED variable, established partitioning after mowing.
 C-----------------------------------------------------------------------
 C  Called by:  CROPGRO
 C  Calls:      FOR_SDCOMP, FOR_IPDMND
@@ -32,6 +33,7 @@ C=======================================================================
      &  WTLF, WTNLF, WTNRT, WTNSR, WTNST, WTSD,           !Input
      &  WTSHE, YRDOY,                                     !Input
      &  NVEG0, NR1, NR2, NR7, YRSIM,                      !Input
+     &  MOWED,                                            !Input
 
      &  AGRSD1, AGRSD2, AGRVG, AGRVG2, CDMREP, F, FNINL,  !Output
      &  FNINR, FNINS, FNINSD, FRLF, FRRT, FRSTM, GDMSD,   !Output
@@ -165,6 +167,10 @@ C Variables for apportioning NDMVEG and NDMOLD
       REAL PROLFR, PROSTR, PRORTR, PROSRR
       CHARACTER LFDELT*6
       REAL LFDEL
+
+!     CHP added MOWED (TRUE-FALSE) to indicate whether the first
+!       mowing event has occurred.
+      LOGICAL MOWED
 
       INTEGER LUNECO, LUNIO
 
@@ -353,15 +359,16 @@ C      SDAGE and growth temperature )
 C-----------------------------------------------------------------------
 
         IF (PLME .EQ. 'T') THEN
-      
-        IF (PHZACC(4) .GE. SDLEST) THEN 
-        FRLF = TABEX(YLFEST,XLFEST,VSTAGE,8)
-        FRSTM = TABEX(YSTEST,XLFEST,VSTAGE,8)
-        FRSTR = TABEX(YSREST,XLFEST,VSTAGE,8)
+
+!       IF (PHZACC(4) .GE. SDLEST) THEN 
+        IF (PHZACC(4) .GE. SDLEST .OR. MOWED) THEN 
+          FRLF = TABEX(YLFEST,XLFEST,VSTAGE,8)
+          FRSTM = TABEX(YSTEST,XLFEST,VSTAGE,8)
+          FRSTR = TABEX(YSREST,XLFEST,VSTAGE,8)
         ELSE
-        FRLF = TABEX(YLEAF,XLEAF,VSTAGE,8)
-        FRSTM = TABEX(YSTEM,XLEAF,VSTAGE,8)
-        FRSTR = TABEX(YSTOR,XLEAF,VSTAGE,8)
+          FRLF = TABEX(YLEAF,XLEAF,VSTAGE,8)
+          FRSTM = TABEX(YSTEM,XLEAF,VSTAGE,8)
+          FRSTR = TABEX(YSTOR,XLEAF,VSTAGE,8)
         ENDIF
 
         FRRT = 1.0 - FRLF - FRSTM - FRSTR
@@ -643,7 +650,6 @@ C-----------------------------------------------------------------------
         FRLFM  = TABEX (YLFEST, XLFEST, VSTAGE, 8)
         FRSTMM = TABEX (YSTEST, XLFEST, VSTAGE, 8)
         FRSTRM = TABEX (YSREST, XLFEST, VSTAGE, 8)
-        
 
         YY = FRLFM - FRLFF 
         XX = FRSTMM - FRSTMF
@@ -655,14 +661,15 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C     Calculate Pattern of Vegetative Partitioning, a function of V-STAGE
 C-----------------------------------------------------------------------
-        IF (PHZACC(4) .GE. SDLEST) THEN 
-        FRLF  = TABEX(YLFEST,XLFEST,VSTAGE,8)
-        FRSTM = TABEX(YSTEST,XLFEST,VSTAGE,8)
-        FRSTR = TABEX(YSREST,XLFEST,VSTAGE,8)
+!       IF (PHZACC(4) .GE. SDLEST) THEN 
+        IF (PHZACC(4) .GE. SDLEST .OR. MOWED) THEN 
+          FRLF  = TABEX(YLFEST,XLFEST,VSTAGE,8)
+          FRSTM = TABEX(YSTEST,XLFEST,VSTAGE,8)
+          FRSTR = TABEX(YSREST,XLFEST,VSTAGE,8)
         ELSE
-        FRLF  = TABEX(YLEAF,XLEAF,VSTAGE,8)
-        FRSTM = TABEX(YSTEM,XLEAF,VSTAGE,8)
-        FRSTR = TABEX(YSTOR,XLEAF,VSTAGE,8)
+          FRLF  = TABEX(YLEAF,XLEAF,VSTAGE,8)
+          FRSTM = TABEX(YSTEM,XLEAF,VSTAGE,8)
+          FRSTR = TABEX(YSTOR,XLEAF,VSTAGE,8)
         ENDIF
 
       ELSE
