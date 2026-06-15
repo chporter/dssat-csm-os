@@ -21,18 +21,19 @@ C
 C  Calls  :
 C=======================================================================
       SUBROUTINE forage_harvest(CONTROL,FILECC, ATMOW, ATTP,
-     &              RHOL,RHOS,PCNL,PCNST,SLA,RTWT,STRWT,   !Input
-     &              WTLF,STMWT,TOPWT,TOTWT,WCRLF,WCRST,    !Input/Output
-     &              WTNLF,WTNST,WNRLF,WNRST,WTNCAN,        !Input/Output
-     &              AREALF,XLAI,XHLAI,VSTAGE,vstagp,canht, !Input/Output
-     &              fhtot,FHTOTN, fhpctlf,fhpctn,FREQ,
-     &              MOWC,RSPLC,HMFRQ,HMGDD,HMCUT, HMMOW,HRSPL,
-     &              DWTCO, DWTLO, DWTSO, PWTCO, PWTLO, PWTSO,
-     &              HMVS, WTCO, WTLO, WTSO, TAVG, MOWGDD,
-     &              MOWCOUNT, TGMIN, VTO1, VTB1, MOWREF, 
-     &              RSREF, YFREQ, YRSREF, YCUTHT, YCHMOW,
-     &              XCUTHT, XCHMOW, XFRGDD, XFREQ, CUTDAY,
-     &              PROLFF, PROSTF, pliglf, pligst)
+     &  RHOL,RHOS,PCNL,PCNST,SLA,RTWT,STRWT,   !Input
+     &  WTLF,STMWT,TOPWT,TOTWT,WCRLF,WCRST,    !Input/Output
+     &  WTNLF,WTNST,WNRLF,WNRST,WTNCAN,        !Input/Output
+     &  AREALF,XLAI,XHLAI,VSTAGE,vstagp,canht, !Input/Output
+     &  fhtot,FHTOTN, fhpctlf,fhpctn,FREQ,
+     &  MOWC,RSPLC,HMFRQ,HMGDD,HMCUT, HMMOW,HRSPL,
+     &  DWTCO, DWTLO, DWTSO, PWTCO, PWTLO, PWTSO,
+     &  HMVS, WTCO, WTLO, WTSO, TAVG, MOWGDD,
+     &  MOWCOUNT, TGMIN, VTO1, VTB1, MOWREF, 
+     &  RSREF, YFREQ, YRSREF, YCUTHT, YCHMOW,
+     &  XCUTHT, XCHMOW, XFRGDD, XFREQ, CUTDAY,
+     &  PROLFF, PROSTF, pliglf, pligst, 
+     &  MOWED)                                  !Output
 
       USE MODULEDEFS
       USE ModuleData
@@ -53,7 +54,7 @@ C=======================================================================
       integer,dimension(8) :: date_time
       INTEGER DYNAMIC,ERRNUM,PATHL  !LUNEXP,LINEXP,LNHAR,LUNIO,
 
-      LOGICAL MOWTODAY
+      LOGICAL MOWTODAY, MOWED
 
       REAL,ALLOCATABLE,DIMENSION(:) :: MOW,RSPLF,MVS,rsht
       REAL FHLEAF,FHSTEM,FHVSTG
@@ -151,6 +152,7 @@ C***********************************************************************
         MOWGDD = 0.0
         MOWCOUNT = 1
         MOWTODAY = .FALSE.
+        MOWED = .FALSE. !set to TRUE after the first mow
 
         CALL PUT('MHARVEST','ISH_date',-99)
         CALL PUT('MHARVEST','ISH_wt',  -99.)
@@ -360,6 +362,7 @@ C   FO -  05/07/2020 Add new Y4K subroutine call to convert YRDOY
 C-----------------------------------------------------------------------
         MOWGDD = 0.0
         CUTNO = 0
+        MOWED = .FALSE. !set to TRUE after the first mow
 
         CALL PUT('MHARVEST','ISH_date',-99)
         CALL PUT('MHARVEST','ISH_wt',  -99.)
@@ -443,6 +446,8 @@ C-----------------------------------------------------------------------
             IF (MOW(I).GE.0.and.trno(i)==trtno)then
               cutno = CUTNO + 1
               MOWTODAY = .TRUE.
+              MOWED = .TRUE.
+
               if(mow(i)/10<topwt) THEN
                 FHLEAF=0
                 FHSTEM=0
@@ -506,6 +511,8 @@ C-----------------------------------------------------------------------
         IF (MOWC .GE. 0.0) THEN
           MOWCOUNT = 1
           MOWTODAY = .TRUE.
+          MOWED = .TRUE.
+
           CUTNO = CUTNO + 1
           IF (MOWC/10. < topwt) THEN
             FHLEAF=0

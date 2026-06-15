@@ -283,6 +283,9 @@ C TF/DP 2022-01-31 Simple version AutoMOW
       INTEGER HMMOW, HRSPL, HMVS
       CHARACTER*1 ATTP
 
+!     CHP added MOWED (TRUE-FALSE) to indicate whether the first
+!       mowing event has occurred.
+      LOGICAL MOWED
 
 !     Arrays which contain data for printing in SUMMARY.OUT file
       INTEGER, PARAMETER :: SUMNUM = 3
@@ -438,6 +441,7 @@ C-----------------------------------------------------------------------
      &  WTLF, WTNLF, WTNRT, WTNSR, WTNST, WTSD,           !Input
      &  WTSHE, YRDOY,                                     !Input
      &  NVEG0, NR1, NR2, NR7, YRSIM,                      !Input
+     &  MOWED,                                            !Input
 
      &  AGRSD1, AGRSD2, AGRVG, AGRVG2, CDMREP, F, FNINL,  !Output
      &  FNINR, FNINS, FNINSD, FRLF, FRRT, FRSTM, GDMSD,   !Output
@@ -748,8 +752,9 @@ C-----------------------------------------------------------------------
      &    MOWCOUNT, TGMIN, VTO1, VTB1, MOWREF, 
      &    RSREF, YFREQ, YRSREF, YCUTHT, YCHMOW,
      &    XCUTHT, XCHMOW, XFRGDD, XFREQ, CUTDAY,
-     &    PROLFF, PROSTF, pliglf, pligst)
-     
+     &    PROLFF, PROSTF, pliglf, pligst, 
+     &    MOWED)                                  !Output
+
 !***********************************************************************
 !***********************************************************************
 !     Seasonal initialization - run once per season
@@ -816,7 +821,9 @@ C-----------------------------------------------------------------------
      &    MOWCOUNT, TGMIN, VTO1, VTB1, MOWREF, 
      &    RSREF, YFREQ, YRSREF, YCUTHT, YCHMOW,
      &    XCUTHT, XCHMOW, XFRGDD, XFREQ, CUTDAY,
-     &    PROLFF, PROSTF, pliglf, pligst)
+     &    PROLFF, PROSTF, pliglf, pligst, 
+     &    MOWED)                                  !Output
+
 !-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C     Seasonal initialization for Dormancy processes
@@ -869,6 +876,7 @@ C     Initialize pest coupling point and damage variables, first day only
      &  WTLF, WTNLF, WTNRT, WTNSR, WTNST, WTSD,           !Input
      &  WTSHE, YRDOY,                                     !Input
      &  NVEG0, NR1, NR2, NR7, YRSIM,                      !Input
+     &  MOWED,                                            !Input
 
      &  AGRSD1, AGRSD2, AGRVG, AGRVG2, CDMREP, F, FNINL,  !Output
      &  FNINR, FNINS, FNINSD, FRLF, FRRT, FRSTM, GDMSD,   !Output
@@ -1250,7 +1258,9 @@ C-----------------------------------------------------------------------
      &    MOWCOUNT, TGMIN, VTO1, VTB1, MOWREF, 
      &    RSREF, YFREQ, YRSREF, YCUTHT, YCHMOW,
      &    XCUTHT, XCHMOW, XFRGDD, XFREQ, CUTDAY,
-     &    PROLFF, PROSTF, pliglf, pligst)
+     &    PROLFF, PROSTF, pliglf, pligst, 
+     &    MOWED)                                  !Output
+
 
 !***********************************************************************
 !***********************************************************************
@@ -1301,6 +1311,7 @@ C-----------------------------------------------------------------------
      &  WTLF, WTNLF, WTNRT, WTNSR, WTNST, WTSD,           !Input
      &  WTSHE, YRDOY,                                     !Input
      &  NVEG0, NR1, NR2, NR7, YRSIM,                      !Input
+     &  MOWED,                                            !Input
 
      &  AGRSD1, AGRSD2, AGRVG, AGRVG2, CDMREP, F, FNINL,  !Output
      &  FNINR, FNINS, FNINSD, FRLF, FRRT, FRSTM, GDMSD,   !Output
@@ -1658,6 +1669,7 @@ C-----------------------------------------------------------------------
      &  WTLF, WTNLF, WTNRT, WTNSR, WTNST, WTSD,           !Input
      &  WTSHE, YRDOY,                                     !Input
      &  NVEG0, NR1, NR2, NR7, YRSIM,                      !Input
+     &  MOWED,                                            !Input
 
      &  AGRSD1, AGRSD2, AGRVG, AGRVG2, CDMREP, F, FNINL,  !Output
      &  FNINR, FNINS, FNINSD, FRLF, FRRT, FRSTM, GDMSD,   !Output
@@ -2059,7 +2071,9 @@ C-----------------------------------------------------------------------
      &    MOWCOUNT, TGMIN, VTO1, VTB1, MOWREF, 
      &    RSREF, YFREQ, YRSREF, YCUTHT, YCHMOW,
      &    XCUTHT, XCHMOW, XFRGDD, XFREQ, CUTDAY,
-     &    PROLFF, PROSTF, pliglf, pligst)
+     &    PROLFF, PROSTF, pliglf, pligst, 
+     &    MOWED)                                  !Output
+
 
       Cumul_FHTOT  = Cumul_FHTOT  + FHWAH
       Cumul_FHTOTN = Cumul_FHTOTN + FHTOTN
@@ -2172,7 +2186,9 @@ C-----------------------------------------------------------------------
      &    MOWCOUNT, TGMIN, VTO1, VTB1, MOWREF, 
      &    RSREF, YFREQ, YRSREF, YCUTHT, YCHMOW,
      &    XCUTHT, XCHMOW, XFRGDD, XFREQ, CUTDAY,
-     &    PROLFF, PROSTF, pliglf, pligst)
+     &    PROLFF, PROSTF, pliglf, pligst, 
+     &    MOWED)                                  !Output
+
 
 
 !     !!   ! Write to Overview.out and summary.out files.
