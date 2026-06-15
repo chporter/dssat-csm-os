@@ -140,7 +140,6 @@ C***********************************************************************
 C***********************************************************************
       IF (DYNAMIC .EQ. RUNINIT) THEN
 
-!      FILEIO = CONTROL % FILEIO
       FILEX = CONTROL % FILEX
       PATHEX = CONTROL % PATHEX
       YRDOY  = CONTROL % YRDOY
@@ -212,6 +211,12 @@ C***********************************************************************
           IF (MOWCOUNT.GT.0) THEN
             ALLOCATE(TRNO(MOWCOUNT),DATE(MOWCOUNT),MOW(MOWCOUNT))
             ALLOCATE(RSPLF(MOWCOUNT),MVS(MOWCOUNT),rsht(mowcount))
+            TRNO = 0
+            DATE = 0
+            MOW = 0.0
+            RSPLF = 0.0
+            MVS = 0.0
+            RSHT = 0.0
           ELSE
 C           MOW file has no data for this treatment
             CALL ERROR(ERRKEY,2,MOWFILE,0)
@@ -219,7 +224,7 @@ C           MOW file has no data for this treatment
             MOW (1) = -99
             RETURN
           END IF
-  
+
           I = 0
           ISECT = 0
           DO WHILE (ISECT.EQ.0)
@@ -433,7 +438,6 @@ C-----------------------------------------------------------------------
 !----------------------------------------------------------------------
 
       IF (.NOT.ALLOCATED(MOW) .AND. ATMOW .EQV. .FALSE.) THEN
-
         DO I=1,SIZE(MOW)
           if(date(i)==yrdoy) then
             IF (MOW(I).GE.0.and.trno(i)==trtno)then
@@ -447,10 +451,11 @@ C-----------------------------------------------------------------------
                   FHLEAF=WTLF-(MOW(I)/10)*RSPLF(I)/100
                   FHSTEM=STMWT-(MOW(I)/10)*(1.0-RSPLF(I)/100)
                 ELSE
-                  FHLEAF=WTLF-(MOW(I)/10)*WTLF/(WTLF+STMWT)
-                  FHSTEM=STMWT-(MOW(I)/10)*STMWT/(WTLF+STMWT)
+                  IF (WTLF + STMWT > 0.0) THEN
+                    FHLEAF=WTLF-(MOW(I)/10)*WTLF/(WTLF+STMWT)
+                    FHSTEM=STMWT-(MOW(I)/10)*STMWT/(WTLF+STMWT)
+                  ENDIF
                 END IF
-
                 FHLEAF=MAX(FHLEAF,0.0)
                 FHSTEM=MAX(FHSTEM,0.0)
                 FHVSTG=MAX(MVS(I),0.0)
