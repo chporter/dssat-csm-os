@@ -93,7 +93,8 @@
                                                                                                     
                                                                                                     
 !*LEAF SENESCENCE FACTORS                                                                           
-  0.80  0.20  .060  -4.0 -35.0        SENRTE,SENRT2,SENDAY,FREEZ1,FREEZ2 - 10/22/25  
+  0.80  0.20  .000  -4.0 -35.0        SENRTE,SENRT2,SENDAY,FREEZ1,FREEZ2 - CHP SENDAY = 0.0  
+! 0.80  0.20  .060  -4.0 -35.0        SENRTE,SENRT2,SENDAY,FREEZ1,FREEZ2 - 10/22/25  
   1.17  13.1  0.01                     ICMP,TCMP(Light comp, time constant-senes),LFSEN (natural sen
                                                                                                     
                                                                                                     

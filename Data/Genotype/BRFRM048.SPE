@@ -103,7 +103,8 @@
                                                                                                     
                                                                                                     
 !*LEAF SENESCENCE FACTORS                                                                           
-  0.80  0.20  .060  -5.0 -18.0        SENRTE,SENRT2,SENDAY,FREEZ1,FREEZ2 -     BP                   
+  0.80  0.20  .000  -5.0 -18.0        SENRTE,SENRT2,SENDAY,FREEZ1,FREEZ2 -     CHP SENDAY = 0.0                   
+! 0.80  0.20  .060  -5.0 -18.0        SENRTE,SENRT2,SENDAY,FREEZ1,FREEZ2 -     BP                   
   1.17  13.1  .014                     ICMP,TCMP(Light comp, time constant-senes),LFSEN (natural sen
 !  1.17  13.1  0.01                     ICMP,TCMP(Light comp, time constant-senes),LFSEN (natural sen
 ! KJB, incr lfsen to improve predictions 6/14/17, LAI and leaf too high.                            

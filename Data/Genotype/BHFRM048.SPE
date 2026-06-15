@@ -91,7 +91,8 @@
                                                                                                     
                                                                                                     
 !*LEAF SENESCENCE FACTORS                                                                           
-  0.80  0.20  .060  -8.0 -18.0        SENRTE,SENRT2,SENDAY,FREEZ1,FREEZ2 -     !kjb-bahia                    
+  0.80  0.20  .000  -8.0 -18.0        SENRTE,SENRT2,SENDAY,FREEZ1,FREEZ2 -     CHP SENDAY = 0.0                 
+! 0.80  0.20  .060  -8.0 -18.0        SENRTE,SENRT2,SENDAY,FREEZ1,FREEZ2 -     !kjb-bahia                    
   0.80  20.0  .011                     ICMP,TCMP(Light comp, time constant-senes),LFSEN (natural sen !kjb-3/23/23
                                                                                                     
 ! .......XSTAGE.........  .......XSENMX.........                                                    
