@@ -1199,13 +1199,6 @@ C-----------------------------------------------------------------------
       CLOFF = (SLMDOT + LTSEN + LFSENWT) *  
      &    (SENCLV * (RHOL - PCHOLFF) + PCHOLFF) 
      &    + (SLNDOT + WLIDOT + WLFDOT) * RHOL
-
-
-!     temp chp
-      write(5567,'(I7,50F10.4)') YRDOY, CLOFF, SLMDOT, LTSEN, LFSENWT, 
-     &    SENCLV, RHOL, PCHOLFF, SLNDOT, WLIDOT, WLFDOT
-
-
 C--------------------------------------------
 C PDA 5/6/2010  ADDED CODE FOR FORAGE HARVEST 
 C--------------------------------------------
@@ -1946,10 +1939,6 @@ C-----------------------------------------------------------------------
       ELSE
         WNRLF = 0.0
       ENDIF
-
-!     temp chp
-      write(5454,'(I7,10F10.4)') YRDOY, WNRLF, WTLF, WCRLF, WTNLF,PROLFF
-
 
       IF ((STMWT - WCRST) .GT. 0.0) THEN
         WNRST = MAX (WTNST - PROSTF * 0.16 * (STMWT-WCRST), 0.0)

@@ -783,12 +783,12 @@ C     to account for mass, N and C lost this way in sections below
 C-----------------------------------------------------------------------
 ! CHP 2025-12-01 should this be SLDOT instead of SLNDOT?
 !     SLNDOT is water senescence, SLDOT is total senescence
-      WRCLDT = ALPHL * WLDOTN - CRUSLF - RHOL*(SLNDOT+WLIDOT+WLFDOT)
+!     WRCLDT = ALPHL * WLDOTN - CRUSLF - RHOL*(SLNDOT+WLIDOT+WLFDOT)
 !     temp chp ??? change or not? It does make some difference.
 
 ! chp 2026-06-02 This issue is still unresolved, but I'm going back
 !     to the original equation for testing.
-!     WRCLDT = ALPHL * WLDOTN - CRUSLF - RHOL*(SLDOT+WLIDOT+WLFDOT)
+      WRCLDT = ALPHL * WLDOTN - CRUSLF - RHOL*(SLDOT+WLIDOT+WLFDOT)
 
       IF (WTLF > 1.E-4) THEN
          WRCLDT = WRCLDT + CADLF *
