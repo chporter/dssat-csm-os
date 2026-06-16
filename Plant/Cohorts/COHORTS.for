@@ -124,12 +124,12 @@ C=======================================================================
       REAL WLDOT_calc, SLDOT_calc, WLFDOT_calc, NRUSLF_calc, 
      &  CRUSLF_calc, WLIDOT_calc, WatSen_calc, LfMineSen_calc, 
      &  LCADD_calc, LNADD_calc, NLDOT_calc, NLOFF_calc,
-     &  LFSN_calc
+     &  LFSN_calc, FHLEAF_calc
 
       REAL WSDOT_calc, SSDOT_calc, NRUSST_calc, 
      &  CRUSST_calc, WSIDOT_calc, STMineSen_calc, 
      &  SCADD_calc, SNADD_calc, NSDOT_calc, NSOFF_calc,
-     &  STSN_calc
+     &  STSN_calc, FHSTEM_calc
 
       REAL WTST_calc, PStemN_calc, WCRST_calc, 
      &  WTNST_calc, WNRST_calc, WSFDOT_calc, 
@@ -209,7 +209,7 @@ C=======================================================================
      &  CRUSLF_calc, NRUSLF_calc, 
      &  WLIDOT_calc, WLFDOT_calc, SLDOT_calc, 
      &  WatSen_calc, LfMineSen_calc, 
-     &  NLOFF_calc, NLDOT_calc,
+     &  NLOFF_calc, NLDOT_calc, FHLEAF_calc,
 !       Stem output:
      &  WTST_calc, WCRST_calc, PStemN_calc,
      &  WTNST_calc, WNRST_calc, STSN_calc, 
@@ -217,7 +217,7 @@ C=======================================================================
      &  CRUSST_calc, NRUSST_calc, 
      &  WSIDOT_calc, WSFDOT_calc, SSDOT_calc, 
      &  WatSenStem_calc, STMineSen_calc, 
-     &  NSOFF_calc, NSDOT_calc)
+     &  NSOFF_calc, NSDOT_calc, FHSTEM_calc)
 
 !***********************************************************************
 !***********************************************************************
@@ -300,6 +300,9 @@ C-GH 08/19/2025
       WCRST_calc = 0.0
       WTNST_calc = 0.0
 
+      WLDOT_cohort = 0.0
+      WSDOT_cohort = 0.0
+
 !     Read parameters from species file
       CALL IPCOHO(
      &  FILECC, MODEL,                            !Input
@@ -317,7 +320,7 @@ C-GH 08/19/2025
      &  CRUSLF_calc, NRUSLF_calc, 
      &  WLIDOT_calc, WLFDOT_calc, SLDOT_calc, 
      &  WatSen_calc, LfMineSen_calc, 
-     &  NLOFF_calc, NLDOT_calc,
+     &  NLOFF_calc, NLDOT_calc, FHLEAF_calc,
 !       Stem output:
      &  WTST_calc, WCRST_calc, PStemN_calc,
      &  WTNST_calc, WNRST_calc, STSN_calc, 
@@ -325,7 +328,7 @@ C-GH 08/19/2025
      &  CRUSST_calc, NRUSST_calc, 
      &  WSIDOT_calc, WSFDOT_calc, SSDOT_calc, 
      &  WatSenStem_calc, STMineSen_calc, 
-     &  NSOFF_calc, NSDOT_calc)
+     &  NSOFF_calc, NSDOT_calc, FHSTEM_calc)
 
 !***********************************************************************
 !***********************************************************************
@@ -433,6 +436,9 @@ C-GH 08/19/2025
 !     Ensure that losses don't exceed mass, adjust as necessary
 !------------------------------
 !     Calculate the loss of leaf tissue per cohort
+      LeafMassDecrease = 0.0
+      StemMassDecrease = 0.0
+
       DO I = 1, NLC
 !       Leaf mass decrease (WLIDOT + WLFDOT + SLDOT in GROW)
         LeafMassDecrease(I) = LFFRZ(I) + LFPST(I) + LeafTotSen(I)
@@ -535,8 +541,8 @@ C-GH 08/19/2025
 
         LFCAD(I) = LFCAD(I) * Loss_adj_LF
         LFNAD(I) = LFNAD(I) * Loss_adj_LF
-        STCAD(I) = LFCAD(I) * Loss_adj_ST
-        STNAD(I) = LFNAD(I) * Loss_adj_ST
+        STCAD(I) = STCAD(I) * Loss_adj_ST
+        STNAD(I) = STNAD(I) * Loss_adj_ST
       ENDDO
 
 !     temp chp
@@ -692,14 +698,14 @@ C-GH 08/19/2025
             RHOS = STNSC(I) / STDM(I)
 
 !           CSOFF = (SSMDOT + STLTSEN + STSENWT) * !for_grow (stem)
-            CSOFF = (SLMDOT_c(I) + STLTSEN_c(I) + STSENWT_c(I)) * 
+            CSOFF = (SSMDOT_c(I) + STLTSEN_c(I) + STSENWT_c(I)) * 
      &              (SENCSV * (RHOS - PCHOSTF) + PCHOSTF)
 !    &            + (SSNDOT + WSIDOT + WSFDOT) * RHOS    !for_grow (stem)
      &            + (STWSSN(I) + STPST(I) + STFRZ(I)) * RHOS
 
             IF (FHStem_c(I) .GT. 0.0) THEN
 !              CSOFF = CSOFF + FHSTEM * RHOS    !for_grow (stem)
-!              CSOFF = CSOFF + FHStem_c(I) * RHOS
+              CSOFF = CSOFF + FHStem_c(I) * RHOS
             ENDIF
 !
             IF (CSOFF. LT. 0.0) CSOFF = 0.0
@@ -708,13 +714,12 @@ C-GH 08/19/2025
             CSOFF_SUM = CSOFF_SUM + CSOFF
           END SELECT
 
-! FROM LEAF COHORTS:
 !         WRCSDT=WSDOTN*ALPHS-CRUSST-CSOFF
           WRCSDT_c(I) = -STCMN(I) - CSOFF
 
           IF (FHStem_c(I) .EQ. 0.0) THEN
 !           WRCSDT = WRCSDT + CADST - STCADDM
-            WRCSDT_c(I) = WRCSDT_c(I) + LFCAD(I)
+            WRCSDT_c(I) = WRCSDT_c(I) + STCAD(I)
           ENDIF
 
 !         Update mobile CH2O in stem
@@ -838,14 +843,14 @@ C-GH 08/19/2025
 
 !           Net N gain today for cohort I
 !           NSDOT=NGRST-NRUSST-NSOFF
-            NLDOT_c(I) = - NLOFF_c(I) - LFNMN(I)
+            NSDOT_c(I) = - NSOFF_c(I) - STNMN(I)
 
             IF (FHSTEM_c(I) .EQ. 0.0) THEN
 !             NSDOT = NSDOT + NADST - STNADDM
               NSDOT_c(I) = NSDOT_c(I) + STNAD(I)
             ENDIF
 
-            NLDOT_c(I) = MAX(NLDOT_c(I), -LeafNTot(I))
+            NSDOT_c(I) = MAX(NSDOT_c(I), -StemNTot(I))
           END SELECT
 
 !         Stem N
@@ -939,6 +944,7 @@ C-GH 08/19/2025
       LNADD_calc  = SUM(LFNAD(1:LCMax))      !mobile N in GROW
       NLOFF_calc  = SUM(NLOFF_c(1:LCMax))    !N loss senes,freez,pest
       NLDOT_calc  = SUM(NLDOT_c(1:LCMax)) + NGRLF !Total N added today
+      FHLEAF_calc = SUM(FHLEAF_c)            !harvested
 
 !------------------------------------
 !     Total states over all leaf cohorts
@@ -960,6 +966,7 @@ C-GH 08/19/2025
       SNADD_calc  = SUM(STNAD(1:LCMax))      !mobile N in GROW
       NSOFF_calc  = SUM(NSOFF_c(1:LCMax))    !N loss senes,freez,pest
       NSDOT_calc  = SUM(NSDOT_c(1:LCMax)) + NGRST !Total N added today
+      FHSTEM_calc = SUM(FHSTEM_c)            !harvested
 
 !------------------------------------
 !     Total states over all stem cohorts
@@ -1030,7 +1037,7 @@ C-GH 08/19/2025
      &  CRUSLF_calc, NRUSLF_calc, 
      &  WLIDOT_calc, WLFDOT_calc, SLDOT_calc, 
      &  WatSen_calc, LfMineSen_calc, 
-     &  NLOFF_calc, NLDOT_calc,
+     &  NLOFF_calc, NLDOT_calc, FHLEAF_calc,
 !       Stem output:
      &  WTST_calc, WCRST_calc, PStemN_calc,
      &  WTNST_calc, WNRST_calc, STSN_calc, 
@@ -1038,7 +1045,7 @@ C-GH 08/19/2025
      &  CRUSST_calc, NRUSST_calc, 
      &  WSIDOT_calc, WSFDOT_calc, SSDOT_calc, 
      &  WatSenStem_calc, STMineSen_calc, 
-     &  NSOFF_calc, NSDOT_calc)
+     &  NSOFF_calc, NSDOT_calc, FHSTEM_calc)
 
 !***********************************************************************
 !***********************************************************************

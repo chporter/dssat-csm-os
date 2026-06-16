@@ -15,7 +15,7 @@ C=======================================================================
      &  CRUSLF_calc, NRUSLF_calc, 
      &  WLIDOT_calc, WLFDOT_calc, SLDOT_calc, 
      &  WatSen_calc, LfMineSen_calc, 
-     &  NLOFF_calc, NLDOT_calc,
+     &  NLOFF_calc, NLDOT_calc, FHLEAF_calc,
 !       Stem output:
      &  WTST_calc, WCRST_calc, PStemN_calc,
      &  WTNST_calc, WNRST_calc, STSN_calc, 
@@ -23,7 +23,7 @@ C=======================================================================
      &  CRUSST_calc, NRUSST_calc, 
      &  WSIDOT_calc, WSFDOT_calc, SSDOT_calc, 
      &  WatSenStem_calc, STMineSen_calc, 
-     &  NSOFF_calc, NSDOT_calc)
+     &  NSOFF_calc, NSDOT_calc, FHSTEM_calc)
 
       USE ModuleDefs
       USE ModuleData
@@ -39,14 +39,14 @@ C=======================================================================
      &  WLDOT_calc, SLDOT_calc, WLFDOT_calc, NRUSLF_calc, 
      &  CRUSLF_calc, WLIDOT_calc, WatSen_calc, LfMineSen_calc, 
      &  LCADD_calc, LNADD_calc, NLDOT_calc, NLOFF_calc,
-     &  LFSN_calc
+     &  LFSN_calc, FHLEAF_calc
 
       REAL, INTENT(IN) ::  WTST_calc, WNRST_calc, WCRST_calc, 
      &  WTNST_calc, PStemN_calc, 
      &  WSDOT_calc, SSDOT_calc, WSFDOT_calc, NRUSST_calc, 
      &  CRUSST_calc, WSIDOT_calc, WatSenStem_calc, STMineSen_calc, 
      &  SCADD_calc, SNADD_calc, NSDOT_calc, NSOFF_calc,
-     &  STSN_calc
+     &  STSN_calc, FHSTEM_calc
 
       CHARACTER (len=8) MODEL
       CHARACTER*15 LCOUT, SCOUT
@@ -116,7 +116,7 @@ C=======================================================================
      &  '     CRUSLFc     NRUSLFc',
      &  '     WLIDOTc     WLFDOTc      SLDOTc',
      &  '      WatSen      NMinSn',
-     &  '      NLOFFc      NLDOTc')
+     &  '      NLOFFc      NLDOTc     FHLEAFc')
 
 !-----------------------------------------------------------------------
 !     Initialize 2nd leaf cohort output file
@@ -168,7 +168,7 @@ C=======================================================================
      &  '     CRUSSTc     NRUSSTc',
      &  '     WSIDOTc     WSFDOTc      SSDOTc',
      &  '    WatSenST      NMinSn',
-     &  '      NSOFFc      NSDOTc')
+     &  '      NSOFFc      NSDOTc      FHSTEMc')
 
 !***********************************************************************
 !***********************************************************************
@@ -186,7 +186,7 @@ C=======================================================================
      &  CRUSLF_calc, NRUSLF_calc, 
      &  WLIDOT_calc, WLFDOT_calc, SLDOT_calc, 
      &  WatSen_calc, LfMineSen_calc, 
-     &  NLOFF_calc, NLDOT_calc
+     &  NLOFF_calc, NLDOT_calc, FHLEAF_calc
 
 310   FORMAT (1X,I4, 1X,I3, 2I6, 30F12.6)
 
@@ -205,7 +205,7 @@ C=======================================================================
      &  CRUSST_calc, NRUSST_calc, 
      &  WSIDOT_calc, WSFDOT_calc, SSDOT_calc, 
      &  WatSenStem_calc, StMineSen_calc, 
-     &  NsOFF_calc, NsDOT_calc
+     &  NsOFF_calc, NsDOT_calc, FHSTEM_calc
 
 410   FORMAT (1X,I4, 1X,I3, 2I6, 30F12.6)
 

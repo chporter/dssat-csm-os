@@ -1999,9 +1999,11 @@ C-----------------------------------------------------------------------
      &    WLFDOT, WSFDOT, WSRFDOT)                    !Output 
 
       ELSE
-      WLFDOT = 0.0
-      WSRFDOT = 0.0
-      WSFDOT = 0.0
+        WLFDOT = 0.0
+        WSRFDOT = 0.0
+        WSFDOT = 0.0
+        LFFRZ = 0.0
+        STFRZ = 0.0
       ENDIF
 C-----------------------------------------------------------------------
 C     Call to root growth and rooting depth routine

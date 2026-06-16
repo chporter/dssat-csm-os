@@ -649,6 +649,9 @@ C-----------------------------------------------------------------------
         STNAD_sum = SUM(STNAD)/0.16
         STDM_sum  = SUM(STDM)
 
+        write(5757,'(I7,10F10.4)') 
+     &    YRDOY, STMWT, CADST, SCADD, STDM_SUM, STCAD_SUM
+
         ADD = (CADST+NADST/0.16) *
      &    (1. - MIN(1.0,(SSDOT+WSIDOT)/STMWT))
         ShutMob = ShutMob - ADD * 10.                         !kg/ha

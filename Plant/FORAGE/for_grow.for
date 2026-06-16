@@ -529,14 +529,14 @@ C-----------------------------------------------------------------------
      &  '       WLDOT       LCADD       LNADD      CRUSLF',
      &  '      NRUSLF      WLIDOT      WLFDOT       SLDOT'
      &  '      SLNDOT       NLOFF       NLDOT',
-     &  '       NGRLF      WLDOTN',
+     &  '       NGRLF      WLDOTN      FHLEAF',
 
      &  '       STMWT       WCRST       PCNST',
      &  '       WTNST       WNRST        STSN',
      &  '       WSDOT       SCADD       SNADD      CRUSST',
-     &  '      NRUSST      WSIDOT       SSDOT',
+     &  '      NRUSST      WSIDOT      WSFDOT       SSDOT',
      &  '      SSNDOT       NSOFF       NSDOT',
-     &  '       NGRST      WSDOTN')
+     &  '       NGRST      WSDOTN      FHSTEM')
 
 !     end temp chp
 !=========================================================================
@@ -2194,12 +2194,12 @@ C-----------------------------------------------------------------------
      &   WTLF, XLAI, WCRLF, PCNL, WTNLF, WNRLF, WTNLF - WNRLF,
      &   WLDOT, LCADD, LNADD, CRUSLF, NRUSLF/0.16, 
      &   WLIDOT, WLFDOT, SLDOT, SLNDOT, 
-     &   NLOFF, NLDOT, NGRLF, WLDOTN,
+     &   NLOFF, NLDOT, NGRLF, WLDOTN, FHLEAF,
 
      &   STMWT, WCRST, PCNST, WTNST, WNRST, WTNST - WNRST,
      &   WSDOT, SCADD, SNADD, CRUSST, NRUSST/0.16, 
-     &   WSIDOT, SSDOT, SSNDOT, 
-     &   NSOFF, NSDOT, NGRST, WSDOTN
+     &   WSIDOT, WSFDOT, SSDOT, SSNDOT, 
+     &   NSOFF, NSDOT, NGRST, WSDOTN, FHSTEM
 
   300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
      &    50F12.6)

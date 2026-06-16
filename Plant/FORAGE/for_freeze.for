@@ -49,7 +49,9 @@ C      of the storage organ.  Plant would live as long as there
 C      was storage organ left.
 C-----------------------------------------------------------------------
       WLFDOT = 0.0
+      WSFDOT = 0.0
       LFFRZ  = 0.0
+      STFRZ  = 0.0
       WSRFDOT = 0.0
 
       PSRSRFD = 0.0

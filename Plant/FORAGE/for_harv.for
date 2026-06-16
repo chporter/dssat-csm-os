@@ -103,7 +103,7 @@ C=======================================================================
       CHARACTER(len=6)  SECTION,ERRKEY,trtchar
       character(len=10),parameter :: fhout='FORAGE.OUT'
       CHARACTER*12 MOWFILE, FILEX
-      CHARACTER*30 FILEIO
+!     CHARACTER*30 FILEIO
 !     CHARACTER*78 MSG(2)
       CHARACTER*80 FILECC
       CHARACTER*80 PATHEX
@@ -128,8 +128,9 @@ C=======================================================================
 
       TYPE(CONTROLTYPE) CONTROL
 
-!     Leaf cohorts
+!     Leaf and stem cohorts
       REAL WTLF_before_cut, FHLEAF_sum
+      REAL STMWT_before_cut, FHSTEM_sum
 
 !     SAVE FILEMOW,TRNO,DATE,MOW,RSPLF,MVS,rsht,CUTNO
 
@@ -420,6 +421,7 @@ C-----------------------------------------------------------------------
         ENDIF
 
         FHLEAF_c = 0.0
+        FHSTEM_c = 0.0
         fhtot = 0
         fhlfn = 0
         fhstn = 0
@@ -444,6 +446,7 @@ C-----------------------------------------------------------------------
       DWTSO = WTSO - PWTSO
       DWTSO = WTSO - PWTSO
       FHLEAF_c = 0.0
+      FHSTEM_c = 0.0
 !----------------------------------------------------------------------
 
       IF (.NOT.ALLOCATED(MOW) .AND. ATMOW .EQV. .FALSE.) THEN
@@ -560,6 +563,8 @@ C-----------------------------------------------------------------------
 
         WTLF_before_cut = WTLF
         WTLF = WTLF - FHLEAF
+
+        STMWT_before_cut = STMWT
         STMWT = STMWT - FHSTEM
         TOPWT = TOPWT - FHLEAF - FHSTEM
         TOTWT = TOTWT - FHLEAF - FHSTEM
@@ -596,6 +601,7 @@ C-----------------------------------------------------------------------
 
       ELSE
         FHLEAF = 0.0
+        FHSTEM = 0.0
         fhtot = 0
         fhlfn = 0
         fhstn = 0
@@ -639,9 +645,34 @@ C-----------------------------------------------------------------------
 !          ENDIF
 !        ENDDO
 
-
         FHLEAF_sum = SUM(FHLEAF_c)
 !       PRINT *, YRDOY, FHLEAF, FHLEAF_sum
+      ENDIF
+
+!     Handle stem cohorts
+!     For initial testing, reduce each cohort by the proportion of whole stem lost
+!     Eventually, we want to remove new (top) growth
+      IF (FHSTEM > 0.0) THEN
+        DO I = 1, NLC
+          FHSTEM_c(I) = FHSTEM * STDM(I) / STMWT_before_cut
+          FHSTEM_c(I) = MAX(0.0, FHSTEM_c(I))
+        ENDDO
+
+!!       Remove newest cohorts for mow (UNTESTED)
+!        TotalRemoved = 0.0
+!        DO I = NLC, 1, -1
+!          TotalRemoved = TotalRemoved + STDM(I)
+!          FHSTEM_c(I) = STDM(I)
+!          IF (TotalRemoved >= FHSTEM) THEN
+!            FHSTEM_c(I) = TotalRemoved - FHSTEM
+!            EXIT
+!          ELSE
+!            CYCLE
+!          ENDIF
+!        ENDDO
+
+        FHSTEM_sum = SUM(FHSTEM_c)
+!        PRINT *, YRDOY, FHSTEM, FHSTEM_sum
       ENDIF
 
 !***********************************************************************

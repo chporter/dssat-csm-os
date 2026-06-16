@@ -399,6 +399,7 @@ C-----------------------------------------------------------------------
       CRUSSH = 0.0
 !     Leaf cohort CH2O mining ~ CRUSLF
       LFCMN = 0.0
+      STCMN = 0.0
 
 C-----------------------------------------------------------------------
 C    Calculate Increase in Remobilizable C due to N shortage and
@@ -445,8 +446,8 @@ C-----------------------------------------------------------------------
 
 !         Handle C mining for leaf and stem cohorts
           DO I = 1, NLC
-            LFCMN(I) = CMineFactor * LFNSC(I)
-            STCMN(I) = CMineFactor * STNSC(I)
+            LFCMN(I) = CMineFactor * LFNSC(I)  !CRUSLF
+            STCMN(I) = CMineFactor * STNSC(I)  !CRUSST
           ENDDO 
         ENDIF
       ENDIF
