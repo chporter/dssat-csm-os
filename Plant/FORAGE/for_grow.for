@@ -620,9 +620,6 @@ C     Initial seedling or transplant weight
       WTNSD  = 0.0
       WTNTOT = WTNLF + WTNST + WTNRT + WTNSH + WTNSD + WTNSR
 
-!     2026-04-01 chp added initialization for mobile N
-      WNRLF = MAX (WTNLF - PROLFF * 0.16 * (WTLF-WCRLF), 0.0)
-
 !     Seed or transplant N at planting
       SDNPL  = WTPSD * SDPRO * 0.16 * 0.75 * PLTPOP -
      &  (WTNLF + WTNST + WTNRT + WTNSR)

@@ -162,7 +162,7 @@ C=======================================================================
       CALL HEADER(SEASINIT, SCLUN, CONTROL % RUN)
       WRITE (SCLUN,210)
   210 FORMAT('@YEAR DOY   DAS   DAP',
-     &  '       SWADc      WCRSTc      StemNc',
+     &  '      STMWTc      WCRSTc      StemNc',
      &  '      WTNSTc      WNRSTc       STSNc',
      &  '      WSDOTc      SCADDc      SNADDc',
      &  '     CRUSSTc     NRUSSTc',

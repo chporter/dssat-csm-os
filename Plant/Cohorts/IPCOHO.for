@@ -10,8 +10,8 @@
      &  FILECC, MODEL,                            !Input
      &  ALPHL, ALPHS, ICMP, MAXNMINE,             !Output
      &  NMOBMX, NVSMOB,                           !Output
-     &  PCHOLFF, PCHOSTF, PROLFF, PROSTF,         !Output
-     &  SENDAY, SENMAX, SENCLV, SENCSV,           !Output
+     &  PCHOLFF, PCHOSTF, PROLFI, PROLFF, PROSTI, !Output
+     &  PROSTF, SENDAY, SENMAX, SENCLV, SENCSV,   !Output
      &  SENNLV, SENNSV, TCMP, XSENMX)             !Output
 
 !-----------------------------------------------------------------------
@@ -21,7 +21,7 @@
       CHARACTER*92, INTENT(IN) :: FILECC
       REAL, INTENT(OUT) :: ALPHL, ALPHS, PCHOLFF, PCHOSTF, ICMP, 
      &  MAXNMINE, NMOBMX, NVSMOB, 
-     &  PROLFF, PROSTF, SENDAY, 
+     &  PROLFF, PROLFI, PROSTF, PROSTI, SENDAY, 
      &  SENCLV, SENCSV, SENNLV, SENNSV, TCMP
       REAL, INTENT(OUT) :: SENMAX(4), XSENMX(4)
 
@@ -50,7 +50,8 @@
         CALL ERROR(SECTION, 42, FILECC, LNUM)
       ELSE
         CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
-        READ(C80,'(12X,F6.0,12X,F6.0)',IOSTAT=ERR) PROLFF, PROSTF
+        READ(C80,'(F6.0,6X,2F6.0,6X,F6.0)',IOSTAT=ERR) 
+     &    PROLFI, PROLFF, PROSTI, PROSTF
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
 
         IF (MODEL(1:5) == 'PRFRM') THEN

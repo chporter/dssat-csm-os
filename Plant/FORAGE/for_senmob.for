@@ -547,9 +547,9 @@ C    Find and Read Surviving section  Added by Diego
         CALL HEADER(SEASINIT, NOUTDG2, CONTROL % RUN)
         WRITE (NOUTDG2,210)
   210   FORMAT('@YEAR DOY   DAS   DAP',
-     &   '      TotSen      NatSen     NMobSen    LoLitSen',
-     &   '    WaterSen      SLMDOT      Nmob_a      Nmob_p',
-     &   '     Nmob_mp     Cmine_p    Cmine_mp')
+     &   '     LTotSen     LNatSen       LNMob     LLitSen',
+     &   '     LWatSen      SLMDOT     LNmob_a     LNmob_p',
+     &   '    LNmob_mp    LCmine_p   LCmine_mp')
 
 !     end temp chp
 
@@ -1341,7 +1341,8 @@ C    1-12-2024 KJB and DP
      &   LFSNMOB, NMINELF, LFNMINE, CMINELF, LFCMINE, 
      &   LeafTotSen_sum, LFNSEN_sum, LFSENWT_sum, LTSEN_sum, 
      &   WaterSen_sum, SLMDOT_sum, 
-     &   LFSNMOB_sum, NMINELF_sum, LFNMINE_sum, CMINELF_sum, LFCMINE_sum
+     &   LFSNMOB_sum, NMINELF_sum, LFNMINE_sum, CMINELF_sum,LFCMINE_sum,
+     &   StemTotSen_sum, STCMINE_sum, CMINEST_sum
 
   300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
      &    50F12.6)
