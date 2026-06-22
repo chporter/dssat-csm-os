@@ -565,7 +565,6 @@ C-GH 08/19/2025
      &    - LFNMN(I)/0.16       !N mined = NRUSLF/0.16 
      &    - LFCMN(I)            !C mined = CRUSLF
      &    - LeafMassDecrease(I) !freez, pst, senes=SLDOT+WLIDOT+WLFDOT
-     &    - FHLEAF_c(I)         !harvest
 
 !       Leaf dry matter (WTLF in GROW)
         IF (LFDM(I) + WLDOT_cohort >= 1.E-10) THEN
@@ -582,7 +581,6 @@ C-GH 08/19/2025
      &    - STNMN(I)/0.16       !N mined = NRUSST/0.16 
      &    - STCMN(I)            !C mined = CRUSST
      &    - StemMassDecrease(I) !freez, pst, senes=SSDOT+WSIDOT+WSFDOT
-     &    - FHSTEM_c(I)         !harvest
 
 !       Stem dry matter (STMWT in GROW)
         IF (STDM(I) + WSDOT_cohort >= 1.E-10) THEN
@@ -611,10 +609,7 @@ C-GH 08/19/2025
      &      - LeafMassDecrease(I) * SLA_calc
      &      - LFNMN(I) / 0.16 * SLA_calc
      &      + LFNAD(I) / 0.16 * SLA_calc
-     &      - FHLEAF_c(I) * SLA_calc
-
           LFSLA(I) = LFAREA(I) / LFDM(I)
-
         ELSE
           LFAREA(I)   = 0.0
           LFSLA(I)    = 0.0
@@ -644,7 +639,7 @@ C-GH 08/19/2025
      &        - LFNSC(I) / LFDM(I) * LeafMassDecrease(I)
 
           CASE ('PRFRM')
-            IF (FHLEAF_c(I) == 0.0) THEN
+!           IF (FHLEAF_c(I) == 0.0) THEN
 !             CLOFF = (SLMDOT + LTSEN + LFSENWT) *  
               CLOFF = (SLMDOT_c(I) + LTSEN_c(I) + LFSENWT_c(I)) * 
 !    &                (SENCLV * (RHOL - PCHOLFF) + PCHOLFF) 
@@ -659,10 +654,10 @@ C-GH 08/19/2025
 
 !             WRCLDT = WRCLDT + CADLF - LFCADDM
               WRCLDT_c(I) = WRCLDT_c(I) + LFCAD(I)
-            ELSE
-!             Harvest today
-              WRCLDT_c(I) = -FHLEAF_c(I) * RHOL(I)
-            ENDIF
+!            ELSE
+!!             Harvest today
+!              WRCLDT_c(I) = -FHLEAF_c(I) * RHOL(I)
+!            ENDIF
           END SELECT
 
 !         Update mobile CH2O in leaf 
@@ -687,17 +682,12 @@ C-GH 08/19/2025
      &        - STNSC(I) / STDM(I) * StemMassDecrease(I)
 
           CASE ('PRFRM')
-            IF (FHSTEM_c(I) == 0.0) THEN
+!           IF (FHSTEM_c(I) == 0.0) THEN
 !             CSOFF = (SSMDOT + STLTSEN + STSENWT) * !for_grow (stem)
               CSOFF = (SSMDOT_c(I) + STLTSEN_c(I) + STSENWT_c(I)) * 
      &                (SENCSV * (RHOS(I) - PCHOSTF) + PCHOSTF)
 !    &              + (SSNDOT + WSIDOT + WSFDOT) * RHOS    !for_grow (stem)
      &              + (STWSSN(I) + STPST(I) + STFRZ(I)) * RHOS(I)
-
-              IF (FHStem_c(I) .GT. 0.0) THEN
-!                CSOFF = CSOFF + FHSTEM * RHOS    !for_grow (stem)
-                CSOFF = CSOFF + FHStem_c(I) * RHOS(I)
-              ENDIF
 
               IF (CSOFF. LT. 0.0) CSOFF = 0.0
 
@@ -707,10 +697,10 @@ C-GH 08/19/2025
 !             WRCSDT = WRCSDT + CADST - STCADDM
               WRCSDT_c(I) = WRCSDT_c(I) + STCAD(I)
 
-            ELSE
-!             Harvest today
-              WRCSDT_c(I) = -FHSTEM_c(I) * RHOS(I)
-            ENDIF
+!            ELSE
+!!             Harvest today
+!              WRCSDT_c(I) = -FHSTEM_c(I) * RHOS(I)
+!            ENDIF
           END SELECT
 
 !         Update mobile CH2O in stem
@@ -749,7 +739,7 @@ C-GH 08/19/2025
             ENDIF
 
           CASE ('PRFRM')
-            IF (FHLEAF_c(I) == 0.0) THEN
+!           IF (FHLEAF_c(I) == 0.0) THEN
 !             NLOFF      = SLMDOT *    
               NLOFF_c(I) = LFNSEN_c(I) * 
 !    &         (SENNLV * (PCNL/100 - PROLFF * 0.16) + PROLFF * 0.16) 
@@ -759,11 +749,11 @@ C-GH 08/19/2025
 !    &         + (SLNDOT + WLIDOT + WLFDOT) * PCNL/100  
      &         + (LFWSSN(I) + LFPST(I) + LFFRZ(I)) * PCNLeaf(I)/100.
 
-              IF (FHLEAF_c(I) .GT. 0.0) THEN
-!               Harvest event today
-!               NLOFF = NLOFF + FHLEAF * PCNL/100.
-                NLOFF_c(I) = NLOFF_c(I) + FHLEAF_c(I) * PCNLeaf(I)/100.
-              ENDIF
+!              IF (FHLEAF_c(I) .GT. 0.0) THEN
+!!               Harvest event today
+!!               NLOFF = NLOFF + FHLEAF * PCNL/100.
+!                NLOFF_c(I) = NLOFF_c(I) + FHLEAF_c(I) * PCNLeaf(I)/100.
+!              ENDIF
 
               NLOFF_c(I) = MIN(NLOFF_c(I), LeafNTot(I))
               
@@ -779,10 +769,10 @@ C-GH 08/19/2025
 
               NLDOT_c(I) = MAX(NLDOT_c(I), -LeafNTot(I))
 
-            ELSE
-!             Harvest today
-              NLDOT_c(I) = -FHLEAF_c(I) * PCNLeaf(i)/100.
-            ENDIF
+!            ELSE
+!!             Harvest today
+!              NLDOT_c(I) = -FHLEAF_c(I) * PCNLeaf(i)/100.
+!            ENDIF
           END SELECT
 
 !     ---------------------------------------------------------
@@ -817,7 +807,7 @@ C-GH 08/19/2025
             NSDOT_c(I) = MAX(NSDOT_c(I), -StemNTot(I))
 
           CASE ('PRFRM')
-            IF (FHSTEM_c(I) == 0.0) THEN
+!           IF (FHSTEM_c(I) == 0.0) THEN
 !             NSOFF  = SSMDOT * 
               NSOFF_c(I) = SSMDOT_c(I) * 
 !    &           (SENNSV * (PCNST/100 - PROSTF * 0.16) + PROSTF * 0.16) 
@@ -837,10 +827,10 @@ C-GH 08/19/2025
               NSDOT_c(I) = NSDOT_c(I) + STNAD(I)
 
               NSDOT_c(I) = MAX(NSDOT_c(I), -StemNTot(I))
-            ELSE
-!             Harvest today
-              NSDOT_c(I) = FHSTEM_c(I) * PCNStem(I)/100.
-            ENDIF
+!            ELSE
+!!             Harvest today
+!              NSDOT_c(I) = -FHSTEM_c(I) * PCNStem(I)/100.
+!            ENDIF
           END SELECT
 
 !         Stem N
@@ -884,6 +874,60 @@ C-GH 08/19/2025
       ENDIF
 
 !-------------------------------------------------------------------
+!     Handle harvested leaf
+!     Update LFDM and STDM here so the harvested values do not affect
+!       calculations of WRCLDT_c and WRCSDT_c
+      FHLEAF_calc = SUM(FHLEAF_c)            !harvested
+      WTLF_calc   = SUM(LFDM)                 !Leaf mass g/m2
+      IF (FHLEAF_calc > 0.0) THEN
+!       Harvest today
+        DO I = 1, NLC
+          IF (FHLEAF_c(I) < LFDM(I)) THEN
+            LFDM(I) = LFDM(I) - FHLEAF_c(I)
+            LFAREA(I) = LFAREA(I) - FHLEAF_c(I) * SLA_calc
+            LFSLA(I) = LFAREA(I) / LFDM(I)
+            LFNSC(I) = LFNSC(I) -FHLEAF_c(I) * RHOL(I)
+            LeafNTot(I) = LeafNTot(I) -FHLEAF_c(I) * PCNLeaf(i)/100.
+            LFSN(I) = MIN(LeafNTot(I),PROLFF*0.16 * (LFDM(I) -LFNSC(I)))
+            LFNSN(I) = LeafNTot(I) - LFSN(I)
+          ELSE
+            FHLEAF_c(I) = LFDM(I)
+            LFDM(I)     = 0.0
+            LFAREA(I)   = 0.0
+            LFSLA(I)    = 0.0
+            LFNSC(I)    = 0.0
+            LeafNTot(I) = 0.0
+            LFSN(I)     = 0.0
+            LFNSN(I)    = 0.0
+          ENDIF
+        ENDDO
+      ENDIF
+
+!-------------------------------------------------------------------
+!     Handle harvested stem
+      FHSTEM_calc = SUM(FHSTEM_c)            !harvested
+      WTST_calc   = SUM(STDM)                !Stem mass g/m2
+      IF (FHSTEM_calc > 0.0) THEN
+!       Harvest today
+        DO I = 1, NLC
+          IF (FHSTEM_c(I) < STDM(I)) THEN
+            STDM(I) = STDM(I) - FHSTEM_c(I)
+            STNSC(I) = STNSC(I) -FHSTEM_c(I) * RHOS(I)
+            StemNTot(I) = StemNTot(I) -FHSTEM_c(I) * PCNStem(I)/100.
+            STSN(I) = MIN(StemNTot(I),PROSTF*0.16 * (STDM(I) -STNSC(I)))
+            STNSN(I) = StemNTot(I) - STSN(I)
+          ELSE
+            FHSTEM_c(I) = STDM(I)
+            STDM(I)     = 0.0
+            STNSC(I)    = 0.0
+            StemNTot(I) = 0.0
+            STSN(I)     = 0.0
+            STNSN(I)    = 0.0
+          ENDIF
+        ENDDO
+      ENDIF
+
+!-------------------------------------------------------------------
       DO I = 1, NLC
         CohortAge(I) = CohortAge(I) + DTX  !cohort age in p-t-d
         CohortAgeDays(I) = CohortAgeDays(I) + 1
@@ -914,7 +958,6 @@ C-GH 08/19/2025
 !         NDF = function of LFLIGNIN, LFCELLUL, LFHEMICEL
       ENDDO
 
-
 !***********************************************************************
 !***********************************************************************
 !     END OF DYNAMIC IF CONSTRUCT
@@ -940,7 +983,6 @@ C-GH 08/19/2025
       NLDOT_calc  = SUM(NLDOT_c(1:LCMax)) + NGRLF !Total N added today
       FHLEAF_calc = SUM(FHLEAF_c)            !harvested
 
-!------------------------------------
 !     Total states over all leaf cohorts
       WTLF_calc  = SUM(LFDM(1:LCMax))     !Leaf mass g/m2
       AREALF_calc= SUM(LFAREA(1:LCMax))   !Lf area index
@@ -949,6 +991,7 @@ C-GH 08/19/2025
       WNRLF_calc = SUM(LFNSN(1:LCMax))    !Non-structural N
       LFSN_calc  = SUM(LFSN(1:LCMax))     !Structural N
 
+!------------------------------------
 !     Total rates over all stem cohorts
       CRUSST_calc = SUM(STCMN(1:LCMax))      !CH2O mined in VEGGR
       NRUSST_calc = SUM(STNMN(1:LCMax)) / 0.16 !N mined in MOBIL
@@ -962,13 +1005,13 @@ C-GH 08/19/2025
       NSDOT_calc  = SUM(NSDOT_c(1:LCMax)) + NGRST !Total N added today
       FHSTEM_calc = SUM(FHSTEM_c)            !harvested
 
-!------------------------------------
 !     Total states over all stem cohorts
       WTST_calc  = SUM(STDM(1:LCMax))     !Stem mass g/m2
       WCRST_calc = SUM(STNSC(1:LCMax))    !CH2O reserves
       WTNST_calc = SUM(StemNTot(1:LCMax)) !Stem N
       WNRST_calc = SUM(STNSN(1:LCMax))    !Non-structural N
       STSN_calc  = SUM(STSN(1:LCMax))     !Structural N
+!------------------------------------
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!     TEMP CHP

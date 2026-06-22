@@ -455,7 +455,6 @@ C-----------------------------------------------------------------------
             IF (MOW(I).GE.0.and.trno(i)==trtno)then
               cutno = CUTNO + 1
               MOWTODAY = .TRUE.
-              MOWED = .TRUE.
 
               if(mow(i)/10<topwt) THEN
                 FHLEAF=0
@@ -520,7 +519,6 @@ C-----------------------------------------------------------------------
         IF (MOWC .GE. 0.0) THEN
           MOWCOUNT = 1
           MOWTODAY = .TRUE.
-          MOWED = .TRUE.
 
           CUTNO = CUTNO + 1
           IF (MOWC/10. < topwt) THEN
@@ -549,6 +547,7 @@ C-----------------------------------------------------------------------
 
 !     Summarize today's harvest
       if (fhtot > 0.0) then
+        MOWED = .TRUE.
         fhlfn = fhleaf*pcnl/100
         fhstn = fhstem*pcnst/100
         fhtotn = fhlfn+fhstn
@@ -672,7 +671,7 @@ C-----------------------------------------------------------------------
 !        ENDDO
 
         FHSTEM_sum = SUM(FHSTEM_c)
-!        PRINT *, YRDOY, FHSTEM, FHSTEM_sum
+!        PRINT *, YRDOY, FHSTEM, FHSTEM_sum, STMWT, WTNST
       ENDIF
 
 !***********************************************************************
