@@ -133,7 +133,7 @@ C=======================================================================
 
       REAL WTST_calc, PStemN_calc, WCRST_calc, 
      &  WTNST_calc, WNRST_calc, WSFDOT_calc, 
-     &  WatSenStem_calc
+     &  WatSenStem_calc, WRCLDT_calc
 
       CHARACTER (len=8) MODEL
 
@@ -210,6 +210,7 @@ C=======================================================================
      &  WLIDOT_calc, WLFDOT_calc, SLDOT_calc, 
      &  WatSen_calc, LfMineSen_calc, 
      &  NLOFF_calc, NLDOT_calc, FHLEAF_calc,
+     &  WRCLDT_calc,
 !       Stem output:
      &  WTST_calc, WCRST_calc, PStemN_calc,
      &  WTNST_calc, WNRST_calc, STSN_calc, 
@@ -321,6 +322,7 @@ C-GH 08/19/2025
      &  WLIDOT_calc, WLFDOT_calc, SLDOT_calc, 
      &  WatSen_calc, LfMineSen_calc, 
      &  NLOFF_calc, NLDOT_calc, FHLEAF_calc,
+     &  WRCLDT_calc,
 !       Stem output:
      &  WTST_calc, WCRST_calc, PStemN_calc,
      &  WTNST_calc, WNRST_calc, STSN_calc, 
@@ -636,7 +638,10 @@ C-GH 08/19/2025
      &        - LFCMN(I)      !~ CRUSLF, mined CH2O
      &        + LFCAD(I)      !new reserves
 !               leaf mass losses:
-     &        - LFNSC(I) / LFDM(I) * LeafMassDecrease(I)
+!               NOTE: this goes back to original format, 
+!               using water stress senescence only instead of 
+!               total senescence.
+     &        - (LFWSSN(I) + LFPST(I) + LFFRZ(I)) * RHOL(I)
 
           CASE ('PRFRM')
 !           IF (FHLEAF_c(I) == 0.0) THEN
@@ -982,6 +987,7 @@ C-GH 08/19/2025
       NLOFF_calc  = SUM(NLOFF_c(1:LCMax))    !N loss senes,freez,pest
       NLDOT_calc  = SUM(NLDOT_c(1:LCMax)) + NGRLF !Total N added today
       FHLEAF_calc = SUM(FHLEAF_c)            !harvested
+      WRCLDT_calc = SUM(WRCLDT_c)            !change to mobile CH2O
 
 !     Total states over all leaf cohorts
       WTLF_calc  = SUM(LFDM(1:LCMax))     !Leaf mass g/m2
@@ -1075,6 +1081,7 @@ C-GH 08/19/2025
      &  WLIDOT_calc, WLFDOT_calc, SLDOT_calc, 
      &  WatSen_calc, LfMineSen_calc, 
      &  NLOFF_calc, NLDOT_calc, FHLEAF_calc,
+     &  WRCLDT_calc,
 !       Stem output:
      &  WTST_calc, WCRST_calc, PStemN_calc,
      &  WTNST_calc, WNRST_calc, STSN_calc, 

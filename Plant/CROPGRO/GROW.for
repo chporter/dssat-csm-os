@@ -444,7 +444,7 @@ C-----------------------------------------------------------------------
      &  '       WSDOT       SCADD       SNADD      CRUSST',
      &  '      NRUSST      WSIDOT       SSDOT',
      &  '      SSNDOT       NSOFF       NSDOT',
-     &  '       NGRST      WSDOTN')
+     &  '       NGRST      WSDOTN      WCRLDT')
 
 !     end temp chp
 !=========================================================================
@@ -786,12 +786,12 @@ C     to account for mass, N and C lost this way in sections below
 C-----------------------------------------------------------------------
 ! CHP 2025-12-01 should this be SLDOT instead of SLNDOT?
 !     SLNDOT is water senescence, SLDOT is total senescence
-!     WRCLDT = ALPHL * WLDOTN - CRUSLF - RHOL*(SLNDOT+WLIDOT+WLFDOT)
+      WRCLDT = ALPHL * WLDOTN - CRUSLF - RHOL*(SLNDOT+WLIDOT+WLFDOT)
 !     temp chp ??? change or not? It does make some difference.
 
 ! chp 2026-06-02 This issue is still unresolved, but I'm going back
 !     to the original equation for testing.
-      WRCLDT = ALPHL * WLDOTN - CRUSLF - RHOL*(SLDOT+WLIDOT+WLFDOT)
+!     WRCLDT = ALPHL * WLDOTN - CRUSLF - RHOL*(SLDOT+WLIDOT+WLFDOT)
 
       IF (WTLF > 1.E-4) THEN
          WRCLDT = WRCLDT + CADLF *
@@ -1323,7 +1323,7 @@ C-----------------------------------------------------------------------
      &   STMWT, WCRST, PCNST, WTNST, WNRST, WTNST - WNRST,
      &   WSDOT, SCADD, SNADD, CRUSST, NRUSST/0.16, 
      &   WSIDOT, SSDOT, SSNDOT, 
-     &   NSOFF, NSDOT, NGRST, WSDOTN
+     &   NSOFF, NSDOT, NGRST, WSDOTN, WRCLDT
 
   300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
      &    50F12.6)

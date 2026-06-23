@@ -16,6 +16,7 @@ C=======================================================================
      &  WLIDOT_calc, WLFDOT_calc, SLDOT_calc, 
      &  WatSen_calc, LfMineSen_calc, 
      &  NLOFF_calc, NLDOT_calc, FHLEAF_calc,
+     &  WRCLDT_calc,
 !       Stem output:
      &  WTST_calc, WCRST_calc, PStemN_calc,
      &  WTNST_calc, WNRST_calc, STSN_calc, 
@@ -39,7 +40,7 @@ C=======================================================================
      &  WLDOT_calc, SLDOT_calc, WLFDOT_calc, NRUSLF_calc, 
      &  CRUSLF_calc, WLIDOT_calc, WatSen_calc, LfMineSen_calc, 
      &  LCADD_calc, LNADD_calc, NLDOT_calc, NLOFF_calc,
-     &  LFSN_calc, FHLEAF_calc
+     &  LFSN_calc, FHLEAF_calc, WRCLDT_calc
 
       REAL, INTENT(IN) ::  WTST_calc, WNRST_calc, WCRST_calc, 
      &  WTNST_calc, PStemN_calc, 
@@ -116,7 +117,8 @@ C=======================================================================
      &  '     CRUSLFc     NRUSLFc',
      &  '     WLIDOTc     WLFDOTc      SLDOTc',
      &  '      WatSen      NMinSn',
-     &  '      NLOFFc      NLDOTc     FHLEAFc')
+     &  '      NLOFFc      NLDOTc     FHLEAFc',
+     &  '     WRCLDTc')
 
 !-----------------------------------------------------------------------
 !     Initialize 2nd leaf cohort output file
@@ -186,7 +188,7 @@ C=======================================================================
      &  CRUSLF_calc, NRUSLF_calc, 
      &  WLIDOT_calc, WLFDOT_calc, SLDOT_calc, 
      &  WatSen_calc, LfMineSen_calc, 
-     &  NLOFF_calc, NLDOT_calc, FHLEAF_calc
+     &  NLOFF_calc, NLDOT_calc, FHLEAF_calc, WRCLDT_calc
 
 310   FORMAT (1X,I4, 1X,I3, 2I6, 30F12.6)
 

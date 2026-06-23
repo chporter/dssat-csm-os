@@ -746,7 +746,7 @@ C-----------------------------------------------------------------------
           WRITE(DLUN2,312) HARVFRAC(1)*100., " % yield harvested",
      &            SumDat % HWAH, " kg/ha"
           WRITE(DLUN2,312) HARVFRAC(2)*100., " % by-product harv",
-     &            SumDat % BWAH, " kg/ha"
+     &            SumDat % BWAH * 10., " kg/ha"
   312     FORMAT(T45,F6.1,A,T72,F7.0,A)
 
 !         Harvest residues
