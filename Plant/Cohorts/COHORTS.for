@@ -170,7 +170,7 @@ C=======================================================================
       REAL CLOFF, CSOFF, WSDOT_cohort
 
 !     TEMP CHP
-      REAL CLOFF_sum, CSOFF_sum , stcad_sum
+      REAL CLOFF_sum, CSOFF_sum , stcad_sum, Percent_harvested
 
 !     Variables read from species file:
       REAL ALPHL, ALPHS, PROLFF, PROLFI, PROSTF, PROSTI
@@ -240,11 +240,11 @@ C=======================================================================
       LFAREAH   = 0.0 !healthy leaf area (cm2[leaf]/m2)
       FHLEAF_c  = 0.0 !harvested leaf mass
 
-      CUMLFDM = 0.0 !Not used by could be compared with CumLeafDM
+      CUMLFDM   = 0.0 !Not used by could be compared with CumLeafDM
 
       STDM      = 0.0 !stem dry matter (g[stem]/m2) = WTLF
       STNSC     = 0.0 !stem non-structural (mobile) CH2O (g/m2) = WCRLF
-      LeafNTot  = 0.0 !stem N total (g[N]]/m2) = WTNLF
+      StemNTot  = 0.0 !stem N total (g[N]]/m2) = WTNLF
       STNSN     = 0.0 !stem non-structural (mobile) N (g/m2) = WNRLF
       LFSN      = 0.0 !stem structural (non-mobile) N (g[N]]/m2)
       LFAREA    = 0.0 !stem area (cm2[stem]/m2)
@@ -668,9 +668,11 @@ C-GH 08/19/2025
 !         Update mobile CH2O in leaf 
           LFNSC(I) = LFNSC(I) + WRCLDT_c(I)
           IF (LFNSC(I) < 0.0) LFNSC(I) = 0.0
+          RHOL(I) = LFNSC(I) / LFDM(I)
 
         ELSE  !LFDM(I) <= 0.0
-          LFNSC(I)    = 0.0
+          LFNSC(I) = 0.0
+          RHOL(I)  = 0.0
         ENDIF
 
 !       ---------------------------
@@ -711,9 +713,11 @@ C-GH 08/19/2025
 !         Update mobile CH2O in stem
           STNSC(I) = STNSC(I) + WRCSDT_c(I)
           IF (STNSC(I) < 0.0) STNSC(I) = 0.0
+          RHOS(I) = STNSC(I) / STDM(I)
 
         ELSE  !STDM(I) <= 0.0
           STNSC(I)    = 0.0
+          RHOS(I) = 0.0
         ENDIF
       ENDDO
 
@@ -767,10 +771,10 @@ C-GH 08/19/2025
               NLDOT_c(I) = - NLOFF_c(I) - LFNMN(I)
 
 !             IF (WTLF .GT. 0.0.AND.FHLEAF.EQ.0) THEN
-              IF (FHLEAF_C(I) == 0.0) THEN
+!             IF (FHLEAF_C(I) == 0.0) THEN
 !               NLDOT = NLDOT + NADLF - LFNADDM
                 NLDOT_c(I) = NLDOT_c(I) + LFNAD(I)
-              ENDIF
+!             ENDIF
 
               NLDOT_c(I) = MAX(NLDOT_c(I), -LeafNTot(I))
 
@@ -790,10 +794,13 @@ C-GH 08/19/2025
 !         Non-structural N (WNRLF in GROW)
           LFNSN(I) = LeafNTot(I) - LFSN(I)
 
+          PCNLeaf(I) = LeafNTot(I) / LFDM(I) * 100.  ! % N 
+
         ELSE  !LFDM(I) <= 0.0
           LeafNTot(I) = 0.0
           LFSN(I)     = 0.0
           LFNSN(I)    = 0.0
+          PCNLeaf(I)  = 0.0
         ENDIF
 
 !       ---------------------------
@@ -840,6 +847,7 @@ C-GH 08/19/2025
 
 !         Stem N
           StemNTot(I) = StemNTot(I) + NSDOT_c(I) 
+          PCNStem(I) = StemNTot(I) / STDM(I) * 100.  ! % N 
 
 !         Structural N (WTNST minus WNRST in GROW)
           STSN(I) = MIN(StemNTot(I), PROSTF*0.16 * (STDM(I) - STNSC(I)))
@@ -851,6 +859,7 @@ C-GH 08/19/2025
           StemNTot(I) = 0.0
           STSN(I)     = 0.0
           STNSN(I)    = 0.0
+          PCNStem(I)  = 0.0
         ENDIF
       ENDDO
 
@@ -862,12 +871,14 @@ C-GH 08/19/2025
         NLC = NLC + 1  !today's new cohort
 
 !       New growth for today's leaf cohort
-        LFDM(NLC)  = WLDOTN             !leaf dry mass
-        CumLeafDM(NLC) = WLDOTN         !cum leaf mass added
-        LFAREA(NLC)= WLDOTN * F         !leaf area
-        LFNSC(NLC) = WLDOTN * ALPHL     !non-struct CH2O
-        LFSN(NLC)  = PROLFF * 0.16 * (WLDOTN - LFNSC(NLC))  !struc N
-        LFNSN(NLC) = NGRLF - LFSN(NLC)  !non-struct N (mobile)
+        LFDM(NLC)   = WLDOTN             !leaf dry mass
+        CumLeafDM(NLC) = WLDOTN          !cum leaf mass added
+        LFAREA(NLC) = WLDOTN * F         !leaf area
+        LFNSC(NLC)  = WLDOTN * ALPHL     !non-struct CH2O
+        LeafNTot(NLC) = NGRLF            !total leaf N (g/m2)
+        LFSN(NLC)   = PROLFF * 0.16 * (WLDOTN - LFNSC(NLC))  !struc N
+        LFNSN(NLC)  = NGRLF - LFSN(NLC)  !non-struct N (mobile)
+        PCNLeaf(NLC) = LeafNTot(NLC) / LFDM(NLC) * 100.  ! % N
 
 !       New growth for today's stem cohort
         STDM(NLC)  = WSDOTN             !stem dry mass
@@ -875,7 +886,7 @@ C-GH 08/19/2025
         StemNTot(NLC) = NGRST           !total stem N (g/m2)
         STSN(NLC)  = PROSTF * 0.16 * (WSDOTN - STNSC(NLC))  !struc N
         STNSN(NLC) = NGRST - STSN(NLC)  !non-struct N (mobile)
-
+        PCNStem(NLC) = StemNTot(NLC) / STDM(NLC) * 100.  ! % N
       ENDIF
 
 !-------------------------------------------------------------------
@@ -883,8 +894,14 @@ C-GH 08/19/2025
 !     Update LFDM and STDM here so the harvested values do not affect
 !       calculations of WRCLDT_c and WRCSDT_c
       FHLEAF_calc = SUM(FHLEAF_c)            !harvested
-      WTLF_calc   = SUM(LFDM)                 !Leaf mass g/m2
       IF (FHLEAF_calc > 0.0) THEN
+
+!       TEMP CHP
+!       FORCE NEW COHORT TO BE HARVESTED AT SAME RATE
+        WTLF_calc   = SUM(LFDM) - WLDOTN                 !Leaf mass g/m2
+        Percent_harvested = FHLEAF_calc / WTLF_calc
+        FHLEAF_c(NLC) = LFDM(NLC) * Percent_harvested
+
 !       Harvest today
         DO I = 1, NLC
           IF (FHLEAF_c(I) < LFDM(I)) THEN
@@ -932,6 +949,18 @@ C-GH 08/19/2025
         ENDDO
       ENDIF
 
+!***********************************************************************
+!***********************************************************************
+!     END OF DYNAMIC IF CONSTRUCT
+!***********************************************************************
+      ENDIF
+
+!***********************************************************************
+!***********************************************************************
+!     Sum over all cohorts for SEASINIT and for INTEGR
+!***********************************************************************
+      IF (DYNAMIC .EQ. EMERG .OR.DYNAMIC .EQ. INTEGR) THEN
+!-----------------------------------------------------------------------
 !-------------------------------------------------------------------
       DO I = 1, NLC
         CohortAge(I) = CohortAge(I) + DTX  !cohort age in p-t-d
@@ -963,18 +992,6 @@ C-GH 08/19/2025
 !         NDF = function of LFLIGNIN, LFCELLUL, LFHEMICEL
       ENDDO
 
-!***********************************************************************
-!***********************************************************************
-!     END OF DYNAMIC IF CONSTRUCT
-!***********************************************************************
-      ENDIF
-
-!***********************************************************************
-!***********************************************************************
-!     Sum over all cohorts for SEASINIT and for INTEGR
-!***********************************************************************
-      IF (DYNAMIC .EQ. SEASINIT .OR. DYNAMIC .EQ. INTEGR) THEN
-!-----------------------------------------------------------------------
 !     Total rates over all leaf cohorts
       CRUSLF_calc = SUM(LFCMN(1:LCMax))      !CH2O mined in VEGGR
       NRUSLF_calc = SUM(LFNMN(1:LCMax)) / 0.16 !N mined in MOBIL
@@ -1081,7 +1098,7 @@ C-GH 08/19/2025
      &  WLIDOT_calc, WLFDOT_calc, SLDOT_calc, 
      &  WatSen_calc, LfMineSen_calc, 
      &  NLOFF_calc, NLDOT_calc, FHLEAF_calc,
-     &  WRCLDT_calc,
+     &  (WRCLDT_calc + WLDOTN * ALPHL),
 !       Stem output:
      &  WTST_calc, WCRST_calc, PStemN_calc,
      &  WTNST_calc, WNRST_calc, STSN_calc, 

@@ -530,7 +530,7 @@ C-----------------------------------------------------------------------
      &  '      NRUSLF      WLIDOT      WLFDOT       SLDOT'
      &  '      SLNDOT       NLOFF       NLDOT',
      &  '       NGRLF      WLDOTN      FHLEAF',
-
+     &  '      WRCLDT',
      &  '       STMWT       WCRST       PCNST',
      &  '       WTNST       WNRST        STSN',
      &  '       WSDOT       SCADD       SNADD      CRUSST',
@@ -2192,6 +2192,7 @@ C-----------------------------------------------------------------------
      &   WLDOT, LCADD, LNADD, CRUSLF, NRUSLF/0.16, 
      &   WLIDOT, WLFDOT, SLDOT, SLNDOT, 
      &   NLOFF, NLDOT, NGRLF, WLDOTN, FHLEAF,
+     &   WRCLDT,
 
      &   STMWT, WCRST, PCNST, WTNST, WNRST, WTNST - WNRST,
      &   WSDOT, SCADD, SNADD, CRUSST, NRUSST/0.16, 

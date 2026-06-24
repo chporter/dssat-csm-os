@@ -129,8 +129,9 @@ C=======================================================================
       TYPE(CONTROLTYPE) CONTROL
 
 !     Leaf and stem cohorts
-      REAL WTLF_before_cut, FHLEAF_sum
-      REAL STMWT_before_cut, FHSTEM_sum
+      REAL WTLF_before_cut  
+      REAL STMWT_before_cut
+!     REAL LFDM_sum, FHLEAF_sum, FHSTEM_sum  !temp chp
 
 !     SAVE FILEMOW,TRNO,DATE,MOW,RSPLF,MVS,rsht,CUTNO
 
@@ -643,10 +644,13 @@ C-----------------------------------------------------------------------
 !            CYCLE
 !          ENDIF
 !        ENDDO
-
-        FHLEAF_sum = SUM(FHLEAF_c)
-!       PRINT *, YRDOY, FHLEAF, FHLEAF_sum
       ENDIF
+
+!!     temp chp
+!        FHLEAF_sum = SUM(FHLEAF_c)
+!        LFDM_sum = SUM(LFDM)
+!        WRITE(3674,'(I7,10F10.4)') 
+!     &    YRDOY, WTLF_BEFORE_CUT, FHLEAF, LFDM_sum, FHLEAF_sum
 
 !     Handle stem cohorts
 !     For initial testing, reduce each cohort by the proportion of whole stem lost
@@ -669,10 +673,11 @@ C-----------------------------------------------------------------------
 !            CYCLE
 !          ENDIF
 !        ENDDO
-
-        FHSTEM_sum = SUM(FHSTEM_c)
-!        PRINT *, YRDOY, FHSTEM, FHSTEM_sum, STMWT, WTNST
       ENDIF
+
+!!     temp chp
+!        FHSTEM_sum = SUM(FHSTEM_c)
+!!        PRINT *, YRDOY, FHSTEM, FHSTEM_sum, STMWT, WTNST
 
 !***********************************************************************
 !***********************************************************************
