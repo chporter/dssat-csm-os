@@ -398,46 +398,12 @@ C-GH 08/19/2025
 !***********************************************************************
       ELSEIF (DYNAMIC .EQ. INTEGR) THEN
 !-----------------------------------------------------------------------
-!!-------------------------------------------
-!! INCREASED N MINING FROM SHADING (SHADEFAC)
-!!-------------------------------------------
-!     This part is not handled (yet) in VEGGR  ************* <<<--- SHADEFAC NOT HANDLED YET
-!      IF (PAR .GT. 0.) THEN
-!        LCMP = -(1. / KCAN) * ALOG(ICMP / PAR)
-!      ENDIF
-!
-!      SHADEFAC = 1.0
-!      CUMAREA=0.0
-!      DO I=1,NLC
-!        CUMAREA=CUMAREA+LFAREA(I)/10000
-!        IF (CUMAREA/LCMP.GE.1)THEN
-!          SHADEFAC(I)=CUMAREA/LCMP
-!        ELSE
-!          SHADEFAC(I)=1
-!        ENDIF
-!      ENDDO
-!
-! This is now done in MOBIL, but does not include shadefac  ************* <<<--- MOBIL
-
-!    DO  I=1,NLC
-!        IF (LFNSN(I) .LE. 0.0 .OR. MAXNMINE .LE. 0.0 
-!     &                        .OR. NMOBMX .LE. 0.0) THEN
-!          LFNMN(I)=0.0
-!        ELSE
-!          LFNMN(I)=SHADEFAC(I)*(NMINER/NMOBMX)*MAXNMINE*LFNSN(I)
-!          LFNMN(I)=MIN(LFNMN(I),LFNSN(I))
-!          IF ((LFNSN(I)-LFNMN(I)).LE.0.00001)THEN
-!            LFNMN(I)=LFNSN(I)
-!          ENDIF
-!        ENDIF
-!     END DO
-
 !------------------------------
 !     LEAF and STEM LOSSES
 !     Ensure that losses don't exceed mass, adjust as necessary
 !------------------------------
-      CALL LossAdjust ("LEAF", MODEL)
-      CALL LossAdjust ("STEM", MODEL)
+      CALL LossAdjust ("LEAF", MODEL, LeafMassDecrease)
+      CALL LossAdjust ("STEM", MODEL, StemMassDecrease)
 
 !---------------------------------------------
 !     Integration of leaf and stem mass
@@ -1020,15 +986,16 @@ C-GH 08/19/2025
 !       LFCAD or STCAD            !addition of CH2O to reserves g/m2
 !       LFNAD or STNAD            !addition of N to reserved g/m2
 
-      SUBROUTINE LossAdjust (LeafOrStem, MODEL)
+      SUBROUTINE LossAdjust (LeafOrStem, MODEL, MassDecrease)
 
       IMPLICIT NONE
 
       CHARACTER (len=4), INTENT(IN) :: LeafOrStem
       CHARACTER (len=8), INTENT(IN) :: MODEL
+      REAL, DIMENSION(1:LCMax), INTENT(OUT) :: MassDecrease
 
       INTEGER I
-      REAL Excess, LossFactor, MassDecrease, SenFrac
+      REAL Excess, LossFactor, SenFrac
       REAL, DIMENSION(1:LCMax) :: CAdd, Freeze, Mass, NAdd
       REAL, DIMENSION(1:LCMax) :: NMinSen, Pest, TotalSen, WatSen
 
@@ -1064,11 +1031,11 @@ C-GH 08/19/2025
 
       DO I = 1, NLC
 !       Leaf or stem mass decrease 
-        MassDecrease = Freeze(I) + Pest(I) + TotalSen(I)
+        MassDecrease(I) = Freeze(I) + Pest(I) + TotalSen(I)
 
 !       Check that loss is no greater than cohort mass 
-        IF (MassDecrease > Mass(I)) THEN
-          MassDecrease = Mass(I)
+        IF (MassDecrease(I) > Mass(I)) THEN
+          MassDecrease(I) = Mass(I)
 
 !         Freeze damage occurs first
           IF (Freeze(I) > Mass(I)) THEN
@@ -1102,7 +1069,7 @@ C-GH 08/19/2025
         SELECT CASE (MODEL(1:5))
         CASE ('CRGRO')
           IF (Mass(I) > 0.0) THEN
-            LossFactor = (1. - MIN(1.0, MassDecrease / Mass(I)))
+            LossFactor = (1. - MIN(1.0, MassDecrease(I) / Mass(I)))
           ELSE
             LossFactor = 0.0
           ENDIF
@@ -1248,3 +1215,39 @@ C-GH 08/19/2025
 C=======================================================================
       END MODULE COHORTS_MOD
 C=======================================================================
+
+!     SHADING CODE FROM ORIGINAL BOOTE / ALDERMAN VERSION
+!!-------------------------------------------
+!! INCREASED N MINING FROM SHADING (SHADEFAC)
+!!-------------------------------------------
+!     This part is not handled (yet) in VEGGR  ************* <<<--- SHADEFAC NOT HANDLED YET
+!      IF (PAR .GT. 0.) THEN
+!        LCMP = -(1. / KCAN) * ALOG(ICMP / PAR)
+!      ENDIF
+!
+!      SHADEFAC = 1.0
+!      CUMAREA=0.0
+!      DO I=1,NLC
+!        CUMAREA=CUMAREA+LFAREA(I)/10000
+!        IF (CUMAREA/LCMP.GE.1)THEN
+!          SHADEFAC(I)=CUMAREA/LCMP
+!        ELSE
+!          SHADEFAC(I)=1
+!        ENDIF
+!      ENDDO
+!
+! This is now done in MOBIL, but does not include shadefac  ************* <<<--- MOBIL
+
+!    DO  I=1,NLC
+!        IF (LFNSN(I) .LE. 0.0 .OR. MAXNMINE .LE. 0.0 
+!     &                        .OR. NMOBMX .LE. 0.0) THEN
+!          LFNMN(I)=0.0
+!        ELSE
+!          LFNMN(I)=SHADEFAC(I)*(NMINER/NMOBMX)*MAXNMINE*LFNSN(I)
+!          LFNMN(I)=MIN(LFNMN(I),LFNSN(I))
+!          IF ((LFNSN(I)-LFNMN(I)).LE.0.00001)THEN
+!            LFNMN(I)=LFNSN(I)
+!          ENDIF
+!        ENDIF
+!     END DO
+
