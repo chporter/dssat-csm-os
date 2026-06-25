@@ -165,12 +165,11 @@ C=======================================================================
       REAL, DIMENSION(LCMax) :: StemMassDecrease, NSDOT_c, 
      &    NSOFF_c, WRCSDT_c, RHOS
 
-      REAL CUMLFDM, Excess, SenFrac, WLDOT_cohort, 
-     &    Loss_adj_LF, Loss_adj_ST
+      REAL CUMLFDM, WLDOT_cohort
       REAL CLOFF, CSOFF, WSDOT_cohort
 
 !     TEMP CHP
-      REAL CLOFF_sum, CSOFF_sum , stcad_sum, Percent_harvested
+      REAL CLOFF_sum, CSOFF_sum , Percent_harvested
 
 !     Variables read from species file:
       REAL ALPHL, ALPHS, PROLFF, PROLFI, PROSTF, PROSTI
@@ -1061,6 +1060,7 @@ C-GH 08/19/2025
 !------------------------------
 !     Calculate the loss of tissue per cohort
       MassDecrease = 0.0
+      LossFactor = 1.0
 
       DO I = 1, NLC
 !       Leaf or stem mass decrease 
@@ -1103,6 +1103,8 @@ C-GH 08/19/2025
         CASE ('CRGRO')
           IF (Mass(I) > 0.0) THEN
             LossFactor = (1. - MIN(1.0, MassDecrease / Mass(I)))
+          ELSE
+            LossFactor = 0.0
           ENDIF
 
         CASE ('PRFRM')
@@ -1111,6 +1113,8 @@ C-GH 08/19/2025
 !           If it is correct, we should do the same thing for CRGRO 
             LossFactor = (1. - MIN(1.0, (Pest(I) + Freeze(I)) / 
      &                                  (Mass(I) - TotalSen(I))))
+          ELSE
+            LossFactor = 0.0
           ENDIF
         END SELECT
 
