@@ -437,118 +437,8 @@ C-GH 08/19/2025
 !     LEAF and STEM LOSSES
 !     Ensure that losses don't exceed mass, adjust as necessary
 !------------------------------
-!     Calculate the loss of leaf tissue per cohort
-      LeafMassDecrease = 0.0
-      StemMassDecrease = 0.0
-
-      DO I = 1, NLC
-!       Leaf mass decrease (WLIDOT + WLFDOT + SLDOT in GROW)
-        LeafMassDecrease(I) = LFFRZ(I) + LFPST(I) + LeafTotSen(I)
-!       Stem mass decrease (WSIDOT + WSFDOT + SSDOT in GROW)
-        StemMassDecrease(I) = STFRZ(I) + STPST(I) + StemTotSen(I)
-
-!       Check that loss is no greater than leaf cohort mass 
-        IF (LeafMassDecrease(I) > LFDM(I)) THEN
-          LeafMassDecrease(I) = LFDM(I)
-
-!         Freeze damage occurs first
-          IF (LFFRZ(I) > LFDM(I)) THEN
-            LFFRZ(I) = LFDM(I)
-            Excess = 0.0
-          ELSE
-            Excess = LFDM(I) - LFFRZ(I)
-          ENDIF
-
-!         Next, pests get their bit
-          IF (LFPST(I) > Excess) THEN
-            LFPST(I) = Excess
-            Excess = 0.0
-          ELSE
-            Excess = Excess - LFPST(I)
-          ENDIF
-
-!         Anything leftover gets taken by senescence
-          IF (Excess > 0.0) THEN
-            SenFrac = Excess / LeafTotSen(I)
-            LeafTotSen(I) = Excess
-            LFNMNSN(I) = LFNMNSN(I) * SenFrac
-            LFWSSN(I) = LFWSSN(I) * SenFrac
-          ELSE
-            LeafTotSen(I) = 0.0
-            LFNMNSN(I) = 0.0   
-            LFWSSN(I) = 0.0    
-          ENDIF
-        ENDIF
-
-!       Check that loss is no greater than stem cohort mass 
-        IF (StemMassDecrease(I) > STDM(I)) THEN
-          StemMassDecrease(I) = STDM(I)
-
-!         Freeze damage occurs first
-          IF (STFRZ(I) > STDM(I)) THEN
-            STFRZ(I) = STDM(I)
-            Excess = 0.0
-          ELSE
-            Excess = STDM(I) - STFRZ(I)
-          ENDIF
-
-!         Next, pests get their bit
-          IF (STPST(I) > Excess) THEN
-            STPST(I) = Excess
-            Excess = 0.0
-          ELSE
-            Excess = Excess - STPST(I)
-          ENDIF
-
-!         Anything leftover gets taken by senescence
-          IF (Excess > 0.0) THEN
-            SenFrac = Excess / StemTotSen(I)
-            StemTotSen(I) = Excess
-            STNMNSN(I) = STNMNSN(I) * SenFrac
-            STWSSN(I) = STWSSN(I) * SenFrac
-          ELSE
-            StemTotSen(I) = 0.0
-            STNMNSN(I) = 0.0   
-            STWSSN(I) = 0.0    
-          ENDIF
-        ENDIF
-      ENDDO
-
-!------------------------------
-!     LEAF and STEM ADDITIONS
-!     Adjust new reserves to account for leaf losses just calculated.
-!------------------------------
-      DO I = 1, NLC
-        SELECT CASE (MODEL(1:5))
-        CASE ('CRGRO')
-          IF (LFDM(I) > 0.0) THEN
-            Loss_adj_LF = (1. - MIN(1.0, LeafMassDecrease(I) / LFDM(I)))
-          ENDIF
-          IF (STDM(I) > 0.0) THEN
-            Loss_adj_ST = (1. - MIN(1.0, StemMassDecrease(I) / STDM(I)))
-          ENDIF
-
-        CASE ('PRFRM')
-          IF (LFDM(I) -  LeafTotSen(I) > 0.0) THEN
-!           CHP: This is how it's done in for_grow, but I'm not convinced it's correct.
-!           If it is correct, we should do the same thing for CRGRO 
-            Loss_adj_LF = (1. - MIN(1.0, (LFPST(I) + LFFRZ(I)) / 
-     &                                   (LFDM(I) - LeafTotSen(I))))
-          ENDIF
-          IF (STDM(I) -  StemTotSen(I) > 0.0) THEN
-            Loss_adj_ST = (1. - MIN(1.0, (STPST(I) + STFRZ(I)) / 
-     &                                   (STDM(I) - StemTotSen(I))))
-          ENDIF
-        END SELECT
-
-        LFCAD(I) = LFCAD(I) * Loss_adj_LF
-        LFNAD(I) = LFNAD(I) * Loss_adj_LF
-        STCAD(I) = STCAD(I) * Loss_adj_ST
-        STNAD(I) = STNAD(I) * Loss_adj_ST
-      ENDDO
-
-!     temp chp
-      stcad_sum = sum(stcad)
+      CALL LossAdjust ("LEAF", MODEL)
+      CALL LossAdjust ("STEM", MODEL)
 
 !---------------------------------------------
 !     Integration of leaf and stem mass
@@ -1116,6 +1006,140 @@ C-GH 08/19/2025
 !-----------------------------------------------------------------------
       RETURN
       END SUBROUTINE COHORTS
+!=======================================================================
+
+!=======================================================================
+! Subroutine LossAdjust calculates the adjustment rate for additions to 
+!     leaf and stem cohorts due to freeze, pest, and senescence.
+
+!  This subroutine potentially modifies the values of:
+!       LFFRZ or STFRZ            !tissue damaged by freeze g/m2
+!       LFPST or STPST            !tissue damaged by pest g/m2
+!       LeafTotSen or StemTotSen  !total senesced tissue g/m2
+!       LFWSSN or STWSSN          !water senescence g/m2
+!       LFNMNSN or STNMNSN        !leaf N mining senescence g/m2
+!       LFCAD or STCAD            !addition of CH2O to reserves g/m2
+!       LFNAD or STNAD            !addition of N to reserved g/m2
+
+      SUBROUTINE LossAdjust (LeafOrStem, MODEL)
+
+      IMPLICIT NONE
+
+      CHARACTER (len=4), INTENT(IN) :: LeafOrStem
+      CHARACTER (len=8), INTENT(IN) :: MODEL
+
+      INTEGER I
+      REAL Excess, LossFactor, MassDecrease, SenFrac
+      REAL, DIMENSION(1:LCMax) :: CAdd, Freeze, Mass, NAdd
+      REAL, DIMENSION(1:LCMax) :: NMinSen, Pest, TotalSen, WatSen
+
+      SELECT CASE(LeafOrStem)
+      CASE ("LEAF")
+        Mass     = LFDM
+        Freeze   = LFFRZ
+        Pest     = LFPST
+        TotalSen = LeafTotSen
+        WatSen   = LFWSSN
+        NMinSen  = LFNMNSN
+        CAdd     = LFCAD
+        Nadd     = LFNAD
+
+      CASE ("STEM")
+        Mass     = STDM
+        Freeze   = STFRZ
+        Pest     = STPST
+        TotalSen = StemTotSen
+        WatSen   = STWSSN
+        NMinSen  = STNMNSN
+        CAdd     = STCAD
+        Nadd     = STNAD
+      END SELECT
+
+!------------------------------
+!     LEAF and STEM LOSSES
+!     Ensure that losses don't exceed mass, adjust as necessary
+!------------------------------
+!     Calculate the loss of tissue per cohort
+      MassDecrease = 0.0
+
+      DO I = 1, NLC
+!       Leaf or stem mass decrease 
+        MassDecrease = Freeze(I) + Pest(I) + TotalSen(I)
+
+!       Check that loss is no greater than cohort mass 
+        IF (MassDecrease > Mass(I)) THEN
+          MassDecrease = Mass(I)
+
+!         Freeze damage occurs first
+          IF (Freeze(I) > Mass(I)) THEN
+            Freeze(I) = Mass(I)
+            Excess = 0.0
+          ELSE
+            Excess = Mass(I) - Freeze(I)
+          ENDIF
+
+!         Next, pests get their bit
+          IF (Pest(I) > Excess) THEN
+            Pest(I) = Excess
+            Excess = 0.0
+          ELSE
+            Excess = Excess - Pest(I)
+          ENDIF
+
+!         Anything leftover gets taken by senescence
+          IF (Excess > 0.0) THEN
+            SenFrac = Excess / TotalSen(I)
+            TotalSen(I) = Excess
+            NMinSen(I) = NMinSen(I) * SenFrac
+            WatSen(I) = WatSen(I) * SenFrac
+          ELSE
+            TotalSen(I) = 0.0
+            NMinSen(I) = 0.0
+            WatSen(I) = 0.0
+          ENDIF
+        ENDIF
+
+        SELECT CASE (MODEL(1:5))
+        CASE ('CRGRO')
+          IF (Mass(I) > 0.0) THEN
+            LossFactor = (1. - MIN(1.0, MassDecrease / Mass(I)))
+          ENDIF
+
+        CASE ('PRFRM')
+          IF (Mass(I) - TotalSen(I) > 0.0) THEN
+!           CHP: This is how it's done in for_grow, but I'm not convinced it's correct.
+!           If it is correct, we should do the same thing for CRGRO 
+            LossFactor = (1. - MIN(1.0, (Pest(I) + Freeze(I)) / 
+     &                                  (Mass(I) - TotalSen(I))))
+          ENDIF
+        END SELECT
+
+        CAdd(I) = CAdd(I) * LossFactor
+        Nadd(I) = Nadd(I) * LossFactor
+      ENDDO
+
+      SELECT CASE(LeafOrStem)
+      CASE ("LEAF")
+        LFFRZ = Freeze
+        LFPST = Pest
+        LeafTotSen = TotalSen
+        LFWSSN = WatSen
+        LFNMNSN = NMinSen
+        LFCAD = CAdd
+        LFNAD = Nadd
+
+      CASE ("STEM")
+        STFRZ = Freeze
+        STPST = Pest
+        StemTotSen = TotalSen
+        STWSSN = WatSen
+        STNMNSN = NMinSen
+        STCAD = CAdd
+        STNAD = Nadd
+      END SELECT
+!-----------------------------------------------------------------------
+      RETURN
+      END SUBROUTINE LossAdjust
 !=======================================================================
 
 !***********************************************************************
