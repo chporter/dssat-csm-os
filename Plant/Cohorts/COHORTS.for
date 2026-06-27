@@ -255,53 +255,28 @@ C=======================================================================
 !      LFHEMICEL = 0.0 !Hemicellulose content %
 
 !     Zero out rate arrays
-      LFFRZ = 0.0
-      STFRZ = 0.0
-      LFCMN = 0.0
-      STCMN = 0.0
-      LFPST = 0.0
-      STPST = 0.0
-      LFNMN = 0.0
-      STNMN = 0.0
-      LeafTotSen = 0.0
-      LFNMNSN = 0.0
-      LFWSSN = 0.0
-      StemTotSen = 0.0
-      STNMNSN = 0.0
-      STWSSN = 0.0
-      LFCAD = 0.0
-      LFNAD = 0.0
-      STCAD = 0.0
-      STNAD = 0.0
-      LFCMINE_c = 0.0
-      LFSNMOB_c = 0.0
-      LTSEN_c = 0.0
-      LFSENWT_c = 0.0
-      LFNSEN_c = 0.0
-      SLMDOT_c = 0.0
-      STCMINE_c = 0.0
-      STSNMOB_c = 0.0
-      STLTSEN_c  = 0.0
-      STSENWT_c = 0.0
-      STNSEN_c = 0.0
-      SSMDOT_c = 0.0
-      FHLEAF_c = 0.0
-      FHSTEM_c  = 0.0
-
-C-GH 08/19/2025
-      WTLF_calc = 0.0
-      WNRLF_calc = 0.0
-      WCRLF_calc = 0.0
+      LFFRZ = 0.0      ; STFRZ = 0.0
+      LFCMN = 0.0      ; STCMN = 0.0
+      LFPST = 0.0      ; STPST = 0.0
+      LFNMN = 0.0      ; STNMN = 0.0
+      LeafTotSen = 0.0 ; StemTotSen = 0.0
+      LFNMNSN = 0.0    ; STNMNSN = 0.0
+      LFWSSN = 0.0     ; STWSSN = 0.0
+      LFCAD = 0.0      ; STCAD = 0.0
+      LFNAD = 0.0      ; STNAD = 0.0
+      LFCMINE_c = 0.0  ; STCMINE_c = 0.0
+      LFSNMOB_c = 0.0  ; STSNMOB_c = 0.0
+      LTSEN_c = 0.0    ; STLTSEN_c  = 0.0
+      LFSENWT_c = 0.0  ; STSENWT_c = 0.0
+      LFNSEN_c = 0.0   ; STNSEN_c = 0.0
+      SLMDOT_c = 0.0   ; SSMDOT_c = 0.0
+      FHLEAF_c = 0.0   ; FHSTEM_c  = 0.0
+      WTLF_calc = 0.0  ; WTST_calc = 0.0
+      WNRLF_calc = 0.0 ; WNRST_calc = 0.0
+      WCRLF_calc = 0.0 ; WCRST_calc = 0.0
       XLAI_calc = 0.0
-      WTNLF_calc = 0.0
-
-      WTST_calc = 0.0
-      WNRST_calc = 0.0
-      WCRST_calc = 0.0
-      WTNST_calc = 0.0
-
-      WLDOT_cohort = 0.0
-      WSDOT_cohort = 0.0
+      WTNLF_calc = 0.0 ; WTNST_calc = 0.0
+      WLDOT_cohort = 0.0; WSDOT_cohort = 0.0
 
 !     Read parameters from species file
       CALL IPCOHO(
@@ -579,67 +554,16 @@ C-GH 08/19/2025
 !---------------------------------------------
 !     Integration of leaf and stem N
 !---------------------------------------------
-      NLOFF_c = 0.0
-      NLDOT_c = 0.0
-      NSOFF_c = 0.0
-      NSDOT_c = 0.0
+      CALL NOFF (
+     &  "LEAF", MODEL, PROLFF, SENNLV,   !Input
+     &  NLDOT_c)                           !Output
+
+      CALL NOFF (
+     &  "STEM", MODEL, PROSTF, SENNSV,   !Input
+     &  NSDOT_c)                           !Output
 
       DO I = 1, NLC
-!       ---------------------------
-!       Leaf cohort
         IF (LFDM(I) > 0.0) THEN
-          SELECT CASE (MODEL(1:5))
-          CASE ('CRGRO')
-            IF (LFDM(I) .GT. 0.0) THEN
-!             N loss due to senescence, freeze, pest
-              NLOFF_c(I) = 
-     &          + (LFWSSN(I) + LFPST(I) + LFFRZ(I)) * PCNLeaf(I) / 100.
-     &          + (LeafTotSen(I) - LFWSSN(I)) * PROLFF * 0.16
-              NLOFF_c(I) = MIN(NLOFF_c(I), LeafNTot(I))
-
-!             Net N gain today for cohort I
-              NLDOT_c(I) = - NLOFF_c(I) - LFNMN(I) + LFNAD(I) 
-              NLDOT_c(I) = MAX(NLDOT_c(I), -LeafNTot(I))
-            ENDIF
-
-          CASE ('PRFRM')
-!           IF (FHLEAF_c(I) == 0.0) THEN
-!             NLOFF      = SLMDOT *    
-              NLOFF_c(I) = LFNSEN_c(I) * 
-!    &         (SENNLV * (PCNL/100 - PROLFF * 0.16) + PROLFF * 0.16) 
-     &         (SENNLV * (PCNLeaf(I)/100. - PROLFF*0.16) + PROLFF*0.16)
-!    &         + (LTSEN + LFSENWT) * PROLFF *0.16
-     &         + (LTSEN_c(I) + LFSENWT_c(I)) * PROLFF *0.16
-!    &         + (SLNDOT + WLIDOT + WLFDOT) * PCNL/100  
-     &         + (LFWSSN(I) + LFPST(I) + LFFRZ(I)) * PCNLeaf(I)/100.
-
-!              IF (FHLEAF_c(I) .GT. 0.0) THEN
-!!               Harvest event today
-!!               NLOFF = NLOFF + FHLEAF * PCNL/100.
-!                NLOFF_c(I) = NLOFF_c(I) + FHLEAF_c(I) * PCNLeaf(I)/100.
-!              ENDIF
-
-              NLOFF_c(I) = MIN(NLOFF_c(I), LeafNTot(I))
-              
-!             Net N gain today for cohort I
-!             NLDOT=NGRLF-NRUSLF-NLOFF
-              NLDOT_c(I) = - NLOFF_c(I) - LFNMN(I)
-
-!             IF (WTLF .GT. 0.0.AND.FHLEAF.EQ.0) THEN
-!             IF (FHLEAF_C(I) == 0.0) THEN
-!               NLDOT = NLDOT + NADLF - LFNADDM
-                NLDOT_c(I) = NLDOT_c(I) + LFNAD(I)
-!             ENDIF
-
-              NLDOT_c(I) = MAX(NLDOT_c(I), -LeafNTot(I))
-
-!            ELSE
-!!             Harvest today
-!              NLDOT_c(I) = -FHLEAF_c(I) * PCNLeaf(i)/100.
-!            ENDIF
-          END SELECT
-
-!     ---------------------------------------------------------
 !         Leaf N
           LeafNTot(I) = LeafNTot(I) + NLDOT_c(I) 
 
@@ -661,45 +585,6 @@ C-GH 08/19/2025
 !       ---------------------------
 !       Stem cohort
         IF (STDM(I) .GT. 0.0) THEN
-          SELECT CASE (MODEL(1:5))
-          CASE ('CRGRO')
-!           N loss due to senescence, freeze, pest
-            NSOFF_c(I) = 
-     &        + (STWSSN(I) + STPST(I)) * PCNStem(I) / 100.
-     &        + (StemTotSen(I) - STWSSN(I)) * PROSTF * 0.16
-            NSOFF_c(I) = MIN(NSOFF_c(I), StemNTot(I))
-
-!           Net N gain today for cohort I
-            NSDOT_c(I) = - NSOFF_c(I) - STNMN(I) + STNAD(I) 
-            NSDOT_c(I) = MAX(NSDOT_c(I), -StemNTot(I))
-
-          CASE ('PRFRM')
-!           IF (FHSTEM_c(I) == 0.0) THEN
-!             NSOFF  = SSMDOT * 
-              NSOFF_c(I) = SSMDOT_c(I) * 
-!    &           (SENNSV * (PCNST/100 - PROSTF * 0.16) + PROSTF * 0.16) 
-     &           (SENNSV * (PCNStem(I)/100. - PROSTF*0.16) +PROSTF*0.16)
-!    &           + (STLTSEN + STSENWT) * PROSTF *0.16
-     &           + (STLTSEN_c(I) + STSENWT_c(I)) * PROSTF *0.16
-!    &           + (SSNDOT + WSIDOT + WSFDOT) * PCNST/100  
-     &           + (STWSSN(I) + STPST(I) + STFRZ(I)) * PCNStem(I)/100.
-
-              NSOFF_c(I) = MIN(NSOFF_c(I), StemNTot(I))
-
-!             Net N gain today for cohort I
-!             NSDOT=NGRST-NRUSST-NSOFF
-              NSDOT_c(I) = - NSOFF_c(I) - STNMN(I)
-
-!             NSDOT = NSDOT + NADST - STNADDM
-              NSDOT_c(I) = NSDOT_c(I) + STNAD(I)
-
-              NSDOT_c(I) = MAX(NSDOT_c(I), -StemNTot(I))
-!            ELSE
-!!             Harvest today
-!              NSDOT_c(I) = -FHSTEM_c(I) * PCNStem(I)/100.
-!            ENDIF
-          END SELECT
-
 !         Stem N
           StemNTot(I) = StemNTot(I) + NSDOT_c(I) 
           PCNStem(I) = StemNTot(I) / STDM(I) * 100.  ! % N 
@@ -1112,6 +997,98 @@ C-GH 08/19/2025
       RETURN
       END SUBROUTINE LossAdjust
 !=======================================================================
+
+!=======================================================================
+! Subroutine NOFF calculates the net loss of N for leaf and stem
+!     cohorts. 
+
+      SUBROUTINE NOFF (
+     &  LeafOrStem, MODEL, PRO_F, SENN_V,   !Input
+     &  N_DOT)                              !Output
+
+      IMPLICIT NONE
+
+      CHARACTER (len=4), INTENT(IN) :: LeafOrStem
+      CHARACTER (len=8), INTENT(IN) :: MODEL
+      REAL, INTENT(IN) :: PRO_F, SENN_V
+      REAL, DIMENSION(1:LCMax), INTENT(OUT) :: N_DOT
+
+      INTEGER I
+      REAL Excess, LossFactor, SenFrac
+      REAL, DIMENSION(1:LCMax) :: Freeze, LitSen, Mass, N_OFF, 
+     &  NAdd, NatSen, NMine, NMinSen, Ntot, PCN, 
+     &  Pest, SENWT, TotalSen, WatSen
+
+!-----------------------------------------------------------------------
+      SELECT CASE(LeafOrStem)
+      CASE ("LEAF")
+        Mass     = LFDM
+        Freeze   = LFFRZ
+        Pest     = LFPST
+        TotalSen = LeafTotSen
+        WatSen   = LFWSSN
+        Nadd     = LFNAD
+        PCN      = PCNLeaf
+        SENWT    = LFSENWT_c
+        NTot     = LeafNTot
+        NMine    = LFNMN
+        NatSen   = LFNSEN_c
+        LitSen   = LTSEN_c
+
+      CASE ("STEM")
+        Mass     = STDM
+        Freeze   = STFRZ
+        Pest     = STPST
+        TotalSen = StemTotSen
+        WatSen   = STWSSN
+        Nadd     = STNAD
+        PCN      = PCNStem
+        SENWT    = STSENWT_c
+        NTot     = StemNTot
+        NMine    = STNMN
+        NatSen   = SSMDOT_c
+        LitSen   = STLTSEN_c
+      END SELECT
+
+      N_DOT = 0.0
+      N_OFF = 0.0
+
+      DO I = 1, NLC
+        IF (Mass(I) > 0.0) THEN
+!         ---------------------------
+          SELECT CASE (MODEL(1:5))
+          CASE ('CRGRO')
+!             N loss due to senescence, freeze, pest
+              N_OFF(I) = 
+     &          + (WatSen(I) + Pest(I) + Freeze(I)) * PCN(I) / 100.
+     &          + (TotalSen(I) - WatSen(I)) * PRO_F * 0.16
+              N_OFF(I) = MIN(N_OFF(I), NTot(I))
+
+!             Net N gain today for cohort I
+              N_DOT(I) = - N_OFF(I) - NMine(I) + Nadd 
+              N_DOT(I) = MAX(N_DOT(I), -NTot(I))
+          
+          CASE ('PRFRM')
+            N_OFF_c(I) = NatSen(I) * 
+     &       (SENN_V * (PCN(I)/100. - PRO_F*0.16) + PRO_F*0.16)
+     &       + (LitSen(I) + SENWT(I)) * PRO_F *0.16
+     &       + (WatSen(I) + Pest(I) + Freeze(I)) * PCN(I)/100.
+          
+            N_OFF_c(I) = MIN(N_OFF(I), NTot(I))
+
+!           Net N gain today for cohort I
+            N_DOT(I) = - N_OFF(I) - NMine(I) + Nadd(I)
+            N_DOT(I) = MAX(N_DOT(I), -NTot(I))
+          END SELECT
+        ELSE
+          N_DOT(I) = 0.0
+      ENDDO
+
+!-----------------------------------------------------------------------
+      RETURN
+      END SUBROUTINE NOFF
+!=======================================================================
+
 
 !***********************************************************************
 !     Variable listing for COHORTS subroutine (updated 20 April 2009)
