@@ -182,8 +182,8 @@ C=======================================================================
 !     K model (not yet implemented)
       REAL KSTRES
 
-!     Leaf cohorts
-      REAL, DIMENSION(LCMax) :: PCNLeaf
+!     Leaf and stem cohorts
+      REAL, DIMENSION(LCMax) :: PCNLeaf, PCNStem
 
 !-----------------------------------------------------------------------
 !     Define constructed variable types based on definitions in

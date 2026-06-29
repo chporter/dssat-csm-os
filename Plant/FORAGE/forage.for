@@ -291,8 +291,8 @@ C TF/DP 2022-01-31 Simple version AutoMOW
 !       mowing event has occurred.
       LOGICAL MOWED
 
-!     Leaf cohorts
-      REAL, DIMENSION(LCMax) :: PCNLeaf
+!     Leaf and stem cohorts
+      REAL, DIMENSION(LCMax) :: PCNLeaf, PCNStem
 
 !     Arrays which contain data for printing in SUMMARY.OUT file
       INTEGER, PARAMETER :: SUMNUM = 3
@@ -488,7 +488,7 @@ C-----------------------------------------------------------------------
      &    WCRRT,WCRSH, WCRSR, WCRST, WNRLF, WNRRT, WNRSH,       !Input
      &    WNRSR,WNRST, WTLF, XLAI, XPOD,                        !Input
      &    YRDOY, YRSIM, TGRO,                                   !Input
-     &    PCNLEAF,                                              !Input
+     &    PCNLeaf, PCNStem,                                     !Output
      &    CMINELF, CMINEP, CMINERT, CMINESH, CMINESR,           !Output
      &    CMINEST, CMOBMX, CMOBSR, LAIMOBR, LFCMINE,            !Output
      &    LFSCMOB, LFSENWT, LFSNMOB, LTSEN, NMINELF,            !Output
@@ -998,7 +998,7 @@ C-----------------------------------------------------------------------
      &    WCRRT,WCRSH, WCRSR, WCRST, WNRLF, WNRRT, WNRSH,       !Input
      &    WNRSR,WNRST, WTLF, XLAI, XPOD,                        !Input
      &    YRDOY, YRSIM, TGRO,                                   !Input
-     &    PCNLEAF,                                              !Input
+     &    PCNLeaf, PCNStem,                                     !Output
      &    CMINELF, CMINEP, CMINERT, CMINESH, CMINESR,           !Output
      &    CMINEST, CMOBMX, CMOBSR, LAIMOBR, LFCMINE,            !Output
      &    LFSCMOB, LFSENWT, LFSNMOB, LTSEN, NMINELF,            !Output
@@ -1559,7 +1559,7 @@ C-----------------------------------------------------------------------
      &    WCRRT,WCRSH, WCRSR, WCRST, WNRLF, WNRRT, WNRSH,       !Input
      &    WNRSR,WNRST, WTLF, XLAI, XPOD,                        !Input
      &    YRDOY, YRSIM, TGRO,                                   !Input
-     &    PCNLEAF,                                              !Input
+     &    PCNLeaf, PCNStem,                                     !Output
      &    CMINELF, CMINEP, CMINERT, CMINESH, CMINESR,           !Output
      &    CMINEST, CMOBMX, CMOBSR, LAIMOBR, LFCMINE,            !Output
      &    LFSCMOB, LFSENWT, LFSNMOB, LTSEN, NMINELF,            !Output
@@ -2185,7 +2185,7 @@ C----------------------------------
      &    WCRRT,WCRSH, WCRSR, WCRST, WNRLF, WNRRT, WNRSH,       !Input
      &    WNRSR,WNRST, WTLF, XLAI, XPOD,                        !Input
      &    YRDOY, YRSIM, TGRO,                                   !Input
-     &    PCNLEAF,                                              !Input
+     &    PCNLeaf, PCNStem,                                     !Output
      &    CMINELF, CMINEP, CMINERT, CMINESH, CMINESR,           !Output
      &    CMINEST, CMOBMX, CMOBSR, LAIMOBR, LFCMINE,            !Output
      &    LFSCMOB, LFSENWT, LFSNMOB, LTSEN, NMINELF,            !Output

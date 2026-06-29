@@ -22,7 +22,7 @@ C========================================================================
      &    WCRRT,WCRSH, WCRSR, WCRST, WNRLF, WNRRT, WNRSH,       !Input
      &    WNRSR,WNRST, WTLF, XLAI, XPOD,                        !Input
      &    YRDOY, YRSIM, TGRO,                                   !Input
-     &    PCNLEAF,                                              !Input
+     &    PCNLeaf, PCNStem,                                     !Output
      &    CMINELF, CMINEP, CMINERT, CMINESH, CMINESR,           !Output
      &    CMINEST, CMOBMX, CMOBSR, LAIMOBR, LFCMINE,            !Output
      &    LFSCMOB, LFSENWT, LFSNMOB, LTSEN, NMINELF,            !Output
@@ -132,7 +132,7 @@ C-----------------------------------------------------------------------
       REAL LFNMINE_sum, LFNSEN_sum, LFSNMOB_sum, LTSEN_sum, NMINELF_sum,
      &    SLMDOT_sum, WaterSen_sum, LeafTotSen_SUM, LFSENWT_sum,
      &    CMINELF_sum, LFCMINE_sum 
-      REAL, DIMENSION(LCMax) :: PCNLeaf
+      REAL, DIMENSION(LCMax) :: PCNLeaf, PCNStem
       REAL WtLeaf
 
       REAL, DIMENSION(LCMax) :: STNMINE_c, CMINEST_c, 
