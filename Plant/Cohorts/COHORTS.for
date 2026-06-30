@@ -78,6 +78,11 @@ C=======================================================================
      &  FHLEAF_c,   !Forage harvest
      &  FHSTEM_c    !Forage harvest
 
+!     Cohort composition - Values in g/m2
+      REAL, DIMENSION(1:LCMax) :: LeafLignin, LeafCellulose,LeafHemicell
+      REAL, DIMENSION(1:LCMax) :: StemLignin, StemCellulose,StemHemicell
+
+
       CONTAINS
 C=======================================================================
 C  COHORTS, Subroutine, K.J. Boote, P. Alderman
@@ -102,7 +107,7 @@ C=======================================================================
       IMPLICIT NONE
       SAVE
       EXTERNAL YR_DOY, GETLUN, HEADER, TIMDIF, IPCOHO, OPCOHORTS
-      EXTERNAL LossAdjust, NOFF, COFF
+      EXTERNAL LossAdjust, NOFF, COFF, HarvestCohorts, CohortComp
 
       INTEGER, INTENT(IN) :: DYNAMIC
       REAL, INTENT(IN) :: DTX, F, NGRLF, NGRST, WLDOTN, WSDOTN
@@ -154,11 +159,6 @@ C=======================================================================
      &  StemNTot,      !stem N total (g[N]]/m2) = WTNLF
      &  STSN           !stem structural (non-mobile) N (g[N]]/m2)
 
-!!       Composition and quality
-!     &  LFLIGNIN,     !Lignin content %
-!     &  LFCELLUL,     !Cellulose content %
-!     &  LFHEMICEL     !Hemicellulose content %
-
       REAL, DIMENSION(LCMax) :: LeafMassDecrease, NLDOT_c, 
      &    NLOFF_c, WRCLDT_c, RHOL
       REAL, DIMENSION(LCMax) :: StemMassDecrease, NSDOT_c, 
@@ -167,8 +167,8 @@ C=======================================================================
       REAL CUMLFDM, WLDOT_cohort
       REAL WSDOT_cohort
 
-!     TEMP CHP
-      REAL Percent_harvested
+!     Harvest quality
+      REAL ADF, NDF
 
 !     Variables read from species file:
       REAL ALPHL, ALPHS, PROLFF, PROLFI, PROSTF, PROSTI
@@ -237,6 +237,9 @@ C=======================================================================
       LFAREA    = 0.0 !Leaf area (cm2[leaf]/m2)
       LFAREAH   = 0.0 !healthy leaf area (cm2[leaf]/m2)
       FHLEAF_c  = 0.0 !harvested leaf mass
+      LeafLignin    = 0.0 !fraction 
+      LeafCellulose = 0.0 !fraction 
+      LeafHemicell  = 0.0 !fraction 
 
       CUMLFDM   = 0.0 !Not used by could be compared with CumLeafDM
 
@@ -248,10 +251,9 @@ C=======================================================================
       LFAREA    = 0.0 !stem area (cm2[stem]/m2)
       LFAREAH   = 0.0 !healthy stem area (cm2[stem]/m2)
       FHSTEM_c  = 0.0 !harvested stem mass
-
-!      LFLIGNIN  = 0.0 !Lignin content %
-!      LFCELLUL  = 0.0 !Cellulose content %
-!      LFHEMICEL = 0.0 !Hemicellulose content %
+      StemLignin    = 0.0 !fraction 
+      StemCellulose = 0.0 !fraction 
+      StemHemicell  = 0.0 !fraction 
 
 !     Zero out rate arrays
       LFFRZ = 0.0      ; STFRZ = 0.0
@@ -334,11 +336,6 @@ C=======================================================================
         PCNLeaf(1) = 0.0
       ENDIF
 
-!!     Composition
-!      LFLIGNIN  = function of ??
-!      LFCELLUL  = function of ??
-!      LFHEMICEL = function of ??
-
 !     Leaf area
       LFAREA(1)  = WLDOTN * F              !leaf area (cm2/m2)
       LFAREAH(1) = LFAREA(1)              !healthy leaf area
@@ -361,10 +358,7 @@ C=======================================================================
         PCNStem(1) = 0.0
       ENDIF
 
-!!     Composition
-!      STLIGNIN  = function of ??
-!      STCELLUL  = function of ??
-!      STHEMICEL = function of ??
+      CALL CohortComp()
 
 !***********************************************************************
 !***********************************************************************
@@ -424,12 +418,10 @@ C=======================================================================
 !       Keep track of total leaf and stem mass addition today
         WLDOT_calc = WLDOT_calc + WLDOT_cohort
         WSDOT_calc = WSDOT_calc + WSDOT_cohort
-      ENDDO
 
 !---------------------------------------------
 !     Integration of leaf area
 !---------------------------------------------
-      DO I = 1, NLC
         IF (LFDM(I) .GT. 0.0) THEN
 !     ---------------------------------------------------------
 !         Leaf area
@@ -563,64 +555,24 @@ C=======================================================================
       ENDIF
 
 !-------------------------------------------------------------------
+      CALL CohortComp()
+
 !     Handle harvested leaf
 !     Update LFDM and STDM here so the harvested values do not affect
 !       calculations of WRCLDT_c and WRCSDT_c
       FHLEAF_calc = SUM(FHLEAF_c)            !harvested
-      IF (FHLEAF_calc > 0.0) THEN
-
-!       TEMP CHP
-!       FORCE NEW COHORT TO BE HARVESTED AT SAME RATE
-        WTLF_calc   = SUM(LFDM) - WLDOTN                 !Leaf mass g/m2
-        Percent_harvested = FHLEAF_calc / WTLF_calc
-        FHLEAF_c(NLC) = LFDM(NLC) * Percent_harvested
-
-!       Harvest today
-        DO I = 1, NLC
-          IF (FHLEAF_c(I) < LFDM(I)) THEN
-            LFDM(I) = LFDM(I) - FHLEAF_c(I)
-            LFAREA(I) = LFAREA(I) - FHLEAF_c(I) * SLA_calc
-            LFSLA(I) = LFAREA(I) / LFDM(I)
-            LFNSC(I) = LFNSC(I) -FHLEAF_c(I) * RHOL(I)
-            LeafNTot(I) = LeafNTot(I) -FHLEAF_c(I) * PCNLeaf(i)/100.
-            LFSN(I) = MIN(LeafNTot(I),PROLFF*0.16 * (LFDM(I) -LFNSC(I)))
-            LFNSN(I) = LeafNTot(I) - LFSN(I)
-          ELSE
-            FHLEAF_c(I) = LFDM(I)
-            LFDM(I)     = 0.0
-            LFAREA(I)   = 0.0
-            LFSLA(I)    = 0.0
-            LFNSC(I)    = 0.0
-            LeafNTot(I) = 0.0
-            LFSN(I)     = 0.0
-            LFNSN(I)    = 0.0
-          ENDIF
-        ENDDO
-      ENDIF
-
-!-------------------------------------------------------------------
-!     Handle harvested stem
       FHSTEM_calc = SUM(FHSTEM_c)            !harvested
-      WTST_calc   = SUM(STDM)                !Stem mass g/m2
-      IF (FHSTEM_calc > 0.0) THEN
-!       Harvest today
-        DO I = 1, NLC
-          IF (FHSTEM_c(I) < STDM(I)) THEN
-            STDM(I) = STDM(I) - FHSTEM_c(I)
-            STNSC(I) = STNSC(I) -FHSTEM_c(I) * RHOS(I)
-            StemNTot(I) = StemNTot(I) -FHSTEM_c(I) * PCNStem(I)/100.
-            STSN(I) = MIN(StemNTot(I),PROSTF*0.16 * (STDM(I) -STNSC(I)))
-            STNSN(I) = StemNTot(I) - STSN(I)
-          ELSE
-            FHSTEM_c(I) = STDM(I)
-            STDM(I)     = 0.0
-            STNSC(I)    = 0.0
-            StemNTot(I) = 0.0
-            STSN(I)     = 0.0
-            STNSN(I)    = 0.0
-          ENDIF
-        ENDDO
+
+      IF (FHLEAF_calc > 0.0 .OR. FHSTEM_calc > 0.0) THEN
+        CALL HarvestCohorts(
+     &  PCNLeaf, PROLFF, RHOL,                    !Input
+     &  PCNStem, PROSTF, RHOS,                    !Input
+     &  LeafNTot, LFSN, LFAREA, LFSLA,            !Input/Output
+     &  StemNTot, STSN,                           !Input/Output
+     &  ADF, NDF)                                 !Output
       ENDIF
+
+      CALL CohortComp()
 
 !***********************************************************************
 !***********************************************************************
@@ -634,7 +586,6 @@ C=======================================================================
 !***********************************************************************
       IF (DYNAMIC .EQ. EMERG .OR.DYNAMIC .EQ. INTEGR) THEN
 !-----------------------------------------------------------------------
-!-------------------------------------------------------------------
       DO I = 1, NLC
         CohortAge(I) = CohortAge(I) + DTX  !cohort age in p-t-d
         CohortAgeDays(I) = CohortAgeDays(I) + 1
@@ -656,13 +607,6 @@ C=======================================================================
           PCNStem(I) = 0.0
           RHOS(I) = 0.0
         ENDIF
-
-!!        Composition
-!         LFLIGNIN = function of ??
-!         LFCELLUL = function of ??
-!         LFHEMICEL = function of ??
-!         ADF = function of LFLIGNIN, LFCELLUL, LFHEMICEL
-!         NDF = function of LFLIGNIN, LFCELLUL, LFHEMICEL
       ENDDO
 
 !     Total rates over all leaf cohorts
@@ -731,6 +675,8 @@ C=======================================================================
         SLAAD_calc  = 0.0
       ENDIF
       LAIMX_calc = MAX(LAIMX_calc, XLAI_calc)
+
+      CALL CohortComp()
 
 !***********************************************************************
 !***********************************************************************

@@ -132,6 +132,7 @@ C=======================================================================
       REAL WTLF_before_cut  
       REAL STMWT_before_cut
 !     REAL LFDM_sum, FHLEAF_sum, FHSTEM_sum  !temp chp
+      REAL ADF, NDF  !forage quality calculated in cohorts module
 
 !     SAVE FILEMOW,TRNO,DATE,MOW,RSPLF,MVS,rsht,CUTNO
 
@@ -370,33 +371,20 @@ C-----------------------------------------------------------------------
         CUTNO = 0
         MOWED = .FALSE. !set to TRUE after the first mow
 
-        CALL PUT('MHARVEST','ISH_date',-99)
-        CALL PUT('MHARVEST','ISH_wt',  -99.)
-
-        CALL GETLUN('FORHARV', fhlun)
-
         INQUIRE(file=FHOUT,EXIST=EXISTS)
         IF (exists.and.(run/=1.or.i/=1)) THEN
           OPEN(FILE=FHOUT,UNIT=FHLUN,POSITION='APPEND')
         ELSE
-          call date_and_time(values=date_time)
           OPEN(FILE=FHOUT,UNIT=FHLUN)
           rewind(fhlun)
-          fhoutfmt =
-     &     "('*Forage Model Harvest Output: ',A8,A2,1X,A,1X,"//
-     &     "'DSSAT Cropping System Model Ver. '"//
-     &     ",I1,'.',I1,'.',I1,'.',"//
-     &     "I3.3,1X,A10,4X,"//
-     &     "A3,' ',I2.2,', ',I4,'; ',I2.2,':',I2.2,':',I2.2/)"
-          WRITE (fhlun,fhoutfmt) FILEX(1:8),crop,trim(ename),
-     &       Version,VBranch,
-     &       MonthTxt(DATE_TIME(2)), DATE_TIME(3), DATE_TIME(1),
-     &       DATE_TIME(5), DATE_TIME(6), DATE_TIME(7)
+
+          WRITE(fhlun,'("*Forage Model Harvest Output")')
+          CALL HEADER(SEASINIT, fhlun, CONTROL % RUN)
           WRITE(fhlun,'(a)')
      &     '@RUN FILEX    CR TRNO FHNO YEAR DOY'//
      &     ' RCWAH RLWAH RSWAH RSRWH RRTWH RLAIH'//
      &     ' FHWAH FHNAH FHN%H FHC%H FHLGH FHL%H'//
-     &     '  MOWC RSPLC'
+     &     '  MOWC RSPLC   ADF   NDF'
         end if
 
 !***********************************************************************
@@ -686,16 +674,20 @@ C-----------------------------------------------------------------------
       ELSEIF (DYNAMIC .EQ. OUTPUT) THEN
 !-----------------------------------------------------------------------
       IF (MOWTODAY) THEN
-          call yr_doy(yrdoy,year,doy)
-          write(fhoutfmt,'(a)') '(i4,x,a8,a3,2(i5),i5,i4,'//
-     &          '5(i6),f6.2,2(i6),3(f6.2),f6.1,x,f5.0,F6.1,F6.1)'
-          WRITE(fhlun,fhoutfmt)
-     &         run,FILEX(1:8),crop,trtno,CUTNO,year,doy,
-     &         Nint(topwt*10.),Nint(wtlf*10.),Nint(stmwt*10.),
-     &         Nint(strwt*10.),Nint(rtwt*10.),xlai,
-     &         Nint(fhtot*10.),Nint(fhtotn*10.),
-     &         fhpctn,fhpcho,fhplig,fhpctlf,
-     &         MOWC,RSPLC
+!       Get quality of harvest calculated in Cohorts module
+        CALL GET('MHARVEST','ADF', ADF)
+        CALL GET('MHARVEST','NDF', NDF)
+
+        call yr_doy(yrdoy,year,doy)
+        WRITE(fhlun,1000)
+     &       run,FILEX(1:8),crop,trtno,CUTNO,year,doy,
+     &       Nint(topwt*10.),Nint(wtlf*10.),Nint(stmwt*10.),
+     &       Nint(strwt*10.),Nint(rtwt*10.),xlai,
+     &       Nint(fhtot*10.),Nint(fhtotn*10.),
+     &       fhpctn,fhpcho,fhplig,fhpctlf,
+     &       MOWC,RSPLC, ADF, NDF
+ 1000   FORMAT(i4,x,a8,a3,2(i5),i5,i4,
+     &        5(i6),f6.2,2(i6),3(f6.2),f6.1,x,f5.0,F6.1, 2F6.1)
       ENDIF
 
 !***********************************************************************
