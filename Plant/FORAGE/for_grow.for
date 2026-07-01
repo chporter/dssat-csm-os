@@ -848,7 +848,7 @@ C-----------------------------------------------------------------------
 !       Handle new reserves for leaf cohorts. These will be adjusted for 
 !         leaf losses in the COHORTS subroutine.
         DO I = 1, NLC
-          IF (LFDM(I) > 0.0) THEN
+          IF (WTLF > 0.0) THEN
             LFCAD(I) = LFDM(I) / WTLF * CADLF
             LFNAD(I) = LFDM(I) / WTLF * NADLF
           ENDIF
@@ -907,7 +907,7 @@ C--------------------------------------------
 !     Handle new reserves for stem cohorts. These will be adjusted for 
 !       losses in the COHORTS subroutine.
       DO I = 1, NLC
-        IF (STDM(I) > 0.0) THEN
+        IF (STMWT > 0.0) THEN
           STCAD(I) = STDM(I) / STMWT * CADST
           STNAD(I) = STDM(I) / STMWT * NADST
         ENDIF
