@@ -230,11 +230,6 @@ C-----------------------------------------------------------------------
       FHSTEM_c = 0.0
 !----------------------------------------------------------------------
 
-!      IF (.NOT.ALLOCATED(MOW) .AND. ATMOW .EQV. .FALSE.) THEN
-!        DO I=1,SIZE(MOW)
-!          if(date(i)==yrdoy) then
-!            IF (MOW(I).GE.0.and.trno(i)==trtno)then
-
       IF (.NOT. ATMOW .AND. MOWa > 1.E-6) THEN
         CUTNO = CUTNO + 1
         MOWTODAY = .TRUE.

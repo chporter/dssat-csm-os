@@ -7,47 +7,42 @@ C  REVISION       HISTORY
 C  06/07/2026 CHP written
 C=======================================================================
 
-      SUBROUTINE OpCohorts(DYNAMIC, YRPLT, 
-!       Leaf output:
-     &  WTLF_calc, XLAI_calc, WCRLF_calc, PLEAFN_calc, 
-     &  WTNLF_calc, WNRLF_calc, LFSN_calc, 
-     &  WLDOT_calc, LCADD_calc, LNADD_calc, 
-     &  CRUSLF_calc, NRUSLF_calc, 
-     &  WLIDOT_calc, WLFDOT_calc, SLDOT_calc, 
-     &  WatSen_calc, LfMineSen_calc, 
-     &  NLOFF_calc, NLDOT_calc, FHLEAF_calc,
-     &  WRCLDT_calc,
-!       Stem output:
-     &  WTST_calc, WCRST_calc, PStemN_calc,
-     &  WTNST_calc, WNRST_calc, STSN_calc, 
-     &  WSDOT_calc, SCADD_calc, SNADD_calc, 
-     &  CRUSST_calc, NRUSST_calc, 
-     &  WSIDOT_calc, WSFDOT_calc, SSDOT_calc, 
-     &  WatSenStem_calc, STMineSen_calc, 
-     &  NSOFF_calc, NSDOT_calc, FHSTEM_calc)
+      SUBROUTINE OpCohorts(DYNAMIC, YRPLT,    !Input
+     &  LeafNTot, LFSN, LFAREA,               !Input
+     &  StemNTot, STSN,                       !Input
+     &  SLA, SLAAD, LAIMX,                    !Output
+     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !Output
+     &  STMWT, WCRST, WNRST, WTNST)           !Output
 
       USE ModuleDefs
       USE ModuleData
       USE COHORTS_MOD
       IMPLICIT NONE
       SAVE
-      EXTERNAL YR_DOY, GETLUN, HEADER, TIMDIF
+      EXTERNAL YR_DOY, GETLUN, HEADER, TIMDIF, CohortComp
 
       INTEGER, INTENT(IN) :: DYNAMIC, YRPLT
+      REAL, DIMENSION(1:LCMax), INTENT(IN) :: 
+     &  LFAREA, LeafNTot, StemNTot, LFSN, STSN
+      REAL, INTENT(OUT) :: SLA, SLAAD, LAIMX
+      REAL, INTENT(OUT) :: WTLF, WCRLF, WNRLF, WTNLF, XLAI
+      REAL, INTENT(OUT) :: STMWT, WCRST, WNRST, WTNST
 
-      REAL, INTENT(IN) :: WTLF_calc, WNRLF_calc, WCRLF_calc, XLAI_calc, 
+      REAL WTLF_calc, WNRLF_calc, WCRLF_calc, XLAI_calc, 
      &  WTNLF_calc, PLEAFN_calc,
-     &  WLDOT_calc, SLDOT_calc, WLFDOT_calc, NRUSLF_calc, 
+     &  SLDOT_calc, WLFDOT_calc, NRUSLF_calc, 
      &  CRUSLF_calc, WLIDOT_calc, WatSen_calc, LfMineSen_calc, 
-     &  LCADD_calc, LNADD_calc, NLDOT_calc, NLOFF_calc,
-     &  LFSN_calc, FHLEAF_calc, WRCLDT_calc
+     &  LCADD_calc, LNADD_calc, SLAAD_calc, LAIMX_calc, SLA_calc,
+     &  LFSN_calc, FHLEAF_calc
 
-      REAL, INTENT(IN) ::  WTST_calc, WNRST_calc, WCRST_calc, 
+      REAL  WTST_calc, WNRST_calc, WCRST_calc, 
      &  WTNST_calc, PStemN_calc, 
-     &  WSDOT_calc, SSDOT_calc, WSFDOT_calc, NRUSST_calc, 
+     &  SSDOT_calc, WSFDOT_calc, NRUSST_calc, 
      &  CRUSST_calc, WSIDOT_calc, WatSenStem_calc, STMineSen_calc, 
-     &  SCADD_calc, SNADD_calc, NSDOT_calc, NSOFF_calc,
+     &  SCADD_calc, SNADD_calc, 
      &  STSN_calc, FHSTEM_calc
+
+      REAL AREALF_calc
 
       CHARACTER (len=8) MODEL
       CHARACTER*15 LCOUT, SCOUT
@@ -94,6 +89,12 @@ C=======================================================================
 !***********************************************************************
       ELSEIF (DYNAMIC .EQ. SEASINIT) THEN
 !-----------------------------------------------------------------------
+      WTLF_calc = 0.0  ; WTST_calc = 0.0
+      WNRLF_calc = 0.0 ; WNRST_calc = 0.0
+      WCRLF_calc = 0.0 ; WCRST_calc = 0.0
+      XLAI_calc = 0.0
+      WTNLF_calc = 0.0 ; WTNST_calc = 0.0
+
 !     Initialize main leaf cohort output file
 !     Contains daily aggregated leaf variables from cohort model for
 !       comparison to GROW.OUT or grow_for.OUT files.
@@ -113,12 +114,11 @@ C=======================================================================
   200 FORMAT('@YEAR DOY   DAS   DAP',
      &  '       LWADc       LAIDc      WCRLFc      LeafNc',
      &  '      WTNLFc      WNRLFc       LFSNc',
-     &  '      WLDOTc      LCADDc      LNADDc',
+     &  '      LCADDc      LNADDc',
      &  '     CRUSLFc     NRUSLFc',
      &  '     WLIDOTc     WLFDOTc      SLDOTc',
      &  '      WatSen      NMinSn',
-     &  '      NLOFFc      NLDOTc     FHLEAFc',
-     &  '     WRCLDTc')
+     &  '     FHLEAFc')
 
 !-----------------------------------------------------------------------
 !     Initialize 2nd leaf cohort output file
@@ -166,11 +166,11 @@ C=======================================================================
   210 FORMAT('@YEAR DOY   DAS   DAP',
      &  '      STMWTc      WCRSTc      StemNc',
      &  '      WTNSTc      WNRSTc       STSNc',
-     &  '      WSDOTc      SCADDc      SNADDc',
+     &  '      SCADDc      SNADDc',
      &  '     CRUSSTc     NRUSSTc',
      &  '     WSIDOTc     WSFDOTc      SSDOTc',
      &  '    WatSenST      NMinSn',
-     &  '      NSOFFc      NSDOTc     FHSTEMc')
+     &  '     FHSTEMc')
 
 !***********************************************************************
 !***********************************************************************
@@ -179,16 +179,80 @@ C=======================================================================
 !-----------------------------------------------------------------------
       ELSE IF (DYNAMIC .EQ. OUTPUT) THEN
 !-----------------------------------------------------------------------
+!     Total rates over all leaf cohorts
+      CRUSLF_calc = SUM(LFCMN(1:LCMax))      !CH2O mined in VEGGR
+      NRUSLF_calc = SUM(LFNMN(1:LCMax)) / 0.16 !N mined in MOBIL
+      WLFDOT_calc = SUM(LFFRZ(1:LCMax))      !Freeze in FREEZE
+      SLDOT_calc  = SUM(LeafTotSen(1:LCMax)) !Total senes in SENES
+      WatSen_calc = SUM(LFWSSN(1:LCMax))     !Water senes in SENES
+      LfMineSen_calc = SUM(LFNMNSN(1:LCMax)) !N mining senes 
+      LCADD_calc  = SUM(LFCAD(1:LCMax))      !mobile CH2O in GROW
+      LNADD_calc  = SUM(LFNAD(1:LCMax))      !mobile N in GROW
+      FHLEAF_calc = SUM(FHLEAF_c)            !harvested
+
+!     Total states over all leaf cohorts
+      WTLF_calc  = SUM(LFDM(1:LCMax))     !Leaf mass g/m2
+      AREALF_calc= SUM(LFAREA(1:LCMax))   !Lf area index
+      WCRLF_calc = SUM(LFNSC(1:LCMax))    !CH2O reserves
+      WTNLF_calc = SUM(LeafNTot(1:LCMax)) !Leaf N
+      WNRLF_calc = SUM(LFNSN(1:LCMax))    !Non-structural N
+      LFSN_calc  = SUM(LFSN(1:LCMax))     !Structural N
+
+!------------------------------------
+!     Total rates over all stem cohorts
+      CRUSST_calc = SUM(STCMN(1:LCMax))      !CH2O mined in VEGGR
+      NRUSST_calc = SUM(STNMN(1:LCMax)) / 0.16 !N mined in MOBIL
+      WSFDOT_calc = SUM(STFRZ(1:LCMax))      !Freeze in FREEZE
+      SSDOT_calc  = SUM(StemTotSen(1:LCMax)) !Total senes in SENES
+      WatSenStem_calc = SUM(STWSSN(1:LCMax)) !Water senes in SENES
+      StMineSen_calc = SUM(STNMNSN(1:LCMax)) !N mining senes 
+      SCADD_calc  = SUM(STCAD(1:LCMax))      !mobile CH2O in GROW
+      SNADD_calc  = SUM(STNAD(1:LCMax))      !mobile N in GROW
+      FHSTEM_calc = SUM(FHSTEM_c)            !harvested
+
+!     Total states over all stem cohorts
+      WTST_calc  = SUM(STDM(1:LCMax))     !Stem mass g/m2
+      WCRST_calc = SUM(STNSC(1:LCMax))    !CH2O reserves
+      WTNST_calc = SUM(StemNTot(1:LCMax)) !Stem N
+      WNRST_calc = SUM(STNSN(1:LCMax))    !Non-structural N
+      STSN_calc  = SUM(STSN(1:LCMax))     !Structural N
+!------------------------------------
+
+      IF (WTLF_calc > 0.0) THEN
+        PLEAFN_calc = WTNLF_calc / WTLF_calc * 100.
+      ELSE
+        PLEAFN_calc = 0.0
+      ENDIF
+
+      IF (WTST_calc > 0.0) THEN
+        PStemN_calc = WTNST_calc / WTST_calc * 100.
+      ELSE
+        PStemN_calc = 0.0
+      ENDIF
+
+!     Export a single SLA, XLAI, XHLAI, LAIMX for all leaves
+      XLAI_calc  = AREALF_calc / 10000. !Leaf area index (m2/m2)
+      IF (WTLF_calc > 0.0) THEN
+        SLA_calc    = AREALF_calc / WTLF_calc
+        SLAAD_calc  = AREALF_calc / (WTLF_calc - WCRLF_calc)
+      ELSE
+        SLA_calc    = 0.0
+        SLAAD_calc  = 0.0
+      ENDIF
+      LAIMX_calc = MAX(LAIMX_calc, XLAI_calc)
+
+      CALL CohortComp()
+
       WRITE (LCLUN,310) YEAR, DOY, DAS, DAP,
 !       State
      &  WTLF_calc, XLAI_calc, WCRLF_calc, PLEAFN_calc, 
      &  WTNLF_calc, WNRLF_calc, LFSN_calc, 
 !       Rate
-     &  WLDOT_calc, LCADD_calc, LNADD_calc / 0.16, 
+     &  LCADD_calc, LNADD_calc / 0.16, 
      &  CRUSLF_calc, NRUSLF_calc, 
      &  WLIDOT_calc, WLFDOT_calc, SLDOT_calc, 
      &  WatSen_calc, LfMineSen_calc, 
-     &  NLOFF_calc, NLDOT_calc, FHLEAF_calc, WRCLDT_calc
+     &  FHLEAF_calc
 
 310   FORMAT (1X,I4, 1X,I3, 2I6, 30F12.6)
 
@@ -203,13 +267,27 @@ C=======================================================================
      &  WTST_calc, WCRST_calc, PStemN_calc, 
      &  WTNST_calc, WNRST_calc, STSN_calc, 
 !       Rate
-     &  WSDOT_calc, SCADD_calc, SNADD_calc / 0.16, 
+     &  SCADD_calc, SNADD_calc / 0.16, 
      &  CRUSST_calc, NRUSST_calc, 
      &  WSIDOT_calc, WSFDOT_calc, SSDOT_calc, 
      &  WatSenStem_calc, StMineSen_calc, 
-     &  NsOFF_calc, NsDOT_calc, FHSTEM_calc
+     &  FHSTEM_calc
 
 410   FORMAT (1X,I4, 1X,I3, 2I6, 30F12.6)
+
+!     Transfer cohort totals for output
+      WTLF  = WTLF_calc
+      WCRLF = WCRLF_calc
+      WNRLF = WNRLF_calc
+      WTNLF = WTNLF_calc
+      XLAI  = XLAI_calc
+      STMWT = WTST_calc
+      WCRST = WCRST_calc
+      WNRST = WNRST_calc
+      WTNST = WTNST_calc
+      LAIMX = LAIMX_calc
+      SLAAD = SLAAD_calc
+      SLA   = SLA_calc
 
 !***********************************************************************
 !***********************************************************************

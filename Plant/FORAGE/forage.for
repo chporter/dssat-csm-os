@@ -689,9 +689,7 @@ C-----------------------------------------------------------------------
      &  DTX, F, FILECC, NGRLF, NGRST,         !Input
      &  WLDOTN, WSDOTN,                       !Input
      &  YRPLT,                                !Input
-     &  PCNLeaf, PCNStem,                     !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !OUTPUT (eventually)
-     &  STMWT, WCRST, WNRST, WTNST)           !OUTPUT (eventually)
+     &  PCNLeaf, PCNStem)                     !Output
 
       CALL FOR_OPMOB(CONTROL, ISWITCH, 
      &  YRPLT, MDATE, DAS, YRDOY, DTX, DXR57, PGAVL, NAVL, PG, PPMFAC, 
@@ -1130,9 +1128,7 @@ C-----------------------------------------------------------------------
      &  DTX, F, FILECC, NGRLF, NGRST,         !Input
      &  WLDOTN, WSDOTN,                       !Input
      &  YRPLT,                                !Input
-     &  PCNLeaf, PCNStem,                     !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !OUTPUT (eventually)
-     &  STMWT, WCRST, WNRST, WTNST)           !OUTPUT (eventually)
+     &  PCNLeaf, PCNStem)                     !Output
 
       CALL FOR_OPMOB(CONTROL, ISWITCH, 
      &  YRPLT, MDATE, DAS, YRDOY, DTX, DXR57, PGAVL, NAVL, PG, PPMFAC, 
@@ -1495,9 +1491,7 @@ C-GH
      &  DTX, F, FILECC, NGRLF, NGRST,         !Input
      &  WLDOTN, WSDOTN,                       !Input
      &  YRPLT,                                !Input
-     &  PCNLeaf, PCNStem,                     !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !OUTPUT (eventually)
-     &  STMWT, WCRST, WNRST, WTNST)           !OUTPUT (eventually)
+     &  PCNLeaf, PCNStem)                     !Output
 
       WLDOTN=0
       NGRLF=0
@@ -2153,9 +2147,7 @@ C----------------------------------
      &  DTX, F, FILECC, NGRLF, NGRST,         !Input
      &  WLDOTN, WSDOTN,                       !Input
      &  YRPLT,                                !Input
-     &  PCNLeaf, PCNStem,                     !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !OUTPUT (eventually)
-     &  STMWT, WCRST, WNRST, WTNST)           !OUTPUT (eventually)
+     &  PCNLeaf, PCNStem)                     !Output
 
       CONTINUE
 !-----------------------------------------------------------------------
@@ -2260,9 +2252,7 @@ C-----------------------------------------------------------------------
      &  DTX, F, FILECC, NGRLF, NGRST,         !Input
      &  WLDOTN, WSDOTN,                       !Input
      &  YRPLT,                                !Input
-     &  PCNLeaf, PCNStem,                     !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !OUTPUT (eventually)
-     &  STMWT, WCRST, WNRST, WTNST)           !OUTPUT (eventually)
+     &  PCNLeaf, PCNStem)                     !Output
 
       CALL FOR_OPGROW(CONTROL, ISWITCH, 
      &    CADLF, CADST, CANHT, CANWH, CMINEA, DWNOD,  

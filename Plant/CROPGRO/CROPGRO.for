@@ -426,9 +426,7 @@ C-----------------------------------------------------------------------
      &  DTX, F, FILECC, NGRLF, NGRST,         !Input
      &  WLDOTN, WSDOTN,                       !Input
      &  YRPLT,                                !Input
-     &  PCNLeaf, PCNStem,                     !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !OUTPUT (eventually)
-     &  STMWT, WCRST, WNRST, WTNST)           !OUTPUT (eventually)
+     &  PCNLeaf, PCNStem)                     !Output
 
       CALL OPGROW(CONTROL, ISWITCH, SoilProp, 
      &    CADLF, CADST, CANHT, CANWH, CMINEA, DWNOD, GROWTH,  
@@ -683,9 +681,7 @@ C-GH Add leaf Cohorts
      &  DTX, F, FILECC, NGRLF, NGRST,         !Input
      &  WLDOTN, WSDOTN,                       !Input
      &  YRPLT,                                !Input
-     &  PCNLeaf, PCNStem,                     !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !OUTPUT (eventually)
-     &  STMWT, WCRST, WNRST, WTNST)           !OUTPUT (eventually)
+     &  PCNLeaf, PCNStem)                     !Output
 
 !-----------------------------------------------------------------------
 !     Write headings to output file GROWTH.OUT
@@ -907,9 +903,7 @@ C-GH
      &  DTX, F, FILECC, NGRLF, NGRST,         !Input
      &  WLDOTN, WSDOTN,                       !Input
      &  YRPLT,                                !Input
-     &  PCNLeaf, PCNStem,                     !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !OUTPUT (eventually)
-     &  STMWT, WCRST, WNRST, WTNST)           !OUTPUT (eventually)
+     &  PCNLeaf, PCNStem)                     !Output
 
       WLDOTN = 0.0
       NGRLF  = 0.0
@@ -1336,9 +1330,7 @@ C----------------------------------
      &  DTX, F, FILECC, NGRLF, NGRST,         !Input
      &  WLDOTN, WSDOTN,                       !Input
      &  YRPLT,                                !Input
-     &  PCNLeaf, PCNStem,                     !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !OUTPUT (eventually)
-     &  STMWT, WCRST, WNRST, WTNST)           !OUTPUT (eventually)
+     &  PCNLeaf, PCNStem)                     !Output
 
       IF ((WTLF+STMWT).GT. 0.0001) THEN
         PCNVEG = (WTNLF+WTNST)/(WTLF+STMWT)*100.
@@ -1395,9 +1387,7 @@ C----------------------------------
      &  DTX, F, FILECC, NGRLF, NGRST,         !Input
      &  WLDOTN, WSDOTN,                       !Input
      &  YRPLT,                                !Input
-     &  PCNLeaf, PCNStem,                     !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !OUTPUT (eventually)
-     &  STMWT, WCRST, WNRST, WTNST)           !OUTPUT (eventually)
+     &  PCNLeaf, PCNStem)                     !Output
 
         CALL OPGROW(CONTROL, ISWITCH, SoilProp, 
      &    CADLF, CADST, CANHT, CANWH, CMINEA, DWNOD, GROWTH,  
