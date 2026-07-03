@@ -331,6 +331,7 @@ set(
         "Plant/CERES-SweetCorn/SW_FreshWt.for"
         "Plant/CERES-SweetCorn/SW_GROSUB.for"
         "Plant/Cohorts/COHORTS.for"
+        "Plant/Cohorts/Cohort_harvest.for"
         "Plant/Cohorts/Cohort_subs.for"
         "Plant/Cohorts/IPCOHO.for"
         "Plant/Cohorts/OpCohorts.for"

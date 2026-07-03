@@ -292,7 +292,7 @@ C TF/DP 2022-01-31 Simple version AutoMOW
       LOGICAL MOWED
 
 !     Leaf and stem cohorts
-      REAL, DIMENSION(LCMax) :: PCNLeaf, PCNStem
+!      REAL, DIMENSION(LCMax) :: PCNLeaf  !, PCNStem
 
 !     Arrays which contain data for printing in SUMMARY.OUT file
       INTEGER, PARAMETER :: SUMNUM = 3
@@ -488,7 +488,7 @@ C-----------------------------------------------------------------------
      &    WCRRT,WCRSH, WCRSR, WCRST, WNRLF, WNRRT, WNRSH,       !Input
      &    WNRSR,WNRST, WTLF, XLAI, XPOD,                        !Input
      &    YRDOY, YRSIM, TGRO,                                   !Input
-     &    PCNLeaf, PCNStem,                                     !Output
+!    &    PCNLeaf, !PCNStem,                                     !Output
      &    CMINELF, CMINEP, CMINERT, CMINESH, CMINESR,           !Output
      &    CMINEST, CMOBMX, CMOBSR, LAIMOBR, LFCMINE,            !Output
      &    LFSCMOB, LFSENWT, LFSNMOB, LTSEN, NMINELF,            !Output
@@ -688,8 +688,7 @@ C-----------------------------------------------------------------------
       CALL COHORTS(DYNAMIC, 
      &  DTX, F, FILECC, NGRLF, NGRST,         !Input
      &  WLDOTN, WSDOTN,                       !Input
-     &  YRPLT,                                !Input
-     &  PCNLeaf, PCNStem)                     !Output
+     &  YRPLT)                                !Input
 
       CALL FOR_OPMOB(CONTROL, ISWITCH, 
      &  YRPLT, MDATE, DAS, YRDOY, DTX, DXR57, PGAVL, NAVL, PG, PPMFAC, 
@@ -996,7 +995,7 @@ C-----------------------------------------------------------------------
      &    WCRRT,WCRSH, WCRSR, WCRST, WNRLF, WNRRT, WNRSH,       !Input
      &    WNRSR,WNRST, WTLF, XLAI, XPOD,                        !Input
      &    YRDOY, YRSIM, TGRO,                                   !Input
-     &    PCNLeaf, PCNStem,                                     !Output
+!    &    PCNLeaf, !PCNStem,                                     !Output
      &    CMINELF, CMINEP, CMINERT, CMINESH, CMINESR,           !Output
      &    CMINEST, CMOBMX, CMOBSR, LAIMOBR, LFCMINE,            !Output
      &    LFSCMOB, LFSENWT, LFSNMOB, LTSEN, NMINELF,            !Output
@@ -1127,8 +1126,8 @@ C-----------------------------------------------------------------------
       CALL COHORTS(DYNAMIC, 
      &  DTX, F, FILECC, NGRLF, NGRST,         !Input
      &  WLDOTN, WSDOTN,                       !Input
-     &  YRPLT,                                !Input
-     &  PCNLeaf, PCNStem)                     !Output
+     &  YRPLT)                                !Input
+!    &  PCNLeaf)                     !Output
 
       CALL FOR_OPMOB(CONTROL, ISWITCH, 
      &  YRPLT, MDATE, DAS, YRDOY, DTX, DXR57, PGAVL, NAVL, PG, PPMFAC, 
@@ -1490,8 +1489,8 @@ C-GH
       CALL COHORTS(EMERG, 
      &  DTX, F, FILECC, NGRLF, NGRST,         !Input
      &  WLDOTN, WSDOTN,                       !Input
-     &  YRPLT,                                !Input
-     &  PCNLeaf, PCNStem)                     !Output
+     &  YRPLT)                                !Input
+!    &  PCNLeaf)                     !Output
 
       WLDOTN=0
       NGRLF=0
@@ -1553,7 +1552,7 @@ C-----------------------------------------------------------------------
      &    WCRRT,WCRSH, WCRSR, WCRST, WNRLF, WNRRT, WNRSH,       !Input
      &    WNRSR,WNRST, WTLF, XLAI, XPOD,                        !Input
      &    YRDOY, YRSIM, TGRO,                                   !Input
-     &    PCNLeaf, PCNStem,                                     !Output
+!    &    PCNLeaf, !PCNStem,                                     !Output
      &    CMINELF, CMINEP, CMINERT, CMINESH, CMINESR,           !Output
      &    CMINEST, CMOBMX, CMOBSR, LAIMOBR, LFCMINE,            !Output
      &    LFSCMOB, LFSENWT, LFSNMOB, LTSEN, NMINELF,            !Output
@@ -2112,6 +2111,15 @@ C-----------------------------------------------------------------------
      &  VSTAGE, DWTCO, DWTLO, DWTSO,
      &  PWTCO, PWTLO, PWTSO)                         !Input/Output
 
+C----------------------------------
+C     CALL COHORT MODEL
+C----------------------------------
+!      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
+      CALL COHORTS(DYNAMIC, 
+     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
+     &  WLDOTN, WSDOTN,                       !Input
+     &  YRPLT)                                !Input
+
       FHWAH= 0.0
       FHTOTN = 0.0
       FHLPH = 0.0
@@ -2138,16 +2146,6 @@ C-----------------------------------------------------------------------
 !      IF (FHWAH > 1.E-3) THEN
 !        WRITE(3333,"('FHWAH,FHTOTN',2F10.2)") FHWAH, FHTOTN
 !      ENDIF
-
-C----------------------------------
-C     CALL COHORT MODEL
-C----------------------------------
-!      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
-      CALL COHORTS(DYNAMIC, 
-     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
-     &  WLDOTN, WSDOTN,                       !Input
-     &  YRPLT,                                !Input
-     &  PCNLeaf, PCNStem)                     !Output
 
       CONTINUE
 !-----------------------------------------------------------------------
@@ -2177,7 +2175,7 @@ C----------------------------------
      &    WCRRT,WCRSH, WCRSR, WCRST, WNRLF, WNRRT, WNRSH,       !Input
      &    WNRSR,WNRST, WTLF, XLAI, XPOD,                        !Input
      &    YRDOY, YRSIM, TGRO,                                   !Input
-     &    PCNLeaf, PCNStem,                                     !Output
+!    &    PCNLeaf, !PCNStem,                                     !Output
      &    CMINELF, CMINEP, CMINERT, CMINESH, CMINESR,           !Output
      &    CMINEST, CMOBMX, CMOBSR, LAIMOBR, LFCMINE,            !Output
      &    LFSCMOB, LFSENWT, LFSNMOB, LTSEN, NMINELF,            !Output
@@ -2251,8 +2249,8 @@ C-----------------------------------------------------------------------
       CALL COHORTS(DYNAMIC, 
      &  DTX, F, FILECC, NGRLF, NGRST,         !Input
      &  WLDOTN, WSDOTN,                       !Input
-     &  YRPLT,                                !Input
-     &  PCNLeaf, PCNStem)                     !Output
+     &  YRPLT)                                !Input
+!    &  PCNLeaf)                     !Output
 
       CALL FOR_OPGROW(CONTROL, ISWITCH, 
      &    CADLF, CADST, CANHT, CANWH, CMINEA, DWNOD,  

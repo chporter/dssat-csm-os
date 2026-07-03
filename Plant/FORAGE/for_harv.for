@@ -46,9 +46,9 @@ C=======================================================================
       IMPLICIT NONE
       SAVE
       EXTERNAL ERROR, TABEX
-      EXTERNAL MowFileRead, IPSPE_FORHAR, OP_FORHARV
+      EXTERNAL MowFileRead, IPSPE_FORHAR, OP_FORHARV, HarvestCohorts
 
-      INTEGER YRDOY, I, DYNAMIC, MOWCOUNT
+      INTEGER YRDOY, DYNAMIC, MOWCOUNT
 
       LOGICAL MOWTODAY, MOWED
 
@@ -98,10 +98,6 @@ C=======================================================================
       CHARACTER*1 ATTP
 
       TYPE(CONTROLTYPE) CONTROL
-
-!     Leaf and stem cohorts
-      REAL WTLF_before_cut  
-      REAL STMWT_before_cut
 
       PARAMETER  (ERRKEY = 'FRHARV')
 
@@ -335,10 +331,8 @@ C-----------------------------------------------------------------------
         fhpcho = (fhcrlf+fhcrst)/fhtot*100
         fhpctlf = fhleaf/fhtot*100
 
-        WTLF_before_cut = WTLF
         WTLF = WTLF - FHLEAF
 
-        STMWT_before_cut = STMWT
         STMWT = STMWT - FHSTEM
         TOPWT = TOPWT - FHLEAF - FHSTEM
         TOTWT = TOTWT - FHLEAF - FHSTEM
@@ -373,6 +367,8 @@ C-----------------------------------------------------------------------
         CALL PUT('MHARVEST','ISH_date',YRDOY)
         CALL PUT('MHARVEST','ISH_wt', fhtot*10.)
 
+        CALL HarvestCohorts(YRDOY, FHLEAF, FHSTEM)
+
       ELSE
         FHLEAF = 0.0
         FHSTEM = 0.0
@@ -396,62 +392,6 @@ C-----------------------------------------------------------------------
         DWTLO = WTLO - PWTLO
         DWTSO = WTSO - PWTSO
       ENDIF
-
-!     Handle leaf cohorts
-!     For initial testing, reduce each cohort by the proportion of whole leaf lost
-!     Eventually, we want to remove new (top) growth
-      IF (FHLEAF > 0.0) THEN
-        DO I = 1, NLC
-          FHLEAF_c(I) = FHLEAF * LFDM(I) / WTLF_before_cut
-          FHLEAF_c(I) = MAX(0.0, FHLEAF_c(I))
-        ENDDO
-
-!!       Remove newest cohorts for mow (UNTESTED)
-!        TotalRemoved = 0.0
-!        DO I = NLC, 1, -1
-!          TotalRemoved = TotalRemoved + LFDM(I)
-!          FHLEAF_c(I) = LFDM(I)
-!          IF (TotalRemoved >= FHLEAF) THEN
-!            FHLEAF_c(I) = TotalRemoved - FHLEAF
-!            EXIT
-!          ELSE
-!            CYCLE
-!          ENDIF
-!        ENDDO
-      ENDIF
-
-!!     temp chp
-!        FHLEAF_sum = SUM(FHLEAF_c)
-!        LFDM_sum = SUM(LFDM)
-!        WRITE(3674,'(I7,10F10.4)') 
-!     &    YRDOY, WTLF_BEFORE_CUT, FHLEAF, LFDM_sum, FHLEAF_sum
-
-!     Handle stem cohorts
-!     For initial testing, reduce each cohort by the proportion of whole stem lost
-!     Eventually, we want to remove new (top) growth
-      IF (FHSTEM > 0.0) THEN
-        DO I = 1, NLC
-          FHSTEM_c(I) = FHSTEM * STDM(I) / STMWT_before_cut
-          FHSTEM_c(I) = MAX(0.0, FHSTEM_c(I))
-        ENDDO
-
-!!       Remove newest cohorts for mow (UNTESTED)
-!        TotalRemoved = 0.0
-!        DO I = NLC, 1, -1
-!          TotalRemoved = TotalRemoved + STDM(I)
-!          FHSTEM_c(I) = STDM(I)
-!          IF (TotalRemoved >= FHSTEM) THEN
-!            FHSTEM_c(I) = TotalRemoved - FHSTEM
-!            EXIT
-!          ELSE
-!            CYCLE
-!          ENDIF
-!        ENDDO
-      ENDIF
-
-!!     temp chp
-!        FHSTEM_sum = SUM(FHSTEM_c)
-!!        PRINT *, YRDOY, FHSTEM, FHSTEM_sum, STMWT, WTNST
 
 !***********************************************************************
 !***********************************************************************

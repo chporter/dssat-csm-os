@@ -183,7 +183,7 @@ C=======================================================================
       REAL KSTRES
 
 !     Leaf and stem cohorts
-      REAL, DIMENSION(LCMax) :: PCNLeaf, PCNStem
+!      REAL, DIMENSION(LCMax) :: PCNLeaf  !, PCNStem
 
 !-----------------------------------------------------------------------
 !     Define constructed variable types based on definitions in
@@ -425,8 +425,8 @@ C-----------------------------------------------------------------------
       CALL COHORTS(DYNAMIC, 
      &  DTX, F, FILECC, NGRLF, NGRST,         !Input
      &  WLDOTN, WSDOTN,                       !Input
-     &  YRPLT,                                !Input
-     &  PCNLeaf, PCNStem)                     !Output
+     &  YRPLT)                                !Input
+!    &  PCNLeaf)                     !Output
 
       CALL OPGROW(CONTROL, ISWITCH, SoilProp, 
      &    CADLF, CADST, CANHT, CANWH, CMINEA, DWNOD, GROWTH,  
@@ -680,8 +680,8 @@ C-GH Add leaf Cohorts
       CALL COHORTS(DYNAMIC, 
      &  DTX, F, FILECC, NGRLF, NGRST,         !Input
      &  WLDOTN, WSDOTN,                       !Input
-     &  YRPLT,                                !Input
-     &  PCNLeaf, PCNStem)                     !Output
+     &  YRPLT)                                !Input
+!    &  PCNLeaf)                     !Output
 
 !-----------------------------------------------------------------------
 !     Write headings to output file GROWTH.OUT
@@ -902,8 +902,8 @@ C-GH
       CALL COHORTS(DYNAMIC, 
      &  DTX, F, FILECC, NGRLF, NGRST,         !Input
      &  WLDOTN, WSDOTN,                       !Input
-     &  YRPLT,                                !Input
-     &  PCNLeaf, PCNStem)                     !Output
+     &  YRPLT)                                !Input
+!    &  PCNLeaf)                     !Output
 
       WLDOTN = 0.0
       NGRLF  = 0.0
@@ -1329,8 +1329,8 @@ C----------------------------------
       CALL COHORTS(DYNAMIC, 
      &  DTX, F, FILECC, NGRLF, NGRST,         !Input
      &  WLDOTN, WSDOTN,                       !Input
-     &  YRPLT,                                !Input
-     &  PCNLeaf, PCNStem)                     !Output
+     &  YRPLT)                                !Input
+!    &  PCNLeaf)                     !Output
 
       IF ((WTLF+STMWT).GT. 0.0001) THEN
         PCNVEG = (WTNLF+WTNST)/(WTLF+STMWT)*100.
@@ -1386,8 +1386,8 @@ C----------------------------------
       CALL COHORTS(DYNAMIC, 
      &  DTX, F, FILECC, NGRLF, NGRST,         !Input
      &  WLDOTN, WSDOTN,                       !Input
-     &  YRPLT,                                !Input
-     &  PCNLeaf, PCNStem)                     !Output
+     &  YRPLT)                                !Input
+!    &  PCNLeaf)                     !Output
 
         CALL OPGROW(CONTROL, ISWITCH, SoilProp, 
      &    CADLF, CADST, CANHT, CANWH, CMINEA, DWNOD, GROWTH,  

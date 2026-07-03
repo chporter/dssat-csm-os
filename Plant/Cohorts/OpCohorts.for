@@ -8,10 +8,8 @@ C  06/07/2026 CHP written
 C=======================================================================
 
       SUBROUTINE OpCohorts(DYNAMIC, YRPLT,    !Input
-     &  LeafNTot, LFSN, LFAREA,               !Input
-     &  StemNTot, STSN,                       !Input
-     &  SLA, SLAAD, LAIMX,                    !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF, XLAI,      !Output
+     &  LAIMX, SLA, SLAAD, XLAI,              !Output
+     &  WTLF, WCRLF, WNRLF, WTNLF,            !Output
      &  STMWT, WCRST, WNRST, WTNST)           !Output
 
       USE ModuleDefs
@@ -22,8 +20,6 @@ C=======================================================================
       EXTERNAL YR_DOY, GETLUN, HEADER, TIMDIF, CohortComp
 
       INTEGER, INTENT(IN) :: DYNAMIC, YRPLT
-      REAL, DIMENSION(1:LCMax), INTENT(IN) :: 
-     &  LFAREA, LeafNTot, StemNTot, LFSN, STSN
       REAL, INTENT(OUT) :: SLA, SLAAD, LAIMX
       REAL, INTENT(OUT) :: WTLF, WCRLF, WNRLF, WTNLF, XLAI
       REAL, INTENT(OUT) :: STMWT, WCRST, WNRST, WTNST
@@ -180,42 +176,42 @@ C=======================================================================
       ELSE IF (DYNAMIC .EQ. OUTPUT) THEN
 !-----------------------------------------------------------------------
 !     Total rates over all leaf cohorts
-      CRUSLF_calc = SUM(LFCMN(1:LCMax))      !CH2O mined in VEGGR
-      NRUSLF_calc = SUM(LFNMN(1:LCMax)) / 0.16 !N mined in MOBIL
-      WLFDOT_calc = SUM(LFFRZ(1:LCMax))      !Freeze in FREEZE
-      SLDOT_calc  = SUM(LeafTotSen(1:LCMax)) !Total senes in SENES
-      WatSen_calc = SUM(LFWSSN(1:LCMax))     !Water senes in SENES
-      LfMineSen_calc = SUM(LFNMNSN(1:LCMax)) !N mining senes 
-      LCADD_calc  = SUM(LFCAD(1:LCMax))      !mobile CH2O in GROW
-      LNADD_calc  = SUM(LFNAD(1:LCMax))      !mobile N in GROW
-      FHLEAF_calc = SUM(FHLEAF_c)            !harvested
+      CRUSLF_calc = SUM(LFCMN)        !CH2O mined in VEGGR
+      NRUSLF_calc = SUM(LFNMN) / 0.16 !N mined in MOBIL
+      WLFDOT_calc = SUM(LFFRZ)        !Freeze in FREEZE
+      SLDOT_calc  = SUM(LeafTotSen)   !Total senes in SENES
+      WatSen_calc = SUM(LFWSSN)       !Water senes in SENES
+      LfMineSen_calc = SUM(LFNMNSN)   !N mining senes 
+      LCADD_calc  = SUM(LFCAD)        !mobile CH2O in GROW
+      LNADD_calc  = SUM(LFNAD)        !mobile N in GROW
+      FHLEAF_calc = SUM(FHLEAF_c)     !harvested
 
 !     Total states over all leaf cohorts
-      WTLF_calc  = SUM(LFDM(1:LCMax))     !Leaf mass g/m2
-      AREALF_calc= SUM(LFAREA(1:LCMax))   !Lf area index
-      WCRLF_calc = SUM(LFNSC(1:LCMax))    !CH2O reserves
-      WTNLF_calc = SUM(LeafNTot(1:LCMax)) !Leaf N
-      WNRLF_calc = SUM(LFNSN(1:LCMax))    !Non-structural N
-      LFSN_calc  = SUM(LFSN(1:LCMax))     !Structural N
+      WTLF_calc  = SUM(LFDM)          !Leaf mass g/m2
+      AREALF_calc= SUM(LFAREA)        !Lf area index
+      WCRLF_calc = SUM(LFNSC)         !CH2O reserves
+      WTNLF_calc = SUM(LeafNTot)      !Leaf N
+      WNRLF_calc = SUM(LFNSN)         !Non-structural N
+      LFSN_calc  = SUM(LFSN)          !Structural N
 
 !------------------------------------
 !     Total rates over all stem cohorts
-      CRUSST_calc = SUM(STCMN(1:LCMax))      !CH2O mined in VEGGR
-      NRUSST_calc = SUM(STNMN(1:LCMax)) / 0.16 !N mined in MOBIL
-      WSFDOT_calc = SUM(STFRZ(1:LCMax))      !Freeze in FREEZE
-      SSDOT_calc  = SUM(StemTotSen(1:LCMax)) !Total senes in SENES
-      WatSenStem_calc = SUM(STWSSN(1:LCMax)) !Water senes in SENES
-      StMineSen_calc = SUM(STNMNSN(1:LCMax)) !N mining senes 
-      SCADD_calc  = SUM(STCAD(1:LCMax))      !mobile CH2O in GROW
-      SNADD_calc  = SUM(STNAD(1:LCMax))      !mobile N in GROW
-      FHSTEM_calc = SUM(FHSTEM_c)            !harvested
+      CRUSST_calc = SUM(STCMN)        !CH2O mined in VEGGR
+      NRUSST_calc = SUM(STNMN) / 0.16 !N mined in MOBIL
+      WSFDOT_calc = SUM(STFRZ)        !Freeze in FREEZE
+      SSDOT_calc  = SUM(StemTotSen)   !Total senes in SENES
+      WatSenStem_calc = SUM(STWSSN)   !Water senes in SENES
+      StMineSen_calc = SUM(STNMNSN)   !N mining senes 
+      SCADD_calc  = SUM(STCAD)        !mobile CH2O in GROW
+      SNADD_calc  = SUM(STNAD)        !mobile N in GROW
+      FHSTEM_calc = SUM(FHSTEM_c)     !harvested
 
 !     Total states over all stem cohorts
-      WTST_calc  = SUM(STDM(1:LCMax))     !Stem mass g/m2
-      WCRST_calc = SUM(STNSC(1:LCMax))    !CH2O reserves
-      WTNST_calc = SUM(StemNTot(1:LCMax)) !Stem N
-      WNRST_calc = SUM(STNSN(1:LCMax))    !Non-structural N
-      STSN_calc  = SUM(STSN(1:LCMax))     !Structural N
+      WTST_calc  = SUM(STDM)          !Stem mass g/m2
+      WCRST_calc = SUM(STNSC)         !CH2O reserves
+      WTNST_calc = SUM(StemNTot)      !Stem N
+      WNRST_calc = SUM(STNSN)         !Non-structural N
+      STSN_calc  = SUM(STSN)          !Structural N
 !------------------------------------
 
       IF (WTLF_calc > 0.0) THEN
