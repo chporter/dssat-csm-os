@@ -367,8 +367,6 @@ C-----------------------------------------------------------------------
         CALL PUT('MHARVEST','ISH_date',YRDOY)
         CALL PUT('MHARVEST','ISH_wt', fhtot*10.)
 
-        CALL HarvestCohorts(YRDOY, FHLEAF, FHSTEM)
-
       ELSE
         FHLEAF = 0.0
         FHSTEM = 0.0
@@ -392,6 +390,8 @@ C-----------------------------------------------------------------------
         DWTLO = WTLO - PWTLO
         DWTSO = WTSO - PWTSO
       ENDIF
+
+      CALL HarvestCohorts(YRDOY, FHLEAF, FHSTEM)
 
 !***********************************************************************
 !***********************************************************************
