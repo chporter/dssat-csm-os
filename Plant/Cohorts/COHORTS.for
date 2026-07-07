@@ -18,7 +18,8 @@
      &  LFNSN,        !Leaf non-structural (mobile) N (g/m2) = WNRLF
      &  PCNLeaf,      !Leaf N%
      &  LFAREA,       !Leaf area (m2)
-     &  LFSLA         !Leaf SLA
+     &  LFSLA,        !Leaf SLA
+     &  RHOL_c        !Fraction of mobile CH2O in leaf
 
 !     STATE VARIABLES: Stem cohorts
       REAL, DIMENSION(LCMax) ::  
@@ -27,7 +28,8 @@
      &  StemNTot,     !Stem total N g/m2
      &  STSN,         !Stem structural N g/m2
      &  STNSN,        !Stem non-structural (mobile) N (g/m2) = WNRLF
-     &  PCNStem       !Stem N%
+     &  PCNStem,      !Stem N%
+     &  RHOS_c        !Fraction of mobile CH2O in stem
 
 !     RATE VARIABLES: Leaf and stem cohorts
       REAL, DIMENSION(LCMax) ::  
@@ -89,7 +91,6 @@
      &  LeafLignin, LeafCellulose, LeafHemicell,
      &  StemLignin, StemCellulose, StemHemicell
 
-
       CONTAINS
 C=======================================================================
 C  COHORTS, Subroutine, K.J. Boote, P. Alderman
@@ -139,21 +140,21 @@ C=======================================================================
 
 !     Leaf Cohort state variables, not exported (yet?)
       REAL, DIMENSION(LCMax) :: 
-     &  LeafNTot,     !Leaf N total (g[N]]/m2) = WTNLF
-     &  LFSN,         !Leaf structural (non-mobile) N (g[N]]/m2)
-     &  LFAREA,       !Leaf area (cm2[leaf]/m2)
-     &  LFAREAH,      !Healthy leaf area (cm2[leaf]/m2)
-     &  LFSLA         !Specific leaf area (cm2/g)
+!     &  LeafNTot,     !Leaf N total (g[N]]/m2) = WTNLF
+!     &  LFSN,         !Leaf structural (non-mobile) N (g[N]]/m2)
+!     &  LFAREA,       !Leaf area (cm2[leaf]/m2)
+     &  LFAREAH       !Healthy leaf area (cm2[leaf]/m2)
+!     &  LFSLA         !Specific leaf area (cm2/g)
 
 !     Stem Cohort state variables, not exported (yet?)
-      REAL, DIMENSION(LCMax) :: 
-     &  StemNTot,      !stem N total (g[N]]/m2) = WTNLF
-     &  STSN           !stem structural (non-mobile) N (g[N]]/m2)
+!      REAL, DIMENSION(LCMax) :: 
+!     &  StemNTot,      !stem N total (g[N]]/m2) = WTNLF
+!     &  STSN           !stem structural (non-mobile) N (g[N]]/m2)
 
       REAL, DIMENSION(LCMax) :: LeafMassDecrease, NLDOT_c, 
-     &    WRCLDT_c, RHOL
+     &    WRCLDT_c !, RHOL
       REAL, DIMENSION(LCMax) :: StemMassDecrease, NSDOT_c, 
-     &    WRCSDT_c, RHOS
+     &    WRCSDT_c !, RHOS
 
       REAL WLDOT_cohort
       REAL WSDOT_cohort
@@ -191,6 +192,7 @@ C=======================================================================
      &  FILECC, MODEL)                            !Input
 
       CALL OpCohorts(DYNAMIC, YRPLT,          !Input
+!     &  LFSN, LFAREA, LeafNTot, PCNLeaf, 
      &  LAIMX, SLA, SLAAD, XLAI,              !Output
      &  WTLF, WCRLF, WNRLF, WTNLF,            !Output
      &  STMWT, WCRST, WNRST, WTNST)           !Output
@@ -237,6 +239,7 @@ C=======================================================================
       WLDOT_cohort = 0.0;WSDOT_cohort = 0.0
 
       CALL OpCohorts(DYNAMIC, YRPLT,          !Input
+!     &  LFSN, LFAREA, LeafNTot, PCNLeaf, 
      &  LAIMX, SLA, SLAAD, XLAI,              !Output
      &  WTLF, WCRLF, WNRLF, WTNLF,            !Output
      &  STMWT, WCRST, WNRST, WTNST)           !Output
@@ -361,9 +364,9 @@ C=======================================================================
 !           should be replaced by a cohort SLA when everything is working
 !           as it is in GROW.
           LFAREA(I) = LFAREA(I) 
-     &      - LeafMassDecrease(I) * SLA
-     &      - LFNMN(I) / 0.16 * SLA
-     &      + LFNAD(I) / 0.16 * SLA
+     &      - LeafMassDecrease(I) * LFSLA(I)
+     &      - LFNMN(I) / 0.16 * LFSLA(I)
+     &      + LFNAD(I) / 0.16 * LFSLA(I)
           LFSLA(I) = LFAREA(I) / LFDM(I)
         ELSE
           LFAREA(I)   = 0.0
@@ -515,19 +518,19 @@ C=======================================================================
         LeafNTot(I) = LFNSN(I) + LFSN(I)
         IF (LFDM(I) > 0.0) THEN
           PCNLeaf(I) = LeafNTot(I) / LFDM(I) * 100.  ! % N 
-          RHOL(I) = LFNSC(I) / LFDM(I)
+          RHOL_c(I) = LFNSC(I) / LFDM(I)
         ELSE
           PCNLeaf(I) = 0.0
-          RHOL(I) = 0.0
+          RHOL_c(I) = 0.0
         ENDIF
 
         StemNTot(I) = STNSN(I) + STSN(I)
         IF (STDM(I) > 0.0) THEN
           PCNStem(I) = StemNTot(I) / STDM(I) * 100.  ! % N 
-          RHOS(I) = STNSC(I) / STDM(I)
+          RHOS_c(I) = STNSC(I) / STDM(I)
         ELSE
           PCNStem(I) = 0.0
-          RHOS(I) = 0.0
+          RHOS_c(I) = 0.0
         ENDIF
       ENDDO
 
@@ -541,6 +544,7 @@ C=======================================================================
       ELSE IF (DYNAMIC .EQ. OUTPUT .OR. DYNAMIC .EQ. SEASEND) THEN
 !-----------------------------------------------------------------------
       CALL OpCohorts(DYNAMIC, YRPLT,          !Input
+!     &  LFSN, LFAREA, LeafNTot, PCNLeaf, 
      &  LAIMX, SLA, SLAAD, XLAI,              !Output
      &  WTLF, WCRLF, WNRLF, WTNLF,            !Output
      &  STMWT, WCRST, WNRST, WTNST)           !Output
