@@ -16,9 +16,9 @@
         LeafLignin(I)    = LFDM(I) * 0.25
         LeafCellulose(I) = LFDM(I) * 0.25
         LeafHemicell(I)  = LFDM(I) * 0.25
-        StemLignin(I)    = LFDM(I) * 0.25
-        StemCellulose(I) = LFDM(I) * 0.25
-        StemHemicell(I)  = LFDM(I) * 0.25
+        StemLignin(I)    = STDM(I) * 0.25
+        StemCellulose(I) = STDM(I) * 0.25
+        StemHemicell(I)  = STDM(I) * 0.25
       ENDDO
 
 !-----------------------------------------------------------------------
