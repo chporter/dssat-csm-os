@@ -8,6 +8,7 @@ C  06/07/2026 CHP written
 C=======================================================================
 
       SUBROUTINE OpCohorts(DYNAMIC, YRPLT,    !Input
+!     &  LFSN, LFAREA, LeafNTot, PCNLeaf, 
      &  LAIMX, SLA, SLAAD, XLAI,              !Output
      &  WTLF, WCRLF, WNRLF, WTNLF,            !Output
      &  STMWT, WCRST, WNRST, WTNST)           !Output
@@ -24,6 +25,10 @@ C=======================================================================
       REAL, INTENT(OUT) :: WTLF, WCRLF, WNRLF, WTNLF, XLAI
       REAL, INTENT(OUT) :: STMWT, WCRST, WNRST, WTNST
 
+!!     TEMP CHP
+!      REAL, DIMENSION(1:LCMax), INTENT(IN) :: 
+!     &  LFSN, LFAREA, LeafNTot, PCNLeaf
+
       REAL WTLF_calc, WNRLF_calc, WCRLF_calc, XLAI_calc, 
      &  WTNLF_calc, PLEAFN_calc,
      &  SLDOT_calc, WLFDOT_calc, NRUSLF_calc, 
@@ -39,6 +44,9 @@ C=======================================================================
      &  STSN_calc, FHSTEM_calc
 
       REAL AREALF_calc
+
+!     TEMP CHP
+      REAL RHOL_CALC, RHOL_MIN, RHOL_MAX, RHOS_CALC, RHOS_MIN, RHOS_MAX
 
       CHARACTER (len=8) MODEL
       CHARACTER*15 LCOUT, SCOUT
@@ -114,7 +122,7 @@ C=======================================================================
      &  '     CRUSLFc     NRUSLFc',
      &  '     WLIDOTc     WLFDOTc      SLDOTc',
      &  '      WatSen      NMinSn',
-     &  '     FHLEAFc')
+     &  '     FHLEAFc       RHOLc      RHOLmn      RHOLmx')
 
 !-----------------------------------------------------------------------
 !     Initialize 2nd leaf cohort output file
@@ -166,7 +174,7 @@ C=======================================================================
      &  '     CRUSSTc     NRUSSTc',
      &  '     WSIDOTc     WSFDOTc      SSDOTc',
      &  '    WatSenST      NMinSn',
-     &  '     FHSTEMc')
+     &  '     FHSTEMc       RHOSc      RHOSmn      RHOSmx')
 
 !***********************************************************************
 !***********************************************************************
@@ -239,6 +247,20 @@ C=======================================================================
 
       CALL CohortComp()
 
+!     TEMP CHP
+      RHOL_CALC = WCRLF_calc / WTLF_calc
+      RHOL_MIN = RHOL_c(1)
+      RHOL_MAX = RHOL_c(1)
+      RHOS_CALC = WCRST_calc / WTST_calc
+      RHOS_MIN = RHOS_c(1)
+      RHOS_MAX = RHOS_c(1)
+      DO I = 2, NLC
+        RHOL_MIN = MIN(RHOL_c(I), RHOL_MIN)
+        RHOL_MAX = MAX(RHOL_c(I), RHOL_MAX)
+        RHOS_MIN = MIN(RHOS_c(I), RHOS_MIN)
+        RHOS_MAX = MAX(RHOS_c(I), RHOS_MAX)
+      ENDDO
+
       WRITE (LCLUN,310) YEAR, DOY, DAS, DAP,
 !       State
      &  WTLF_calc, XLAI_calc, WCRLF_calc, PLEAFN_calc, 
@@ -248,7 +270,7 @@ C=======================================================================
      &  CRUSLF_calc, NRUSLF_calc, 
      &  WLIDOT_calc, WLFDOT_calc, SLDOT_calc, 
      &  WatSen_calc, LfMineSen_calc, 
-     &  FHLEAF_calc
+     &  FHLEAF_calc, RHOL_CALC, RHOL_MIN, RHOL_MAX
 
 310   FORMAT (1X,I4, 1X,I3, 2I6, 30F12.6)
 
@@ -267,7 +289,7 @@ C=======================================================================
      &  CRUSST_calc, NRUSST_calc, 
      &  WSIDOT_calc, WSFDOT_calc, SSDOT_calc, 
      &  WatSenStem_calc, StMineSen_calc, 
-     &  FHSTEM_calc
+     &  FHSTEM_calc, RHOS_CALC, RHOS_MIN, RHOS_MAX
 
 410   FORMAT (1X,I4, 1X,I3, 2I6, 30F12.6)
 
