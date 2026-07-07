@@ -377,32 +377,42 @@ C=======================================================================
 !     Mobile, non-structural CH2O (WCRLF, WCRST in GROW)
 !     ---------------------------
       CALL COFF("LEAF", MODEL,
-     &  LeafMassDecrease, PCHOLFF, RHOL, SENCLV,  !Input
-     &  WRCLDT_c)                                 !Output
+     &  LeafMassDecrease, PCHOLFF, RHOL_c, SENCLV,  !Input
+     &  WRCLDT_c)                                   !Output
 
       CALL COFF("STEM", MODEL,
-     &  StemMassDecrease, PCHOSTF, RHOS, SENCSV,  !Input
-     &  WRCSDT_c)                                 !Output
+     &  StemMassDecrease, PCHOSTF, RHOS_c, SENCSV,  !Input
+     &  WRCSDT_c)                                   !Output
 
       DO I = 1, NLC
         IF (LFDM(I) > 0.0) THEN
 !         Update mobile CH2O in leaf 
           LFNSC(I) = LFNSC(I) + WRCLDT_c(I)
           IF (LFNSC(I) < 0.0) LFNSC(I) = 0.0
-          RHOL(I) = LFNSC(I) / LFDM(I)
+          RHOL_c(I) = LFNSC(I) / LFDM(I)
+!         Limit mobile CH2O for each cohort to 1.5 * ALPHL(need to ask Ken!!)
+          IF (RHOL_c(I) > 1.5 * ALPHL) THEN
+            LFNSC(I) = LFDM(I) * ALPHL * 1.5  
+            RHOL_c(I) = LFNSC(I) / LFDM(I)
+          ENDIF
         ELSE  !LFDM(I) <= 0.0
           LFNSC(I) = 0.0
-          RHOL(I)  = 0.0
+          RHOL_c(I)  = 0.0
         ENDIF
 
         IF (STDM(I) .GT. 0.0) THEN
 !         Update mobile CH2O in stem
           STNSC(I) = STNSC(I) + WRCSDT_c(I)
           IF (STNSC(I) < 0.0) STNSC(I) = 0.0
-          RHOS(I) = STNSC(I) / STDM(I)
+          RHOS_c(I) = STNSC(I) / STDM(I)
+!         Limit mobile CH2O for each cohort to 1.5 * ALPHS (need to ask Ken!!)
+          IF (RHOS_c(I) > 1.5 * ALPHS) THEN
+            STNSC(I) = STDM(I) * ALPHS * 1.5
+            RHOS_c(I) = STNSC(I) / STDM(I)
+          ENDIF
         ELSE  !STDM(I) <= 0.0
           STNSC(I)    = 0.0
-          RHOS(I) = 0.0
+          RHOS_c(I) = 0.0
         ENDIF
       ENDDO
 
