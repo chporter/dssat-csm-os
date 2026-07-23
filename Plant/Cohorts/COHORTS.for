@@ -118,6 +118,7 @@ C=======================================================================
       SAVE
       EXTERNAL YR_DOY, GETLUN, HEADER, TIMDIF, OPCOHORTS
       EXTERNAL LossAdjust, NOFF, COFF, CohortComp
+      EXTERNAL WARNING, ERROR
 
       INTEGER, INTENT(IN) :: DYNAMIC
       REAL, INTENT(IN) :: DTX, F, NGRLF, NGRST, WLDOTN, WSDOTN
@@ -131,7 +132,10 @@ C=======================================================================
 
       REAL WLDOT_calc, WSDOT_calc
 
-      CHARACTER (len=8) MODEL
+      CHARACTER (len=6), PARAMETER :: ERRKEY = 'COHORT'
+      CHARACTER (len=6)  LCMax_txt
+      CHARACTER (len=8)  MODEL
+      CHARACTER (len=78) MSG(2)
 
       INTEGER YRDOY, YEAR, DOY, DAS, DAP, TIMDIF
       INTEGER I, FirstCohortDAS
@@ -476,6 +480,19 @@ C=======================================================================
 !-------------------------------------------------------------------
 !     Today's new cohort
 !-------------------------------------------------------------------
+!     Check for max number of cohorts.
+!     End the simulation if this new cohort exceeds the limit.
+      IF (NLC == LCMax) THEN
+        WRITE(LCMax_txt,'(G0)') LCMax
+        WRITE(MSG(1),'(A,A,A)')
+     &  "Maximum number of cohorts (",TRIM(ADJUSTL(LCMax_txt)),
+     &  ") reached." 
+        MSG(2) = 
+     &  "Contact DSSAT developers if you need longer simulations."
+        CALL WARNING(2,ERRKEY,MSG)
+        CALL ERROR(ERRKEY,75," ",0)
+      ENDIF
+
 !     If there is any new leaf OR new stem mass today, add a new cohort
       IF (WLDOTN > 0.0 .OR. WSDOTN > 0.0) THEN
         NLC = NLC + 1  !today's new cohort
