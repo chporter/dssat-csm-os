@@ -240,13 +240,32 @@ c     MJ, Mar 2008: added HDATE_YR and HDATE_DOY
       WRITE (HEADER(5),310) EXPER,CG,ENAME(1:50)
       WRITE (HEADER(6),312) PATHEX(1:62)
   312 FORMAT (1X,'DATA PATH ',5X,':',1X,A)
+
+
+!     TEMP CHP
+!     Try printing both treatment number and rotation number. 
+!     Let's see what GBuild does.
+
+!     OLD CODE:
+!      IF (INDEX('FQ',RNMODE) > 0) THEN
+!        WRITE (HEADER(7),320) MOD(CONTROL%ROTNUM,1000),TITLET, MODEL
+!      ELSE
+!        WRITE (HEADER(7),320) MOD(TRTNO,1000),TITLET, MODEL
+!      ENDIF
+!      WRITE (HEADER(8),'(" ")')
+!      I = 9; HEADERS%ShortCount = I-2
+
+!     NEW CODE
       IF (INDEX('FQ',RNMODE) > 0) THEN
-        WRITE (HEADER(7),320) MOD(CONTROL%ROTNUM,1000),TITLET, MODEL
-      ELSE
-        WRITE (HEADER(7),320) MOD(TRTNO,1000),TITLET, MODEL
+        WRITE (HEADER(7),319) MOD(CONTROL%ROTNUM,1000),TITLET, MODEL
       ENDIF
-      WRITE (HEADER(8),'(" ")')
-      I = 9; HEADERS%ShortCount = I-2
+      WRITE (HEADER(8),320) MOD(TRTNO,1000),TITLET, MODEL
+
+      WRITE (HEADER(9),'(" ")')
+      I = 10; HEADERS%ShortCount = I-2
+
+!     END TEMP CHP
+
       HEADERS % ICOUNT  = I-1
       HEADERS % HEADER = HEADER
       HEADERS % RUN    = RUN
@@ -443,6 +462,7 @@ C-----------------------------------------------------------------------
 
   300 FORMAT (1X,'MODEL',10X,':',1X,A8,' - ',A16)
   310 FORMAT (1X,'EXPERIMENT',5X,':',1X,A8,1X,A2,1X,A50)
+  319 FORMAT (1X,'ROTATION ',I3, 3X,':',1X,A25,1X,A8) !TEMP CHP
   320 FORMAT (1X,'TREATMENT',I3, 3X,':',1X,A25,1X,A8)
   330 FORMAT (1X,'CROP',11X,':',1X,A16,1X,'CULTIVAR :',A17,1X,
      &        'ECOTYPE :',A6)
