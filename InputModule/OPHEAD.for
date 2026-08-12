@@ -258,11 +258,12 @@ c     MJ, Mar 2008: added HDATE_YR and HDATE_DOY
 !     NEW CODE
       IF (INDEX('FQ',RNMODE) > 0) THEN
         WRITE (HEADER(7),319) MOD(CONTROL%ROTNUM,1000),TITLET, MODEL
+      ELSE
+        WRITE (HEADER(7),320) MOD(TRTNO,1000),TITLET, MODEL
       ENDIF
-      WRITE (HEADER(8),320) MOD(TRTNO,1000),TITLET, MODEL
 
-      WRITE (HEADER(9),'(" ")')
-      I = 10; HEADERS%ShortCount = I-2
+      WRITE (HEADER(8),'(" ")')
+      I = 9; HEADERS%ShortCount = I-2
 
 !     END TEMP CHP
 
