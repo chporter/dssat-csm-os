@@ -91,6 +91,7 @@ C-----------------------------------------------------------------------
         STFRZ = 0.0
         DO I = 1, NLC
           STFRZ(I) = (STDM(I) - StemTotSen(I) - STNMN(I) / 0.16) * FRZDL
+          STFRZ(I) = MAX(0.0, MIN(STFRZ(I), STDM(I)))
         ENDDO
 
       ENDIF

@@ -90,6 +90,7 @@ C-----------------------------------------------------------------------
       REAL LFNSEN, SLMDOT, SRMDOT, SSMDOT, SSRMDOT 
       REAL LFSCMOB, RTSCMOB, SRSCMOB, STSCMOB, TSCMOB
       REAL LFSNMOB, RTSNMOB, SRSNMOB, STSNMOB, TSNMOB
+      REAL STNSEN
 
       REAL CMINELF, CMINERT, CMINESH, CMINESR, CMINEST
       REAL NMINELF, NMINERT, NMINESR, NMINEST  !NMINESH, 
@@ -137,17 +138,18 @@ C-----------------------------------------------------------------------
 
       REAL, DIMENSION(LCMax) :: STNMINE_c, CMINEST_c, 
      &    NMINEST_c, SSNDOT_c
-      REAL STNMINE_sum, STSNMOB_sum, !STLTSEN_sum, !STNSEN_sum, 
-     &    NMINEST_sum, StemTotSen_sum, !SSMDOT_sum, SSNDOT_sum, 
+      REAL STNMINE_sum, STSNMOB_sum, STLTSEN_sum, STNSEN_sum, 
+     &    NMINEST_sum, StemTotSen_sum, SSMDOT_sum, SSNDOT_sum, 
      &    STSENWT_sum, CMINEST_sum, STCMINE_sum 
 
 !=========================================================================
 !    TEMP CHP Add printout for SENESMOB variables
       EXTERNAL YR_DOY, HEADER
       TYPE (ControlType) CONTROL
-      CHARACTER*9 OUTSN  !SENES.OUT
-      CHARACTER*10 OUTSN2  !SENES2.OUT
-      INTEGER NOUTDG, NOUTDG2, ERRNUM, YEAR, DOY, DAP, YRPLT
+      CHARACTER*13 OUTLSN  !LeafSenes.OUT
+      CHARACTER*13 OUTSSN  !StemSenes.OUT
+      CHARACTER*10 OUTSN2  !SENES2.OUT - whole leaf only output
+      INTEGER NOUTDGL, NOUTDGS, NOUTDG2, ERRNUM, YEAR, DOY, DAP, YRPLT
       LOGICAL FEXIST
       CALL GET(CONTROL)
       DAS   = CONTROL % DAS
@@ -393,8 +395,11 @@ C    Find and Read Surviving section  Added by Diego
 !=========================================================================
 !     TEMP CHP Add printout for for_senmob variables
 
-          OUTSN  = 'SENES.OUT'
-          CALL GETLUN('OUTSN',  NOUTDG)
+          OUTLSN  = 'LeafSenes.OUT'
+          CALL GETLUN('OUTLSN',  NOUTDGL)
+
+          OUTSSN  = 'StemSenes.OUT'
+          CALL GETLUN('OUTSSN',  NOUTDGS)
 
           OUTSN2  = 'SENES2.OUT'
           CALL GETLUN('OUTSN2',  NOUTDG2)
@@ -503,25 +508,48 @@ C    Find and Read Surviving section  Added by Diego
       SLMDOT_sum  = 0.0
       WaterSen_sum= 0.0
 
+!     Stem cohorts
+      CMINEST_c  = 0.0
+      StemTotSen = 0.0
+      STCMINE_c  = 0.0
+      STNMINE_c  = 0.0
+      STNMNSN    = 0.0
+      STNSEN_c   = 0.0
+      STSENWT_c  = 0.0
+      STSNMOB_c  = 0.0
+      STWSSN     = 0.0
+      STLTSEN_c  = 0.0
+      NMINEST_c  = 0.0
+      SSMDOT_c   = 0.0
+      SSNDOT_c   = 0.0
+
+      StemTotSen_SUM = 0.0
+      STNMINE_sum = 0.0
+      STNSEN_sum  = 0.0
+      STSNMOB_sum = 0.0
+      STLTSEN_sum   = 0.0
+      NMINEST_sum = 0.0
+      SSMDOT_sum  = 0.0
+      SSNDOT_sum= 0.0
 
 !=========================================================================
 !     TEMP CHP Add printout for SENESMOB variables
 
-!       Initialize daily SENESMOB output file      
-        INQUIRE (FILE = OUTSN, EXIST = FEXIST)
+!       Initialize daily Leaf senescence output file      
+        INQUIRE (FILE = OUTLSN, EXIST = FEXIST)
         IF (FEXIST) THEN
-          OPEN (UNIT = NOUTDG, FILE = OUTSN, STATUS = 'OLD',
+          OPEN (UNIT = NOUTDGL, FILE = OUTLSN, STATUS = 'OLD',
      &      IOSTAT = ERRNUM, POSITION = 'APPEND')
         ELSE
-          OPEN (UNIT = NOUTDG, FILE = OUTSN, STATUS = 'NEW',
+          OPEN (UNIT = NOUTDGL, FILE = OUTLSN, STATUS = 'NEW',
      &      IOSTAT = ERRNUM)
-          WRITE(NOUTDG,'("*SENESMOB OUTPUT FILE")')
+          WRITE(NOUTDGL,'("*Leaf senmob OUTPUT FILE")')
         ENDIF
 
         !Write headers
-        CALL HEADER(SEASINIT, NOUTDG, CONTROL % RUN)
+        CALL HEADER(SEASINIT, NOUTDGL, CONTROL % RUN)
 
-        WRITE (NOUTDG,200)
+        WRITE (NOUTDGL,200)
   200   FORMAT('@YEAR DOY   DAS   DAP',
      &   '      TotSen      NatSen     NMobSen    LoLitSen',
      &   '    WaterSen      SLMDOT      Nmob_a      Nmob_p',
@@ -530,9 +558,33 @@ C    Find and Read Surviving section  Added by Diego
      &   '    WatSen_c    SLMDOT_c     Nmoba_c     Nmobp_c',
      &   '    Nmobmp_c    Cminep_c    Cminempc')
 
+!       Initialize daily Stem senescence output file      
+        INQUIRE (FILE = OUTSSN, EXIST = FEXIST)
+        IF (FEXIST) THEN
+          OPEN (UNIT = NOUTDGS, FILE = OUTSSN, STATUS = 'OLD',
+     &      IOSTAT = ERRNUM, POSITION = 'APPEND')
+        ELSE
+          OPEN (UNIT = NOUTDGS, FILE = OUTSSN, STATUS = 'NEW',
+     &      IOSTAT = ERRNUM)
+          WRITE(NOUTDGS,'("*Stem senmob OUTPUT FILE")')
+        ENDIF
+
+        !Write headers
+        CALL HEADER(SEASINIT, NOUTDGS, CONTROL % RUN)
+
+        WRITE (NOUTDGS,205)
+  205   FORMAT('@YEAR DOY   DAS   DAP',
+     &   '      TotSen      NatSen     NMobSen    LoLitSen',
+     &   '    WaterSen      SSMDOT      Nmob_a      Nmob_p',
+     &   '     Nmob_mp     Cmine_p    Cmine_mp',
+     &   '    TotSen_c    NatSen_c    NMbSen_c    LitSen_c',
+     &   '    WatSen_c    SSMDOT_c     Nmoba_c     Nmobp_c',
+     &   '    Nmobmp_c    Cminep_c    Cminempc')
 
 
-!       Initialize daily SENESMOB output file      
+
+
+!       Initialize daily Leaf senescence (whole leaf only) output file
         INQUIRE (FILE = OUTSN2, EXIST = FEXIST)
         IF (FEXIST) THEN
           OPEN (UNIT = NOUTDG2, FILE = OUTSN2, STATUS = 'OLD',
@@ -652,6 +704,30 @@ C    Find and Read Surviving section  Added by Diego
       NMINELF_sum = 0.0
       SLMDOT_sum  = 0.0
       WaterSen_sum= 0.0
+
+!     Stem cohorts
+      CMINEST_c  = 0.0
+      StemTotSen = 0.0
+      STCMINE_c  = 0.0
+      STNMINE_c  = 0.0
+      STNMNSN    = 0.0
+      STNSEN_c   = 0.0
+      STSENWT_c  = 0.0
+      STSNMOB_c  = 0.0
+      STWSSN     = 0.0
+      STLTSEN_c  = 0.0
+      NMINEST_c  = 0.0
+      SSMDOT_c   = 0.0
+      SSNDOT_c   = 0.0
+
+      StemTotSen_SUM = 0.0
+      STNMINE_sum = 0.0
+      STNSEN_sum  = 0.0
+      STSNMOB_sum = 0.0
+      STLTSEN_sum   = 0.0
+      NMINEST_sum = 0.0
+      SSMDOT_sum  = 0.0
+      SSNDOT_sum= 0.0
 
 !=========================================================================
 
@@ -931,12 +1007,14 @@ C-----------------------------------------------------------------------
         SSDOT = SSDOT + SSNDOT
         SSDOT = MIN(SSDOT, 0.1 * STMWT)
         SSNDOT = SSDOT - (SSMDOT + STSENWT + STLTSEN)
+        SSNDOT = MAX(0.0, SSNDOT)
 
         DO I = 1, NLC
           SSNDOT_c(I) = WaterSen_c(I) * PORPT
           StemTotSen(I) = StemTotSen(I) + SSNDOT_c(I)
           StemTotSen(I) = MIN(StemTotSen(I), 0.1 * STDM(I))
           SSNDOT_c(I) = StemTotSen(I) - (SSMDOT_c(I) + STLTSEN_c(I))
+          SSNDOT_c(I) = MAX(0.0, SSNDOT_c(I))
         ENDDO
 
 C-----------------------------------------------------------------------
@@ -1002,6 +1080,12 @@ C-----------------------------------------------------------------------
      &    + STLTSEN_c(I) * (PCNStem(I) / 100. - PROSTF * 0.16)
         ENDDO
         STSNMOB_sum = SUM(STSNMOB_c)
+
+!       TEMP CHP
+!        IF (ABS(STSNMOB_sum - STSNMOB) > 1.E-4) THEN
+           WRITE(3224,'(I7,1X,A,1X,2F10.5)') 
+     &       YRDOY, "STSNMOB", STSNMOB_sum, STSNMOB
+!        ENDIF
 
         SRSNMOB = SSRMDOT * (PCNSR / 100 - 
      &    (SENNSRV * (PCNSR / 100 - PROSRF*0.16) + PROSRF*0.16))
@@ -1335,17 +1419,26 @@ C    1-12-2024 KJB and DP
 !***********************************************************************
       ELSEIF (DYNAMIC .EQ. OUTPUT) THEN
 
-        WRITE (NOUTDG,300)
+        WRITE (NOUTDGL,300)
      &   YEAR, DOY, DAS, DAP, 
      &   SLDOT, LFNSEN, LFSENWT, LTSEN, SLNDOT, SLMDOT,
      &   LFSNMOB, NMINELF, LFNMINE, CMINELF, LFCMINE, 
      &   LeafTotSen_sum, LFNSEN_sum, LFSENWT_sum, LTSEN_sum, 
      &   WaterSen_sum, SLMDOT_sum, 
-     &   LFSNMOB_sum, NMINELF_sum, LFNMINE_sum, CMINELF_sum,LFCMINE_sum,
-     &   StemTotSen_sum, STCMINE_sum, CMINEST_sum
+     &   LFSNMOB_sum, NMINELF_sum, LFNMINE_sum, CMINELF_sum,LFCMINE_sum
 
   300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
      &    50F12.6)
+
+        SSMDOT_SUM = SUM(SSMDOT_C)
+
+        WRITE (NOUTDGS,300)
+     &   YEAR, DOY, DAS, DAP, 
+     &   SSDOT, STNSEN, STSENWT, STLTSEN, SSNDOT, SSMDOT,
+     &   STSNMOB, NMINEST, STNMINE, CMINEST, STCMINE, 
+     &   StemTotSen_sum, STNSEN_sum, STSENWT_sum, STLTSEN_sum, 
+     &   SSNDOT_sum, SSMDOT_sum, 
+     &   STSNMOB_sum, NMINEST_sum, STNMINE_sum, CMINEST_sum,STCMINE_sum
 
         WRITE (NOUTDG2,300)
      &   YEAR, DOY, DAS, DAP, 
@@ -1360,7 +1453,8 @@ C    1-12-2024 KJB and DP
 !***********************************************************************
       ELSE IF (DYNAMIC .EQ. SEASEND) THEN
 C-----------------------------------------------------------------------
-          CLOSE (NOUTDG)
+          CLOSE (NOUTDGL)
+          CLOSE (NOUTDGS)
           CLOSE (NOUTDG2)
 
 !     end temp chp

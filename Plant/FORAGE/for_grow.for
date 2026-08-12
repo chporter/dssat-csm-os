@@ -536,7 +536,8 @@ C-----------------------------------------------------------------------
      &  '       WSDOT       SCADD       SNADD      CRUSST',
      &  '      NRUSST      WSIDOT      WSFDOT       SSDOT',
      &  '      SSNDOT       NSOFF       NSDOT',
-     &  '       NGRST      WSDOTN      FHSTEM        RHOS')
+     &  '       NGRST      WSDOTN      FHSTEM        RHOS',
+     &  '      WRCSDT')
 
 !     end temp chp
 !=========================================================================
@@ -1276,6 +1277,10 @@ C-----------------------------------------------------------------------
       CSOFF = (SSMDOT + STLTSEN + STSENWT) * 
      &    (SENCSV * (RHOS - PCHOSTF) + PCHOSTF)
      &    + (SSNDOT + WSIDOT + WSFDOT) * RHOS  
+
+!     temp chp
+      write(3111,'(A,2I7,3F15.8)') 
+     &  'for_grow ',yrdoy,0,CSOFF, CRUSST, CADST - STCADDM
 
 C--------------------------------------------
 C PDA 5/6/2010  ADDED CODE FOR FORAGE HARVEST 
@@ -2197,7 +2202,8 @@ C-----------------------------------------------------------------------
      &   STMWT, WCRST, PCNST, WTNST, WNRST, WTNST - WNRST,
      &   WSDOT, SCADD, SNADD, CRUSST, NRUSST/0.16, 
      &   WSIDOT, WSFDOT, SSDOT, SSNDOT, 
-     &   NSOFF, NSDOT, NGRST, WSDOTN, FHSTEM, RHOS
+     &   NSOFF, NSDOT, NGRST, WSDOTN, FHSTEM, RHOS,
+     &   WRCSDT
 
   300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
      &    50F12.6)

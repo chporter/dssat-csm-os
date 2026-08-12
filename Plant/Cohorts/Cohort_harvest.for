@@ -38,9 +38,8 @@
       REAL ADF_Stem, NDF_Stem
       REAL TotHarvested, FHTOT
 
-!!     temp chp
-!      REAL LFNSC_calc, RHOL_calc
-!      REAL STNSC_calc, RHOS_calc
+!     temp chp
+      REAL RHOL_calc, RHOS_calc
 
 !-----------------------------------------------------------------------
       TotHarvested = 0.0
@@ -111,12 +110,10 @@
           ADF_Stem = (StemLignin(I)+StemCellulose(I)+StemHemicell(I))/3.
           NDF_Stem = (StemLignin(I)+StemCellulose(I)+StemHemicell(I))/4.
 
-!!         ---------------------------------
-!!         temp chp
-!          LFNSC_calc = SUM(LFNSC)
-!!         RHOL(I) = LFNSC(I) / LFDM(I)
-!          RHOL_calc = LFNSC_calc / WTLF
-!!         ---------------------------------
+!         ---------------------------------
+!         temp chp
+          RHOL_calc = SUM(LFNSC) / WTLF
+!         ---------------------------------
 
 !         Update leaf and stem composition
           LFDM(I) = LFDM(I) - FHLEAF_c(I)
@@ -139,12 +136,11 @@
             LFNSN(I) = 0.0
           ENDIF
 
-!!         ---------------------------------
-!!         temp chp
-!          STNSC_calc = SUM(STNSC)
-!!         RHOS(I) = STNSC(I) / STDM(I)
-!          RHOS_calc = STNSC_calc / STMWT
-!!         ---------------------------------
+!         ---------------------------------
+!         temp chp
+!         use average RHOS instead of cohort value
+          RHOS_calc = SUM(STNSC) / STMWT
+!         ---------------------------------
 
           STDM(I) = STDM(I) - FHSTEM_c(I)
           IF (STDM(I) > 0.0) THEN
@@ -175,9 +171,11 @@
 !       Cohort harvest values may have been adjusted, recalculate totals
         FHLEAF = SUM(FHLEAF_c)
         FHSTEM = SUM(FHSTEM_c)
-
         FHTOT = FHLEAF + FHSTEM
-        WRITE(4353,'(I8, 3F10.2)') YRDOY, FHLEAF, FHSTEM, FHTOT
+
+!       temp chp
+        WRITE(4353,'(I8, 10F10.2)') 
+     &    YRDOY, WTLF, STMWT, FHLEAF, FHSTEM, FHTOT
       ENDIF
 
       CALL PUT('MHARVEST','ADF', ADF)

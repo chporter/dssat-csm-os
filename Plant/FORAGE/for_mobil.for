@@ -155,6 +155,11 @@ C     NMINELF SHOULD HAVE BEEN LFNMINE, ETC. IN EARLIER VERSION, NOW NMINEP=TSNM
            STNMN_SUM = STNMN_SUM + STNMN(I)
          END DO
 
+!       TEMP CHP
+         IF (ABS(STNMN_SUM -NRUSST) > 1.E-4) THEN
+           WRITE(3224,'(A,1X,2F10.5)') "STNMN", STNMN_SUM, NRUSST
+         ENDIF
+
 C-----------------------------------------------------------------------
 !    Calculate proportion of N Mined from Leaf, Stem,Root, Shell, and
 !      Storage - Use to put back excess mobilized N

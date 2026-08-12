@@ -9,6 +9,9 @@ C=======================================================================
 
       SUBROUTINE OpCohorts(DYNAMIC, YRPLT,    !Input
 !     &  LFSN, LFAREA, LeafNTot, PCNLeaf, 
+     &  WRCLDT_c, WRCSDT_c,   !TEMP CHP
+     &  WLDOTN, ALPHL, WSDOTN, ALPHS,  !TEMP CHP
+     &  WLDOT_CALC, WSDOT_CALC, !TEMP CHP
      &  LAIMX, SLA, SLAAD, XLAI,              !Output
      &  WTLF, WCRLF, WNRLF, WTNLF,            !Output
      &  STMWT, WCRST, WNRST, WTNST)           !Output
@@ -21,13 +24,16 @@ C=======================================================================
       EXTERNAL YR_DOY, GETLUN, HEADER, TIMDIF, CohortComp
 
       INTEGER, INTENT(IN) :: DYNAMIC, YRPLT
+
       REAL, INTENT(OUT) :: SLA, SLAAD, LAIMX
       REAL, INTENT(OUT) :: WTLF, WCRLF, WNRLF, WTNLF, XLAI
       REAL, INTENT(OUT) :: STMWT, WCRST, WNRST, WTNST
 
-!!     TEMP CHP
-!      REAL, DIMENSION(1:LCMax), INTENT(IN) :: 
+!     TEMP CHP
+      REAL, DIMENSION(1:LCMax), INTENT(IN) :: 
 !     &  LFSN, LFAREA, LeafNTot, PCNLeaf
+     & WRCLDT_c, WRCSDT_c   !TEMP CHP
+      REAL WRCLDT_calc, WRCSDT_calc
 
       REAL WTLF_calc, WNRLF_calc, WCRLF_calc, XLAI_calc, 
      &  WTNLF_calc, PLEAFN_calc,
@@ -47,6 +53,7 @@ C=======================================================================
 
 !     TEMP CHP
       REAL RHOL_CALC, RHOL_MIN, RHOL_MAX, RHOS_CALC, RHOS_MIN, RHOS_MAX
+      REAL WLDOTN, ALPHL, WSDOTN, ALPHS, WLDOT_calc, WSDOT_calc
 
       CHARACTER (len=8) MODEL
       CHARACTER*15 LCOUT, SCOUT
@@ -122,7 +129,8 @@ C=======================================================================
      &  '     CRUSLFc     NRUSLFc',
      &  '     WLIDOTc     WLFDOTc      SLDOTc',
      &  '      WatSen      NMinSn',
-     &  '     FHLEAFc       RHOLc      RHOLmn      RHOLmx')
+     &  '     FHLEAFc       RHOLc      RHOLmn      RHOLmx',
+     &  '     WRCLDTc      WLDOTc')
 
 !-----------------------------------------------------------------------
 !     Initialize 2nd leaf cohort output file
@@ -174,7 +182,8 @@ C=======================================================================
      &  '     CRUSSTc     NRUSSTc',
      &  '     WSIDOTc     WSFDOTc      SSDOTc',
      &  '    WatSenST      NMinSn',
-     &  '     FHSTEMc       RHOSc      RHOSmn      RHOSmx')
+     &  '     FHSTEMc       RHOSc      RHOSmn      RHOSmx',
+     &  '     WRCSDTc      WSDOTc')
 
 !***********************************************************************
 !***********************************************************************
@@ -193,6 +202,7 @@ C=======================================================================
       LCADD_calc  = SUM(LFCAD)        !mobile CH2O in GROW
       LNADD_calc  = SUM(LFNAD)        !mobile N in GROW
       FHLEAF_calc = SUM(FHLEAF_c)     !harvested
+      WRCLDT_calc = SUM(WRCLDT_c) + WLDOTN * ALPHL
 
 !     Total states over all leaf cohorts
       WTLF_calc  = SUM(LFDM)          !Leaf mass g/m2
@@ -213,6 +223,7 @@ C=======================================================================
       SCADD_calc  = SUM(STCAD)        !mobile CH2O in GROW
       SNADD_calc  = SUM(STNAD)        !mobile N in GROW
       FHSTEM_calc = SUM(FHSTEM_c)     !harvested
+      WRCSDT_calc = SUM(WRCSDT_c) + WSDOTN * ALPHS
 
 !     Total states over all stem cohorts
       WTST_calc  = SUM(STDM)          !Stem mass g/m2
@@ -248,10 +259,19 @@ C=======================================================================
       CALL CohortComp()
 
 !     TEMP CHP
-      RHOL_CALC = WCRLF_calc / WTLF_calc
+      if (wtlf_calc > 0.0) then
+        RHOL_CALC = WCRLF_calc / WTLF_calc
+      else
+        RHOL_CALC = 0.0
+      endif
       RHOL_MIN = RHOL_c(1)
       RHOL_MAX = RHOL_c(1)
-      RHOS_CALC = WCRST_calc / WTST_calc
+
+      if (wtst_calc > 0.0) then
+        RHOS_CALC = WCRST_calc / WTST_calc
+      else
+        RHOS_CALC = 0.0
+      endif
       RHOS_MIN = RHOS_c(1)
       RHOS_MAX = RHOS_c(1)
       DO I = 2, NLC
@@ -270,7 +290,8 @@ C=======================================================================
      &  CRUSLF_calc, NRUSLF_calc, 
      &  WLIDOT_calc, WLFDOT_calc, SLDOT_calc, 
      &  WatSen_calc, LfMineSen_calc, 
-     &  FHLEAF_calc, RHOL_CALC, RHOL_MIN, RHOL_MAX
+     &  FHLEAF_calc, RHOL_CALC, RHOL_MIN, RHOL_MAX, WRCLDT_calc,
+     &  WLDOT_calc
 
 310   FORMAT (1X,I4, 1X,I3, 2I6, 30F12.6)
 
@@ -289,7 +310,8 @@ C=======================================================================
      &  CRUSST_calc, NRUSST_calc, 
      &  WSIDOT_calc, WSFDOT_calc, SSDOT_calc, 
      &  WatSenStem_calc, StMineSen_calc, 
-     &  FHSTEM_calc, RHOS_CALC, RHOS_MIN, RHOS_MAX
+     &  FHSTEM_calc, RHOS_CALC, RHOS_MIN, RHOS_MAX, WRCSDT_calc,
+     &  WSDOT_calc
 
 410   FORMAT (1X,I4, 1X,I3, 2I6, 30F12.6)
 

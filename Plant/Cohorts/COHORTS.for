@@ -197,6 +197,9 @@ C=======================================================================
 
       CALL OpCohorts(DYNAMIC, YRPLT,          !Input
 !     &  LFSN, LFAREA, LeafNTot, PCNLeaf, 
+     &  WRCLDT_c, WRCSDT_c,   !TEMP CHP
+     &  WLDOTN, ALPHL, WSDOTN, ALPHS,  !TEMP CHP
+     &  WLDOT_CALC, WSDOT_CALC, !TEMP CHP
      &  LAIMX, SLA, SLAAD, XLAI,              !Output
      &  WTLF, WCRLF, WNRLF, WTNLF,            !Output
      &  STMWT, WCRST, WNRST, WTNST)           !Output
@@ -244,6 +247,9 @@ C=======================================================================
 
       CALL OpCohorts(DYNAMIC, YRPLT,          !Input
 !     &  LFSN, LFAREA, LeafNTot, PCNLeaf, 
+     &  WRCLDT_c, WRCSDT_c,   !TEMP CHP
+     &  WLDOTN, ALPHL, WSDOTN, ALPHS,  !TEMP CHP
+     &  WLDOT_CALC, WSDOT_CALC, !TEMP CHP
      &  LAIMX, SLA, SLAAD, XLAI,              !Output
      &  WTLF, WCRLF, WNRLF, WTNLF,            !Output
      &  STMWT, WCRST, WNRST, WTNST)           !Output
@@ -325,9 +331,9 @@ C=======================================================================
 !       Leaf dry matter increase (WLDOT in GROW)
         WLDOT_cohort = 
      &      LFCAD(I)            !Reserve C = LCADD
+     &    - LFCMN(I)            !C mined = CRUSLF
      &    + LFNAD(I)/0.16       !Reserve N = LNADD
      &    - LFNMN(I)/0.16       !N mined = NRUSLF/0.16 
-     &    - LFCMN(I)            !C mined = CRUSLF
      &    - LeafMassDecrease(I) !freez, pst, senes=SLDOT+WLIDOT+WLFDOT
 
 !       Leaf dry matter (WTLF in GROW)
@@ -397,11 +403,11 @@ C=======================================================================
           LFNSC(I) = LFNSC(I) + WRCLDT_c(I)
           IF (LFNSC(I) < 0.0) LFNSC(I) = 0.0
           RHOL_c(I) = LFNSC(I) / LFDM(I)
-!         Limit mobile CH2O for each cohort to 1.5 * ALPHL(need to ask Ken!!)
-          IF (RHOL_c(I) > 1.5 * ALPHL) THEN
-            LFNSC(I) = LFDM(I) * ALPHL * 1.5  
-            RHOL_c(I) = LFNSC(I) / LFDM(I)
-          ENDIF
+!!         Limit mobile CH2O for each cohort to 1.5 * ALPHL(need to ask Ken!!)
+!          IF (RHOL_c(I) > 1.5 * ALPHL) THEN
+!            LFNSC(I) = LFDM(I) * ALPHL * 1.5  
+!            RHOL_c(I) = LFNSC(I) / LFDM(I)
+!          ENDIF
         ELSE  !LFDM(I) <= 0.0
           LFNSC(I) = 0.0
           RHOL_c(I)  = 0.0
@@ -412,11 +418,11 @@ C=======================================================================
           STNSC(I) = STNSC(I) + WRCSDT_c(I)
           IF (STNSC(I) < 0.0) STNSC(I) = 0.0
           RHOS_c(I) = STNSC(I) / STDM(I)
-!         Limit mobile CH2O for each cohort to 1.5 * ALPHS (need to ask Ken!!)
-          IF (RHOS_c(I) > 1.5 * ALPHS) THEN
-            STNSC(I) = STDM(I) * ALPHS * 1.5
-            RHOS_c(I) = STNSC(I) / STDM(I)
-          ENDIF
+!!         Limit mobile CH2O for each cohort to 1.5 * ALPHS (need to ask Ken!!)
+!          IF (RHOS_c(I) > 1.5 * ALPHS) THEN
+!            STNSC(I) = STDM(I) * ALPHS * 1.5
+!            RHOS_c(I) = STNSC(I) / STDM(I)
+!          ENDIF
         ELSE  !STDM(I) <= 0.0
           STNSC(I)    = 0.0
           RHOS_c(I) = 0.0
@@ -562,6 +568,9 @@ C=======================================================================
 !-----------------------------------------------------------------------
       CALL OpCohorts(DYNAMIC, YRPLT,          !Input
 !     &  LFSN, LFAREA, LeafNTot, PCNLeaf, 
+     &  WRCLDT_c, WRCSDT_c,   !TEMP CHP
+     &  WLDOTN, ALPHL, WSDOTN, ALPHS,  !TEMP CHP
+     &  WLDOT_CALC, WSDOT_CALC, !TEMP CHP
      &  LAIMX, SLA, SLAAD, XLAI,              !Output
      &  WTLF, WCRLF, WNRLF, WTNLF,            !Output
      &  STMWT, WCRST, WNRST, WTNST)           !Output
