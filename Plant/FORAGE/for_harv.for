@@ -495,7 +495,7 @@ C-----------------------------------------------------------------------
         FILEMOW = PATHEX(1:(PATHL)) // mowfile
       ENDIF
 
-      INQUIRE(FILE = MOWFILE, EXIST = FEXIST)
+      INQUIRE(FILE = FILEMOW, EXIST = FEXIST)
       IF (.NOT. FEXIST) THEN
         MSG(1) = "Mow file missing."
         MSG(2) = MOWFILE
