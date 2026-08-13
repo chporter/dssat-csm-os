@@ -511,7 +511,11 @@ C=======================================================================
         LeafNTot(NLC) = NGRLF            !total leaf N (g/m2)
         LFSN(NLC)   = PROLFF * 0.16 * (WLDOTN - LFNSC(NLC))  !struc N
         LFNSN(NLC)  = NGRLF - LFSN(NLC)  !non-struct N (mobile)
-        PCNLeaf(NLC) = LeafNTot(NLC) / LFDM(NLC) * 100.  ! % N
+        IF (LFDM(NLC) > 0.0) THEN
+          PCNLeaf(NLC) = LeafNTot(NLC) / LFDM(NLC) * 100.  ! % N
+        ELSE
+          PCNLeaf(NLC) = 0.0
+        ENDIF
 
 !       New growth for today's stem cohort
         STDM(NLC)  = WSDOTN             !stem dry mass
@@ -519,7 +523,11 @@ C=======================================================================
         StemNTot(NLC) = NGRST           !total stem N (g/m2)
         STSN(NLC)  = PROSTF * 0.16 * (WSDOTN - STNSC(NLC))  !struc N
         STNSN(NLC) = NGRST - STSN(NLC)  !non-struct N (mobile)
-        PCNStem(NLC) = StemNTot(NLC) / STDM(NLC) * 100.  ! % N
+        IF (STDM(NLC) > 0.0) THEN
+          PCNStem(NLC) = StemNTot(NLC) / STDM(NLC) * 100.  ! % N
+        ELSE
+          PCNStem(NLC) = 0.0
+        ENDIF
       ENDIF
 
 !***********************************************************************
