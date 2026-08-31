@@ -196,7 +196,7 @@ C=======================================================================
 
       REAL RMIN, SDLIP, WLFI, WSTI, WRTI
       REAL CLW, CSW
-      REAL LCADD, LNADD   !TEMP CHP
+      REAL LCADD, LNADD, SCADD, SNADD   !TEMP CHP
 
 !     Surface and soil residue due to daily senescence of plant matter
 !      REAL SENCLN(0:NL, 3), SENRT(NL), SENNOD(NL)
@@ -283,7 +283,7 @@ C-----------------------------------------------------------------------
       trtno  = control % trtnum
       run    = control % run
       ename  = control % ename
-      
+
 !     Transfer values from constructed data types into local variables.
       !Don't get DYNAMIC from CONTROL variable because it will not
       ! have EMERG value (set only in CROPGRO).
@@ -526,7 +526,15 @@ C-----------------------------------------------------------------------
      &  '       WLDOT       LCADD       LNADD      CRUSLF',
      &  '      NRUSLF      WLIDOT      WLFDOT       SLDOT'
      &  '      SLNDOT       NLOFF       NLDOT',
-     &  '       NGRLF      WLDOTN')
+     &  '       NGRLF      WLDOTN      FHLEAF        RHOL',
+     &  '      WRCLDT',
+     &  '       STMWT       WCRST       PCNST',
+     &  '       WTNST       WNRST        STSN',
+     &  '       WSDOT       SCADD       SNADD      CRUSST',
+     &  '      NRUSST      WSIDOT      WSFDOT       SSDOT',
+     &  '      SSNDOT       NSOFF       NSDOT',
+     &  '       NGRST      WSDOTN      FHSTEM        RHOS',
+     &  '      WRCSDT')
 
 !     end temp chp
 !=========================================================================
@@ -867,6 +875,10 @@ C--------------------------------------------
       IF (STMWT .GT. 0.0 .AND. FHSTEM .EQ. 0) THEN
         WSDOT = WSDOT + CADST - STCADDM +(NADST - STNADDM)/0.16
       ENDIF
+
+!     temp chp
+      SCADD = CADST - STCADDM 
+      SNADD = (NADST - STNADDM)/0.16
 
 C--------------------------------------------
 
@@ -2151,10 +2163,17 @@ C-----------------------------------------------------------------------
      &   WTLF, XLAI, WCRLF, PCNL, WTNLF, WNRLF, WTNLF - WNRLF,
      &   WLDOT, LCADD, LNADD, CRUSLF, NRUSLF/0.16, 
      &   WLIDOT, WLFDOT, SLDOT, SLNDOT, 
-     &   NLOFF, NLDOT, NGRLF, WLDOTN
+     &   NLOFF, NLDOT, NGRLF, WLDOTN, FHLEAF, RHOL,
+     &   WRCLDT, 
+
+     &   STMWT, WCRST, PCNST, WTNST, WNRST, WTNST - WNRST,
+     &   WSDOT, SCADD, SNADD, CRUSST, NRUSST/0.16, 
+     &   WSIDOT, WSFDOT, SSDOT, SSNDOT, 
+     &   NSOFF, NSDOT, NGRST, WSDOTN, FHSTEM, RHOS,
+     &   WRCSDT
 
   300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
-     &    30F12.6)
+     &    50F12.6)
 
 !     still temp chp...
 
