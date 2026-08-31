@@ -691,52 +691,53 @@ C-----------------------------------------------------------------------
 
 !---------------------------------------------------------------------
 !    CHP 2026-05-11 commented out the following code. See note below.
-!C-----------------------------------------------------------------------
-!C      In this case, the remaining TSNMOB will stay inthe WTNxx pools
-!C-----------------------------------------------------------------------
-!        IF (CMINEA .LT. TSCMOB) THEN
-!          LFSCMOB = LFSCMOB * (CMINEA / TSCMOB)
-!          STSCMOB = STSCMOB * (CMINEA / TSCMOB)
-!          RTSCMOB = RTSCMOB * (CMINEA / TSCMOB)
-!          SRSCMOB = SRSCMOB * (CMINEA / TSCMOB)
-!        ELSE
-!C-----------------------------------------------------------------------
-!C      Otherwise all TSNMOB plus some portion of mobilized N will be used
-!C-----------------------------------------------------------------------
-!!            IF (CMINEP .GT.TSCMOB) THEN
-!          CMINER = (CMINEA - TSCMOB) / (CMINEP - TSCMOB)
-!          ACMINESH = SHCMINE * CMINER
-!          ACMINELF = (LFCMINE - LFSCMOB) * CMINER
-!          ACMINEST = (STCMINE - STSCMOB) * CMINER
-!          ACMINERT = (RTCMINE - RTSCMOB) * CMINER
-!          ACMINESR = (SRCMINE - SRSCMOB) * CMINER
-!
-!!        ENDIF
-!
-!        CRUSLF = LFSCMOB + ACMINELF
-!        CRUSST = STSCMOB + ACMINEST
-!        CRUSRT = RTSCMOB + ACMINERT
-!        CRUSSR = SRSCMOB + ACMINESR
-!        CRUSSH = ACMINESH
+!    TEMP CHP Uncommented code for test
+C-----------------------------------------------------------------------
+C      In this case, the remaining TSNMOB will stay inthe WTNxx pools
+C-----------------------------------------------------------------------
+        IF (CMINEA .LT. TSCMOB) THEN
+          LFSCMOB = LFSCMOB * (CMINEA / TSCMOB)
+          STSCMOB = STSCMOB * (CMINEA / TSCMOB)
+          RTSCMOB = RTSCMOB * (CMINEA / TSCMOB)
+          SRSCMOB = SRSCMOB * (CMINEA / TSCMOB)
+        ELSE
+C-----------------------------------------------------------------------
+C      Otherwise all TSNMOB plus some portion of mobilized N will be used
+C-----------------------------------------------------------------------
+!            IF (CMINEP .GT.TSCMOB) THEN
+          CMINER = (CMINEA - TSCMOB) / (CMINEP - TSCMOB)
+          ACMINESH = SHCMINE * CMINER
+          ACMINELF = (LFCMINE - LFSCMOB) * CMINER
+          ACMINEST = (STCMINE - STSCMOB) * CMINER
+          ACMINERT = (RTCMINE - RTSCMOB) * CMINER
+          ACMINESR = (SRCMINE - SRSCMOB) * CMINER
+
+        ENDIF
+
+        CRUSLF = LFSCMOB + ACMINELF
+        CRUSST = STSCMOB + ACMINEST
+        CRUSRT = RTSCMOB + ACMINERT
+        CRUSSR = SRSCMOB + ACMINESR
+        CRUSSH = ACMINESH
 !      ENDIF
 
-!---------------------------------------------------------------------
-!     CHP 2026-05-11 - TSCMOB, LFSCMOB, STSCMOB, RTSCMOB, and SRSCMOB
-!       are all zero. So the above code simplifies to this:
-
-        IF (CMINEP .GT. 0.0) THEN
-          CMINER = CMINEA / CMINEP
-          ACMINESH = SHCMINE * CMINER
-          ACMINELF = LFCMINE * CMINER
-          ACMINEST = STCMINE * CMINER
-          ACMINERT = RTCMINE * CMINER
-          ACMINESR = SRCMINE * CMINER
-
-          CRUSLF = ACMINELF
-          CRUSST = ACMINEST
-          CRUSRT = ACMINERT
-          CRUSSR = ACMINESR
-          CRUSSH = ACMINESH
+!!---------------------------------------------------------------------
+!!     CHP 2026-05-11 - TSCMOB, LFSCMOB, STSCMOB, RTSCMOB, and SRSCMOB
+!!       are all zero. So the above code simplifies to this:
+!!      temp chp comment out for test
+!       IF (CMINEP .GT. 0.0) THEN
+!          CMINER = CMINEA / CMINEP
+!          ACMINESH = SHCMINE * CMINER
+!          ACMINELF = LFCMINE * CMINER
+!          ACMINEST = STCMINE * CMINER
+!          ACMINERT = RTCMINE * CMINER
+!          ACMINESR = SRCMINE * CMINER
+!
+!          CRUSLF = ACMINELF
+!          CRUSST = ACMINEST
+!          CRUSRT = ACMINERT
+!          CRUSSR = ACMINESR
+!          CRUSSH = ACMINESH
 
 !         ------------------------------------------------
 !         Handle C mining for leaf and stem cohorts
@@ -747,7 +748,7 @@ C-----------------------------------------------------------------------
           CRUSLF_calc = SUM(LFCMN)
           CRUSST_calc = SUM(STCMN)
 !         ------------------------------------------------
-        ENDIF
+!       ENDIF
       ENDIF
 C-----------------------------------------------------------------------
 C      "Original" Forage model modification to code for adding CSAVEV

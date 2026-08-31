@@ -20,9 +20,9 @@ C=======================================================================
 ! ALPHSH, LFSNMOB, RTSNMOB, SHELWT, SRSNMOB, STSNMOB, WCRSH,
 
 !-----------------------------------------------------------------------
-      USE ModuleDefs
-      USE COHORTS_MOD
-
+      USE ModuleDefs     !Definitions of constructed variable types, 
+        ! which contain control information, soil
+        ! parameters, hourly weather data.
       IMPLICIT NONE
       EXTERNAL FIND, ERROR, GETLUN, IGNORE, CURV
       SAVE
@@ -36,7 +36,7 @@ C=======================================================================
       CHARACTER*92 FILECC
 
       INTEGER LUNIO, LNUM, FOUND
-      INTEGER DYNAMIC, II, PATHL, LUNCRP, ERR, LINC, ISECT  !, I
+      INTEGER DYNAMIC, II, PATHL, LUNCRP, ERR, LINC, ISECT
 
       REAL ALPHL, ALPHR, ALPHS, ALPHSR, CADPV, CADVG,  !ALPHSH, 
      &   PG, PGAVL, PGLFMX, PHTMAX, RTWT, STMWT,  !SHELWT,    
@@ -54,11 +54,6 @@ C=======================================================================
       REAL SLDOT, SRDOT, SSDOT, SSRDOT
 
       REAL CURV, LMXSTD, PGREF
-
-!     2025-05-12 chp added leaf cohorts, but now I don't see how
-!       these would be used.
-!      REAL, DIMENSION(LCMax) :: LFCCAP_c, LFMCCAP_c
-!      REAL LFCCAP_sum
 
       PARAMETER (BLANK  = ' ')
       PARAMETER (ERRKEY = 'CH2OREF')
@@ -85,6 +80,7 @@ C-----------------------------------------------------------------------
       RTCDEBT = 0.0
       SRCDEBT = 0.0
       CADVG = 0.0
+
 
 !-----------------------------------------------------------------------
 !       Read data from FILEIO for use in PLANT module
@@ -328,20 +324,10 @@ C-----------------------------------------------------------------------
       if(WTLF .gt. 0.0)then
          LFCCAP = LFMCCAP - WCRLF - (SLDOT * WCRLF/WTLF - LFSCMOB)
          IF (LFCCAP .LE. 0.0) LFCCAP = 0.0
-
-!!        Leaf cohorts
-!         DO I = 1, NLC
-!           LFMCCAP_c(I) = ALPHL * (LFDM(I) - LeafTotSen(I) - LFNSC(I))
-!           LFCCAP_c(I) = LFMCCAP_c(I) - LFNSC(I) 
-!     &                - (LeafTotSen(I) * LFNSC(I) / LFDM(I))
-!           IF (LFCCAP_c(I) < 0.0) LFCCAP_c(I) = 0.0
-!         ENDDO
-
       else
          LFCCAP = 0.0
-!         LFCCAP_c = 0.0
       end if
-!      LFCCAP_sum = SUM(LFCCAP_c)
+
 
       if(STMWT .gt. 0.0)then
          STCCAP = STMCCAP - WCRST - (SSDOT * WCRST/STMWT - STSCMOB)

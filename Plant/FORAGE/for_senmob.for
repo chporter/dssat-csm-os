@@ -22,7 +22,6 @@ C========================================================================
      &    WCRRT,WCRSH, WCRSR, WCRST, WNRLF, WNRRT, WNRSH,       !Input
      &    WNRSR,WNRST, WTLF, XLAI, XPOD,                        !Input
      &    YRDOY, YRSIM, TGRO,                                   !Input
-!     &    PCNLeaf, !PCNStem,                                     !Output
      &    CMINELF, CMINEP, CMINERT, CMINESH, CMINESR,           !Output
      &    CMINEST, CMOBMX, CMOBSR, LAIMOBR, LFCMINE,            !Output
      &    LFSCMOB, LFSENWT, LFSNMOB, LTSEN, NMINELF,            !Output
@@ -581,9 +580,6 @@ C    Find and Read Surviving section  Added by Diego
      &   '    WatSen_c    SSMDOT_c     Nmoba_c     Nmobp_c',
      &   '    Nmobmp_c    Cminep_c    Cminempc')
 
-
-
-
 !       Initialize daily Leaf senescence (whole leaf only) output file
         INQUIRE (FILE = OUTSN2, EXIST = FEXIST)
         IF (FEXIST) THEN
@@ -895,26 +891,25 @@ C-----------------------------------------------------------------------
           LCMP = -(1. / KCAN) * ALOG(ICMP / PAR)
           LTSEN = DTX * (XLAI - LCMP) / TCMP
           LTSEN = MAX(0.0, LTSEN)
-
+        ENDIF
 C-----------------------------------------------------------------------
 C     8/3/05 SJR Change LTSEN from leaf area senesced to the equivalent
 C      leaf mass senesced.  Moved conversion from SLDOT update equation.
 C      For ease of use in calculating DM, CH2O, and N lost in GROW 
 C      subroutine
 C-----------------------------------------------------------------------
-          LTSEN = LTSEN * 10000. / SLAAD 
+       LTSEN = LTSEN * 10000. / SLAAD 
 
-!         Handle leaf cohorts
-!         Probably want to modify this calculation to use age of cohorts
-!         to estimate location in the canopy.
-          IF (WtLeaf > 0.0) THEN
-            DO I = 1, NLC
-              LTSEN_c(I) = LTSEN * LFDM(I) / WtLeaf
-            ENDDO
-          ENDIF
-        ENDIF
+!      Handle leaf cohorts
+!      Probably want to modify this calculation to use age of cohorts
+!      to estimate location in the canopy.
+       IF (WtLeaf > 0.0) THEN
+         DO I = 1, NLC
+           LTSEN_c(I) = LTSEN * LFDM(I) / WtLeaf
+         ENDDO
+       ENDIF
 
-        LTSEN_sum = SUM(LTSEN_c)
+       LTSEN_sum = SUM(LTSEN_c)
 
 C-----------------------------------------------------------------------
 C     Convert area loss to biomass(m2 *10000cm2/m2)/(cm2/g)=g/m2
@@ -982,19 +977,14 @@ C-----------------------------------------------------------------------
         SSDOT = SSMDOT
         StemTotSen = SSMDOT_c
 
-!       CHP 2026-06-08
-!       LFSENWT has a value of zero at this point
-!       so STSENWT here is also zero. 
-!       This is calculated later so comment this code out.
-!        SSDOT = SSDOT + LFSENWT * PORPT
-!        SSDOT = MIN(SSDOT,0.1*STMWT)
-!        STSENWT = SSDOT - SSMDOT
+        SSDOT = SSDOT + LFSENWT * PORPT
+        SSDOT = MIN(SSDOT,0.1*STMWT)
+        STSENWT = SSDOT - SSMDOT
 
 !       Low light senescence of stems
         SSDOT = SSDOT + LTSEN * PORPT
         SSDOT = MIN(SSDOT,0.1*STMWT)
-!       STLTSEN = SSDOT - (SSMDOT + STSENWT)
-        STLTSEN = SSDOT - SSMDOT
+        STLTSEN = SSDOT - (SSMDOT + STSENWT)
 
         DO I = 1, NLC
           StemTotSen(I) = StemTotSen(I) + LTSEN_c(I) * PORPT
@@ -1007,7 +997,6 @@ C-----------------------------------------------------------------------
         SSDOT = SSDOT + SSNDOT
         SSDOT = MIN(SSDOT, 0.1 * STMWT)
         SSNDOT = SSDOT - (SSMDOT + STSENWT + STLTSEN)
-        SSNDOT = MAX(0.0, SSNDOT)
 
         DO I = 1, NLC
           SSNDOT_c(I) = WaterSen_c(I) * PORPT
@@ -1128,7 +1117,6 @@ C-----------------------------------------------------------------------
 !            SRSCMOB = SSRMDOT * ((WCRSR / STRWT) - PCHOSRF)
 !            RTSCMOB = SRMDOT * ((WCRRT / RTWT) - PCHORTF)
 
-!       CHP 2026-05-11 - These values are always zero.
         TSCMOB = LFSCMOB + STSCMOB + SRSCMOB + RTSCMOB 
 
 C-----------------------------------------------------------------------
