@@ -132,6 +132,10 @@ C=======================================================================
 
       REAL WLDOT_calc, WSDOT_calc
 
+!     temp chp
+      REAL LFWT_MAX, LFWT_MIN
+      REAL STMWT_MAX, STMWT_MIN
+
       CHARACTER (len=6), PARAMETER :: ERRKEY = 'COHORT'
       CHARACTER (len=6)  LCMax_txt
       CHARACTER (len=8)  MODEL
@@ -200,6 +204,7 @@ C=======================================================================
      &  WRCLDT_c, WRCSDT_c,   !TEMP CHP
      &  WLDOTN, ALPHL, WSDOTN, ALPHS,  !TEMP CHP
      &  WLDOT_CALC, WSDOT_CALC, !TEMP CHP
+     &  LFWT_MIN, LFWT_MAX, STMWT_MIN, STMWT_MAX, !TEMP CHP
      &  LAIMX, SLA, SLAAD, XLAI,              !Output
      &  WTLF, WCRLF, WNRLF, WTNLF,            !Output
      &  STMWT, WCRST, WNRST, WTNST)           !Output
@@ -250,6 +255,7 @@ C=======================================================================
      &  WRCLDT_c, WRCSDT_c,   !TEMP CHP
      &  WLDOTN, ALPHL, WSDOTN, ALPHS,  !TEMP CHP
      &  WLDOT_CALC, WSDOT_CALC, !TEMP CHP
+     &  LFWT_MIN, LFWT_MAX, STMWT_MIN, STMWT_MAX, !TEMP CHP
      &  LAIMX, SLA, SLAAD, XLAI,              !Output
      &  WTLF, WCRLF, WNRLF, WTNLF,            !Output
      &  STMWT, WCRST, WNRST, WTNST)           !Output
@@ -382,6 +388,19 @@ C=======================================================================
           LFAREA(I)   = 0.0
           LFSLA(I)    = 0.0
         ENDIF
+      ENDDO
+
+!     TEMP CHP
+      LFWT_MIN = LFDM(1)
+      LFWT_MAX = LFDM(1)
+      STMWT_MIN = STDM(1)
+      STMWT_MAX = STDM(1)
+
+      DO I = 2, NLC
+        IF (LFDM(I) > LFWT_MAX) LFWT_MAX = LFDM(I)
+        IF (LFDM(I) < LFWT_MIN) LFWT_MIN = LFDM(I)
+        IF (STDM(I) > STMWT_MAX) STMWT_MAX = STDM(I)
+        IF (STDM(I) < STMWT_MIN) STMWT_MIN = STDM(I)
       ENDDO
 
 !---------------------------------------------
@@ -579,6 +598,7 @@ C=======================================================================
      &  WRCLDT_c, WRCSDT_c,   !TEMP CHP
      &  WLDOTN, ALPHL, WSDOTN, ALPHS,  !TEMP CHP
      &  WLDOT_CALC, WSDOT_CALC, !TEMP CHP
+     &  LFWT_MIN, LFWT_MAX, STMWT_MIN, STMWT_MAX, !TEMP CHP
      &  LAIMX, SLA, SLAAD, XLAI,              !Output
      &  WTLF, WCRLF, WNRLF, WTNLF,            !Output
      &  STMWT, WCRST, WNRST, WTNST)           !Output

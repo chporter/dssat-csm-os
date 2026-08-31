@@ -488,7 +488,6 @@ C-----------------------------------------------------------------------
      &    WCRRT,WCRSH, WCRSR, WCRST, WNRLF, WNRRT, WNRSH,       !Input
      &    WNRSR,WNRST, WTLF, XLAI, XPOD,                        !Input
      &    YRDOY, YRSIM, TGRO,                                   !Input
-!    &    PCNLeaf, !PCNStem,                                     !Output
      &    CMINELF, CMINEP, CMINERT, CMINESH, CMINESR,           !Output
      &    CMINEST, CMOBMX, CMOBSR, LAIMOBR, LFCMINE,            !Output
      &    LFSCMOB, LFSENWT, LFSNMOB, LTSEN, NMINELF,            !Output
@@ -995,7 +994,6 @@ C-----------------------------------------------------------------------
      &    WCRRT,WCRSH, WCRSR, WCRST, WNRLF, WNRRT, WNRSH,       !Input
      &    WNRSR,WNRST, WTLF, XLAI, XPOD,                        !Input
      &    YRDOY, YRSIM, TGRO,                                   !Input
-!    &    PCNLeaf, !PCNStem,                                     !Output
      &    CMINELF, CMINEP, CMINERT, CMINESH, CMINESR,           !Output
      &    CMINEST, CMOBMX, CMOBSR, LAIMOBR, LFCMINE,            !Output
      &    LFSCMOB, LFSENWT, LFSNMOB, LTSEN, NMINELF,            !Output
@@ -1552,7 +1550,6 @@ C-----------------------------------------------------------------------
      &    WCRRT,WCRSH, WCRSR, WCRST, WNRLF, WNRRT, WNRSH,       !Input
      &    WNRSR,WNRST, WTLF, XLAI, XPOD,                        !Input
      &    YRDOY, YRSIM, TGRO,                                   !Input
-!    &    PCNLeaf, !PCNStem,                                     !Output
      &    CMINELF, CMINEP, CMINERT, CMINESH, CMINESR,           !Output
      &    CMINEST, CMOBMX, CMOBSR, LAIMOBR, LFCMINE,            !Output
      &    LFSCMOB, LFSENWT, LFSNMOB, LTSEN, NMINELF,            !Output
