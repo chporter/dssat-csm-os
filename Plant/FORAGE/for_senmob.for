@@ -89,7 +89,7 @@ C-----------------------------------------------------------------------
       REAL LFNSEN, SLMDOT, SRMDOT, SSMDOT, SSRMDOT 
       REAL LFSCMOB, RTSCMOB, SRSCMOB, STSCMOB, TSCMOB
       REAL LFSNMOB, RTSNMOB, SRSNMOB, STSNMOB, TSNMOB
-      REAL STNSEN
+!     REAL STNSEN
 
       REAL CMINELF, CMINERT, CMINESH, CMINESR, CMINEST
       REAL NMINELF, NMINERT, NMINESR, NMINEST  !NMINESH, 
@@ -137,7 +137,7 @@ C-----------------------------------------------------------------------
 
       REAL, DIMENSION(LCMax) :: STNMINE_c, CMINEST_c, 
      &    NMINEST_c, SSNDOT_c
-      REAL STNMINE_sum, STSNMOB_sum, STLTSEN_sum, STNSEN_sum, 
+      REAL STNMINE_sum, STSNMOB_sum, STLTSEN_sum, !STNSEN_sum, 
      &    NMINEST_sum, StemTotSen_sum, SSMDOT_sum, SSNDOT_sum, 
      &    STSENWT_sum, CMINEST_sum, STCMINE_sum 
 
@@ -513,7 +513,7 @@ C    Find and Read Surviving section  Added by Diego
       STCMINE_c  = 0.0
       STNMINE_c  = 0.0
       STNMNSN    = 0.0
-      STNSEN_c   = 0.0
+!     STNSEN_c   = 0.0
       STSENWT_c  = 0.0
       STSNMOB_c  = 0.0
       STWSSN     = 0.0
@@ -524,7 +524,7 @@ C    Find and Read Surviving section  Added by Diego
 
       StemTotSen_SUM = 0.0
       STNMINE_sum = 0.0
-      STNSEN_sum  = 0.0
+!     STNSEN_sum  = 0.0
       STSNMOB_sum = 0.0
       STLTSEN_sum   = 0.0
       NMINEST_sum = 0.0
@@ -573,11 +573,11 @@ C    Find and Read Surviving section  Added by Diego
 
         WRITE (NOUTDGS,205)
   205   FORMAT('@YEAR DOY   DAS   DAP',
-     &   '      TotSen      NatSen     NMobSen    LoLitSen',
-     &   '    WaterSen      SSMDOT      Nmob_a      Nmob_p',
+     &   '      TotSen      SSMDOT     NMobSen    LoLitSen',
+     &   '    WaterSen      Nmob_a      Nmob_p',
      &   '     Nmob_mp     Cmine_p    Cmine_mp',
-     &   '    TotSen_c    NatSen_c    NMbSen_c    LitSen_c',
-     &   '    WatSen_c    SSMDOT_c     Nmoba_c     Nmobp_c',
+     &   '    TotSen_c    SSMDOT_c    NMbSen_c    LitSen_c',
+     &   '    WatSen_c     Nmoba_c     Nmobp_c',
      &   '    Nmobmp_c    Cminep_c    Cminempc')
 
 !       Initialize daily Leaf senescence (whole leaf only) output file
@@ -684,7 +684,7 @@ C    Find and Read Surviving section  Added by Diego
       LFNMINE_c  = 0.0
       LFNMNSN    = 0.0
       LFNSEN_c   = 0.0
-      LFSENWT_c  = 0.0
+!     LFSENWT_c  = 0.0
       LFSNMOB_c  = 0.0
       LFWSSN     = 0.0  !=SLNDOT
       LTSEN_c    = 0.0
@@ -707,7 +707,7 @@ C    Find and Read Surviving section  Added by Diego
       STCMINE_c  = 0.0
       STNMINE_c  = 0.0
       STNMNSN    = 0.0
-      STNSEN_c   = 0.0
+!     STNSEN_c   = 0.0
       STSENWT_c  = 0.0
       STSNMOB_c  = 0.0
       STWSSN     = 0.0
@@ -718,7 +718,7 @@ C    Find and Read Surviving section  Added by Diego
 
       StemTotSen_SUM = 0.0
       STNMINE_sum = 0.0
-      STNSEN_sum  = 0.0
+!     STNSEN_sum  = 0.0
       STSNMOB_sum = 0.0
       STLTSEN_sum   = 0.0
       NMINEST_sum = 0.0
@@ -965,9 +965,14 @@ C-----------------------------------------------------------------------
         SSMDOT = MIN(SSMDOT,0.1*STMWT)
 
 !       Handle stem cohorts
+!       Take whole stem mass senescence and distribute to cohorts
+!         rather than assume that there is a leaf:stem cohort association.
         DO I = 1, NLC
-          SSMDOT_c(I) = SLMDOT_c(I) * PORPT
-          SSMDOT_c(I) = MIN(SSMDOT_c(I), 0.1 * STDM(I))
+!         SSMDOT_c(I) = SLMDOT_c(I) * PORPT
+          SSMDOT_c(I) = SSMDOT * STDM(I) / STMWT
+          IF (SSMDOT_c(I) > 0.1*STDM(I)) THEN
+            SSMDOT_c(I) = MIN(SSMDOT_c(I), 0.1 * STDM(I))
+          ENDIF
         ENDDO
 
 C-----------------------------------------------------------------------
@@ -977,9 +982,19 @@ C-----------------------------------------------------------------------
         SSDOT = SSMDOT
         StemTotSen = SSMDOT_c
 
+!       LFSENWT from yesterday
         SSDOT = SSDOT + LFSENWT * PORPT
         SSDOT = MIN(SSDOT,0.1*STMWT)
         STSENWT = SSDOT - SSMDOT
+
+        DO I = 1, NLC
+!         LFSENWT_c from yesterday
+!         StemTotSen(I) = StemTotSen(I) + LFSENWT_c(I) * PORPT
+          STSENWT_c(I) = STSENWT * STDM(I) / STMWT
+          StemTotSen(I) = StemTotSen(I) + STSENWT_c(I)
+          StemTotSen(I) = MIN(StemTotSen(I), 0.1 * STDM(I))
+          STSENWT_c(I) = StemTotSen(I) - SSMDOT_c(I)
+        ENDDO
 
 !       Low light senescence of stems
         SSDOT = SSDOT + LTSEN * PORPT
@@ -987,9 +1002,11 @@ C-----------------------------------------------------------------------
         STLTSEN = SSDOT - (SSMDOT + STSENWT)
 
         DO I = 1, NLC
-          StemTotSen(I) = StemTotSen(I) + LTSEN_c(I) * PORPT
+!         StemTotSen(I) = StemTotSen(I) + LTSEN_c(I) * PORPT
+          STLTSEN_c(I) = STLTSEN * STDM(I) / STMWT
+          StemTotSen(I) = StemTotSen(I) + STLTSEN_c(I)
           StemTotSen(I) = MIN(StemTotSen(I), 0.1 * STDM(I))
-          STLTSEN_c(I) = StemTotSen(I) - SSMDOT_c(I)
+          STLTSEN_c(I) = StemTotSen(I) - (SSMDOT_c(I) + STSENWT_c(I))
         ENDDO
 
 !       Water stress senescence of stems
@@ -999,10 +1016,12 @@ C-----------------------------------------------------------------------
         SSNDOT = SSDOT - (SSMDOT + STSENWT + STLTSEN)
 
         DO I = 1, NLC
-          SSNDOT_c(I) = WaterSen_c(I) * PORPT
+!         SSNDOT_c(I) = WaterSen_c(I) * PORPT
+          SSNDOT_c(I) = SSNDOT * STDM(I) / STMWT
           StemTotSen(I) = StemTotSen(I) + SSNDOT_c(I)
           StemTotSen(I) = MIN(StemTotSen(I), 0.1 * STDM(I))
-          SSNDOT_c(I) = StemTotSen(I) - (SSMDOT_c(I) + STLTSEN_c(I))
+          SSNDOT_c(I) = StemTotSen(I) 
+     &       - (SSMDOT_c(I) + STSENWT_c(I) + STLTSEN_c(I))
           SSNDOT_c(I) = MAX(0.0, SSNDOT_c(I))
         ENDDO
 
@@ -1320,7 +1339,8 @@ C      ADDITIONAL DM LOSS DUE TO N MOBILIZATION? SENRTE
 !     --------------------------------------------
 !     Handle stem cohorts
       DO I = 1, NLC
-        STSENWT_c(I) = LFSENWT_c(I) * PORPT
+!       STSENWT_c(I) = LFSENWT_c(I) * PORPT
+        STSENWT_c(I) = STSENWT * STDM(I) / STMWT
         STSENWT_c(I) = MIN(STDM(I) - StemTotSen(I), STSENWT_c(I))
       ENDDO
       STSENWT_sum = SUM(STSENWT_c)
@@ -1422,10 +1442,10 @@ C    1-12-2024 KJB and DP
 
         WRITE (NOUTDGS,300)
      &   YEAR, DOY, DAS, DAP, 
-     &   SSDOT, STNSEN, STSENWT, STLTSEN, SSNDOT, SSMDOT,
+     &   SSDOT, SSMDOT, STSENWT, STLTSEN, SSNDOT,
      &   STSNMOB, NMINEST, STNMINE, CMINEST, STCMINE, 
-     &   StemTotSen_sum, STNSEN_sum, STSENWT_sum, STLTSEN_sum, 
-     &   SSNDOT_sum, SSMDOT_sum, 
+     &   StemTotSen_sum, SSMDOT_sum, STSENWT_sum, STLTSEN_sum, 
+     &   SSNDOT_sum, 
      &   STSNMOB_sum, NMINEST_sum, STNMINE_sum, CMINEST_sum,STCMINE_sum
 
         WRITE (NOUTDG2,300)

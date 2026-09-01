@@ -425,9 +425,11 @@ C-----------------------------------------------------------------------
 
 !       Stem cohorts
         DO I = 1, NLC
-          StemTotSen(I) = LeafTotSen(I) * PORPT
+!         StemTotSen(I) = LeafTotSen(I) * PORPT
+          StemTotSen(I) = SSDOT * STDM(I) / STMWT
           StemTotSen(I) = MIN(StemTotSen(I), 0.1 * STDM(I))
-          SSNDOT_c(I) = WaterSen_c(I) * PORPT
+!         SSNDOT_c(I) = WaterSen_c(I) * PORPT
+          SSNDOT_c(I) = SSNDOT * STDM(I) / STMWT
           SSNDOT_c(I) = MIN(StemTotSen(I), SSNDOT_c(I))
         ENDDO
 
@@ -460,7 +462,11 @@ C-----------------------------------------------------------------------
           SSDOT = SLDOT * PORPT
           SSNDOT = SSDOT
 
-          StemTotSen = LeafTotSen * PORPT
+
+!         StemTotSen = LeafTotSen * PORPT
+          DO I = 1, NLC
+            StemTotSen(I) = SSDOT * STDM(I) / STMWT
+          ENDDO
           SSNDOT_c = StemTotSen
 
         ELSE
