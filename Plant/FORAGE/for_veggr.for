@@ -689,9 +689,6 @@ C-----------------------------------------------------------------------
 !       CMINEA = MAX(TSCMOB,CMINEP - PGLEFT)
         IF (CMINEA .GT. CMINEP) CMINEA = CMINEP
 
-!---------------------------------------------------------------------
-!    CHP 2026-05-11 commented out the following code. See note below.
-!    TEMP CHP Uncommented code for test
 C-----------------------------------------------------------------------
 C      In this case, the remaining TSNMOB will stay inthe WTNxx pools
 C-----------------------------------------------------------------------
@@ -719,25 +716,6 @@ C-----------------------------------------------------------------------
         CRUSRT = RTSCMOB + ACMINERT
         CRUSSR = SRSCMOB + ACMINESR
         CRUSSH = ACMINESH
-!      ENDIF
-
-!!---------------------------------------------------------------------
-!!     CHP 2026-05-11 - TSCMOB, LFSCMOB, STSCMOB, RTSCMOB, and SRSCMOB
-!!       are all zero. So the above code simplifies to this:
-!!      temp chp comment out for test
-!       IF (CMINEP .GT. 0.0) THEN
-!          CMINER = CMINEA / CMINEP
-!          ACMINESH = SHCMINE * CMINER
-!          ACMINELF = LFCMINE * CMINER
-!          ACMINEST = STCMINE * CMINER
-!          ACMINERT = RTCMINE * CMINER
-!          ACMINESR = SRCMINE * CMINER
-!
-!          CRUSLF = ACMINELF
-!          CRUSST = ACMINEST
-!          CRUSRT = ACMINERT
-!          CRUSSR = ACMINESR
-!          CRUSSH = ACMINESH
 
 !         ------------------------------------------------
 !         Handle C mining for leaf and stem cohorts
@@ -1096,7 +1074,8 @@ C-----------------------------------------------------------------------
 
 !     Leaf cohorts
       INTEGER I
-      REAL NMineAdjust, WTLF_calc
+      REAL NMineAdjustLF, WTLF_calc
+      REAL NMineAdjustST, STMWT_calc
 
       NLEAK2 = 0.0
       NLKNG1 = 0.0
@@ -1197,15 +1176,21 @@ C      Adjust ANMINExx for N "returned" for CH2O
      &      ANMINERT/ANMINETOT
         NRUSSR = NRUSSR - NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
      &      ANMINESR/ANMINETOT
-      ENDIF
 
-!     Leaf cohorts
-      IF (ANMINETOT > 0.0) THEN
-        NMineAdjust = NLKNG1 * (AGRVGI / (RPRO * 0.16)) * 
-     &    ANMINELF/ANMINETOT
+!       Leaf cohorts
         WTLF_calc = SUM(LFDM)
+        NMineAdjustLF = NLKNG1 * (AGRVGI / (RPRO * 0.16))
+     &     * ANMINELF / ANMINETOT
         DO I = 1, NLC
-          LFNMN(I) = LFNMN(I) - LFDM(I) / WTLF_calc * NMineAdjust
+          LFNMN(I) = LFNMN(I) - LFDM(I) / WTLF_calc * NMineAdjustLF
+        ENDDO
+
+!       Stem cohorts
+        STMWT_calc = SUM(STDM)
+        NMineAdjustST = NLKNG1 * (AGRVGI / (RPRO * 0.16))
+     &     * ANMINEST / ANMINETOT
+        DO I = 1, NLC
+          STNMN(I) = STNMN(I) - STDM(I) / STMWT_calc * NMineAdjustST
         ENDDO
       ENDIF
 
