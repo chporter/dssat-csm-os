@@ -2090,7 +2090,6 @@ End Subroutine LinklstSUOIL
   // 'NDCH5,TMIN5,TAVG5,TMAX5,SRAD5,PRCP5,PETP5,ETCP5,ESCP5,EPCP5,WSGA5,NSTA5,'       &
   // 'Phase0,Phase1,Phase2,Phase3,Phase4,Phase5')
 
-
       Allocate(character(LEN=length) :: Header)
 
 ! Header = 'RUNNO,TRNO,R#,O#,C#,CR,MODEL,EXNAME,TNAM,FNAM,WSTA,SOIL_ID,' &

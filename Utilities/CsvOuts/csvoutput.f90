@@ -1419,8 +1419,9 @@ Subroutine CsvOutSumOpsum(RUN, TRTNUM, ROTNO, ROTOPT, REPNO, CROP, MODEL, &
    cHWAHF1 = NINT(HWAHF)
    cFBWAH1 = NINT(FBWAH)
    TITLET1 = Trim(AdjustL(CommaDash(TITLET)))
-           
-   Write(tmp,'(1500(g0,","),g0)') RUN, TRTNUM, ROTNO, ROTOPT, REPNO, CROP, MODEL, &
+
+   !TF Editted to avoid having an extra comma at the end of the line
+   Write(tmp,'(98(g0,","),g0)') RUN, TRTNUM, ROTNO, ROTOPT, REPNO, CROP, MODEL, &
    EXNAME, TITLET1, FLDNAM, WSTAT, WYEAR, SLNO, LATI, LONG, ELEV, &
    YRSIM, YRPLT, EDAT, ADAT, MDAT, YRDOY, HYEAR, DWAP, &
    !CWAM, HWAM, cHWAH1, cBWAH1, PWAM, HWUM, HNUMAM, HNUMUM, HIAM, LAIX, IRNUM, &
@@ -1466,17 +1467,27 @@ Subroutine CsvOutEnvSum(                                        &
    Character(:), allocatable, Target, Intent(Out) :: Csvline
    Character(:), Pointer, Intent(Out) :: pCsvline
    Integer, Intent(Out) :: lngth
-   Integer :: size, i
+   Integer :: size, i, NumberOfCommas
    Character(Len=1300) :: tmp      
+   Character(len=16) :: FMT
 !  End of vars
   
-   Write(tmp,'(1500(g0,","),g0)')                           &
+! chp calculate number of commas based on value of MaxStag
+   NumberOfCommas = 27 + (MaxStag * 13)
+   if (NumberOfCommas < 100) then
+     write(FMT,"(A,I2,A)") '(',NumberOfCommas,'(g0,","),g0) '
+   else
+     write(FMT,"(A,I3,A)") '(',NumberOfCommas,'(g0,","),g0)'
+   endif
+
+!  Write(tmp,'(93(g0,","),g0)')                           &
+   Write(tmp,FMT)                           &
    RUN, TRTNUM, ROTNO, ROTOPT, REPNO, CROP, MODEL, EXNAME, YRDOY,  &
    N2OEM, CO2EM, CH4EM, TCEQM,                              &   
    NDCH(0), DAYLA(0), CO2A(0), TMINA(0), TAVGA(0), TMAXA(0), SRADA(0), PRCP(0), PETP(0), ETCP(0), ESCP(0), EPCP(0),  &
    WSGA(0), NSTA(0),    &
    (NDCH(i), TMINA(i), TAVGA(i), TMAXA(i), SRADA(i), PRCP(i), PETP(i), ETCP(i), ESCP(i), EPCP(i), WSGA(i), NSTA(i), i=1,MaxStag),   &
-   (PhaseName(i),i=1,MaxStag)
+   (PhaseName(i),i=0,MaxStag)
    
    lngth = Len(Trim(Adjustl(tmp)))
    size = lngth
