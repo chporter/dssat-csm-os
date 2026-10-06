@@ -88,8 +88,14 @@
 
 !     Cohort composition - Values in g/m2
       REAL, DIMENSION(1:LCMax) :: 
-     &  LeafLignin, LeafCellulose, LeafHemicell,
-     &  StemLignin, StemCellulose, StemHemicell
+!     &  LeafLignin, LeafCellulose, LeafHemicell,
+!     &  StemLignin, StemCellulose, StemHemicell
+     &  LeafCellFrac,
+     &  LeafHemiFrac,
+     &  LeafLigFrac ,
+     &  StemCellFrac,
+     &  StemHemiFrac,
+     &  StemLigFrac 
 
       CONTAINS
 C=======================================================================
@@ -228,9 +234,16 @@ C=======================================================================
       CumLeafDM = 0.0 !Cumulative leaf growth (g[leaf]/m2) = CLW
       LFAREA    = 0.0 !Leaf area (cm2[leaf]/m2)
       LFAREAH   = 0.0 !healthy leaf area (cm2[leaf]/m2)
-      LeafLignin    = 0.0; StemLignin    = 0.0 !fraction 
-      LeafCellulose = 0.0; StemCellulose = 0.0 !fraction 
-      LeafHemicell  = 0.0; StemHemicell  = 0.0 !fraction 
+
+!     LeafLignin    = 0.0; StemLignin    = 0.0 
+!     LeafCellulose = 0.0; StemCellulose = 0.0 
+!     LeafHemicell  = 0.0; StemHemicell  = 0.0 
+      LeafCellFrac = 0.0
+      LeafHemiFrac = 0.0
+      LeafLigFrac  = 0.0
+      StemCellFrac = 0.0
+      StemHemiFrac = 0.0
+      StemLigFrac  = 0.0
 
       LFFRZ = 0.0      ; STFRZ = 0.0
       LFCMN = 0.0      ; STCMN = 0.0

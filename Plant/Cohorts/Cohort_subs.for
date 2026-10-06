@@ -4,21 +4,133 @@
       SUBROUTINE CohortComp()
 
       USE COHORTS_MOD
+      USE IPCOHO_MOD
       IMPLICIT NONE
       SAVE
 
       INTEGER I
+!      REAL, DIMENSION(LCMax) :: LeafCellFrac, LeafHemiFrac, LeafLigFrac
+!      REAL, DIMENSION(LCMax) ::  StemCellFrac, StemHemiFrac, StemLigFrac
 
-!-----------------------------------------------------------------------
-!     Values in g/m2
+!     For now set min and max to 0 and 1. Need to specify realistic limits.
+      REAL, PARAMETER :: LeafCellFracMin = 0.0, LeafCellFracMax = 1.0
+      REAL, PARAMETER :: LeafHemiFracMin = 0.0, LeafHemiFracMax = 1.0
+      REAL, PARAMETER :: LeafLigFracMin  = 0.0, LeafLigFracMax  = 1.0
+      REAL, PARAMETER :: StemCellFracMin = 0.0, StemCellFracMax = 1.0
+      REAL, PARAMETER :: StemHemiFracMin = 0.0, StemHemiFracMax = 1.0
+      REAL, PARAMETER :: StemLigFracMin  = 0.0, StemLigFracMax  = 1.0
+
       DO I = 1, NLC
-!!!!    REPLACE THESE EQUATIONS WITH SOMETHING THAT MAKES SENSE !!!
-        LeafLignin(I)    = LFDM(I) * 0.25
-        LeafCellulose(I) = LFDM(I) * 0.25
-        LeafHemicell(I)  = LFDM(I) * 0.25
-        StemLignin(I)    = STDM(I) * 0.25
-        StemCellulose(I) = STDM(I) * 0.25
-        StemHemicell(I)  = STDM(I) * 0.25
+        IF (LFDM(I) > 0.0) THEN
+          IF (I ==  NLC) THEN
+!           Initialize composition in newest cohort from species parameters
+            LeafCellFrac(I) = CELLFI
+            LeafHemiFrac(I) = HCLLFI
+            LeafLigFrac (I) = LIGLFI
+          ELSE
+!           Adjust leaf and stem composition based on slope and cohort age
+            LeafCellFrac(I) = CELLFI + CELLFS * CohortAge(I)
+            LeafHemiFrac(I) = HCLLFI + HCLLFS * CohortAge(I)
+            LeafLigFrac (I) = LIGLFI + LIGLFS * CohortAge(I)
+
+            LeafCellFrac(I) = MIN(LeafCellFrac(I), LeafCellFracMax)
+            LeafHemiFrac(I) = MIN(LeafHemiFrac(I), LeafHemiFracMax)
+            LeafLigFrac (I) = MIN(LeafLigFrac (I), LeafLigFracMax )
+
+            LeafCellFrac(I) = MAX(LeafCellFrac(I), LeafCellFracMin)
+            LeafHemiFrac(I) = MAX(LeafHemiFrac(I), LeafHemiFracMin)
+            LeafLigFrac (I) = MAX(LeafLigFrac (I), LeafLigFracMin)
+          ENDIF
+
+!!         Values in g/m2
+!          LeafCellulose(I) = LFDM(I) * LeafCellFrac(I)
+!          LeafHemicell(I)  = LFDM(I) * LeafHemiFrac(I)
+!          LeafLignin(I)    = LFDM(I) * LeafLigFrac(I)
+
+        ELSE
+          LeafCellFrac(I)  = 0.0
+          LeafHemiFrac(I)  = 0.0
+          LeafLigFrac (I)  = 0.0
+!          LeafLignin(I)    = 0.0
+!          LeafCellulose(I) = 0.0
+!          LeafHemicell(I)  = 0.0
+        ENDIF
+
+        IF (STDM(I) > 0.0) THEN
+          IF (I ==  NLC) THEN
+!           Initialize composition in newest cohort from species parameters
+            StemCellFrac(I) = CELSTI
+            StemHemiFrac(I) = HCLSTI
+            StemLigFrac (I) = LIGSTI
+          ELSE
+!           Adjust leaf and stem composition based on slope and cohort age
+            StemCellFrac(I) = CELSTI + CELSTS * CohortAge(I)
+            StemHemiFrac(I) = HCLSTI + HCLSTS * CohortAge(I)
+            StemLigFrac (I) = LIGSTI + LIGSTS * CohortAge(I)
+
+            StemCellFrac(I) = MIN(StemCellFrac(I), StemCellFracMax)
+            StemHemiFrac(I) = MIN(StemHemiFrac(I), StemHemiFracMax)
+            StemLigFrac (I) = MIN(StemLigFrac (I), StemLigFracMax )
+
+            StemCellFrac(I) = MAX(StemCellFrac(I), StemCellFracMin)
+            StemHemiFrac(I) = MAX(StemHemiFrac(I), StemHemiFracMin)
+            StemLigFrac (I) = MAX(StemLigFrac (I), StemLigFracMin )
+          ENDIF
+
+!!         Values in g/m2
+!          StemCellulose(I) = STDM(I) * StemCellFrac(I)
+!          StemHemicell(I)  = STDM(I) * StemHemiFrac (I)
+!          StemLignin(I)    = STDM(I) * StemLigFrac(I)
+
+        ELSE
+          StemCellFrac(I)  = 0.0
+          StemHemiFrac(I)  = 0.0
+          StemLigFrac (I)  = 0.0
+!          StemLignin(I)    = 0.0
+!          StemCellulose(I) = 0.0
+!          StemHemicell(I)  = 0.0
+        ENDIF
+
+!       temp chp
+        select case(i)
+        case(1)
+          IF (LFDM(I) > 0) THEN
+            WRITE(5001,'(2I5,15F10.3)') NLC, I, CohortAge(I),
+     &      LFDM(I), STDM(I),
+     &      LeafCellFrac(I), LeafHemiFrac(I), LeafLigFrac (I), 
+     &      StemCellFrac(I), StemHemiFrac(I), StemLigFrac (I)
+!     &      LeafCellulose(I), LeafHemicell(I),LeafLignin(I),  
+!     &      StemCellulose(I), StemHemicell(I), StemLignin(I)
+          ENDIF
+        case(10)
+          IF (LFDM(I) > 0) THEN
+            WRITE(5010,'(2I5,15F10.3)') NLC, I, CohortAge(I), 
+     &      LFDM(I), STDM(I),
+     &      LeafCellFrac(I), LeafHemiFrac(I), LeafLigFrac (I), 
+     &      StemCellFrac(I), StemHemiFrac(I), StemLigFrac (I)
+!     &      LeafCellulose(I), LeafHemicell(I),LeafLignin(I),  
+!     &      StemCellulose(I), StemHemicell(I), StemLignin(I)
+          ENDIF
+        case(100)
+          IF (LFDM(I) > 0) THEN
+            WRITE(5100,'(2I5,15F10.3)') NLC, I, CohortAge(I), 
+     &      LFDM(I), STDM(I),
+     &      LeafCellFrac(I), LeafHemiFrac(I), LeafLigFrac (I), 
+     &      StemCellFrac(I), StemHemiFrac(I), StemLigFrac (I)
+!     &      LeafCellulose(I), LeafHemicell(I),LeafLignin(I),  
+!     &      StemCellulose(I), StemHemicell(I), StemLignin(I)
+          ENDIF
+        case(500)
+          IF (LFDM(I) > 0) THEN
+            WRITE(5500,'(2I5,15F10.3)') NLC, I, CohortAge(I), 
+     &      LFDM(I), STDM(I),
+     &      LeafCellFrac(I), LeafHemiFrac(I), LeafLigFrac (I), 
+     &      StemCellFrac(I), StemHemiFrac(I), StemLigFrac (I)
+!     &      LeafCellulose(I), LeafHemicell(I),LeafLignin(I),  
+!     &      StemCellulose(I), StemHemicell(I), StemLignin(I)
+          ENDIF
+
+        end select
       ENDDO
 
 !-----------------------------------------------------------------------

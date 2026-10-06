@@ -261,8 +261,6 @@ C=======================================================================
       ENDIF
       LAIMX_calc = MAX(LAIMX_calc, XLAI_calc)
 
-      CALL CohortComp()
-
 !     TEMP CHP
       if (wtlf_calc > 0.0) then
         RHOL_CALC = WCRLF_calc / WTLF_calc
