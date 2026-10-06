@@ -34,8 +34,8 @@
       INTEGER I, YRDOY
       REAL WTLF, STMWT
       REAL ADF, NDF
-      REAL ADF_Leaf, NDF_Leaf
-      REAL ADF_Stem, NDF_Stem
+      REAL, DIMENSION(1:LCMax) :: ADF_Lf_c, NDF_Lf_c
+      REAL, DIMENSION(1:LCMax) :: ADF_St_c, NDF_St_c
       REAL TotHarvested, FHTOT
 
 !     temp chp
@@ -47,6 +47,8 @@
       FHSTEM_c = 0.0
       ADF = 0.0
       NDF = 0.0
+      ADF_Lf_c = 0.0; NDF_Lf_c = 0.0
+      ADF_St_c = 0.0; NDF_St_c = 0.0
 
       IF (FHLEAF > 0.0 .OR. FHSTEM > 0.0) THEN
 
@@ -102,14 +104,6 @@
 !        ENDIF
 
         DO I = 1, NLC
-!         Calculate quality of pre-harvested leaf and stem for each cohort
-!!!!      REPLACE THESE EQUATIONS WITH SOMETHING THAT MAKES SENSE !!!
-          ADF_Leaf = (LeafLignin(I)+LeafCellulose(I)+LeafHemicell(I))/3.
-          NDF_Leaf = (LeafLignin(I)+LeafCellulose(I)+LeafHemicell(I))/4.
-
-          ADF_Stem = (StemLignin(I)+StemCellulose(I)+StemHemicell(I))/3.
-          NDF_Stem = (StemLignin(I)+StemCellulose(I)+StemHemicell(I))/4.
-
 !         ---------------------------------
 !         temp chp
           RHOL_calc = SUM(LFNSC) / WTLF
@@ -158,13 +152,31 @@
             STNSN(I) = 0.0
           ENDIF
 
+!         Calculate quality of pre-harvested leaf and stem for each cohort
+!         ADF and NDF are in fraction here
+          IF (FHLEAF_c(I) > 0.0) THEN
+            ADF_Lf_c(I) = LeafCellFrac(I) + LeafLigFrac(I)
+            NDF_Lf_c(I) = LeafCellFrac(I) + LeafHemiFrac(I) + 
+     &        LeafLigFrac(I)
+
+            ADF = ADF + ADF_Lf_c(I) * FHLEAF_c(I) 
+            NDF = NDF + NDF_Lf_c(I) * FHLEAF_c(I) 
+          ENDIF
+
+          IF (FHSTEM_c(I) > 0.0) THEN
+            ADF_St_c(I) = StemCellFrac(I) + StemLigFrac(I)
+            NDF_St_c(I) = StemCellFrac(I) + StemHemiFrac(I) + 
+     &        StemLigFrac(I)
+
+            ADF = ADF + ADF_St_c(I) * FHSTEM_c(I)
+            NDF = NDF + NDF_St_c(I) * FHSTEM_c(I)
+          ENDIF
+
 !         Weighted average of ADF and NDF
           TotHarvested = TotHarvested + FHLEAF_c(I) + FHSTEM_c(I)
-          ADF = ADF_Leaf * FHLEAF_c(I) + ADF_Stem * FHSTEM_c(I)
-          NDF = NDF_Leaf * FHLEAF_c(I) + NDF_Stem * FHSTEM_c(I)
         ENDDO
 
-!       Divide thru by total mass to get weighted average
+!       Divide thru by total mass to get weighted average and convert to %
         ADF = ADF / TotHarvested * 100.
         NDF = NDF / TotHarvested * 100.
 
@@ -173,9 +185,9 @@
         FHSTEM = SUM(FHSTEM_c)
         FHTOT = FHLEAF + FHSTEM
 
-!       temp chp
-        WRITE(4353,'(I8, 10F10.2)') 
-     &    YRDOY, WTLF, STMWT, FHLEAF, FHSTEM, FHTOT
+!!       temp chp
+!        WRITE(4353,'(I8, 10F10.2)') 
+!     &    YRDOY, WTLF, STMWT, FHLEAF, FHSTEM, FHTOT
       ENDIF
 
       CALL PUT('MHARVEST','ADF', ADF)
