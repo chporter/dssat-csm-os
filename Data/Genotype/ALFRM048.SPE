@@ -27,20 +27,29 @@
 .0117 1.5905 .3824   1.0   PWR   1.0    TRSFN(4),TRSTYP-TEMPERATURE EFFECT-Maint Resp Algarswamy/Jon
                                                                                                     
 !*PLANT COMPOSITION VALUES                                                                          
-  .372  .311  .112  .204  .155  .035   PROLFI,PROLFG,PROLFF,PROSTI,PROSTG,PROSTF !kjb 2/16/24
+  .372  .311  .112  .204  .155  .035   PROLFI,PROLFG,PROLFF,PROSTI,PROSTG,PROSTF !kjb 2/16/24 & 10/5/26
   .092  .074  .056  .250  .216  .050   PRORTI,PRORTG,PRORTF,PROSHI,PROSHG,PROSHF !kjb 2/16/24
   .400  .400  .300  .030  .080  .800   SDPROS,SDPROG,PRONOD,PROMIN,PROMAX,THETA
-  .406  .585  .711  .380  .315  .480   PCARLF,PCARST,PCARRT,PCARSH,PCARSD,PCARNO
+! .406  .585  .711  .380  .315  .480   PCARLF,PCARST,PCARRT,PCARSH,PCARSD,PCARNO  !kjb 10/5/26 incr "rest" because lig change
+  .406  .650  .711  .380  .315  .480   PCARLF,PCARST,PCARRT,PCARSH,PCARSD,PCARNO
   .022  .009  .020  .020  .050         PLIPLF,PLIPST,PLIPRT,PLIPSH,PLIPNO
-  .039  .114  .070  .280  .020  .070   PLIGLF,PLIGST,PLIGRT,PLIGSH,PLIGSD,PLIGNO
+  .039  .039  .070  .280  .020  .070   PLIGLF,PLIGST,PLIGRT,PLIGSH,PLIGSD,PLIGNO  !kjb 10/5/26 decr lig at start
+! .039  .114  .070  .280  .020  .070   PLIGLF,PLIGST,PLIGRT,PLIGSH,PLIGSD,PLIGNO
   .050  .050  .050  .040  .040  .050   POALF,POAST,POART,POASH,POASD,POANO
   .111  .048  .057  .030  .025  .050   PMINLF,PMINST,PMINRT,PMINSH,PMINSD,PMINNO
   .092  .064  .056                     PROSRI,PROSRG,PROSRF (Storage organ composition parameters)  
   .711  .020  .070  .050  .057         PCARSR,PLIPSR,PLIGSR,POASR,PMINSR                            
   0.01 0.220 0.110 0.101 0.092         KCOLD, PROLFR, PROSTR, PRORTR, PROSRR (K factor used in exp e
   .004  .008 .020  .040                PCHOLFF,PCHOSTF,PCHORTF,PCHOSRF (Mobile CH2O concentration of
-                                                                                                    
-                                                                                                    
+! Initial leaf and stem cellulose, hemicellulose, lignin content (fraction) 
+  .329  .260  .039  .382  .300  .039   CELLFI, HCLLFI, LIGLFI, CELSTI, HCLSTI, LIGSTI  
+! Daily rates of change of leaf and stem cellulose, hemicellulose, lignin fractions (fraction / PTD)
+  .005 -.005  .005  .005 -.006  .010   CELLFS, HCLLFS, LIGLFS, CELSTS, HCLSTS, LIGSTS
+! Maximum values of leaf and stem cellulose, hemicellulose, lignin content (fraction)
+  .600  .260  .200  .750  .300  .250   CELLFX, HCLLFX, LIGLFX, CELSTX, HCLSTX, LIGSTX 
+! Minimum values of leaf and stem cellulose, hemicellulose, lignin content (fraction)
+  .329  .002  .039  .382  .002  .039   CELLFN, HCLLFN, LIGLFN, CELSTN, HCLSTN, LIGSTN
+
 !*SEED  COMPOSITION VALUES                                                                          
  7.168 23.65 0.908 0.430               LIPTB,LIPOPT,SLOSUM*100,CARMIN                               
                                                                                                     
@@ -57,6 +66,7 @@
   0.12  0.38 10.00 10.00   LIN         PRREF(4), TYPPREF Canopy PG effect on routine refilling of m
   1.00  1.00  1.00  1.00  0.70                     SENNLV, SENCLV, SENNSV, SENCSV, NSTFAC
   1.00  1.00  1.00  1.00                           SENNRV, SENCRV, SENNSRV, SENCSRV
+ 0.060                                 MAXNMINE !2025-11-18 CHP added for COHORTS
                                                                                                     
                                                                                                     
 !*NITROGEN FIXATION PARAMETERS                                                                      
@@ -93,7 +103,8 @@
                                                                                                     
                                                                                                     
 !*LEAF SENESCENCE FACTORS                                                                           
-  0.80  0.20  .060  -4.0 -35.0        SENRTE,SENRT2,SENDAY,FREEZ1,FREEZ2 - 10/22/25  
+  0.80  0.20  .000  -4.0 -35.0        SENRTE,SENRT2,SENDAY,FREEZ1,FREEZ2 - CHP SENDAY = 0.0  
+! 0.80  0.20  .060  -4.0 -35.0        SENRTE,SENRT2,SENDAY,FREEZ1,FREEZ2 - 10/22/25  
   1.17  13.1  0.01                     ICMP,TCMP(Light comp, time constant-senes),LFSEN (natural sen
                                                                                                     
                                                                                                     

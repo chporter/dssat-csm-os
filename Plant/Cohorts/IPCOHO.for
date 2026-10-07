@@ -11,7 +11,11 @@
       REAL CELLFI, HCLLFI, LIGLFI,   !initial leaf
      &     CELSTI, HCLSTI, LIGSTI,   !initial stem
      &     CELLFS, HCLLFS, LIGLFS,   !slope leaf
-     &     CELSTS, HCLSTS, LIGSTS    !slope stem
+     &     CELSTS, HCLSTS, LIGSTS,   !slope stem
+     &     CELLFN, HCLLFN, LIGLFN,   !minimum leaf
+     &     CELSTN, HCLSTN, LIGSTN,   !minimum stem
+     &     CELLFX, HCLLFX, LIGLFX,   !maximum leaf
+     &     CELSTX, HCLSTX, LIGSTX    !maximum stem
 
       CONTAINS
 
@@ -31,7 +35,7 @@
 !     &  PCHOLFF, PCHOSTF, PROLFI, PROLFF, PROSTI, !Output
 !     &  PROSTF, SENDAY, SENMAX, SENCLV, SENCSV,   !Output
 !     &  SENNLV, SENNSV, TCMP, XSENMX)             !Output
-!        Cellulose, hemicellulose, lignin
+!!       Cellulose, hemicellulose, lignin
 !     &  CELLFI, HCLLFI, LIGLFI,   !initial leaf
 !     &  CELSTI, HCLSTI, LIGSTI,   !initial stem
 !     &  CELLFS, HCLLFS, LIGLFS,   !slope leaf
@@ -78,22 +82,36 @@
           ENDDO
           READ(C80,'(2F6.0)',IOSTAT=ERR) PCHOLFF, PCHOSTF
           IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+
+!         New parameters for cellulose, hemicellulose, and lignin
+          CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+!         Initial leaf cellulose, hemicellulose, lignin (fraction)
+          READ(C80,'(6F6.0)',IOSTAT=ERR) CELLFI, HCLLFI, LIGLFI, 
+!         Initial stem cellulose, hemicellulose, lignin (fraction)
+     &                                   CELSTI, HCLSTI, LIGSTI
+          IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+
+          CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+!         Rate of change of leaf cellulose, hemicellulose, lignin (fraction/PTD)
+          READ(C80,'(6F6.0)',IOSTAT=ERR) CELLFS, HCLLFS, LIGLFS, 
+!         Rate of change of stem cellulose, hemicellulose, lignin (fraction/PTD)
+     &                                   CELSTS, HCLSTS, LIGSTS
+          IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+
+          CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+!         Maximum leaf cellulose, hemicellulose, lignin (fraction)
+          READ(C80,'(6F6.0)',IOSTAT=ERR) CELLFX, HCLLFX, LIGLFX, 
+!         Minimum stem cellulose, hemicellulose, lignin (fraction)
+     &                                   CELSTX, HCLSTX, LIGSTX
+          IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+
+          CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+!         Minimum leaf cellulose, hemicellulose, lignin (fraction)
+          READ(C80,'(6F6.0)',IOSTAT=ERR) CELLFN, HCLLFN, LIGLFN, 
+!         Minimum stem cellulose, hemicellulose, lignin (fraction)
+     &                                   CELSTN, HCLSTN, LIGSTN
+          IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
         ENDIF
-
-!       New parameters for cellulose, hemicellulose, and lignin
-        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
-!       Initial leaf cellulose, hemicellulose, lignin (fraction)
-        READ(C80,'(6F6.0)',IOSTAT=ERR) CELLFI, HCLLFI, LIGLFI, 
-!       Initial stem cellulose, hemicellulose, lignin (fraction)
-     &                                 CELSTI, HCLSTI, LIGSTI
-        IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
-
-        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
-!       Rate of change of leaf cellulose, hemicellulose, lignin (fraction/PTD)
-        READ(C80,'(6F6.0)',IOSTAT=ERR) CELLFS, HCLLFS, LIGLFS, 
-!       Rate of change of stem cellulose, hemicellulose, lignin (fraction/PTD)
-     &                                 CELSTS, HCLSTS, LIGSTS
-        IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
 
       ENDIF
 !-----------------------------------------------------------------------
@@ -183,17 +201,30 @@
 !     Variable listing for COHORTS subroutine (updated 20 April 2009)
 !***********************************************************************
 ! CELLFI       Initial leaf cellulose (fraction)
+! CELLFN       Minimum leaf cellulose (fraction)
 ! CELLFS       Change per day leaf cellulose (fraction/PTD)
+! CELLFX       Maximum leaf cellulose (fraction)
 ! CELSTI       Initial stem cellulose (fraction)
+! CELSTN       Minimum stem cellulose (fraction)
 ! CELSTS       Change per day stem cellulose (fraction/PTD)
+! CELSTX       Maximum stem cellulose (fraction)
 ! HCLLFI       Initial leaf hemicellulose (fraction)
+! HCLLFN       Minimum leaf hemicellulose (fraction)
 ! HCLLFS       Change per day leaf hemicellulose (fraction/PTD)
+! HCLLFX       Maximum leaf hemicellulose (fraction)
 ! HCLSTI       Initial stem hemicellulose (fraction)
+! HCLSTN       Minimum stem hemicellulose (fraction)
 ! HCLSTS       Change per day stem hemicellulose (fraction/PTD)
+! HCLSTX       Maximum stem hemicellulose (fraction)
 ! LIGLFI       Initial leaf lignin (fraction)
+! LIGLFN       Minimum leaf lignin (fraction)
 ! LIGLFS,      Change per day leaf lignin (fraction/PTD)
+! LIGLFX,      Maximum leaf lignin (fraction)
 ! LIGSTI,      Initial stem lignin (fraction)
+! LIGSTN,      Minimum stem lignin (fraction)
 ! LIGSTS       Change per day stem lignin (fraction/PTD)
+! LIGSTX       Maximum stem lignin (fraction)
+
 ! MAXNMINE     Maximum N mining rate (fraction/day)
 ! NGRLF        Maximum N demand for leaf growth (g[leaf N] / m2[ground] / d)
 ! NMOBMX       Maximum N mobilization rate (fraction/day)
