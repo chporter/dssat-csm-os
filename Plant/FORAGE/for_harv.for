@@ -391,7 +391,7 @@ C-----------------------------------------------------------------------
         DWTSO = WTSO - PWTSO
       ENDIF
 
-      CALL HarvestCohorts(YRDOY, FHLEAF, FHSTEM)
+      CALL HarvestCohorts(FHLEAF, FHSTEM)
 
 !***********************************************************************
 !***********************************************************************
@@ -774,7 +774,7 @@ C-----------------------------------------------------------------------
       CHARACTER*2  CROP
 
       REAL ADF, NDF
-      REAL CP, TDN, TDNCP, RFV
+      REAL CP, TDN, RFQ, RFV
 
       DYNAMIC = CONTROL % DYNAMIC
       YRDOY   = CONTROL % YRDOY
@@ -805,7 +805,7 @@ C-----------------------------------------------------------------------
      &     '@RUN FILEX    CR TRNO FHNO YEAR DOY'//
      &     ' RCWAH RLWAH RSWAH RSRWH RRTWH RLAIH'//
      &     ' FHWAH FHNAH FHN%H FHC%H FHLGH FHL%H'//
-     &     '  MOWC RSPLC   ADF   NDF   TDN TDNCP   RFV'
+     &     '  MOWC RSPLC   ADF   NDF   TDN   RFQ   RFV'
         ENDIF
 
 !***********************************************************************
@@ -818,9 +818,16 @@ C-----------------------------------------------------------------------
         CALL GET('MHARVEST','ADF', ADF)
         CALL GET('MHARVEST','NDF', NDF)
 
-        CP = fhpctn * 6.25  !Crude protein
+!       Forage quality terms
+!       ADF = Acid detergent fiber
+!       CP  = Crude protein (%)
+!       TDN = Total digestable nutrients
+!       RFQ = relative feed quality
+!       RFV = relative feed value
+
+        CP = fhpctn * 6.25
         TDN = 88.9 - (0.779 * ADF)
-        TDNCP = 73.7 + 0.463 * CP - 0.595 * ADF
+        RFQ = 73.7 + 0.463 * CP - 0.595 * ADF 
         RFV = (88.9 -(0.779 * ADF)) * ((120 / NDF) / 1.29)
 
         call yr_doy(yrdoy,year,doy)
@@ -830,7 +837,7 @@ C-----------------------------------------------------------------------
      &       Nint(strwt*10.),Nint(rtwt*10.),xlai,
      &       Nint(fhtot*10.),Nint(fhtotn*10.),
      &       fhpctn,fhpcho,fhplig,fhpctlf,
-     &       MOWC,RSPLC, ADF, NDF, TDN, TDNCP, RFV
+     &       MOWC,RSPLC, ADF, NDF, TDN, RFQ, RFV
  1000   FORMAT(i4,x,a8,a3,2(i5),i5,i4,
      &        5(i6),f6.2,2(i6),3(f6.2),f6.1,x,f5.0,6F6.1)
 

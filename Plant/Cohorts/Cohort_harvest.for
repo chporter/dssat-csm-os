@@ -2,6 +2,8 @@
 !     SUBROUTINE HarvestCohorts calculates the harvested amounts of leaf 
 !       and stem cohorts and the quality of the harvest (ADF and NDF)
 
+!     Called from the for_harv.for subroutine and only used for PRFRM model.
+
 !     These variables are potentially modified by this routine
 !       LFDM,     STDM     Leaf and stem dry mass g/m2
 !       LFNSC,    STNSC    Leaf and stem mobile CH2O g/m2
@@ -12,9 +14,9 @@
 !       LFSLA              Specific leaf area
 !       FHLEAF_c, FHSTEM_c Harvested mass of leaf and stem g/m2
 
-      SUBROUTINE HarvestCohorts(YRDOY,
-     &  FHLEAF, FHSTEM)               !Input/Output
+      SUBROUTINE HarvestCohorts(FHLEAF, FHSTEM)   !Input/Output
 
+!     These variables are available throught USE statements
 !     &  PCNLeaf, PROLFF, RHOL,                    !Input
 !     &  PCNStem, PROSTF, RHOS,                    !Input
 !     &  LeafNTot, LFSN, LFAREA, LFSLA,            !Input/Output
@@ -29,11 +31,9 @@
 
       REAL, INTENT(INOUT) :: FHLEAF, FHSTEM
 
-!     REAL, DIMENSION(1:LCMax) :: RHOL, RHOS
-
-      INTEGER I, YRDOY
+      INTEGER I
       REAL WTLF, STMWT
-      REAL ADF, NDF
+      REAL ADF, NDF, ADFmass, NDFmass
       REAL, DIMENSION(1:LCMax) :: ADF_Lf_c, NDF_Lf_c
       REAL, DIMENSION(1:LCMax) :: ADF_St_c, NDF_St_c
       REAL TotHarvested, FHTOT
@@ -47,6 +47,8 @@
       FHSTEM_c = 0.0
       ADF = 0.0
       NDF = 0.0
+      ADFmass = 0.0
+      NDFmass = 0.0
       ADF_Lf_c = 0.0; NDF_Lf_c = 0.0
       ADF_St_c = 0.0; NDF_St_c = 0.0
 
@@ -72,7 +74,7 @@
           ENDDO
         ENDIF
 
-!       NEWEST FIRST HARVEST (UNTESTED)
+!!       Remove newest leaf cohorts first (UNTESTED)
 !        WTLF = SUM(LFDM)
 !        IF (FHLEAF > 0.0) THEN
 !          TotalRemoved = 0.0
@@ -86,8 +88,8 @@
 !              CYCLE
 !            ENDIF
 !          ENDDO
-        
-!!       Remove newest cohorts for mow (UNTESTED)
+
+!!       Remove newest stem cohorts first (UNTESTED)
 !        STMWT = SUM(STDM)
 !        IF (FHSTEM > 0.0) THEN
 !          TotalRemoved = 0.0
@@ -159,8 +161,8 @@
             NDF_Lf_c(I) = LeafCellFrac(I) + LeafHemiFrac(I) + 
      &        LeafLigFrac(I)
 
-            ADF = ADF + ADF_Lf_c(I) * FHLEAF_c(I) 
-            NDF = NDF + NDF_Lf_c(I) * FHLEAF_c(I) 
+            ADFmass = ADFmass + ADF_Lf_c(I) * FHLEAF_c(I) 
+            NDFmass = NDFmass + NDF_Lf_c(I) * FHLEAF_c(I) 
           ENDIF
 
           IF (FHSTEM_c(I) > 0.0) THEN
@@ -168,26 +170,21 @@
             NDF_St_c(I) = StemCellFrac(I) + StemHemiFrac(I) + 
      &        StemLigFrac(I)
 
-            ADF = ADF + ADF_St_c(I) * FHSTEM_c(I)
-            NDF = NDF + NDF_St_c(I) * FHSTEM_c(I)
+            ADFmass = ADFmass + ADF_St_c(I) * FHSTEM_c(I)
+            NDFmass = NDFmass + NDF_St_c(I) * FHSTEM_c(I)
           ENDIF
 
-!         Weighted average of ADF and NDF
           TotHarvested = TotHarvested + FHLEAF_c(I) + FHSTEM_c(I)
         ENDDO
 
 !       Divide thru by total mass to get weighted average and convert to %
-        ADF = ADF / TotHarvested * 100.
-        NDF = NDF / TotHarvested * 100.
+        ADF = ADFmass / TotHarvested * 100.
+        NDF = NDFmass / TotHarvested * 100.
 
 !       Cohort harvest values may have been adjusted, recalculate totals
         FHLEAF = SUM(FHLEAF_c)
         FHSTEM = SUM(FHSTEM_c)
         FHTOT = FHLEAF + FHSTEM
-
-!!       temp chp
-!        WRITE(4353,'(I8, 10F10.2)') 
-!     &    YRDOY, WTLF, STMWT, FHLEAF, FHSTEM, FHTOT
       ENDIF
 
       CALL PUT('MHARVEST','ADF', ADF)

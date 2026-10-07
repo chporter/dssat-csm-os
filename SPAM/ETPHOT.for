@@ -200,8 +200,8 @@ C         added by BAK on 10DEC2015
 C========================================================================
 C MEPHO  MEEVP
 C -----  -----
-C  'C'   /='Z' PHOTO used for photosynthesis, WATBAL used for ET
-C  'L'   /='Z' ETPHOT used for photosynthesis, WATBAL used for ET
+C  'C'   /='Z' PHOTO used for photosynthesis, SPAM used for ET
+C  'L'   /='Z' ETPHOT used for photosynthesis, SPAM used for ET
 C  'L'    'Z'  ETPHOT used for both photosynthesis and ET
 C========================================================================
 

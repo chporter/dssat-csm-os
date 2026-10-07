@@ -235,9 +235,9 @@ C-----------------------------------------------------------------------
         WRITE (NOUTDG,200)
   200   FORMAT('@YEAR DOY   DAS   DAP'
      &  ,'      TotSen      NatSen     NMobSen    LoLitSen',
-     &   '    WaterSen       R7Sen',
-     &   '    TotSen_c    NatSen_c    NMbSen_c    LitSen_c',
-     &   '    WatSen_c     R7Sen_c       RATTP      PORLFT')
+     &   '    WaterSen       R7Sen')
+!     &   '    TotSen_c    NatSen_c    NMbSen_c    LitSen_c',
+!     &   '    WatSen_c     R7Sen_c       RATTP      PORLFT')
 
 !     end temp chp
 !=========================================================================
