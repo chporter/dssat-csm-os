@@ -333,6 +333,10 @@ C-----------------------------------------------------------------------
               NatSen_sum = NatSen_sum + NatSen_c(I)
             ENDDO
 
+          ELSE
+            NatSen = 0.0
+            NatSen_c = 0.0
+            NatSen_sum = 0.0
           ENDIF
 !=========================================================================
 !     TEMP CHP Add printout for SENES variables
@@ -461,14 +465,6 @@ C-----------------------------------------------------------------------
           SSNDOT_c(I) = MIN(StemTotSen(I), SSNDOT_c(I))
         ENDDO
 
-!=========================================================================
-!     TEMP CHP Add printout for SENES variables
-
-        WaterSen = SLNDOT
-
-!     end temp chp
-!=========================================================================
-
 C-----------------------------------------------------------------------
 C     This section calculates senescence of leaves and petioles
 C     after R7.
@@ -532,7 +528,7 @@ C-----------------------------------------------------------------------
 
         WRITE (NOUTDG,300)
      &   YEAR, DOY, DAS, DAP, 
-     &   SLDOT, NatSen, NMobSen, LoLitSen, WaterSen, R7Sen,
+     &   SLDOT, NatSen, NMobSen, LoLitSen, SLNDOT, R7Sen,
      &   LeafTotSen_sum, NatSen_sum, NMobSen_sum, LoLitSen_sum, 
      &   WatOzSen_sum, R7Sen_sum, RATTP, PORLFT
 

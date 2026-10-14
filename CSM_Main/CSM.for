@@ -294,7 +294,6 @@ C***********************************************************************
 
       CONTROL % FILEIO  = FILEIO
       CONTROL % FILEX   = FILEX
-      CONTROL % PATHEX  = PATHEX
       CONTROL % RNMODE  = RNMODE
       CONTROL % ROTNUM  = ROTNUM
       CONTROL % TRTNUM  = TRTNUM
@@ -307,6 +306,8 @@ C-KRT**************************************************************
         PATHEX=""
       ENDIF
 C-KRT*************************************************************
+
+      CONTROL % PATHEX  = PATHEX
 
 C-----------------------------------------------------------------------
 C    Run INPUT module
