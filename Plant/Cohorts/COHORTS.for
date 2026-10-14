@@ -53,6 +53,7 @@
      &  LeafTotSen,   !Total leaf senescense today (g[leaf]/m2) = SLDOT
      &  LFNMNSN,      !Leaf senescence due to N mining (g[leaf]/m2)
      &  LFWSSN,       !leaf water stress senescence today (g[leaf]/m2)
+!                     !  (includes ozone stress)
 
      &  StemTotSen,   !Total Stem senescense today (g[stem]/m2) = SSDOT
      &  STNMNSN,      !Stem senescence due to N mining (g[stem]/m2)

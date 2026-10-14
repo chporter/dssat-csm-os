@@ -36,7 +36,8 @@ C  07/08/2003 CHP Added KSEVAP for export to soil evaporation routines.
 !  06/11/2007 CHP PStres1 affects photosynthesis, PStres2 affects growth
 !  06/15/2022 CHP Added CropStatus
 !  01/26/2023 CHP Reduce compile warnings: add EXTERNAL stmts, remove 
-!                 unused variables, shorten lines.
+!                 unused variables, shorten lines. 
+!  02/10/2023 JG  Added ozone effect on photosynthesis and leaf senescence
 !  10/24/2024 CHP Added TRLV to PlantGro.OUT
 !  11/08/2023  FO Added parameters for lint growth rate in GROW.
 !  21/06/2024  FO Added Lint Yield to OPHARV. 
@@ -182,8 +183,13 @@ C=======================================================================
 !     K model (not yet implemented)
       REAL KSTRES
 
-!     Leaf and stem cohorts
-!      REAL, DIMENSION(LCMax) :: PCNLeaf  !, PCNStem
+!     Ozone input added by JG 11/18/2021
+      REAL OZON7
+!     REAL FO3
+      REAL FOZ1
+      REAL OBASE
+!     REAL PRFO3
+      REAL SFOZ1
 
 !-----------------------------------------------------------------------
 !     Define constructed variable types based on definitions in
@@ -230,6 +236,7 @@ C=======================================================================
       TGRO   = WEATHER % TGRO  
       TGROAV = WEATHER % TGROAV
       TMIN   = WEATHER % TMIN  
+      OZON7  = WEATHER % OZON7
 
 !***********************************************************************
 !***********************************************************************
@@ -246,17 +253,20 @@ C=======================================================================
      &  PLIPSH, PLIGSD, PLIGSH, PMINSD, PMINSH, POASD,    !Output
      &  POASH, PORMIN, PROLFI, PRORTI, PROSHI, PROSTI,    !Output
      &  R30C2, RCH2O, RES30C, RFIXN, RLIG, RLIP, RMIN,    !Output
-     &  RNH4C, RNO3C, ROA, RPRO, RWUEP1, RWUMX, TTFIX)    !Output
+     &  RNH4C, RNO3C, ROA, RPRO, RWUEP1, RWUMX, TTFIX,    !Output
+!       JG added for ozone
+     &  FOZ1, SFOZ1, OBASE)                               !Output
 
       KTRANS = KEP
       KSEVAP = -99.   !Defaults to old method of light
                       !  extinction calculation for soil evap.
 
       IF (CROP .NE. 'FA' .AND. MEPHO .EQ. 'C') THEN
-        CALL PHOTO(CONTROL, 
+        CALL PHOTO(CONTROL, ISWITCH,
      &    BETN, CO2, DXR57, EXCESS, KCAN, KC_SLOPE,       !Input
-     &    NR5, PAR, PStres1, SLPF, RNITP, SLAAD,          !Input
+     &    NR5, OZON7, PAR, PStres1, SLPF, RNITP, SLAAD,   !Input
      &    SWFAC, TDAY, XHLAI, XPOD,                       !Input
+     &    FOZ1, OBASE,                                    !Input
      &    AGEFAC, PG)                                     !Output
       ENDIF
 
@@ -367,8 +377,8 @@ C-----------------------------------------------------------------------
 !-----------------------------------------------------------------------
 C     Call leaf senescence routine for initialization
 C-----------------------------------------------------------------------
-        CALL SENES(RUNINIT, 
-     &    FILECC, CLW, DTX, KCAN, NR7, NRUSLF, PAR,       !Input
+        CALL SENES(RUNINIT, ISWITCH,
+     &    FILECC, CLW, DTX, KCAN, NR7, NRUSLF, OZON7, PAR,!Input
      &    RHOL, SLAAD, STMWT, SWFAC, VSTAGE, WTLF, XLAI,  !Input
 
 !=========================================================================
@@ -379,6 +389,7 @@ C-----------------------------------------------------------------------
 !     END TEMP CHP
 !=========================================================================
 
+     &    SFOZ1, OBASE,                                   !Input
      &    SLDOT, SLNDOT, SSDOT, SSNDOT)                   !Output
 
 C-----------------------------------------------------------------------
@@ -492,10 +503,11 @@ C-----------------------------------------------------------------------
           CALL GET('SPAM', 'AGEFAC', AGEFAC)
           CALL GET('SPAM', 'PG'    , PG)
         ELSEIF (MEPHO .EQ. 'C') THEN
-          CALL PHOTO(CONTROL, 
+          CALL PHOTO(CONTROL, ISWITCH,
      &    BETN, CO2, DXR57, EXCESS, KCAN, KC_SLOPE,       !Input
-     &    NR5, PAR, PStres1, SLPF, RNITP, SLAAD,          !Input
+     &    NR5, OZON7, PAR, PStres1, SLPF, RNITP, SLAAD,   !Input
      &    SWFAC, TDAY, XHLAI, XPOD,                       !Input
+     &    FOZ1, OBASE,                                    !Input
      &    AGEFAC, PG)                                     !Output
         ENDIF
       ENDIF
@@ -652,8 +664,8 @@ C     Initialize pest coupling point and damage variables
 !-----------------------------------------------------------------------
 C     Call leaf senescence routine for initialization
 C-----------------------------------------------------------------------
-      CALL SENES(SEASINIT, 
-     &    FILECC, CLW, DTX, KCAN, NR7, NRUSLF, PAR,       !Input
+      CALL SENES(SEASINIT, ISWITCH,
+     &    FILECC, CLW, DTX, KCAN, NR7, NRUSLF, OZON7, PAR,!Input
      &    RHOL, SLAAD, STMWT, SWFAC, VSTAGE, WTLF, XLAI,  !Input
 
 !=========================================================================
@@ -664,6 +676,7 @@ C-----------------------------------------------------------------------
 !     END TEMP CHP
 !=========================================================================
 
+     &    SFOZ1, OBASE,                                   !Input
      &    SLDOT, SLNDOT, SSDOT, SSNDOT)                   !Output
 
 C-----------------------------------------------------------------------
@@ -771,10 +784,11 @@ C-GH Add leaf Cohorts
           CALL GET('SPAM', 'AGEFAC', AGEFAC)
           CALL GET('SPAM', 'PG'    , PG)
         ELSEIF (MEPHO .EQ. 'C') THEN
-          CALL PHOTO(CONTROL, 
+          CALL PHOTO(CONTROL, ISWITCH,
      &    BETN, CO2, DXR57, EXCESS, KCAN, KC_SLOPE,       !Input
-     &    NR5, PAR, PStres1, SLPF, RNITP, SLAAD,          !Input
+     &    NR5, OZON7, PAR, PStres1, SLPF, RNITP, SLAAD,   !Input
      &    SWFAC, TDAY, XHLAI, XPOD,                       !Input
+     &    FOZ1, OBASE,                                    !Input
      &    AGEFAC, PG)                                     !Output
         ENDIF
       ENDIF
@@ -1232,8 +1246,8 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C     Call leaf senescence routine to compute leaf loss variables
 C-----------------------------------------------------------------------
-      CALL SENES(INTEGR, 
-     &    FILECC, CLW, DTX, KCAN, NR7, NRUSLF, PAR,       !Input
+      CALL SENES(INTEGR, ISWITCH,
+     &    FILECC, CLW, DTX, KCAN, NR7, NRUSLF, OZON7, PAR,!Input
      &    RHOL, SLAAD, STMWT, SWFAC, VSTAGE, WTLF, XLAI,  !Input
 
 !=========================================================================
@@ -1244,6 +1258,7 @@ C-----------------------------------------------------------------------
 !     END TEMP CHP
 !=========================================================================
 
+     &    SFOZ1, OBASE,                                   !Input
      &    SLDOT, SLNDOT, SSDOT, SSNDOT)                   !Output
 
 C-----------------------------------------------------------------------
@@ -1480,11 +1495,13 @@ C----------------------------------
      &  ShutMob, RootMob, ShelMob,                        !Output
      &  TOSHMINE,TOCHMINE,HPODWT,HSDWT,HSHELWT)           !Output
 
-      CALL SENES(DYNAMIC, 
-     &    FILECC, CLW, DTX, KCAN, NR7, NRUSLF, PAR,       !Input
+      CALL SENES(DYNAMIC, ISWITCH,
+     &    FILECC, CLW, DTX, KCAN, NR7, NRUSLF, OZON7, PAR,!Input
      &    RHOL, SLAAD, STMWT, SWFAC, VSTAGE, WTLF, XLAI,  !Input
-     &    YRPLT,
+     &    YRPLT,  !temporary input
+     &    SFOZ1, OBASE,                                   !Input
      &    SLDOT, SLNDOT, SSDOT, SSNDOT)                   !Output
+
 
 !     END TEMP CHP
 !=========================================================================
@@ -1712,6 +1729,7 @@ C----------------------------------
 ! NRUSST    N actually mobilized from stems in a day (g[N]/m2-d)
 ! NSTRES    Nitrogen stress factor (1=no stress, 0=max stress) 
 ! NVEG0     Day of emergence (d)
+! OZON7     Daily 7-hour mean ozone concentration (9:00-15:59), ppb
 ! PAR       Daily photosynthetically active radiation or photon flux 
 !             density (moles[quanta]/m2-d)
 ! PCARSH    Proportion of shell tissue that is carbohydrate (fraction)
