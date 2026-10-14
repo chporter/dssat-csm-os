@@ -234,10 +234,10 @@ C-----------------------------------------------------------------------
           FHLEAF=0.0
           FHSTEM=0.0
           FHVSTG=0.0
-          IF(RSPLFa>=0)THEN
+          IF(RSPLFa >= 0.0) THEN
             FHLEAF=WTLF-(MOWa/10.)*RSPLFa/100.
             FHSTEM=STMWT-(MOWa/10.)*(1.0-RSPLFa/100.)
-          ELSE
+          ELSEIF (WTLF + STMWT > 0.0) THEN
             IF (WTLF + STMWT > 0.0) THEN
               FHLEAF=WTLF-(MOWa/10)*WTLF/(WTLF+STMWT)
               FHSTEM=STMWT-(MOWa/10)*STMWT/(WTLF+STMWT)
@@ -319,8 +319,8 @@ C-----------------------------------------------------------------------
 !     Summarize today's harvest
       if (fhtot > 0.0) then
         MOWED = .TRUE.
-        fhlfn = fhleaf*pcnl/100
-        fhstn = fhstem*pcnst/100
+        fhlfn = fhleaf*pcnl/100.
+        fhstn = fhstem*pcnst/100.
         fhtotn = fhlfn+fhstn
         
         fhcrlf = fhleaf*rhol
@@ -370,16 +370,16 @@ C-----------------------------------------------------------------------
       ELSE
         FHLEAF = 0.0
         FHSTEM = 0.0
-        fhtot = 0
-        fhlfn = 0
-        fhstn = 0
-        fhtotn = 0
-        fhcrlf = 0
-        fhcrst = 0
-        fhpctn = 0
-        fhplig = 0
-        fhpcho = 0
-        fhpctlf = 0
+        fhtot = 0.0
+        fhlfn = 0.0
+        fhstn = 0.0
+        fhtotn = 0.0
+        fhcrlf = 0.0
+        fhcrst = 0.0
+        fhpctn = 0.0
+        fhplig = 0.0
+        fhpcho = 0.0
+        fhpctlf = 0.0
       ENDIF
 
       IF(CUTDAY .EQ. 0) THEN
