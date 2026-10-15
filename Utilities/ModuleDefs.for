@@ -100,6 +100,7 @@ C             CHP Added TRTNUM to CONTROL variable.
         CHARACTER (len=8)  MODEL, ENAME
         CHARACTER (len=12) FILEX
         CHARACTER (len=30) FILEIO
+        CHARACTER (len=80) PATHEX
         CHARACTER (len=102)DSSATP
         CHARACTER (len=120) :: SimControl = 
      &  "                                                            "//
@@ -422,7 +423,7 @@ C             CHP Added TRTNUM to CONTROL variable.
 !     4.  All routines accessing GET or PUT procedures must include a 
 !         "USE ModuleData" statement.
 !     5.  A call to the PUT routine must be used to store data prior to
-!         a call to the GET routine to retrive the data.
+!         a call to the GET routine to retrieve the data.
 
       USE ModuleDefs
       SAVE
@@ -511,6 +512,7 @@ C             CHP Added TRTNUM to CONTROL variable.
 !       Could potentially add more in-season harvest variables as needed.
         INTEGER ISH_date
         REAL ISH_wt
+        REAL ADF, NDF  !forage quality indices
       END TYPE 
 
 !     Data which can be transferred between modules
@@ -785,6 +787,8 @@ C             CHP Added TRTNUM to CONTROL variable.
       CASE ('MHARVEST')
         SELECT CASE(VarName)
         CASE('ISH_wt'); Value = SAVE_data % MHARVEST % ISH_wt
+        CASE('ADF')   ; Value = SAVE_data % MHARVEST % ADF
+        CASE('NDF')   ; Value = SAVE_data % MHARVEST % NDF
         CASE DEFAULT; ERR = .TRUE.
         END SELECT       
 
@@ -918,6 +922,8 @@ C             CHP Added TRTNUM to CONTROL variable.
       CASE ('MHARVEST')
         SELECT CASE(VarName)
         CASE('ISH_wt'); SAVE_data % MHARVEST % ISH_wt = Value
+        CASE('ADF')   ; SAVE_data % MHARVEST % ADF = Value
+        CASE('NDF')   ; SAVE_data % MHARVEST % NDF = Value
         CASE DEFAULT; ERR = .TRUE.
         END SELECT       
 

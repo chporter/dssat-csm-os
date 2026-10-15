@@ -1520,7 +1520,8 @@ SWCN1  Ksat Lyr 1      Saturated hydraulic conductivity in layer 1 (cm/hr)      
 SWCN2  Ksat Lyr 2      Saturated hydraulic conductivity in layer 2 (cm/hr)      .
 SWCN3  Ksat Lyr 3      Saturated hydraulic conductivity in layer 3 (cm/hr)      .
 SWCN4  Ksat Lyr 4      Saturated hydraulic conductivity in layer 4 (cm/hr)      .
-TOTAW  Avail wat mm    Available water capacity (mm)                            .
+TOTAW  Avail wat mm    Plant available water (mm)                               .
+TOTAWC Avail wat cap   Available water capacity (mm)                            .
 
 *Leaves
 @CDE   LABEL           DESCRIPTION............................................  SYNONYMS

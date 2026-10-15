@@ -66,6 +66,7 @@ C=======================================================================
       
       IMPLICIT NONE
       EXTERNAL IPGROW, ERROR, STRESS, LTGROW
+      EXTERNAL TIMDIF, YR_DOY, GETLUN, HEADER
       SAVE
 !-----------------------------------------------------------------------
 
@@ -143,6 +144,7 @@ C=======================================================================
      &  SDPRO, WTFSD, WTPSD, SDWTPL
       REAL RMIN, SDLIP, WLFI, WSTI, WRTI
       REAL CLW, CSW
+      REAL LCADD, LNADD, SCADD, SNADD
 
 !     Surface and soil residue due to daily senescence of plant matter
       REAL SENRT(NL), SENNOD(NL)
@@ -167,6 +169,22 @@ C=======================================================================
       TYPE (SwitchType)  ISWITCH
       TYPE (SoilType)    SOILPROP
       TYPE (ResidueType) SENESCE
+
+!=========================================================================
+!     TEMP CHP Add printout for GROW variables
+
+      CHARACTER*10 OUTGR  !GROW.OUT
+      INTEGER NOUTDG, ERRNUM, YEAR, DOY, DAS, DAP, TIMDIF
+      LOGICAL FEXIST
+
+      YRDOY = CONTROL % YRDOY
+      DAS   = CONTROL % DAS
+      DAP = MAX(0,TIMDIF(YRPLT,YRDOY))
+      IF (DAP > DAS) DAP = 0
+      CALL YR_DOY(YRDOY, YEAR, DOY) 
+
+!     end temp chp
+!=========================================================================
 
 !     Transfer values from constructed data types into local variables.
       !Don't get DYNAMIC from CONTROL variable because it will not
@@ -241,6 +259,16 @@ C-----------------------------------------------------------------------
      &    WSDDOT, TAVG, TURFAC, NSTRES,                          !Input
      &    LTDOT)                                                 !Output
       ENDIF
+
+!=========================================================================
+!     TEMP CHP Add printout for GROW variables
+
+          OUTGR  = 'GROW.OUT'
+          CALL GETLUN('OUTGR',  NOUTDG)
+
+!     end temp chp
+!=========================================================================
+
 !***********************************************************************
 !***********************************************************************
 !     Seasonal initialization - run once per season
@@ -375,6 +403,43 @@ C-----------------------------------------------------------------------
      &    WSDDOT, TAVG, TURFAC, NSTRES,                          !Input
      &    LTDOT)                                                 !Output
       ENDIF
+
+!=========================================================================
+!     TEMP CHP Add printout for GROW variables
+
+!       Initialize daily GROW output file      
+        INQUIRE (FILE = OUTGR, EXIST = FEXIST)
+        IF (FEXIST) THEN
+          OPEN (UNIT = NOUTDG, FILE = OUTGR, STATUS = 'OLD',
+     &      IOSTAT = ERRNUM, POSITION = 'APPEND')
+        ELSE
+          OPEN (UNIT = NOUTDG, FILE = OUTGR, STATUS = 'NEW',
+     &      IOSTAT = ERRNUM)
+          WRITE(NOUTDG,'("*GROW OUTPUT FILE")')
+        ENDIF
+
+        !Write headers
+        CALL HEADER(SEASINIT, NOUTDG, CONTROL % RUN)
+
+        WRITE (NOUTDG,200)
+  200   FORMAT('@YEAR DOY   DAS   DAP'
+     &  '        WTLF        XLAI       WCRLF      PLEAFN',
+     &  '       WTNLF       WNRLF        LFSN',
+     &  '       WLDOT       LCADD       LNADD      CRUSLF',
+     &  '      NRUSLF      WLIDOT      WLFDOT       SLDOT'
+     &  '      SLNDOT       NLOFF       NLDOT',
+     &  '       NGRLF      WLDOTN',
+
+     &  '       STMWT       WCRST       PCNST',
+     &  '       WTNST       WNRST        STSN',
+     &  '       WSDOT       SCADD       SNADD      CRUSST',
+     &  '      NRUSST      WSIDOT       SSDOT',
+     &  '      SSNDOT       NSOFF       NSDOT',
+     &  '       NGRST      WSDOTN      WCRLDT')
+
+!     end temp chp
+!=========================================================================
+
 !***********************************************************************
 !***********************************************************************
 !     EMERGENCE CALCULATIONS - Performed once per season upon emergence
@@ -445,6 +510,9 @@ C     Initial seedling or transplant weight
       WTNSD  = 0.0
       WTNTOT = WTNLF + WTNST + WTNRT + WTNSH + WTNSD
 
+!     2026-04-01 chp added initialization for mobile N
+      WNRLF = MAX (WTNLF - PROLFF * 0.16 * (WTLF-WCRLF), 0.0)
+
 !     Seed or transplant N at planting
       SDNPL  = WTPSD * SDPRO * 0.16 * 0.75 * PLTPOP -
      &  (WTNLF + WTNST + WTNRT)
@@ -502,9 +570,17 @@ C-----------------------------------------------------------------------
 !     A positive value represents leaf mass lost. (kg/ha)
       ShutMob = (NRUSLF/0.16 + CRUSLF) * 10.      !kg/ha
 
+      LCADD = 0.0
+      LNADD = 0.0
+
       IF (WTLF > 1.E-4) THEN
         WLDOT = WLDOT + (CADLF+NADLF/0.16) *
      &    (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
+
+        LCADD = CADLF * (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
+        LNADD = NADLF/0.16 *
+     &    (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
+
         ADD = (CADLF+NADLF/0.16) *
      &    (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
         ShutMob = ShutMob - ADD * 10.             !kg/ha
@@ -518,18 +594,26 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C       WSDOT = Net stem growth rate
 C-----------------------------------------------------------------------
+      SCADD = 0.0
+      SNADD = 0.0
       WSDOT = WSDOTN - SSDOT - WSIDOT - NRUSST / 0.16 - CRUSST
       ShutMob = ShutMob + (NRUSST / 0.16 + CRUSST) * 10.      !kg/ha
 
-      IF (STMWT > 1.E-4) THEN
+      IF (STMWT > 1.E-6) THEN
          WSDOT = WSDOT + (CADST+NADST/0.16) *
      &   (1. - MIN(1.0,(SSDOT+WSIDOT)/STMWT))
+
+        SCADD = CADST * (1. - MIN(1.0,(SSDOT+WSIDOT)/STMWT))
+        SNADD = NADST/0.16 *
+     &    (1. - MIN(1.0,(SSDOT+WSIDOT)/STMWT))
+
         ADD = (CADST+NADST/0.16) *
      &    (1. - MIN(1.0,(SSDOT+WSIDOT)/STMWT))
         ShutMob = ShutMob - ADD * 10.                         !kg/ha
       ELSE
          ADD = 0.
       ENDIF
+
       IF (WSDOT < 0.0) THEN
         WSDOT = MAX(WSDOT, -STMWT)
       ENDIF
@@ -1004,6 +1088,8 @@ C     Calculate Remaining N in Shells, Leaves, Stems, and Roots
 C     That can be Mined (Plant N-Balance).
 C-----------------------------------------------------------------------
       IF ((WTLF - WCRLF) > 1.E-4) THEN
+!     WNRLF    N available for mobilization from leaves above lower limit of 
+!            mining (g[N] / m2)
         WNRLF = MAX (WTNLF - PROLFF * 0.16 * (WTLF-WCRLF), 0.0)
       ELSE
         WNRLF = 0.0
@@ -1165,6 +1251,43 @@ C-----------------------------------------------------------------------
 !        Do this in P module:
 !        SENESCE % CumResE(P) = SENESCE % CumResE(P) + SenE(L,P)
       ENDDO
+
+!=========================================================================
+!     TEMP CHP Add printout for GROW variables
+
+!***********************************************************************
+!***********************************************************************
+!     Daily output
+!***********************************************************************
+      ELSEIF (DYNAMIC .EQ. OUTPUT) THEN
+
+        WRITE (NOUTDG,300)
+     &   YEAR, DOY, DAS, DAP, 
+     &   WTLF, XLAI, WCRLF, PCNL, WTNLF, WNRLF, WTNLF - WNRLF,
+     &   WLDOT, LCADD, LNADD, CRUSLF, NRUSLF/0.16, 
+     &   WLIDOT, WLFDOT, SLDOT, SLNDOT, 
+     &   NLOFF, NLDOT, NGRLF, WLDOTN,
+
+     &   STMWT, WCRST, PCNST, WTNST, WNRST, WTNST - WNRST,
+     &   WSDOT, SCADD, SNADD, CRUSST, NRUSST/0.16, 
+     &   WSIDOT, SSDOT, SSNDOT, 
+     &   NSOFF, NSDOT, NGRST, WSDOTN, WRCLDT
+
+  300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
+     &    50F12.6)
+
+!     still temp chp...
+
+!***********************************************************************
+!***********************************************************************
+!     Seasonal Output 
+!***********************************************************************
+      ELSE IF (DYNAMIC .EQ. SEASEND) THEN
+C-----------------------------------------------------------------------
+          CLOSE (NOUTDG)
+
+!     end temp chp
+!=========================================================================
 
 C***********************************************************************
 C***********************************************************************
@@ -1719,7 +1842,7 @@ C=======================================================================
 !            matter. Structure of variable is defined in ModuleDefs.for 
 ! SENWT    Leaf senescence due to N mobilization (g[leaf] / m2[ground])
 ! SHELWT   Total mass of all shells (g / m2)
-! SLA      Specific leaf area (cm2[leaf] / m2[ground])
+! SLA      Specific leaf area (cm2[leaf] / g[leaf])
 ! SLAAD    Specific leaf area, excluding weight of C stored in leaves
 !           (cm2[leaf] / g[leaf])
 ! SLDOT    Defoliation due to daily leaf senescence (g/m2/day)

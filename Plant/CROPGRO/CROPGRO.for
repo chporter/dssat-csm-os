@@ -38,7 +38,6 @@ C  07/08/2003 CHP Added KSEVAP for export to soil evaporation routines.
 !  01/26/2023 CHP Reduce compile warnings: add EXTERNAL stmts, remove 
 !                 unused variables, shorten lines. 
 !  02/10/2023 JG  Added ozone effect on photosynthesis and leaf senescence
-!                 unused variables, shorten lines.
 !  10/24/2024 CHP Added TRLV to PlantGro.OUT
 !  11/08/2023  FO Added parameters for lint growth rate in GROW.
 !  21/06/2024  FO Added Lint Yield to OPHARV. 
@@ -184,10 +183,10 @@ C=======================================================================
 
 !     Ozone input added by JG 11/18/2021
       REAL OZON7
-      REAL FO3
+!     REAL FO3
       REAL FOZ1
       REAL OBASE
-      REAL PRFO3
+!     REAL PRFO3
       REAL SFOZ1
 
 !-----------------------------------------------------------------------
@@ -253,7 +252,8 @@ C=======================================================================
      &  POASH, PORMIN, PROLFI, PRORTI, PROSHI, PROSTI,    !Output
      &  R30C2, RCH2O, RES30C, RFIXN, RLIG, RLIP, RMIN,    !Output
      &  RNH4C, RNO3C, ROA, RPRO, RWUEP1, RWUMX, TTFIX,    !Output
-     &  FOZ1, SFOZ1, OBASE)                               !Output  JG added for ozone
+!       JG added for ozone
+     &  FOZ1, SFOZ1, OBASE)                               !Output
 
       KTRANS = KEP
       KSEVAP = -99.   !Defaults to old method of light
