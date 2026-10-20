@@ -116,7 +116,7 @@ C     NMINELF SHOULD HAVE BEEN LFNMINE, ETC. IN EARLIER VERSION, NOW NMINEP=TSNM
 !            ENDIF
 !      ENDIF
         
-        NRUSLF = LFSNMOB + ANMINELF
+        NRUSLF = LFSNMOB + ANMINELF !ANMINELF = 0.0
         NRUSST = STSNMOB + ANMINEST
         NRUSRT = RTSNMOB + ANMINERT
         NRUSSR = SRSNMOB + ANMINESR
@@ -132,18 +132,19 @@ C-----------------------------------------------------------------------
 
       NRUSTOT = NRUSLF+NRUSST+NRUSSH+NRUSRT+NRUSSR
       IF (NRUSTOT .GT. 0.0) THEN
-      PNMLF=NRUSLF/NRUSTOT
-      PNMST=NRUSST/NRUSTOT
-      PNMRT=NRUSRT/NRUSTOT
-      PNMSR=NRUSSR/NRUSTOT
-      PNMSH=NRUSSH/NRUSTOT
+        PNMLF=NRUSLF/NRUSTOT
+        PNMST=NRUSST/NRUSTOT
+        PNMRT=NRUSRT/NRUSTOT
+        PNMSR=NRUSSR/NRUSTOT
+        PNMSH=NRUSSH/NRUSTOT
       ELSE
-      PNMLF=0.0
-      PNMST=0.0
-      PNMRT=0.0
-      PNMSR=0.0
-      PNMSH=0.0
+        PNMLF=0.0
+        PNMST=0.0
+        PNMRT=0.0
+        PNMSR=0.0
+        PNMSH=0.0
       ENDIF
+
 !***********************************************************************
 !***********************************************************************
 !     END OF DYNAMIC IF CONSTRUCT
