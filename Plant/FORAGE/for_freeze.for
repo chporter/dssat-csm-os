@@ -23,16 +23,7 @@ C========================================================================
      &    CropStatus, FRZDL, PSRLYRD, PSRSRFD,        !Output
      &    WLFDOT, WSFDOT, WSRFDOT)                    !Output 
 
-!      variables previously in argument list, but not used:
-!      FILEIO, RUN
-!      IDETO, NOUTDO, 
-!      NRUSSR, PSRSRFL, PSRLYR1,
-!      SRFTEMP, SSRDOT, ST, STRWT,
-!      SRLYRD, SRSRFD, , VSTAGE
-
       USE ModuleDefs     !Definitions of constructed variable types, 
-
-
 C-----------------------------------------------------------------------
       IMPLICIT NONE
       EXTERNAL WARNING, TIMDIF
@@ -54,6 +45,8 @@ C      part of abandoned strategy to allow partial to total kill
 C      of the storage organ.  Plant would live as long as there
 C      was storage organ left.
 C-----------------------------------------------------------------------
+      WLFDOT = 0.0
+      WSFDOT = 0.0
 
       WSRFDOT = 0.0
 
@@ -66,45 +59,46 @@ C      temperature multiplied by the proportion lost per degree below
 C      threshold.  For total kill (like DSSAT35) set FRZDC=1.0
 C-----------------------------------------------------------------------
 
-            FRZDL = (FREEZ1 - TMIN) * FRZDC
-            FRZDL = MIN(FRZDL,1.0)
-            FRZDL = MAX(FRZDL,0.0)
+      FRZDL = (FREEZ1 - TMIN) * FRZDC
+      FRZDL = MIN(FRZDL,1.0)
+      FRZDL = MAX(FRZDL,0.0)
 
-            WLFDOT = (WTLF - SLDOT - NRUSLF/0.16) * FRZDL
-            WLFDOT = MIN ((WTLF - SLDOT - NRUSLF/0.16), WLFDOT)
+      IF (FRZDL > 0.0) THEN
+
+        WLFDOT = (WTLF - SLDOT - NRUSLF/0.16) * FRZDL
+        WLFDOT = MIN ((WTLF - SLDOT - NRUSLF/0.16), WLFDOT)
+
 C-----------------------------------------------------------------------
 C      SJR 5/12/04 Moved VSTAGE adjustment to GROW
 C       to be compatible with adjustment for senescence
 C-----------------------------------------------------------------------
-!            VSTAGE = ((WTLF-WLFDOT)/WTLF) * VSTAGE
+!       VSTAGE = ((WTLF-WLFDOT)/WTLF) * VSTAGE
 
-            WSFDOT = (STMWT - SSDOT - NRUSST/0.16) * FRZDL
-            WSFDOT = MIN ((STMWT - SSDOT - NRUSST/0.16), WSFDOT)
+        WSFDOT = (STMWT - SSDOT - NRUSST/0.16) * FRZDL
+        WSFDOT = MIN ((STMWT - SSDOT - NRUSST/0.16), WSFDOT)
 
 
-            IF (TMIN .LE. FREEZ2) THEN
-                    IF (MDATE .LT. 0) THEN
-                        MDATE = YRDOY
-                        CropStatus = 32 !cold stress
-                        ENDIF
+      ENDIF
 
-                  WLFDOT = WTLF - SLDOT - NRUSLF/0.16
+      IF (TMIN .LE. FREEZ2) THEN
+        IF (MDATE .LT. 0) THEN
+          MDATE = YRDOY
+          CropStatus = 32 !cold stress
+        ENDIF
+
+        WLFDOT = WTLF - SLDOT - NRUSLF/0.16
+
 C-----------------------------------------------------------------------
 C      SJR 5/12/04 Moved VSTAGE adjustment to GROW
 C       to be compatible with adjustment for senescence
 C-----------------------------------------------------------------------
-!                  VSTAGE = 0.0
-                  WSFDOT = STMWT - SSDOT - NRUSST/0.16
+!       VSTAGE = 0.0
+        WSFDOT = STMWT - SSDOT - NRUSST/0.16
 
 
-            ENDIF
-      
+      ENDIF
 
       DAP   = MAX(0,TIMDIF(YRPLT,YRDOY))
-
-        
-      
-
       WRITE(MESSAGE(1),100) DAP
       WRITE(MESSAGE(2),110) YRDOY
       CALL WARNING(1, 'FREEZE', MESSAGE)

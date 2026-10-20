@@ -11,6 +11,7 @@ C  10/15/2020 FO  Fixed path issue for MOWFILE.
 C  06/23/2021 FO  Update MOWFILE to handle paths with spaces.
 C  01/28/2022 DP/FO/TF Added AutomaticMOW
 C  01/28/2022 DP/TF  Added GDD option for AutomaticMOW
+!  06/16/2026 CHP Added MOWED variable TRUE after any mowing event.
 C-----------------------------------------------------------------------
 C  INPUT  : 
 C
@@ -32,8 +33,8 @@ C=======================================================================
      &              MOWCOUNT, TGMIN, VTO1, VTB1, MOWREF, 
      &              RSREF, YFREQ, YRSREF, YCUTHT, YCHMOW,
      &              XCUTHT, XCHMOW, XFRGDD, XFREQ, CUTDAY,
-     &              PROLFF, PROSTF, pliglf, pligst)
-
+     &  PROLFF, PROSTF, pliglf, pligst, 
+     &  MOWED)                                  !Output
 !     2023-04-28 TF Removed unused variables in argument list:
 !    CUHT
 
@@ -53,6 +54,7 @@ C=======================================================================
       INTEGER I,MOWCOUNT,j
       integer,dimension(8) :: date_time
       INTEGER DYNAMIC,ERRNUM,LUNIO,PATHL  !LUNEXP,LINEXP,LNHAR,
+      LOGICAL MOWED
 
       REAL,ALLOCATABLE,DIMENSION(:) :: MOW,RSPLF,MVS,rsht
       REAL FHLEAF,FHSTEM,FHVSTG
@@ -149,6 +151,7 @@ C***********************************************************************
 
         MOWGDD = 0.0
         MOWCOUNT = 1
+        MOWED = .FALSE. !set to TRUE after the first mow
 
         CALL PUT('MHARVEST','ISH_date',-99)
         CALL PUT('MHARVEST','ISH_wt',  -99.)
@@ -349,6 +352,7 @@ C   FO -  05/07/2020 Add new Y4K subroutine call to convert YRDOY
 C-----------------------------------------------------------------------
         MOWGDD = 0.0
         CUTNO = 1
+        MOWED = .FALSE. !set to TRUE after the first mow
 
         CALL PUT('MHARVEST','ISH_date',-99)
         CALL PUT('MHARVEST','ISH_wt',  -99.)
@@ -409,6 +413,9 @@ C-----------------------------------------------------------------------
 !               canht=max(rsht(i),0.0)     !enter rsht in cm
 
                 fhtot = fhleaf+fhstem
+                IF (FHTOT > 0.0) THEN  
+                  MOWED = .TRUE.
+                ENDIF
 
                 fhlfn = fhleaf*pcnl/100
                 fhstn = fhstem*pcnst/100
@@ -601,6 +608,7 @@ C-----------------------------------------------------------------------
               fhplig = (fhleaf*pliglf+fhstem*pligst)/fhtot*100
               fhpcho = (fhcrlf+fhcrst)/fhtot*100
               fhpctlf = fhleaf/fhtot*100
+              MOWED = .TRUE.
             ELSE
               fhpctn = 0
               fhplig = 0
@@ -700,6 +708,7 @@ C-----------------------------------------------------------------------
 
 !         Send out amount harvested today for MgmtEvent.OUT file
           IF (fhtot > 0.0) THEN
+            MOWED = .TRUE.
             CALL PUT('MHARVEST','ISH_date',YRDOY)
             CALL PUT('MHARVEST','ISH_wt',  fhtot*10.)
           ENDIF
