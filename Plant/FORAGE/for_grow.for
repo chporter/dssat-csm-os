@@ -93,6 +93,10 @@ C=======================================================================
         ! parameters, hourly weather data.
       IMPLICIT NONE
       EXTERNAL FOR_IPGROW, ERROR, FOR_STRESS
+!     TEMP CHP
+      EXTERNAL TIMDIF, YR_DOY, GETLUN, HEADER
+!     END TEMP CHP
+
       SAVE
 !-----------------------------------------------------------------------
 
@@ -191,6 +195,7 @@ C=======================================================================
 
       REAL RMIN, SDLIP, WLFI, WSTI, WRTI
       REAL CLW, CSW
+      REAL LCADD, LNADD, SCADD, SNADD
 
 !     Surface and soil residue due to daily senescence of plant matter
 !      REAL SENCLN(0:NL, 3), SENRT(NL), SENNOD(NL)
@@ -254,12 +259,29 @@ C-----------------------------------------------------------------------
       TYPE (SoilType)    SOILPROP
       TYPE (ResidueType) SENESCE
       
+
+
+!=========================================================================
+!     TEMP CHP Add printout for GROW variables
+
+      CHARACTER*10 OUTGR  !GROW.OUT
+      INTEGER NOUTDG, ERRNUM, YEAR, DOY, DAS, DAP, TIMDIF
+      LOGICAL FEXIST
+
       YRDOY  = CONTROL % YRDOY
+      DAS   = CONTROL % DAS
+      DAP = MAX(0,TIMDIF(YRPLT,YRDOY))
+      IF (DAP > DAS) DAP = 0
+      CALL YR_DOY(YRDOY, YEAR, DOY) 
+
+!     end temp chp
+!=========================================================================
+
+
       crop   = control % crop
       trtno  = control % trtnum
-      run    = control % run
       ename  = control % ename
-      
+
 !     Transfer values from constructed data types into local variables.
       !Don't get DYNAMIC from CONTROL variable because it will not
       ! have EMERG value (set only in CROPGRO).
@@ -333,6 +355,15 @@ C-----------------------------------------------------------------------
         PCNMIN = PROLFF * 16.0            !Moved from INCOMP
 !-----------------------------------------------------------------------
       ENDIF
+
+!=========================================================================
+!     TEMP CHP Add printout for GROW variables
+
+          OUTGR  = 'GROW.OUT'
+          CALL GETLUN('OUTGR',  NOUTDG)
+
+!     end temp chp
+!=========================================================================
 
 !***********************************************************************
 !***********************************************************************
@@ -467,6 +498,44 @@ C-----------------------------------------------------------------------
 !      IF (CROP .NE. 'FA') THEN
 !        SLA    = F                 
 !      ENDIF
+
+
+!=========================================================================
+!     TEMP CHP Add printout for GROW variables
+
+!       Initialize daily GROW output file      
+        INQUIRE (FILE = OUTGR, EXIST = FEXIST)
+        IF (FEXIST) THEN
+          OPEN (UNIT = NOUTDG, FILE = OUTGR, STATUS = 'OLD',
+     &      IOSTAT = ERRNUM, POSITION = 'APPEND')
+        ELSE
+          OPEN (UNIT = NOUTDG, FILE = OUTGR, STATUS = 'NEW',
+     &      IOSTAT = ERRNUM)
+          WRITE(NOUTDG,'("*GROW OUTPUT FILE")')
+        ENDIF
+
+        !Write headers
+        CALL HEADER(SEASINIT, NOUTDG, CONTROL % RUN)
+
+        WRITE (NOUTDG,200)
+  200   FORMAT('@YEAR DOY   DAS   DAP'
+     &  '        WTLF        XLAI       WCRLF      PLEAFN',
+     &  '       WTNLF       WNRLF        LFSN',
+     &  '       WLDOT       LCADD       LNADD      CRUSLF',
+     &  '      NRUSLF      WLIDOT      WLFDOT       SLDOT'
+     &  '      SLNDOT       NLOFF       NLDOT',
+     &  '       NGRLF      WLDOTN      FHLEAF        RHOL',
+     &  '      WRCLDT',
+     &  '       STMWT       WCRST       PCNST',
+     &  '       WTNST       WNRST        STSN',
+     &  '       WSDOT       SCADD       SNADD      CRUSST',
+     &  '      NRUSST      WSIDOT      WSFDOT       SSDOT',
+     &  '      SSNDOT       NSOFF       NSDOT',
+     &  '       NGRST      WSDOTN      FHSTEM        RHOS',
+     &  '      WRCSDT')
+
+!     end temp chp
+!=========================================================================
 
 !***********************************************************************
 !***********************************************************************
@@ -726,12 +795,17 @@ C      Subtract losses to pest and freeze damage
 C-----------------------------------------------------------------------
       WLDOT = WLDOTN - CRUSLF - NRUSLF/0.16-
      &    SLDOT - WLIDOT - WLFDOT
+
 C--------------------------------------------
 C PDA 5/6/2010  ADDED CODE FOR FORAGE HARVEST 
 C--------------------------------------------
       IF (FHLEAF .GT. 0) THEN
         WLDOT=WLDOT-FHLEAF
       ENDIF
+
+!     Calculate net addition to leaves today per cohort
+      LCADD = 0.0
+      LNADD = 0.0
 !      IF (FHLEAF .GT. 0) THEN
 !        IF (WTLF .GT. 0) THEN
 !          WLDOT = WLDOTN - SLDOT - WLIDOT - WLFDOT
@@ -753,6 +827,9 @@ C-----------------------------------------------------------------------
       IF (WTLF .GT. 0.0 .AND. FHLEAF.EQ.0) THEN
         WLDOT = WLDOT + CADLF - LFCADDM +
      &    (NADLF - LFNADDM)/0.16
+
+        LCADD = CADLF - LFCADDM 
+        LNADD = (NADLF - LFNADDM)/0.16
       ENDIF
 
       IF (WLDOT .LT. 0.0) THEN
@@ -799,6 +876,9 @@ C--------------------------------------------
       IF (STMWT .GT. 0.0 .AND. FHSTEM .EQ. 0) THEN
         WSDOT = WSDOT + CADST - STCADDM +(NADST - STNADDM)/0.16
       ENDIF
+
+      SCADD = CADST - STCADDM 
+      SNADD = (NADST - STNADDM)/0.16
 
 C--------------------------------------------
 
@@ -879,29 +959,24 @@ C-----------------------------------------------------------------------
 
 
         IF (-TPSRSRFL .GT. STRWT*PSRSRFL) THEN
-        TPSRLYR1 = TPSRLYR1 + (TPSRSRFL+(STRWT*PSRSRFL))
-        TPSRSRFL = -STRWT * PSRSRFL
-        IF (-TPSRLYR1 .GE. STRWT*PSRLYR1) THEN
-        TPSRLYR1 = -STRWT * PSRLYR1
-        TPSRSRFL = -STRWT * PSRSRFL
-        ENDIF
+          TPSRLYR1 = TPSRLYR1 + (TPSRSRFL+(STRWT*PSRSRFL))
+          TPSRSRFL = -STRWT * PSRSRFL
+          IF (-TPSRLYR1 .GE. STRWT*PSRLYR1) THEN
+            TPSRLYR1 = -STRWT * PSRLYR1
+            TPSRSRFL = -STRWT * PSRSRFL
+          ENDIF
         ENDIF
 
         IF (-TPSRLYR1 .GT. STRWT*PSRLYR1) THEN
-        TPSRSRFL = TPSRSRFL + (TPSRLYR1+(STRWT*PSRLYR1))
-        TPSRLYR1 = -STRWT * PSRLYR1
-        IF (-TPSRSRFL .GE. STRWT*PSRSRFL) THEN
-        TPSRLYR1 = -STRWT * PSRLYR1
-        TPSRSRFL = -STRWT * PSRSRFL
-        ENDIF
+          TPSRSRFL = TPSRSRFL + (TPSRLYR1+(STRWT*PSRLYR1))
+          TPSRLYR1 = -STRWT * PSRLYR1
+          IF (-TPSRSRFL .GE. STRWT*PSRSRFL) THEN
+            TPSRLYR1 = -STRWT * PSRLYR1
+            TPSRSRFL = -STRWT * PSRSRFL
+          ENDIF
         ENDIF
 
       ENDIF
-
-
-
-
-
 
 C-----------------------------------------------------------------------
 C     Calculate proportions of below and above ground storage organ 
@@ -954,7 +1029,6 @@ C-----------------------------------------------------------------------
      &   (1. - MIN(1.0,WTABRT/SHELWT))
       ENDIF
 
-
 C-----------------------------------------------------------------------
 C     Net seed growth rate
 C-----------------------------------------------------------------------
@@ -981,11 +1055,11 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
       IF (GROWTH .GT. 0.0) THEN
         IF (XPODF .EQ. 'PD') THEN
-        XPOD = 0.17 * (WSDDTN+WSHDTN)/GROWTH + 0.83 * XPOD
+          XPOD = 0.17 * (WSDDTN+WSHDTN)/GROWTH + 0.83 * XPOD
         ELSE IF (XPODF .EQ. 'SD') THEN
-        XPOD = 0.17 * (WSDDTN)/GROWTH + 0.83 * XPOD
+          XPOD = 0.17 * (WSDDTN)/GROWTH + 0.83 * XPOD
         ELSE
-        CALL ERROR(ERRKEY,1,'      ',0)
+          CALL ERROR(ERRKEY,1,'      ',0)
         ENDIF
       ENDIF
 C-----------------------------------------------------------------------
@@ -1094,9 +1168,9 @@ C PDA 5/6/2010  ADDED CODE FOR FORAGE HARVEST
 C--------------------------------------------
       IF (FHLEAF.GT.0)THEN
         IF (WLDOTN.GT.0)THEN
-        CLOFF=CLOFF+(FHLEAF-WLDOTN)*RHOL+WLDOTN*ALPHL
+          CLOFF=CLOFF+(FHLEAF-WLDOTN)*RHOL+WLDOTN*ALPHL
         ELSE
-        CLOFF=CLOFF+FHLEAF*RHOL
+          CLOFF = CLOFF + FHLEAF * RHOL
         ENDIF
 !        IF (WTLF .GT. 0)THEN
 !          CLOFF=CLOFF
@@ -1466,6 +1540,8 @@ C-----------------------------------------------------------------------
         NSOFF = 0.0
       ENDIF
 
+!     chp 2026-06-10
+!     NSOFF does not include harvest amount
 
 C-----------------------------------------------------------------------
 C     Net growth rate of nitrogen in the stem
@@ -1479,6 +1555,7 @@ C--------------------------------------------
       ELSE
         NSDOT=NGRST-NRUSST-NSOFF
       ENDIF
+
 !      IF (FHSTEM.GT.0)THEN
 !        IF (STMWT .GT. 0)THEN
 !          NSOFF=NSOFF
@@ -2046,7 +2123,7 @@ C-----------------------------------------------------------------------
      &    RTWT, SDWT, SHELWT, STMWT, TOPWT,               !Input
      &    TOTWT, TURFAC, WTLF, YRDOY, YRPLT,              !Input
      &    MDATE, CropStatus,                              !Output
-     &  STRWT)                                                                  !Input
+     &    STRWT)                                          !Input
         RETURN
        ENDIF
 
@@ -2057,7 +2134,7 @@ C-----------------------------------------------------------------------
      &  RTWT, SDWT, SHELWT, STMWT, TOPWT,             !Input
      &  TOTWT, TURFAC, WTLF, YRDOY, YRPLT,            !Input
      &  MDATE, CropStatus,                            !Output
-     &  STRWT)                                                                  !Input
+     &  STRWT)                                        !Input
         RETURN
         ENDIF
        ENDIF
@@ -2068,6 +2145,45 @@ C-----------------------------------------------------------------------
       SENESCE % ResE   = SenE
 
 
+
+!=========================================================================
+!     TEMP CHP Add printout for GROW variables
+
+!***********************************************************************
+!***********************************************************************
+!     Daily output
+!***********************************************************************
+      ELSEIF (DYNAMIC .EQ. OUTPUT) THEN
+
+        WRITE (NOUTDG,300)
+     &   YEAR, DOY, DAS, DAP, 
+     &   WTLF, XLAI, WCRLF, PCNL, WTNLF, WNRLF, WTNLF - WNRLF,
+     &   WLDOT, LCADD, LNADD, CRUSLF, NRUSLF/0.16, 
+     &   WLIDOT, WLFDOT, SLDOT, SLNDOT, 
+     &   NLOFF, NLDOT, NGRLF, WLDOTN, FHLEAF, RHOL,
+     &   WRCLDT, 
+
+     &   STMWT, WCRST, PCNST, WTNST, WNRST, WTNST - WNRST,
+     &   WSDOT, SCADD, SNADD, CRUSST, NRUSST/0.16, 
+     &   WSIDOT, WSFDOT, SSDOT, SSNDOT, 
+     &   NSOFF, NSDOT, NGRST, WSDOTN, FHSTEM, RHOS,
+     &   WRCSDT
+
+  300   FORMAT (1X,I4,1X,I3.3,2(1X,I5)
+     &    50F12.6)
+
+!     still temp chp...
+
+!***********************************************************************
+!***********************************************************************
+!     Seasonal Output 
+!***********************************************************************
+      ELSE IF (DYNAMIC .EQ. SEASEND) THEN
+C-----------------------------------------------------------------------
+          CLOSE (NOUTDG)
+
+!     end temp chp
+!=========================================================================
 
 C***********************************************************************
 C***********************************************************************
