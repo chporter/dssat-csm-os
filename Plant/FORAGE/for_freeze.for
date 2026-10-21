@@ -82,7 +82,7 @@ C-----------------------------------------------------------------------
 C      SJR 5/12/04 Moved VSTAGE adjustment to GROW
 C       to be compatible with adjustment for senescence
 C-----------------------------------------------------------------------
-!            VSTAGE = ((WTLF-WLFDOT)/WTLF) * VSTAGE
+!       VSTAGE = ((WTLF-WLFDOT)/WTLF) * VSTAGE
 
         WSFDOT = (STMWT - SSDOT - NRUSST/0.16) * FRZDL
         WSFDOT = MIN ((STMWT - SSDOT - NRUSST/0.16), WSFDOT)
@@ -114,7 +114,7 @@ C-----------------------------------------------------------------------
 C      SJR 5/12/04 Moved VSTAGE adjustment to GROW
 C       to be compatible with adjustment for senescence
 C-----------------------------------------------------------------------
-!                  VSTAGE = 0.0
+!       VSTAGE = 0.0
         WSFDOT = STMWT - SSDOT - NRUSST/0.16
 
 !       Handle freeze damage for stem cohorts

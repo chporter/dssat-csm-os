@@ -194,7 +194,6 @@ C=======================================================================
 !     end temp chp
 !=========================================================================
 
-
 !     Transfer values from constructed data types into local variables.
       !Don't get DYNAMIC from CONTROL variable because it will not
       ! have EMERG value (set only in CROPGRO).
@@ -865,6 +864,7 @@ C     is damaged by insects, freezing, or senesced.  Otherwise, could
 C     get increase in tissue N composition when tissue is aborted.  Need
 C     to account for mass, N and C lost this way in sections below
 C-----------------------------------------------------------------------
+
 C-----------------------------------------------------------------------
 C     Leaf nitrogen senescence and pest damage loss
 C-----------------------------------------------------------------------
@@ -1140,7 +1140,7 @@ C     Calculate Remaining N in Shells, Leaves, Stems, and Roots
 C     That can be Mined (Plant N-Balance).
 C-----------------------------------------------------------------------
       IF ((WTLF - WCRLF) > 1.E-4) THEN
-! WNRLF    N available for mobilization from leaves above lower limit of 
+!     WNRLF    N available for mobilization from leaves above lower limit of 
 !            mining (g[N] / m2)
         WNRLF = MAX (WTNLF - PROLFF * 0.16 * (WTLF-WCRLF), 0.0)
       ELSE

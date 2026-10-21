@@ -165,10 +165,6 @@ C-----------------------------------------------------------------------
 !     Cohorts
       REAL CRUSLF_calc, CRUSST_calc
 
-!      TYPE (ControlType) CONTROL
-!      CALL GET(CONTROL)
-!      DAS = CONTROL % DAS
-
 !***********************************************************************
 !***********************************************************************
 !     Run Initialization - Called once per simulation

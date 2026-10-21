@@ -2159,7 +2159,7 @@ C-----------------------------------------------------------------------
      &    RTWT, SDWT, SHELWT, STMWT, TOPWT,               !Input
      &    TOTWT, TURFAC, WTLF, YRDOY, YRPLT,              !Input
      &    MDATE, CropStatus,                              !Output
-     &  STRWT)                                            !Input
+     &    STRWT)                                          !Input
         RETURN
        ENDIF
 
