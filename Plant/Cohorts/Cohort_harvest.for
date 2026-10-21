@@ -33,7 +33,7 @@
 
       INTEGER I
       REAL WTLF, STMWT
-      REAL ADF, NDF, ADFmass, NDFmass
+      REAL ADF_harvest, NDF_harvest, ADFmass, NDFmass
       REAL, DIMENSION(1:LCMax) :: ADF_Lf_c, NDF_Lf_c
       REAL, DIMENSION(1:LCMax) :: ADF_St_c, NDF_St_c
       REAL TotHarvested, FHTOT
@@ -45,8 +45,8 @@
       TotHarvested = 0.0
       FHLEAF_c = 0.0
       FHSTEM_c = 0.0
-      ADF = 0.0
-      NDF = 0.0
+      ADF_harvest = 0.0
+      NDF_harvest = 0.0
       ADFmass = 0.0
       NDFmass = 0.0
       ADF_Lf_c = 0.0; NDF_Lf_c = 0.0
@@ -178,8 +178,8 @@
         ENDDO
 
 !       Divide thru by total mass to get weighted average and convert to %
-        ADF = ADFmass / TotHarvested * 100.
-        NDF = NDFmass / TotHarvested * 100.
+        ADF_harvest = ADFmass / TotHarvested * 100.
+        NDF_harvest = NDFmass / TotHarvested * 100.
 
 !       Cohort harvest values may have been adjusted, recalculate totals
         FHLEAF = SUM(FHLEAF_c)
@@ -187,8 +187,8 @@
         FHTOT = FHLEAF + FHSTEM
       ENDIF
 
-      CALL PUT('MHARVEST','ADF', ADF)
-      CALL PUT('MHARVEST','NDF', NDF)
+      CALL PUT('MHARVEST','ADF', ADF_harvest)
+      CALL PUT('MHARVEST','NDF', NDF_harvest)
 
 !-----------------------------------------------------------------------
       RETURN

@@ -138,6 +138,7 @@ C=======================================================================
       REAL STMWT, WCRST, WNRST, WTNST
 
       REAL WLDOT_calc, WSDOT_calc
+      REAL ADF_daily, NDF_daily
 
 !     temp chp
       REAL LFWT_MAX, LFWT_MIN
@@ -263,6 +264,11 @@ C=======================================================================
       SLMDOT_c = 0.0   ; SSMDOT_c = 0.0
       FHLEAF_c = 0.0   ; FHSTEM_c  = 0.0
       WLDOT_cohort = 0.0;WSDOT_cohort = 0.0
+
+      ADF_daily = 0.0
+      NDF_daily = 0.0
+      CALL PUT("MHARVEST","ADFday",ADF_daily)
+      CALL PUT("MHARVEST","NDFday",NDF_daily)
 
       CALL OpCohorts(DYNAMIC, YRPLT,          !Input
 !     &  LFSN, LFAREA, LeafNTot, PCNLeaf, 
@@ -598,8 +604,11 @@ C=======================================================================
         ENDIF
       ENDDO
 
+!     Composition of cohorts for perennial forage model
       IF (MODEL(1:5) == 'PRFRM') THEN
-        CALL CohortComp(DTX)
+        CALL CohortComp(DTX, ADF_daily, NDF_daily)
+        CALL PUT("MHARVEST","ADFday",ADF_daily)
+        CALL PUT("MHARVEST","NDFday",NDF_daily)
       ENDIF
 
 !***********************************************************************

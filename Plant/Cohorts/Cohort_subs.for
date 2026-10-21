@@ -3,15 +3,24 @@
 !       of leaf and stem cohorts
 !     Currently used only for PRFRM model
 !=======================================================================
-      SUBROUTINE CohortComp(DTX)
+      SUBROUTINE CohortComp(DTX, ADF_daily, NDF_daily)
 
       USE COHORTS_MOD
       USE IPCOHO_MOD
       IMPLICIT NONE
       SAVE
 
+      REAL, INTENT(IN) :: DTX
+      REAL, INTENT(OUT) :: ADF_daily, NDF_daily
+
       INTEGER I
-      REAL DTX
+      REAL ADFmass, NDFmass, TotalMass
+      REAL, DIMENSION(1:LCMax) :: ADF_Lf_c, NDF_Lf_c
+      REAL, DIMENSION(1:LCMax) :: ADF_St_c, NDF_St_c
+
+!-----------------------------------------------------------------------
+      ADFmass = 0.0
+      NDFmass = 0.0
 
       DO I = 1, NLC
         IF (LFDM(I) > 0.0) THEN     
@@ -68,7 +77,24 @@
           StemLigFrac (I)  = 0.0
         ENDIF
 
+!       Calculate quality of leaf and stem for each cohort
+!       ADF and NDF are in fraction here
+        ADF_Lf_c(I) = LeafCellFrac(I) + LeafLigFrac(I)
+        NDF_Lf_c(I) = LeafCellFrac(I) + LeafHemiFrac(I) + 
+     &    LeafLigFrac(I)
+
+        ADFmass = ADFmass + ADF_Lf_c(I) * LFDM(I) 
+        NDFmass = NDFmass + NDF_Lf_c(I) * LFDM(I) 
+
+        ADF_St_c(I) = StemCellFrac(I) + StemLigFrac(I)
+        NDF_St_c(I) = StemCellFrac(I) + StemHemiFrac(I) + 
+     &    StemLigFrac(I)
+
+        ADFmass = ADFmass + ADF_St_c(I) * STDM(I)
+        NDFmass = NDFmass + NDF_St_c(I) * STDM(I)
+
 !       temp chp
+!       Print cohort composition over time for selected cohorts.
         select case(i)
         case(1)
           IF (LFDM(I) > 0) THEN
@@ -102,9 +128,20 @@
      &      StemCellFrac(I), StemHemiFrac(I), StemLigFrac (I),
      &      PCNLeaf(I), PCNStem(I)
          ENDIF
-
         end select
+!       END TEMP CHP
+
       ENDDO
+
+!     Divide thru by total mass to get weighted average and convert to %
+      TotalMass = SUM(LFDM) + SUM(STDM)
+      IF (TotalMass > 0.0) THEN
+        ADF_daily = ADFmass / TotalMass * 100.
+        NDF_daily = NDFmass / TotalMass * 100.
+      ELSE
+        ADF_daily = 0.
+        NDF_daily = 0.
+      ENDIF
 
 !-----------------------------------------------------------------------
       RETURN
@@ -139,6 +176,7 @@
       REAL, DIMENSION(1:LCMax) :: CAdd, Freeze, Mass, NAdd
       REAL, DIMENSION(1:LCMax) :: NMinSen, Pest, TotalSen, WatSen
 
+!-----------------------------------------------------------------------
       SELECT CASE(LeafOrStem)
       CASE ("LEAF")
         Mass     = LFDM

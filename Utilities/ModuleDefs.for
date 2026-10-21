@@ -512,7 +512,8 @@ C             CHP Added TRTNUM to CONTROL variable.
 !       Could potentially add more in-season harvest variables as needed.
         INTEGER ISH_date
         REAL ISH_wt
-        REAL ADF, NDF  !forage quality indices
+        REAL ADF, NDF  !forage harvest quality indices
+        REAL ADFday, NDFday  !forage quality indices (daily, not harv)
       END TYPE 
 
 !     Data which can be transferred between modules
@@ -789,6 +790,8 @@ C             CHP Added TRTNUM to CONTROL variable.
         CASE('ISH_wt'); Value = SAVE_data % MHARVEST % ISH_wt
         CASE('ADF')   ; Value = SAVE_data % MHARVEST % ADF
         CASE('NDF')   ; Value = SAVE_data % MHARVEST % NDF
+        CASE('ADFday'); Value = SAVE_data % MHARVEST % ADFday
+        CASE('NDFday'); Value = SAVE_data % MHARVEST % NDFday
         CASE DEFAULT; ERR = .TRUE.
         END SELECT       
 
@@ -924,6 +927,8 @@ C             CHP Added TRTNUM to CONTROL variable.
         CASE('ISH_wt'); SAVE_data % MHARVEST % ISH_wt = Value
         CASE('ADF')   ; SAVE_data % MHARVEST % ADF = Value
         CASE('NDF')   ; SAVE_data % MHARVEST % NDF = Value
+        CASE('ADFday'); SAVE_data % MHARVEST % ADFday = Value
+        CASE('NDFday'); SAVE_data % MHARVEST % NDFday = Value
         CASE DEFAULT; ERR = .TRUE.
         END SELECT       
 

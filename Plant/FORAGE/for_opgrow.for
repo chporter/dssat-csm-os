@@ -46,10 +46,8 @@ C  Calls:     None
 !    &  RCHDP, MOWC, RSPLC
 !     
 !-----------------------------------------------------------------------
-      USE ModuleDefs     !Definitions of constructed variable types, 
-        ! which contain control information, soil
-        ! parameters, hourly weather data.
-      !     VSH
+      USE ModuleDefs
+      USE ModuleData
       USE CsvOutput 
       USE Linklist
       IMPLICIT NONE
@@ -104,15 +102,8 @@ C  Calls:     None
      &  WRCSRDT, WSRDOT, WSRDOTN, WSRFDOT, WSRI, WSRIDOT, 
      &  WTNSR, WTNSRA, WTNSRO, WTSRO, XSTR
 
-
-
-!     REAL PROSRF, PROSRG, PROSRI, PCARSR, PLIGSR, 
-!    &  PLIPSR, POASR, PMINSR, ALPHSR, CMOBSRX, CADSRF, NMOBSRX, CLAIT,
-!    &  YSTOR(8), FRSTRF, FRSTRMX, STRSRFL, STRLYR1, SENSR,
-!    &  FNPTD(4), FNPMD(4), FNPGD(4), HARD1, HARD2, 
-!    &  FRZDC, FRZHRD(4), 
-!    &  FRZDHD(4), RDRMG, RDRMM, RDRMT, RCHDP
       REAL fhpctn!,MOWC,RSPLC
+      REAL ADF_daily, NDF_daily
 
       REAL, DIMENSION(NL) :: ST
 C-------------------------------------------
@@ -186,23 +177,22 @@ C-GH        CALL GETLUN('OUTSTOR', NOUTSTOR)
 !-----------------------------------------------------------------------
 !       Initialize daily growth output file
         IF (FMOPT == 'A' .OR. FMOPT == ' ') THEN    ! VSH
-        INQUIRE (FILE = OUTG, EXIST = FEXIST)
-        IF (FEXIST) THEN
-        OPEN (UNIT = NOUTDG, FILE = OUTG, STATUS = 'OLD',
-     &  IOSTAT = ERRNUM, ACCESS = 'APPEND')
-        FIRST = .FALSE.
-        ELSE
-        OPEN (UNIT = NOUTDG, FILE = OUTG, STATUS = 'NEW',
-     &  IOSTAT = ERRNUM)
-        WRITE(NOUTDG,'("*GROWTH ASPECTS OUTPUT FILE")')
-        FIRST = .TRUE.
-        ENDIF
+          INQUIRE (FILE = OUTG, EXIST = FEXIST)
+          IF (FEXIST) THEN
+            OPEN (UNIT = NOUTDG, FILE = OUTG, STATUS = 'OLD',
+     &        IOSTAT = ERRNUM, ACCESS = 'APPEND')
+            FIRST = .FALSE.
+          ELSE
+            OPEN (UNIT = NOUTDG, FILE = OUTG, STATUS = 'NEW',
+     &        IOSTAT = ERRNUM)
+            WRITE(NOUTDG,'("*GROWTH ASPECTS OUTPUT FILE")')
+            FIRST = .TRUE.
+          ENDIF
 
-        !Write headers
-!        CALL HEADER(SEASINIT, FILEIO, NOUTDG, RUN)
-        CALL HEADER(SEASINIT, NOUTDG, RUN)
-        WRITE (NOUTDG,210)
-210   FORMAT('@YEAR DOY   DAS   DAP',
+!         Write headers
+          CALL HEADER(SEASINIT, NOUTDG, RUN)
+          WRITE (NOUTDG,210)
+210       FORMAT('@YEAR DOY   DAS   DAP',
      &    '  L#SD  GSTD  LAID  LWAD  SWAD  QWAD  QS%D  Q1%D  GWAD',
      &    '  RWAD  CWAD  G#AD   GWGD  HIAD  PWAD',
      &    '  P#AD  WSPD  WSGD  NSTD  EWSD  LN%D',
@@ -211,144 +201,63 @@ C-GH        CALL GETLUN('OUTSTOR', NOUTSTOR)
      &    '  RL4D  RL5D  RL6D  RL7D  RL8D  RL9D',
      &    '  RL10  CDAD  LDAD  SDAD  QDAD  HERB  FHL%  LF%D'
 !    &    ' DWTCO DWTLO DWTSO CHTCM CPROT  MOWC  RSPLC')
-     &    ' DWTCO DWTLO DWTSO CHTCM CPROT')
+     &    ' DWTCO DWTLO DWTSO CHTCM   CPROT    FADF    FNDF')
 !-----------------------------------------------------------------------
-!       Initialize daily plant nitrogen output file
-        INQUIRE (FILE = OUTPN, EXIST = FEXIST)
-        IF (FEXIST) THEN
-        OPEN (UNIT = NOUTPN, FILE = OUTPN, STATUS = 'OLD',
-     &  IOSTAT = ERRNUM, ACCESS = 'APPEND')
-        FIRST = .FALSE.
-        ELSE
-        OPEN (UNIT = NOUTPN, FILE = OUTPN, STATUS = 'NEW',
-     &  IOSTAT = ERRNUM)
-        WRITE(NOUTPN,'("*PLANT N OUTPUT FILE")')
-        FIRST = .TRUE.
-        ENDIF
+!         Initialize daily plant nitrogen output file
+          INQUIRE (FILE = OUTPN, EXIST = FEXIST)
+          IF (FEXIST) THEN
+            OPEN (UNIT = NOUTPN, FILE = OUTPN, STATUS = 'OLD',
+     &        IOSTAT = ERRNUM, ACCESS = 'APPEND')
+            FIRST = .FALSE.
+          ELSE
+            OPEN (UNIT = NOUTPN, FILE = OUTPN, STATUS = 'NEW',
+     &        IOSTAT = ERRNUM)
+            WRITE(NOUTPN,'("*PLANT N OUTPUT FILE")')
+            FIRST = .TRUE.
+          ENDIF
 
-        !Write headers
-!        CALL HEADER(SEASINIT, FILEIO, NOUTPN, RUN)
-        CALL HEADER(SEASINIT, NOUTPN, RUN)
-
-        WRITE (NOUTPN,230)
-230   FORMAT('@YEAR DOY   DAS   DAP',
+!         Write headers
+          CALL HEADER(SEASINIT, NOUTPN, RUN)
+          WRITE (NOUTPN,230)
+230       FORMAT('@YEAR DOY   DAS   DAP',
      &  '  CNAD  GNAD  VNAD  GN%D  VN%D    NFXC   NUPC',
      &  '  LNAD  SNAD  QNAD  LN%D  SN%D  QN%D  SHND',
      &  '  RN%D  NFXD')
 
 !-----------------------------------------------------------------------
-!       Initialize daily plant carbon output file
-        INQUIRE (FILE = OUTPC, EXIST = FEXIST)
-        IF (FEXIST) THEN
-        OPEN (UNIT = NOUTPC, FILE = OUTPC, STATUS = 'OLD',
-     &  IOSTAT = ERRNUM, ACCESS = 'APPEND')
-        FIRST = .FALSE.
-        ELSE
-        OPEN (UNIT = NOUTPC, FILE = OUTPC, STATUS = 'NEW',
-     &  IOSTAT = ERRNUM)
-        WRITE(NOUTPC,'("*PLANT C OUTPUT FILE")')
-        FIRST = .TRUE.
-        ENDIF
+!         Initialize daily plant carbon output file
+          INQUIRE (FILE = OUTPC, EXIST = FEXIST)
+          IF (FEXIST) THEN
+            OPEN (UNIT = NOUTPC, FILE = OUTPC, STATUS = 'OLD',
+     &        IOSTAT = ERRNUM, ACCESS = 'APPEND')
+            FIRST = .FALSE.
+          ELSE
+            OPEN (UNIT = NOUTPC, FILE = OUTPC, STATUS = 'NEW',
+     &        IOSTAT = ERRNUM)
+            WRITE(NOUTPC,'("*PLANT C OUTPUT FILE")')
+            FIRST = .TRUE.
+          ENDIF
 
-        !Write headers
-!        CALL HEADER(SEASINIT, FILEIO, NOUTPC, RUN)
-        CALL HEADER(SEASINIT, NOUTPC, RUN)
+!         Write headers
+          CALL HEADER(SEASINIT, NOUTPC, RUN)
 
-        WRITE (NOUTPC,250)
-250   FORMAT('@YEAR DOY   DAS   DAP  TWAD   PHAD',
+          WRITE (NOUTPC,250)
+250       FORMAT('@YEAR DOY   DAS   DAP  TWAD   PHAD',
      &  '   CMAD   CGRD   GRAD   MRAD   CHAD  QHAD  CL%D  CS%D',
      &  '  QC%D  CR%D  TGNN  TGAV  GN%D  GL%D  GC%D')
 
-
-!-----------------------------------------------------------------------
-!       Initialize daily Dormancy output file
-C-GH        INQUIRE (FILE = OUTDRM, EXIST = FEXIST)
-C        IF (FEXIST) THEN
-C        OPEN (UNIT = NOUTDRM, FILE = OUTDRM, STATUS = 'OLD',
-C     &  IOSTAT = ERRNUM, ACCESS = 'APPEND')
-C        FIRST = .FALSE.
-C        ELSE
-C        OPEN (UNIT = NOUTDRM, FILE = OUTDRM, STATUS = 'NEW',
-C     &  IOSTAT = ERRNUM)
-C        WRITE(NOUTDRM,'("*PLANT DORMANCY OUTPUT FILE")')
-C        FIRST = .TRUE.
-C-GH        ENDIF
-
-c-GH        !Write headers
-!        CALL HEADER(SEASINIT, FILEIO, NOUTDRM, RUN)
-C-GH        CALL HEADER(SEASINIT, NOUTDRM, RUN)
-
-C-GH        WRITE (NOUTDRM,270)
-C-GH 270   FORMAT('@YEAR DOY   DAS   DAP',
-C     &  '   QDSD  PPGF  PPMF  PPTF  TSRD  TS1D  FRZ2  LV%D  SV%D',
-C     &    '  QV%D  RV%D')
-
-!-----------------------------------------------------------------------
-!       Initialize daily Storage output file
-C-GH        INQUIRE (FILE = OUTSTOR, EXIST = FEXIST)
-C        IF (FEXIST) THEN
-C        OPEN (UNIT = NOUTSTOR, FILE = OUTSTOR, STATUS = 'OLD',
-C     &  IOSTAT = ERRNUM, ACCESS = 'APPEND')
-C        FIRST = .FALSE.
-C        ELSE
-C        OPEN (UNIT = NOUTSTOR, FILE = OUTSTOR, STATUS = 'NEW',
-C     &  IOSTAT = ERRNUM)
-C        WRITE(NOUTSTOR,'("*PLANT STORAGE OUTPUT FILE")')
-C        FIRST = .TRUE.
-C        ENDIF
-
-        !Write headers
-!        CALL HEADER(SEASINIT, FILEIO, NOUTSTOR, RUN)
-C-GH        CALL HEADER(SEASINIT, NOUTSTOR, RUN)
-
-C-GH        WRITE (NOUTSTOR,280)
-C 280   FORMAT('@YEAR DOY   DAS   DAP',
-C      &   '  QCQD  QHAD  QC%M  QRAD  QMAD  QCFD  QCAD  QCDD  QDTD',
-C     &   '  QN%X  QN%I  QV%D  QV%T  QNAA  QNRX  QNRN  QNAR  QNAM',
-C     &   '  QNAG  QNAN  QNAL  QN%N  QN%D  QW%C  QP%W  QL%S  QL%1',
-C     &   '  QS%D  Q1%D  QC%D  QCAM  QFDS  QFD1  QEAD  QEWD  QWAD',
-C     &   '  QT%S  QT%1  QCRD  QNMD  QCAG  QWNG  QWND  QFAD  QWAI',
-C     &   '  QMAM  QNAD  QNAC  QNLC  QDAD  XSTR')
          END IF    ! VSH
-!-----------------------------------------------------------------------
-!       Initialize Storage inputs output file
-!        INQUIRE (FILE = OUTINSTR, EXIST = FEXIST)
-!        IF (FEXIST) THEN
-!          OPEN (UNIT = NOUTINSTR, FILE = OUTINSTR, STATUS = 'OLD',
-!     &  IOSTAT = ERRNUM, ACCESS = 'APPEND')
-!          FIRST = .FALSE.
-!        ELSE
-!          OPEN (UNIT = NOUTINSTR, FILE = OUTINSTR, STATUS = 'NEW',
-!     &  IOSTAT = ERRNUM)
-!          WRITE(NOUTINSTR,'("*PLANT STORAGE INPUTS OUTPUT FILE")')
-!          FIRST = .TRUE.
-!        ENDIF
-
-        !Write headers
-!        CALL HEADER(SEASINIT, FILEIO, NOUTINSTR, RUN)
-
-!        WRITE (NOUTINSTR,290)
-!  290   FORMAT('  SP%F  SP%G  SP%I  SRC%  SRG%  SRL%  SRO%  SRM%',
-!     &  '  SR%L  SC%M  C%SR  SMNX  LAIT  SP%1  SP%2  SP%3  SP%4',
-!     &    '  SP%5  SP%6  SP%7  SP%8  FRSR  FSRX  SRSF  SRL1  SNSR',
-!     &  '  SRT1  SRT2  SRT3  SRT4  TSPT  SRM1  SRM2  SRM3  SRM4',
-!     &    '  TSPM  SRG1  SRG2  SRG3  SRG4  TSPG  HRD1  HRD2  FZDC',
-!     &  '  ZHD1  ZHD2  ZHD3  ZHD4  THRD  ZDH1  ZDH2  ZDH3  ZDH4',  
-!     &    '  TDHD  RDMG  RDMM  RDMT  RCHD')
-
-
 
 !***********************************************************************
 !***********************************************************************
 !     DAILY OUTPUT
 !***********************************************************************
       ELSE IF (DYNAMIC .EQ. OUTPUT) THEN
-
 !-----------------------------------------------------------------------
-C-----------------------------------------------------------------------
-C   CHECK FOR OUTPUT FREQUENCY
-C-----------------------------------------------------------------------
+!   CHECK FOR OUTPUT FREQUENCY
+!-----------------------------------------------------------------------
       IF (YRDOY .LT. YRPLT .OR. YRPLT .LT. 0) RETURN
+
       IF ((MOD(DAS,FROP) .EQ. 0)          !Daily output every FROP days,
      &  .OR. (YRDOY .EQ. YRPLT)           !on planting date, and
      &  .OR. (YRDOY .EQ. MDATE)) THEN     !at harvest maturity 
@@ -379,7 +288,7 @@ C-----------------------------------------------------------------------
         ELSE
         PELF = 0.0
         ENDIF
-        
+
         IF (FHWAH .eq. 0.0) THEN
         fhpctn = 0.0
         endif
@@ -389,13 +298,16 @@ C-----------------------------------------------------------------------
         ELSE
         HI = 0.
         ENDIF
-        
+
         IF (TOPWT .GT. 0. .AND. PODWT .GE. 0.) THEN
         HIP = PODWT/TOPWT
         ELSE
         HIP = 0.
         ENDIF
-        
+
+        CALL GET("MHARVEST","ADFday",ADF_daily)
+        CALL GET("MHARVEST","NDFday",NDF_daily)
+
         IF (FMOPT == 'A' .OR. FMOPT == ' ') THEN   ! VSH
         WRITE (NOUTDG,310)YEAR, DOY, DAS, DAP,VSTAGE,RSTAGE,XLAI,
      &    NINT(WTLF*10.),NINT(STMWT*10.),NINT(STRWT*10.), 
@@ -408,12 +320,13 @@ C-----------------------------------------------------------------------
      &    NINT(WTCO*10.),NINT(WTLO*10.),NINT(WTSO*10.), 
      &    NINT(WTSRO*10.),NINT(FHWAH*10.),FHLPH,
      &    PELF,NINT(DWTCO*10.),NINT(DWTLO*10.),NINT(DWTSO*10.),
-     &    NINT(CANHT*100.),fhpctn*6.25    !,MOWC,RSPLC
+     &    NINT(CANHT*100.),fhpctn*6.25,
+     &    ADF_daily, NDF_daily   
 310     FORMAT (1X,I4,1X,I3.3,2(1X,I5),
      &    1X,F5.1,1X,I5,1X,F5.2,3(1X,I5),2(1X,F5.2),4(1X,I5),
      &    1X,F6.1,1X,F5.3,2(1X,I5),4(1X,F5.3),3(1X,F5.2),
      &    2(1X,I5),1X,F5.1,2(1X,F5.2),1X,F5.1,11(1X,F5.2),
-     &    4(I6),1x,I5,2(1X,F5.1),3(I6),I6,F6.2,F6.0,F6.2)
+     &    4(I6),1x,I5,2(1X,F5.1),3(I6),I6,3F8.2)
         END IF   ! VSH
         
 !     VSH CSV output corresponding to PlantGro.OUT
@@ -430,13 +343,13 @@ C-----------------------------------------------------------------------
       END IF
 C-----------------------------------------------------------------------
         WTNVEG  = (WTNLF + WTNST)
-      
+
         IF ((WTLF+STMWT).GT. 0.0) THEN
         PCNVEG = (WTNLF+WTNST)/(WTLF+STMWT)*100.
         ELSE
         PCNVEG = 0.0
         ENDIF
-        
+
         IF (FMOPT == 'A' .OR. FMOPT == ' ') THEN       ! VSH
         WRITE (NOUTPN,410) YEAR, DOY, DAS, DAP, (WTNCAN*10), 
      &   (WTNSD*10), (WTNVEG*10), PCNSD, PCNVEG, (WTNFX*10),
@@ -454,28 +367,6 @@ C-----------------------------------------------------------------------
      &   2(1X,F5.1),3(1X,F5.2))
 
 
-C-GH        WRITE (NOUTDRM,610) YEAR, DOY, DAS, DAP,
-C     &    DRMST, PPGFAC, PPMFAC, PPTFAC, SRFTEMP, ST(1), FREEZ2,
-C     &    FRLF, FRSTM, FRSTR, FRRT
-C 610     FORMAT(1X,I4,1X,I3.3,2(1X,I5),1X,A6,3(1X,F5.3),
-C-GH     &    3(1X,F5.1),4(1X,F5.3))
-        
-
-C-GH        WRITE (NOUTSTOR,710) YEAR, DOY, DAS, DAP,
-C     &    AGRSTR, CADSR, CMOBSR, CPFSTR, CRUSSR, CSRFRZ,  
-C     &    NINT(CSRW), CSTRM, DSTOR, FNINSR, FNINSRG, FRSTR,  
-C     &    FRSTRM, NADSR, NGRSR, NGRSRG, NMOBSR, NRUSSR, NSRALL, 
-C     &    NSRDOT, NSROFF, NVSTSR, PCNSR, PCSTRD, PROSRT, PSRSRFD, 
-C     &    PSRLYRD, PSRSRFL, PSRLYR1, RHOSR, SRDAM, SRSRFD, 
-C     &    SRLYRD, SSRDOT, SSRNDOT, NINT (STRWT*10), TPSRSRFL,  
-C     &    TPSRLYR1, WCRSR, WNRSR, WRCSRDT, WSRDOT, WSRDOTN,  
-C     &    WSRFDOT, WSRI, WSRIDOT, WTNSR, NINT(WTNSRA*10), 
-C     &    WTNSRO, NINT(WTSRO*10.), XSTR
-
-C-GH 710    FORMAT(1X,I4,1X,I3.3,2(1X,I5),2(1X,F5.2),1X,F5.4,3(1X,F5.2),
-C     &    1X,I5,2(1X,F5.2),4(1X,F5.3),9(1X,F5.2),7(1X,F5.2),1X, 
-C     &    F5.3,5(1X,F5.2),1X,I5,2(1X,F5.3),1X,F5.1,5(1X,F5.2),
-C     &    1X,F5.0,2(1X,F5.2),1X,I5,1X,F5.2,1X,I6,1X,F5.2)
         END IF    ! VSH
         
         IF (FMOPT == 'C') THEN   ! VSH
