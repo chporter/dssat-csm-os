@@ -3,7 +3,7 @@
 !       of leaf and stem cohorts
 !     Currently used only for PRFRM model
 !=======================================================================
-      SUBROUTINE CohortComp()
+      SUBROUTINE CohortComp(DTX)
 
       USE COHORTS_MOD
       USE IPCOHO_MOD
@@ -11,6 +11,7 @@
       SAVE
 
       INTEGER I
+      REAL DTX
 
       DO I = 1, NLC
         IF (LFDM(I) > 0.0) THEN     
@@ -21,13 +22,13 @@
             LeafLigFrac (I) = LIGLFI
           ELSE
 !           Adjust leaf composition based on slope and cohort age
-            LeafCellFrac(I) = CELLFI + CELLFS * CohortAge(I)
-            LeafHemiFrac(I) = HCLLFI + HCLLFS * CohortAge(I)
-            LeafLigFrac (I) = LIGLFI + LIGLFS * CohortAge(I)
+            LeafCellFrac(I) = LeafCellFrac(I) + CELLFS * DTX
+            LeafHemiFrac(I) = LeafHemiFrac(I) + HCLLFS * DTX
+            LeafLigFrac (I) = LeafLigFrac(I)  + LIGLFS * DTX
 
             LeafCellFrac(I) = MIN(LeafCellFrac(I), CELLFX)
             LeafHemiFrac(I) = MIN(LeafHemiFrac(I), HCLLFX)
-            LeafLigFrac (I) = MIN(LeafLigFrac (I), LIGLFX )
+            LeafLigFrac (I) = MIN(LeafLigFrac (I), LIGLFX)
 
             LeafCellFrac(I) = MAX(LeafCellFrac(I), CELLFN)
             LeafHemiFrac(I) = MAX(LeafHemiFrac(I), HCLLFN)
@@ -48,17 +49,17 @@
             StemLigFrac (I) = LIGSTI
           ELSE
 !           Adjust stem composition based on slope and cohort age
-            StemCellFrac(I) = CELSTI + CELSTS * CohortAge(I)
-            StemHemiFrac(I) = HCLSTI + HCLSTS * CohortAge(I)
-            StemLigFrac (I) = LIGSTI + LIGSTS * CohortAge(I)
+            StemCellFrac(I) = StemCellFrac(I) + CELSTS * DTX
+            StemHemiFrac(I) = StemHemiFrac(I) + HCLSTS * DTX
+            StemLigFrac (I) = StemLigFrac (I) + LIGSTS * DTX
 
             StemCellFrac(I) = MIN(StemCellFrac(I), CELSTX)
             StemHemiFrac(I) = MIN(StemHemiFrac(I), HCLSTX)
-            StemLigFrac (I) = MIN(StemLigFrac (I), LIGSTX )
+            StemLigFrac (I) = MIN(StemLigFrac (I), LIGSTX)
 
             StemCellFrac(I) = MAX(StemCellFrac(I), CELSTN)
             StemHemiFrac(I) = MAX(StemHemiFrac(I), HCLSTN)
-            StemLigFrac (I) = MAX(StemLigFrac (I), LIGSTN )
+            StemLigFrac (I) = MAX(StemLigFrac (I), LIGSTN)
           ENDIF
 
         ELSE
@@ -274,9 +275,6 @@
       REAL, DIMENSION(1:LCMax) :: CAdd, CMine, Freeze, LitSen, Mass,  
      &  NSC, Pest, S_MDOT, SENWT, WatSen
 
-!     temp chp
-      REAL RHO_calc, NSC_calc, Mass_calc
-
 !-----------------------------------------------------------------------
       SELECT CASE(LeafOrStem)
       CASE ("LEAF")
@@ -304,19 +302,6 @@
         SENWT    = STSENWT_c
       END SELECT
 
-!     ---------------------------------
-!     temp chp
-!     use average RHO instead of cohort value
-      NSC_calc = SUM(NSC)
-      Mass_calc = SUM(Mass)
-!     RHOS(I) = STNSC(I) / STDM(I)
-      if (Mass_calc > 0.0) then
-        RHO_calc = NSC_calc / Mass_calc
-      else
-        RHO_calc = 0.0
-      endif
-!     ---------------------------------
-
 !     Mobile, non-structural CH2O 
       WRC_DT = 0.0
 
@@ -332,20 +317,16 @@
             CASE ("LEAF")
               WRC_DT(I) = WRC_DT(I) 
      &          - (WatSen(I) + Pest(I) + Freeze(I)) * RHO(I)
-!    &          - (WatSen(I) + Pest(I) + Freeze(I)) * RHO_calc !temp chp
              CASE ("STEM")
               WRC_DT(I) = WRC_DT(I) 
      &          - WatSen(I) * RHO(I)   !Water senescence
-!    &          - WatSen(I) * RHO_calc !temp chp   !Water senescence
      &          - NSC(I) / Mass(I) * MassDecrease(I)
              END SELECT
 
           CASE ('PRFRM')
               C_OFF = (S_MDOT(I) + LitSen(I) + SENWT(I)) * 
      &                (SENC_V * (RHO(I) - PCHO_F) + PCHO_F) 
-!    &                (SENC_V * (RHO_calc - PCHO_F) + PCHO_F) !temp chp
      &              + (WatSen(I) + Pest(I) + Freeze(I)) * RHO(I)
-!    &              + (WatSen(I) + Pest(I) + Freeze(I)) * RHO_calc !temp chp
 
               IF (C_OFF. LT. 0.0) THEN
                 C_OFF = 0.0
