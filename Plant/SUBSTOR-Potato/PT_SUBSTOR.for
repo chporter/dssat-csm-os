@@ -146,7 +146,7 @@ C=======================================================================
       PConc_Shel = 0.0
       PConc_Seed = 0.0
 
-      CALL PT_ROOTGR (SEASINIT, YRDOY,
+      CALL PT_ROOTGR (SEASINIT, !YRDOY,
      &    DLAYR, DS, DTT, DUL, FILEIO, GRORT, ISWNIT,     !Input
      &    LL, NH4, NLAYR, NO3, PLTPOP, SHF, SW, SWFAC,    !Input
      &    CUMDEP, RLV, RTDEP, TRLV)                       !Output
@@ -213,7 +213,7 @@ C=======================================================================
 
 !       WRESR growth and depth routine
         IF (GRORT .GT. 0.0) THEN
-          CALL PT_ROOTGR (RATE, YRDOY, 
+          CALL PT_ROOTGR (RATE, !YRDOY, 
      &    DLAYR, DS, DTT, DUL, FILEIO, GRORT, ISWNIT,     !Input
      &    LL, NH4, NLAYR, NO3, PLTPOP, SHF, SW, SWFAC,    !Input
      &    CUMDEP, RLV, RTDEP, TRLV)                       !Output

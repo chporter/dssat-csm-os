@@ -2261,15 +2261,15 @@ cbak optimum of 18oc for photosynthesis
          prft = 0.0
       endif
 
-         ! Effect of ozone on photosynthesis added by BTK, JG
-         ! JG divided FOZ1 by 100 to clean parameter value 7/24/20
-         ! JG replaced FOZ2 with (1 + (FOZ1/100 * 25)) 01/18/2022
-         !    same value, but one less parameter needed in ECO file
+!     Effect of ozone on photosynthesis added by BTK, JG
+!     JG divided FOZ1 by 100 to clean parameter value 7/24/20
+!     JG replaced FOZ2 with (1 + (FOZ1/100 * 25)) 01/18/2022
+!        same value, but one less parameter needed in ECO file
       if (OZON7 .gt. OBASE .and. ISWDIS .eq. 'O') then
           FO3 = (-(FOZ1/100) * OZON7) + (1.0 + (FOZ1/100 * OBASE))
-          !FO3 = (-0.0006 * OZON7) + 1.015  !Ozone Tolerant cultivars
-          !FO3 = (-0.005 * OZON7) + 1.125   !Ozone Sensitive cultivars
-          !FO3 = (-0.001 * OZON7) + 1.025   !Ozone Intermediate cultivars
+!         FO3 = (-0.0006 * OZON7) + 1.015  !Ozone Tolerant cultivars
+!         FO3 = (-0.005 * OZON7) + 1.125   !Ozone Sensitive cultivars
+!         FO3 = (-0.001 * OZON7) + 1.025   !Ozone Intermediate cultivars
           FO3 = MAX(FO3, 0.0)
       else
           FO3 = 1.0

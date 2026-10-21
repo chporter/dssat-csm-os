@@ -554,7 +554,7 @@ C-----------------------------------------------------------------------
               IF (ECOTYP .EQ. ECONO) THEN
 !               Read optional cold sensitivity paramter. 
 !               Default to TSEN = 6.0 if no value given.
-                ! JG changed column numbers to match updated ecotype file
+                !JG changed column numbers to match updated ecotype file
                 IF (C255(321:325) == '     ') THEN
                   TSEN = 6.0
                 ELSE
@@ -564,7 +564,7 @@ C-----------------------------------------------------------------------
         
 !               Read optional number of cold days paramter. 
 !               Default to CDAY = 15.0 if no value given.
-                ! JG changed column numbers to match updated ecotype file
+                !JG changed column numbers to match updated ecotype file
                 IF (C255(327:331) == '     ') THEN
                   CDAY = 15
                 ELSE
