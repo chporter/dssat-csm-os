@@ -1338,11 +1338,15 @@ C      ADDITIONAL DM LOSS DUE TO N MOBILIZATION? SENRTE
 
 !     --------------------------------------------
 !     Handle stem cohorts
-      DO I = 1, NLC
-!       STSENWT_c(I) = LFSENWT_c(I) * PORPT
-        STSENWT_c(I) = STSENWT * STDM(I) / STMWT
-        STSENWT_c(I) = MIN(STDM(I) - StemTotSen(I), STSENWT_c(I))
-      ENDDO
+      IF (STMWT > 0.0) THEN
+        DO I = 1, NLC
+!         STSENWT_c(I) = LFSENWT_c(I) * PORPT
+          STSENWT_c(I) = STSENWT * STDM(I) / STMWT
+          STSENWT_c(I) = MIN(STDM(I) - StemTotSen(I), STSENWT_c(I))
+        ENDDO
+      ELSE
+        STSENWT_c = 0.0
+      ENDIF
       STSENWT_sum = SUM(STSENWT_c)
       StemTotSen = StemTotSen + STSENWT_c
 !     --------------------------------------------
