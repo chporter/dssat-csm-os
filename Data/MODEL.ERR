@@ -1035,3 +1035,6 @@ VPD sensitivity parameter PHSV missing for EVAPO method H.
 
 TRANS     2
 VPD threshold parameter PHTV missing for EVAPO method H.
+
+WATBAL   99
+Calculated soil water is less than zero. Contact model developers.
