@@ -153,38 +153,47 @@
             STSN(I) = 0.0
             STNSN(I) = 0.0
           ENDIF
-
-!         Calculate quality of pre-harvested leaf and stem for each cohort
-!         ADF and NDF are in fraction here
-          IF (FHLEAF_c(I) > 0.0) THEN
-            ADF_Lf_c(I) = LeafCellFrac(I) + LeafLigFrac(I)
-            NDF_Lf_c(I) = LeafCellFrac(I) + LeafHemiFrac(I) + 
-     &        LeafLigFrac(I)
-
-            ADFmass = ADFmass + ADF_Lf_c(I) * FHLEAF_c(I) 
-            NDFmass = NDFmass + NDF_Lf_c(I) * FHLEAF_c(I) 
-          ENDIF
-
-          IF (FHSTEM_c(I) > 0.0) THEN
-            ADF_St_c(I) = StemCellFrac(I) + StemLigFrac(I)
-            NDF_St_c(I) = StemCellFrac(I) + StemHemiFrac(I) + 
-     &        StemLigFrac(I)
-
-            ADFmass = ADFmass + ADF_St_c(I) * FHSTEM_c(I)
-            NDFmass = NDFmass + NDF_St_c(I) * FHSTEM_c(I)
-          ENDIF
-
-          TotHarvested = TotHarvested + FHLEAF_c(I) + FHSTEM_c(I)
         ENDDO
 
-!       Divide thru by total mass to get weighted average and convert to %
-        ADF_harvest = ADFmass / TotHarvested * 100.
-        NDF_harvest = NDFmass / TotHarvested * 100.
+        IF (CalcQual) THEN
+          DO I = 1, NLC
+!           Calculate quality of pre-harvested leaf and stem for each cohort
+!           ADF and NDF are in fraction here
+            IF (FHLEAF_c(I) > 0.0) THEN
+              ADF_Lf_c(I) = LeafCellFrac(I) + LeafLigFrac(I)
+              NDF_Lf_c(I) = LeafCellFrac(I) + LeafHemiFrac(I) + 
+     &          LeafLigFrac(I)
+              ADFmass = ADFmass + ADF_Lf_c(I) * FHLEAF_c(I) 
+              NDFmass = NDFmass + NDF_Lf_c(I) * FHLEAF_c(I) 
+            ENDIF
+
+            IF (FHSTEM_c(I) > 0.0) THEN
+              ADF_St_c(I) = StemCellFrac(I) + StemLigFrac(I)
+              NDF_St_c(I) = StemCellFrac(I) + StemHemiFrac(I) + 
+     &          StemLigFrac(I)
+              ADFmass = ADFmass + ADF_St_c(I) * FHSTEM_c(I)
+              NDFmass = NDFmass + NDF_St_c(I) * FHSTEM_c(I)
+            ENDIF
+
+            TotHarvested = TotHarvested + FHLEAF_c(I) + FHSTEM_c(I)
+          ENDDO
+
+!         Divide thru by total mass to get weighted average and convert to %
+          ADF_harvest = ADFmass / TotHarvested * 100.
+          NDF_harvest = NDFmass / TotHarvested * 100.
+        ELSE
+!         Quality parameters not available
+          ADF_harvest = -99.
+          NDF_harvest = -99.
+        ENDIF
 
 !       Cohort harvest values may have been adjusted, recalculate totals
         FHLEAF = SUM(FHLEAF_c)
         FHSTEM = SUM(FHSTEM_c)
         FHTOT = FHLEAF + FHSTEM
+      ELSE
+        ADF_harvest = -99.
+        NDF_harvest = -99.
       ENDIF
 
       CALL PUT('MHARVEST','ADF', ADF_harvest)
