@@ -67,8 +67,7 @@
   1.00  1.00  1.00  1.00  0.70                     SENNLV, SENCLV, SENNSV, SENCSV, NSTFAC
   1.00  1.00  1.00  1.00                           SENNRV, SENCRV, SENNSRV, SENCSRV
  0.060                                 MAXNMINE !2025-11-18 CHP added for COHORTS
-                                                                                                    
-                                                                                                    
+
 !*NITROGEN FIXATION PARAMETERS                                                                      
   .050  .160 0.001   0.0 0.006  0.05   SNACTM,NODRGM,DWNODI,TTFIX,NDTHMX,CNODCR - 11/28/25 too much nodule loss winter  
  -6.00  15.0  30.0  44.0   LIN         FNNGT(4),TYPNGT-TEMP EFF ON NOD GROWTH - kjb 11/30/25                     
