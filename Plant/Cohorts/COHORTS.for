@@ -265,8 +265,13 @@ C=======================================================================
       FHLEAF_c = 0.0   ; FHSTEM_c  = 0.0
       WLDOT_cohort = 0.0;WSDOT_cohort = 0.0
 
-      ADF_daily = 0.0
-      NDF_daily = 0.0
+      IF (CalcQual) THEN
+        ADF_daily = 0.0
+        NDF_daily = 0.0
+      ELSE
+        ADF_daily = -99.
+        NDF_daily = -99.
+      ENDIF
       CALL PUT("MHARVEST","ADFday",ADF_daily)
       CALL PUT("MHARVEST","NDFday",NDF_daily)
 

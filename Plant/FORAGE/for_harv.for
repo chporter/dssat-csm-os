@@ -824,10 +824,15 @@ C-----------------------------------------------------------------------
 !       RFV = relative feed value
 
         CP = fhpctn * 6.25
-        TDN = 88.9 - (0.779 * ADF)
-        RFQ = 73.7 + 0.463 * CP - 0.595 * ADF 
+
         IF (NDF > 0.0) THEN
+          TDN = 88.9 - (0.779 * ADF)
+          RFQ = 73.7 + 0.463 * CP - 0.595 * ADF 
           RFV = (88.9 -(0.779 * ADF)) * ((120 / NDF) / 1.29)
+        ELSE
+          TDN = -99.
+          RFQ = -99.
+          RFV = -99.
         ENDIF
 
         call yr_doy(yrdoy,year,doy)

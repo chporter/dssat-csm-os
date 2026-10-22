@@ -19,6 +19,14 @@
       REAL, DIMENSION(1:LCMax) :: ADF_St_c, NDF_St_c
 
 !-----------------------------------------------------------------------
+!     If species parameters are not available, skip quality calcs
+      IF (.NOT. CalcQual) THEN
+        ADF_daily = -99.
+        NDF_daily = -99.
+        RETURN
+      ENDIF
+
+!-----------------------------------------------------------------------
       ADFmass = 0.0
       NDFmass = 0.0
 

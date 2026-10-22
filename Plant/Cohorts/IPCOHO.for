@@ -7,6 +7,8 @@
      &  SENCLV, SENCSV, SENNLV, SENNSV, TCMP
       REAL SENMAX(4), XSENMX(4)
 
+      LOGICAL CalcQual
+
 !          Cellulose, hemicellulose, lignin
       REAL CELLFI, HCLLFI, LIGLFI,   !initial leaf
      &     CELSTI, HCLSTI, LIGSTI,   !initial stem
@@ -51,11 +53,13 @@
       CHARACTER*6   ERRKEY
       PARAMETER (ERRKEY = 'IPCOHO')
       CHARACTER*6   SECTION
+      CHARACTER*78, DIMENSION(4) :: MSG
       CHARACTER*80  C80
 
       INTEGER LUNCRP,  ERR, LINC, LNUM, FOUND, ISECT
       INTEGER II, I
 
+      CalcQual = .TRUE.
 !-----------------------------------------------------------------------
 !     Read in values from species file
 !-----------------------------------------------------------------------
@@ -83,40 +87,56 @@
           READ(C80,'(2F6.0)',IOSTAT=ERR) PCHOLFF, PCHOSTF
           IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
 
+!*************************************************************************
+!         For now, these new parameters are optional. If available, 
+!           forage quality will be calculated.
 !         New parameters for cellulose, hemicellulose, and lignin
           CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
 !         Initial leaf cellulose, hemicellulose, lignin (fraction)
           READ(C80,'(6F6.0)',IOSTAT=ERR) CELLFI, HCLLFI, LIGLFI, 
 !         Initial stem cellulose, hemicellulose, lignin (fraction)
      &                                   CELSTI, HCLSTI, LIGSTI
-          IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+          IF (ERR .NE. 0) CalcQual = .FALSE.
 
           CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
 !         Rate of change of leaf cellulose, hemicellulose, lignin (fraction/PTD)
           READ(C80,'(6F6.0)',IOSTAT=ERR) CELLFS, HCLLFS, LIGLFS, 
 !         Rate of change of stem cellulose, hemicellulose, lignin (fraction/PTD)
      &                                   CELSTS, HCLSTS, LIGSTS
-          IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+          IF (ERR .NE. 0) CalcQual = .FALSE.
 
           CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
 !         Maximum leaf cellulose, hemicellulose, lignin (fraction)
           READ(C80,'(6F6.0)',IOSTAT=ERR) CELLFX, HCLLFX, LIGLFX, 
 !         Minimum stem cellulose, hemicellulose, lignin (fraction)
      &                                   CELSTX, HCLSTX, LIGSTX
-          IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+          IF (ERR .NE. 0) CalcQual = .FALSE.
 
           CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
 !         Minimum leaf cellulose, hemicellulose, lignin (fraction)
           READ(C80,'(6F6.0)',IOSTAT=ERR) CELLFN, HCLLFN, LIGLFN, 
 !         Minimum stem cellulose, hemicellulose, lignin (fraction)
      &                                   CELSTN, HCLSTN, LIGSTN
-          IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+          IF (ERR .NE. 0) CalcQual = .FALSE.
+
+          IF (.NOT. CalcQual) THEN
+            MSG(1) = "One or more leaf or stem composition " //
+     &               "variables is missing or invalid."
+            MSG(2) = "If you want forage quality calculations, " //
+     &               "add cellulose, hemicellulose, "
+            MSG(3) = "  and lignin values to the species file."
+            WRITE(MSG(4),'(A,A)') "Species file: ", TRIM(FILECC)
+            CALL WARNING(4, ERRKEY, MSG)
+          ENDIF
         ENDIF
+!*************************************************************************
 
       ENDIF
 !-----------------------------------------------------------------------
 !    Find and Read Carbon and Nitrogen Mining Section
 !-----------------------------------------------------------------------
+      REWIND(LUNCRP)
+      LNUM = 0
       SECTION = '!*CARB'
       CALL FIND(LUNCRP, SECTION, LINC, FOUND) ; LNUM = LNUM + LINC
       IF (FOUND .EQ. 0) THEN
