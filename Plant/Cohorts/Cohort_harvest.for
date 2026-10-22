@@ -36,10 +36,7 @@
       REAL ADF_harvest, NDF_harvest, ADFmass, NDFmass
       REAL, DIMENSION(1:LCMax) :: ADF_Lf_c, NDF_Lf_c
       REAL, DIMENSION(1:LCMax) :: ADF_St_c, NDF_St_c
-      REAL TotHarvested, FHTOT
-
-!     temp chp
-      REAL RHOL_calc, RHOS_calc
+      REAL TotHarvested, FHTOT, TotalRemoved
 
 !-----------------------------------------------------------------------
       TotHarvested = 0.0
@@ -54,70 +51,65 @@
 
       IF (FHLEAF > 0.0 .OR. FHSTEM > 0.0) THEN
 
-!       For initial testing, reduce each cohort by the proportion of whole leaf lost
-!       Eventually, we want to remove new (top) growth
-        WTLF = SUM(LFDM)
-        IF (FHLEAF > 0.0) THEN
-          DO I = 1, NLC
-            FHLEAF_c(I) = FHLEAF * LFDM(I) / WTLF
-            FHLEAF_c(I) = MAX(0.0, FHLEAF_c(I))
-            FHLEAF_c(I) = MIN(LFDM(I), FHLEAF_c(I))
-          ENDDO
-        ENDIF
-
-        STMWT = SUM(STDM)
-        IF (FHSTEM > 0.0) THEN
-          DO I = 1, NLC
-            FHSTEM_c(I) = FHSTEM * STDM(I) / STMWT
-            FHSTEM_c(I) = MAX(0.0, FHSTEM_c(I))
-            FHSTEM_c(I) = MIN(STDM(I), FHSTEM_c(I))
-          ENDDO
-        ENDIF
-
-!!       Remove newest leaf cohorts first (UNTESTED)
+!!       For initial testing, reduce each cohort by the proportion of whole leaf lost
+!!       Eventually, we want to remove new (top) growth
 !        WTLF = SUM(LFDM)
 !        IF (FHLEAF > 0.0) THEN
-!          TotalRemoved = 0.0
-!          DO I = NLC, 1, -1
-!            TotalRemoved = TotalRemoved + LFDM(I)
-!            FHLEAF_c(I) = LFDM(I)
-!            IF (TotalRemoved >= FHLEAF) THEN
-!              FHLEAF_c(I) = TotalRemoved - FHLEAF
-!              EXIT
-!            ELSE
-!              CYCLE
-!            ENDIF
+!          DO I = 1, NLC
+!            FHLEAF_c(I) = FHLEAF * LFDM(I) / WTLF
+!            FHLEAF_c(I) = MAX(0.0, FHLEAF_c(I))
+!            FHLEAF_c(I) = MIN(LFDM(I), FHLEAF_c(I))
 !          ENDDO
-
-!!       Remove newest stem cohorts first (UNTESTED)
+!        ENDIF
+!
 !        STMWT = SUM(STDM)
 !        IF (FHSTEM > 0.0) THEN
-!          TotalRemoved = 0.0
-!          DO I = NLC, 1, -1
-!            TotalRemoved = TotalRemoved + STDM(I)
-!            FHSTEM_c(I) = STDM(I)
-!            IF (TotalRemoved >= FHSTEM) THEN
-!              FHSTEM_c(I) = TotalRemoved - FHSTEM
-!              EXIT
-!            ELSE
-!              CYCLE
-!            ENDIF
+!          DO I = 1, NLC
+!            FHSTEM_c(I) = FHSTEM * STDM(I) / STMWT
+!            FHSTEM_c(I) = MAX(0.0, FHSTEM_c(I))
+!            FHSTEM_c(I) = MIN(STDM(I), FHSTEM_c(I))
 !          ENDDO
 !        ENDIF
 
-        DO I = 1, NLC
-!         ---------------------------------
-!         temp chp
-          RHOL_calc = SUM(LFNSC) / WTLF
-!         ---------------------------------
+!       Remove newest leaf cohorts first
+        WTLF = SUM(LFDM)
+        IF (FHLEAF > 0.0) THEN
+          TotalRemoved = 0.0
+          DO I = NLC, 1, -1
+            TotalRemoved = TotalRemoved + LFDM(I)
+            FHLEAF_c(I) = LFDM(I)
+            IF (TotalRemoved >= FHLEAF) THEN
+              FHLEAF_c(I) = TotalRemoved - FHLEAF
+              EXIT
+            ELSE
+              CYCLE
+            ENDIF
+          ENDDO
+        ENDIF
 
+!       Remove newest stem cohorts first
+        STMWT = SUM(STDM)
+        IF (FHSTEM > 0.0) THEN
+          TotalRemoved = 0.0
+          DO I = NLC, 1, -1
+            TotalRemoved = TotalRemoved + STDM(I)
+            FHSTEM_c(I) = STDM(I)
+            IF (TotalRemoved >= FHSTEM) THEN
+              FHSTEM_c(I) = TotalRemoved - FHSTEM
+              EXIT
+            ELSE
+              CYCLE
+            ENDIF
+          ENDDO
+        ENDIF
+
+        DO I = 1, NLC
 !         Update leaf and stem composition
           LFDM(I) = LFDM(I) - FHLEAF_c(I)
           IF (LFDM(I) > 0.0) THEN
             LFAREA(I) = LFAREA(I) - FHLEAF_c(I) * LFSLA(I)
             LFSLA(I) = LFAREA(I) / LFDM(I)
             LFNSC(I) = LFNSC(I) - FHLEAF_c(I) * RHOL_c(I)
-!           LFNSC(I) = LFNSC(I) - FHLEAF_c(I) * RHOL_calc  !temp chp
             LeafNTot(I) = LeafNTot(I) - FHLEAF_c(I) * PCNLeaf(i)/100.
             LFSN(I) = MIN(LeafNTot(I),PROLFF*0.16 * (LFDM(I) -LFNSC(I)))
             LFNSN(I) = LeafNTot(I) - LFSN(I)
@@ -132,16 +124,9 @@
             LFNSN(I) = 0.0
           ENDIF
 
-!         ---------------------------------
-!         temp chp
-!         use average RHOS instead of cohort value
-          RHOS_calc = SUM(STNSC) / STMWT
-!         ---------------------------------
-
           STDM(I) = STDM(I) - FHSTEM_c(I)
           IF (STDM(I) > 0.0) THEN
             STNSC(I) = STNSC(I) - FHSTEM_c(I) * RHOS_c(I)
-!           STNSC(I) = STNSC(I) - FHSTEM_c(I) * RHOS_calc  !temp chp
             StemNTot(I) = StemNTot(I) - FHSTEM_c(I) * PCNStem(I)/100.
             STSN(I) = MIN(StemNTot(I),PROSTF*0.16 * (STDM(I) -STNSC(I)))
             STNSN(I) = StemNTot(I) - STSN(I)
