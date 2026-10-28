@@ -239,6 +239,7 @@ C=======================================================================
         ENDIF
 
 C-----------------------------------------------------------------------
+!     Respiration requirements for net growth
 C     Newest version of CROPGRO has variable seed N, oil, CH2O,
 C     which may make this tougher
 C-----------------------------------------------------------------------
@@ -443,7 +444,7 @@ C-----------------------------------------------------------------------
      &  '       WSDOT       SCADD       SNADD      CRUSST',
      &  '      NRUSST      WSIDOT       SSDOT',
      &  '      SSNDOT       NSOFF       NSDOT',
-     &  '       NGRST      WSDOTN      WCRLDT')
+     &  '       NGRST      WSDOTN      WRCLDT')
 
 !     end temp chp
 !=========================================================================

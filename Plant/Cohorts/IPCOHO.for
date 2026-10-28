@@ -1,14 +1,18 @@
 !=======================================================================
       MODULE IPCOHO_MOD
 !=======================================================================
+!     FileX / cultivar file parameters
+      CHARACTER*1 PLME
+      REAL PLTPOP, SDWTPL, WTFSD, WTPSD
+
+!     Species parameters
       REAL ALPHL, ALPHS, PCHOLFF, PCHOSTF, ICMP, 
      &  MAXNMINE, NMOBMX, NVSMOB, 
      &  PROLFF, PROLFI, PROSTF, PROSTI, SENDAY, 
      &  SENCLV, SENCSV, SENNLV, SENNSV, TCMP
       REAL SENMAX(4), XSENMX(4)
 
-      LOGICAL CalcQual
-
+!     Species quality parameters
 !          Cellulose, hemicellulose, lignin
       REAL CELLFI, HCLLFI, LIGLFI,   !initial leaf
      &     CELSTI, HCLSTI, LIGSTI,   !initial stem
@@ -18,6 +22,9 @@
      &     CELSTN, HCLSTN, LIGSTN,   !minimum stem
      &     CELLFX, HCLLFX, LIGLFX,   !maximum leaf
      &     CELSTX, HCLSTX, LIGSTX    !maximum stem
+
+!     Indicates that quality parameters are available
+      LOGICAL CalcQual
 
       CONTAINS
 
@@ -30,23 +37,13 @@
 !  11/18/2025 CHP Adapted from IPDMND.
 !=======================================================================
       SUBROUTINE IPCOHO(
-     &  FILECC, MODEL)                            !Input
-
-!     &  ALPHL, ALPHS, ICMP, MAXNMINE,             !Output
-!     &  NMOBMX, NVSMOB,                           !Output
-!     &  PCHOLFF, PCHOSTF, PROLFI, PROLFF, PROSTI, !Output
-!     &  PROSTF, SENDAY, SENMAX, SENCLV, SENCSV,   !Output
-!     &  SENNLV, SENNSV, TCMP, XSENMX)             !Output
-!!       Cellulose, hemicellulose, lignin
-!     &  CELLFI, HCLLFI, LIGLFI,   !initial leaf
-!     &  CELSTI, HCLSTI, LIGSTI,   !initial stem
-!     &  CELLFS, HCLLFS, LIGLFS,   !slope leaf
-!     &  CELSTS, HCLSTS, LIGSTS    !slope stem
+     &  FILEIO, FILECC, MODEL)                     !Input
 
 !-----------------------------------------------------------------------
       IMPLICIT NONE
       EXTERNAL GETLUN, ERROR, FIND, IGNORE, WARNING
 !-----------------------------------------------------------------------
+      CHARACTER*30, INTENT(IN) :: FILEIO
       CHARACTER*92, INTENT(IN) :: FILECC
       CHARACTER*8 , INTENT(IN) :: MODEL
 
@@ -56,12 +53,52 @@
       CHARACTER*78, DIMENSION(4) :: MSG
       CHARACTER*80  C80
 
-      INTEGER LUNCRP,  ERR, LINC, LNUM, FOUND, ISECT
+      INTEGER LUNCRP, LUNIO, ERR, LINC, LNUM, FOUND, ISECT
       INTEGER II, I
 
-      CalcQual = .TRUE.
+      CalcQual = .FALSE.
+
+!****************************************************************************
+!     Read FileIO
 !-----------------------------------------------------------------------
-!     Read in values from species file
+      CALL GETLUN('FILEIO', LUNIO)
+      OPEN (LUNIO, FILE = FILEIO,STATUS = 'OLD',IOSTAT=ERR)
+      IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILEIO,0)
+      LNUM = 0
+
+!-----------------------------------------------------------------------
+!    Read Planting Details Section
+!-----------------------------------------------------------------------
+      SECTION = '*PLANT'
+      CALL FIND(LUNIO, SECTION, LINC, FOUND) ; LNUM = LNUM + LINC
+      IF (FOUND == 0) THEN
+        CALL ERROR(SECTION, 42, FILEIO, LNUM)
+      ELSE
+        READ(LUNIO,'(24X,F6.0,5X,A1,24X,F6.0)',IOSTAT=ERR)
+     &          PLTPOP, PLME, SDWTPL ; LNUM = LNUM + 1
+        IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILEIO,LNUM)
+      ENDIF
+
+!-----------------------------------------------------------------------
+!    Read Cultivar Section
+!-----------------------------------------------------------------------
+      SECTION = '*CULTI'
+      CALL FIND(LUNIO, SECTION, LINC, FOUND) ; LNUM = LNUM + LINC
+      IF (FOUND == 0) THEN
+        CALL ERROR(SECTION, 42, FILEIO, LNUM)
+      ELSE
+!       READ(LUNIO,'(24X,A6,66X,F6.0,24X,2F6.0)',IOSTAT=ERR) 
+!    &      ECONO, WTPSD, SDPRO, SDLIP
+        READ(LUNIO,'(96X,F6.0)',IOSTAT=ERR) WTPSD
+        LNUM = LNUM + 1
+        IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILEIO,LNUM)
+      ENDIF
+
+      CLOSE (LUNIO)
+
+!****************************************************************************
+!-----------------------------------------------------------------------
+!     Read species file
 !-----------------------------------------------------------------------
       CALL GETLUN('FILEC', LUNCRP)
       OPEN (LUNCRP,FILE = FILECC, STATUS = 'OLD',IOSTAT=ERR)
@@ -81,6 +118,7 @@
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
 
         IF (MODEL(1:5) == 'PRFRM') THEN
+          CalcQual = .TRUE.
           DO I = 1, 11
             CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
           ENDDO
@@ -169,6 +207,24 @@
           READ(C80,'(F6.0)',IOSTAT=ERR) MAXNMINE
           IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
         END SELECT
+      ENDIF
+
+!-----------------------------------------------------------------------
+!    Find and Read Vegetative Partitioning Parameters
+!-----------------------------------------------------------------------
+      REWIND(LUNCRP)
+      LNUM = 0
+      SECTION = '!*VEGE'
+      CALL FIND(LUNCRP, SECTION, LINC, FOUND) ; LNUM = LNUM + LINC
+      IF (FOUND .EQ. 0) THEN
+        CALL ERROR(SECTION, 42, FILECC, LNUM)
+      ELSE
+        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+        READ(C80,'(F6.0)',IOSTAT=ERR) WTFSD
+        IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
       ENDIF
 
 !-----------------------------------------------------------------------

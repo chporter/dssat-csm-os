@@ -434,10 +434,9 @@ C-----------------------------------------------------------------------
      &  TOSHMINE,TOCHMINE,HPODWT,HSDWT,HSHELWT)           !Output
       
       CALL COHORTS(DYNAMIC, 
-     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
-     &  WLDOTN, WSDOTN,                       !Input
-     &  YRPLT)                                !Input
-!    &  PCNLeaf)                     !Output
+     &    DTX, F, FILECC, FRLF, FRSTM,                    !Input
+     &    NGRLF, NGRST, WLDOTN, WSDOTN,                   !Input
+     &    YRPLT)                                          !Input
 
       CALL OPGROW(CONTROL, ISWITCH, SoilProp, 
      &    CADLF, CADST, CANHT, CANWH, CMINEA, DWNOD, GROWTH,  
@@ -691,10 +690,9 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C-GH Add leaf Cohorts
       CALL COHORTS(DYNAMIC, 
-     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
-     &  WLDOTN, WSDOTN,                       !Input
-     &  YRPLT)                                !Input
-!    &  PCNLeaf)                     !Output
+     &    DTX, F, FILECC, FRLF, FRSTM,                    !Input
+     &    NGRLF, NGRST, WLDOTN, WSDOTN,                   !Input
+     &    YRPLT)                                          !Input
 
 !-----------------------------------------------------------------------
 !     Write headings to output file GROWTH.OUT
@@ -818,6 +816,20 @@ C-GH Add leaf Cohorts
       IF (DAS .EQ. NVEG0) THEN
 !----------------------------------------------------------------------
 !     On day of emergence, initialize:
+!-----------------------------------------------------------------------     
+
+!     Call to cohorts for emergence uses different input argurments
+!      NGRLF  = WTNLF
+!      NGRST  = WTNST
+!      WLDOTN = WTLF
+!      WSDOTN = STMWT
+      CALL COHORTS(EMERG, 
+     &    DTX, F, FILECC, FRLF, FRSTM,                    !Input
+!    &    NGRLF, NGRST, WLDOTN, WSDOTN,                   !Input
+     &    WTNLF, WTNST, WTLF, STMWT,                      !Input
+     &    YRPLT)                                          !Input
+
+!-----------------------------------------------------------------------
 !-----------------------------------------------------------------------
         CALL GROW(CONTROL, ISWITCH, EMERG, SOILPROP, 
      &  AGEFAC, CADLF, CADST, CRUSLF, CRUSRT, CRUSSH,     !Input
@@ -905,24 +917,23 @@ C-----------------------------------------------------------------------
      &    NADST, NGRLF, NGRRT, NGRST, NSTRES,             !Output
      &    TNLEAK, WLDOTN, WRDOTN, WSDOTN)                 !Output
 
-!-----------------------------------------------------------------------     
-C-GH
-      WLDOTN = WTLF
-      NGRLF  = WTNLF
-      WSDOTN = STMWT
-      NGRST  = WTNST
-!       write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
-
-      CALL COHORTS(DYNAMIC, 
-     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
-     &  WLDOTN, WSDOTN,                       !Input
-     &  YRPLT)                                !Input
-!    &  PCNLeaf)                     !Output
-
-      WLDOTN = 0.0
-      NGRLF  = 0.0
-      WSDOTN = 0.0
-      NGRST  = 0.0
+!!-----------------------------------------------------------------------     
+!C-GH
+!      WLDOTN = WTLF
+!      NGRLF  = WTNLF
+!      WSDOTN = STMWT
+!      NGRST  = WTNST
+!!       write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
+!
+!      CALL COHORTS(EMERG, 
+!     &    DTX, F, FILECC, NGRLF, NGRST,                   !Input
+!     &    WLDOTN, WSDOTN,                                 !Input
+!     &    YRPLT)                                          !Input
+!
+!      WLDOTN = 0.0
+!      NGRLF  = 0.0
+!      WSDOTN = 0.0
+!      NGRST  = 0.0
 
 !-----------------------------------------------------------------------
         IF (ISWPHO .EQ. 'Y' .OR. ISWPHO .EQ. 'H') THEN
@@ -1342,10 +1353,9 @@ C     CALL COHORT MODEL
 C----------------------------------
 !      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
       CALL COHORTS(DYNAMIC, 
-     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
-     &  WLDOTN, WSDOTN,                       !Input
-     &  YRPLT)                                !Input
-!    &  PCNLeaf)                     !Output
+     &    DTX, F, FILECC, FRLF, FRSTM,                    !Input
+     &    NGRLF, NGRST, WLDOTN, WSDOTN,                   !Input
+     &    YRPLT)                                          !Input
 
       IF ((WTLF+STMWT).GT. 0.0001) THEN
         PCNVEG = (WTNLF+WTNST)/(WTLF+STMWT)*100.
@@ -1399,10 +1409,9 @@ C----------------------------------
      &    TOSHMINE,TOCHMINE,HPODWT,HSDWT,HSHELWT)         !Output
 
       CALL COHORTS(DYNAMIC, 
-     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
-     &  WLDOTN, WSDOTN,                       !Input
-     &  YRPLT)                                !Input
-!    &  PCNLeaf)                     !Output
+     &    DTX, F, FILECC, FRLF, FRSTM,                    !Input
+     &    NGRLF, NGRST, WLDOTN, WSDOTN,                   !Input
+     &    YRPLT)                                          !Input
 
         CALL OPGROW(CONTROL, ISWITCH, SoilProp, 
      &    CADLF, CADST, CANHT, CANWH, CMINEA, DWNOD, GROWTH,  

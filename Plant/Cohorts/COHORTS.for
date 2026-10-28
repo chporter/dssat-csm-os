@@ -111,8 +111,8 @@ C  06/07/2026 CHP added stem cohorts
 C=======================================================================
 
       SUBROUTINE COHORTS(DYNAMIC, 
-     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
-     &  WLDOTN, WSDOTN,                       !Input
+     &  DTX, F, FILECC, FRLF, FRSTM,          !Input
+     &  NGRLF, NGRST, WLDOTN, WSDOTN,         !Input
      &  YRPLT)                                !Input
 !    &  SLA, SLAAD, LAIMX, XLAI,              !Output (eventually)
 !    &  WTLF, WCRLF, WNRLF, WTNLF,            !Output (eventually)
@@ -128,7 +128,8 @@ C=======================================================================
       EXTERNAL WARNING, ERROR
 
       INTEGER, INTENT(IN) :: DYNAMIC
-      REAL, INTENT(IN) :: DTX, F, NGRLF, NGRST, WLDOTN, WSDOTN
+      REAL, INTENT(IN) :: DTX, F, FRLF, FRSTM, 
+     &    NGRLF, NGRST, WLDOTN, WSDOTN
       INTEGER, INTENT(IN) :: YRPLT
       CHARACTER*92, INTENT(IN) :: FILECC
 
@@ -139,6 +140,7 @@ C=======================================================================
 
       REAL WLDOT_calc, WSDOT_calc
       REAL ADF_daily, NDF_daily
+      REAL TOTWT
 
 !     temp chp
       REAL LFWT_MAX, LFWT_MIN
@@ -147,6 +149,7 @@ C=======================================================================
       CHARACTER (len=6), PARAMETER :: ERRKEY = 'COHORT'
       CHARACTER (len=6)  LCMax_txt
       CHARACTER (len=8)  MODEL
+      CHARACTER (len=30) FileIO
       CHARACTER (len=78) MSG(2)
 
       INTEGER YRDOY, YEAR, DOY, DAS, DAP, TIMDIF
@@ -204,8 +207,9 @@ C=======================================================================
 !***********************************************************************
       IF (DYNAMIC .EQ. RUNINIT) THEN
 !-----------------------------------------------------------------------
+      FILEIO = CONTROL % FILEIO
       CALL  IPCOHO(
-     &  FILECC, MODEL)                            !Input
+     &  FILEIO, FILECC, MODEL)                            !Input
 
       CALL OpCohorts(DYNAMIC, YRPLT,          !Input
 !     &  LFSN, LFAREA, LeafNTot, PCNLeaf, 
@@ -300,14 +304,35 @@ C=======================================================================
       FirstCohortDAS = DAS                !DAS on day of first cohort
       CohortAgeDays(1) = 1                !Cohort age in days
 
+!-------------------------------------
+!     From GROW and for_grow.for
+! ok  WTFSD - species file - read from species file
+!     WTPSD - cultivar file - read from FileIO
+! OK  PLTPOP - FileX - read from FileIO
+! ok  SDWTPL - FileX - read from FileIO
+! OK  PLME - FileX - read from FileIO
+
+      IF (PLME .NE. 'T') THEN
+        TOTWT  = WTFSD * WTPSD * PLTPOP
+      ELSE
+        TOTWT = SDWTPL / 10.
+      ENDIF
+
+!     Initial mass of plant components
+      WTLF  = FRLF * TOTWT
+      STMWT = FRSTM * TOTWT
+!     End of snippet from GROW
+!-------------------------------------
+
 !     Leaf Cohorts
-      LFDM(1)  = WLDOTN                   !dry matter (g/m2)
-      CumLeafDM(1) = WLDOTN               !cumulative addition (g/m2)
-      LFNSC(1) = WLDOTN * ALPHL           !mobile CH2O (g/m2)
-      LeafNTot(1) = NGRLF                 !total leaf N (g/m2)
+      LFDM(1)     = WTLF                  !leaf dry matter (g/m2)
+      CumLeafDM(1)= WTLF                  !cumulative addition (g/m2)
+      LFNSC(1)    = WTLF * ALPHL          !mobile CH2O (g/m2)
+      LeafNTot(1) = WTLF * PROLFI * 0.16  !total leaf N (g/m2)
+
 !     structural N (g/m2) based on structural C
-      LFSN(1)  = PROLFI * 0.16 * (LFDM(1) - LFNSC(1))  
-      LFNSN(1) = NGRLF - LFSN(1)          !mobile N (g/m2)
+      LFSN(1)  = PROLFI * 0.16 * (LFDM(1) - LFNSC(1))
+      LFNSN(1) = LeafNTot(1) - LFSN(1)          !mobile N (g/m2)
       IF (LFDM(1) > 0.0) THEN
         PCNLeaf(1) = LeafNTot(1) / LFDM(1) * 100.  ! % N
       ELSE
@@ -315,7 +340,7 @@ C=======================================================================
       ENDIF
 
 !     Leaf area
-      LFAREA(1)  = WLDOTN * F              !leaf area (cm2/m2)
+      LFAREA(1)  = WTLF * F              !leaf area (cm2/m2)
       LFAREAH(1) = LFAREA(1)              !healthy leaf area
       IF (LFDM(1) > 0.0) THEN
         LFSLA(1)   = LFAREA(1) / LFDM(1)
@@ -324,12 +349,13 @@ C=======================================================================
       ENDIF
 
 !     Stem Cohorts
-      STDM(1)  = WSDOTN                   !dry matter (g/m2)
-      STNSC(1) = WSDOTN * ALPHS           !mobile CH2O (g/m2)
-      StemNTot(1) = NGRST                 !total stem N (g/m2)
+      STDM(1)     = STMWT                   !dry matter (g/m2)
+      STNSC(1)    = STMWT * ALPHS           !mobile CH2O (g/m2)
+      StemNTot(1) = STMWT * PROSTI * 0.16   !total stem N (g/m2)
+
 !     structural N (g/m2) based on structural C
       STSN(1)  = PROSTI * 0.16 * (STDM(1) - STNSC(1)) 
-      STNSN(1) = NGRST - STSN(1)          !mobile N (g/m2) 
+      STNSN(1) = StemNTot(1) - STSN(1)          !mobile N (g/m2) 
       IF (STDM(1) > 0.0) THEN
         PCNStem(1) = StemNTot(1) / STDM(1) * 100.  ! % N
       ELSE
