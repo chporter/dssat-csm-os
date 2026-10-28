@@ -14,8 +14,9 @@
 !       LFSLA              Specific leaf area
 !       FHLEAF_c, FHSTEM_c Harvested mass of leaf and stem g/m2
 
-      SUBROUTINE HarvestCohorts(FHLEAF, FHSTEM)   !Input/Output
-
+      SUBROUTINE HarvestCohorts(FHLEAF, FHSTEM,   !Input/Output
+     &    fhlfn, fhstn, fhcrlf, fhcrst, fhplig         !OUTPUT
+     &  )
 !     These variables are available throught USE statements
 !     &  PCNLeaf, PROLFF, RHOL,                    !Input
 !     &  PCNStem, PROSTF, RHOS,                    !Input
@@ -30,12 +31,14 @@
       SAVE
 
       REAL, INTENT(INOUT) :: FHLEAF, FHSTEM
+      REAL, INTENT(OUT) :: fhlfn, fhstn, fhcrlf, fhcrst, fhplig
 
       INTEGER I
       REAL WTLF, STMWT
-      REAL ADF_harvest, NDF_harvest, ADFmass, NDFmass
+      REAL ADF_harvest, NDF_harvest, ADFmass, NDFmass, LigHarvested
       REAL, DIMENSION(1:LCMax) :: ADF_Lf_c, NDF_Lf_c
       REAL, DIMENSION(1:LCMax) :: ADF_St_c, NDF_St_c
+      REAL, DIMENSION(1:LCMax) :: fhlfn_c, fhstn_c, fhcrlf_c, fhcrst_c
       REAL TotHarvested, FHTOT, TotalRemoved
 
 !-----------------------------------------------------------------------
@@ -48,6 +51,9 @@
       NDFmass = 0.0
       ADF_Lf_c = 0.0; NDF_Lf_c = 0.0
       ADF_St_c = 0.0; NDF_St_c = 0.0
+      ADF_harvest = -99.
+      NDF_harvest = -99.
+      LigHarvested = 0.0
 
       IF (FHLEAF > 0.0 .OR. FHSTEM > 0.0) THEN
 
@@ -109,10 +115,18 @@
           IF (LFDM(I) > 0.0) THEN
             LFAREA(I) = LFAREA(I) - FHLEAF_c(I) * LFSLA(I)
             LFSLA(I) = LFAREA(I) / LFDM(I)
-            LFNSC(I) = LFNSC(I) - FHLEAF_c(I) * RHOL_c(I)
-            LeafNTot(I) = LeafNTot(I) - FHLEAF_c(I) * PCNLeaf(i)/100.
+
+!           fhcrlf = fhleaf*rhol      !leaf CH2O harvested g/m2
+            fhcrlf_c(I) = FHLEAF_c(I) * RHOL_c(I)
+            LFNSC(I) = LFNSC(I) - fhcrlf_c(I)
+
+!           fhlfn = fhleaf*pcnl/100.  !harvested leaf N %
+            fhlfn_c(I) = FHLEAF_c(I) * PCNLeaf(i)/100.  !harvested leaf N g/m2
+            LeafNTot(I) = LeafNTot(I) - fhlfn_c(I)
             LFSN(I) = MIN(LeafNTot(I),PROLFF*0.16 * (LFDM(I) -LFNSC(I)))
             LFNSN(I) = LeafNTot(I) - LFSN(I)
+
+
           ELSE
             FHLEAF_c(I) = LFDM(I)
             LFDM(I) = 0.0
@@ -126,8 +140,14 @@
 
           STDM(I) = STDM(I) - FHSTEM_c(I)
           IF (STDM(I) > 0.0) THEN
-            STNSC(I) = STNSC(I) - FHSTEM_c(I) * RHOS_c(I)
-            StemNTot(I) = StemNTot(I) - FHSTEM_c(I) * PCNStem(I)/100.
+
+!           fhcrst = fhstem*rhos      !stem CH2O harvested g/m2
+            fhcrst_c(I) = FHSTEM_c(I) * RHOS_c(I)
+            STNSC(I) = STNSC(I) - fhcrst_c(I)
+
+!           fhstn = fhstem*pcnst/100. !harvested stem N %
+            fhstn_c(I) = FHSTEM_c(I) * PCNStem(I)/100. !harvested stem N %
+            StemNTot(I) = StemNTot(I) - fhstn_c(I)
             STSN(I) = MIN(StemNTot(I),PROSTF*0.16 * (STDM(I) -STNSC(I)))
             STNSN(I) = StemNTot(I) - STSN(I)
           ELSE
@@ -140,6 +160,60 @@
           ENDIF
         ENDDO
 
+
+!===============================================================================
+!     repeated code from for_harv.for
+!       fhlfn = fhleaf*pcnl/100.  !harvested leaf N g/m2
+        fhlfn = sum(fhlfn_c)
+
+!       fhstn = fhstem*pcnst/100. !harvested stem N g/m2
+        fhstn = sum(fhstn_c)
+
+!       fhtotn = fhlfn+fhstn      !total N harvested
+
+!       fhcrlf = fhleaf*rhol      !leaf CH2O harvested g/m2
+        fhcrlf = sum(fhcrlf_c)
+
+!       fhcrst = fhstem*rhos      !stem CH2O harvested g/m2
+        fhcrst = sum(fhcrst_c)
+
+!       fhpctn = fhtotn/fhtot*100 !%N of harvested material
+!       fhplig = (fhleaf*pliglf+fhstem*pligst)/fhtot*100  !lignin of harvested material %
+!       fhpcho = (fhcrlf+fhcrst)/fhtot*100  !CH2O of harvested material %
+!       fhpctlf = fhleaf/fhtot*100          !% leaf in harvested material
+
+!       WTLF = WTLF - FHLEAF      !update leaf mass
+!       STMWT = STMWT - FHSTEM    !update stem mass
+!       TOPWT = TOPWT - FHLEAF - FHSTEM
+!       TOTWT = TOTWT - FHLEAF - FHSTEM
+
+!!     Stopped cohort integration here. Need to coordinate the rest with cohorts module
+!
+!        WCRLF = WTLF*RHOL         !update leaf carbohydrate
+!        WCRST = STMWT*RHOS        !update stem carbohydrate
+!        WTNLF = WTLF*PCNL/100.    !update leaf N %
+!        WTNST = STMWT*PCNST/100.  !update stem N %
+!        WTNCAN = WTNCAN - FHLEAF*PCNL/100. - FHSTEM*PCNST/100.
+!
+!        IF ((WTLF - WCRLF) .GT. 0.0) THEN !mobile N in leaf
+!          WNRLF = MAX (WTNLF - PROLFF*0.16*(WTLF-WCRLF), 0.0)
+!        ELSE
+!          WNRLF = 0.0
+!        ENDIF
+!
+!        IF ((STMWT - WCRST) .GT. 0.0) THEN  !!mobile N in stem
+!          WNRST = MAX (WTNST - PROSTF*0.16*(STMWT-WCRST), 0.0)
+!        ELSE
+!          WNRST = 0.0
+!        ENDIF
+!
+!        AREALF = WTLF*SLA
+!        XLAI = AREALF/10000.
+!        XHLAI = XLAI
+!!     end repeated code from for_harv.for
+!===============================================================================
+
+!       Harvest quality calculations
         IF (CalcQual) THEN
           DO I = 1, NLC
 !           Calculate quality of pre-harvested leaf and stem for each cohort
@@ -161,11 +235,14 @@
             ENDIF
 
             TotHarvested = TotHarvested + FHLEAF_c(I) + FHSTEM_c(I)
+            LigHarvested = LigHarvested + LeafLigFrac(I) * FHLEAF_c(I) 
+     &                                  + StemLigFrac(I) * FHSTEM_c(I)
           ENDDO
 
 !         Divide thru by total mass to get weighted average and convert to %
           ADF_harvest = ADFmass / TotHarvested * 100.
           NDF_harvest = NDFmass / TotHarvested * 100.
+          fhplig = LigHarvested / TotHarvested * 100.
         ELSE
 !         Quality parameters not available
           ADF_harvest = -99.
@@ -176,9 +253,6 @@
         FHLEAF = SUM(FHLEAF_c)
         FHSTEM = SUM(FHSTEM_c)
         FHTOT = FHLEAF + FHSTEM
-      ELSE
-        ADF_harvest = -99.
-        NDF_harvest = -99.
       ENDIF
 
       CALL PUT('MHARVEST','ADF', ADF_harvest)

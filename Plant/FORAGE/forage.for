@@ -684,10 +684,10 @@ C-----------------------------------------------------------------------
      &  VSTAGE, DWTCO, DWTLO, DWTSO,
      &  PWTCO, PWTLO, PWTSO)                         !Input/Output
 
-      CALL COHORTS(DYNAMIC, 
-     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
-     &  WLDOTN, WSDOTN,                       !Input
-     &  YRPLT)                                !Input
+!      CALL COHORTS(DYNAMIC, 
+!     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
+!     &  WLDOTN, WSDOTN,                       !Input
+!     &  YRPLT)                                !Input
 
       CALL FOR_OPMOB(CONTROL, ISWITCH, 
      &  YRPLT, MDATE, DAS, YRDOY, DTX, DXR57, PGAVL, NAVL, PG, PPMFAC, 
@@ -1121,11 +1121,10 @@ C-----------------------------------------------------------------------
      &    SRCADDOT, SRNADDOT)                             !Output
 !ENDIF
 
-      CALL COHORTS(DYNAMIC, 
-     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
-     &  WLDOTN, WSDOTN,                       !Input
-     &  YRPLT)                                !Input
-!    &  PCNLeaf)                     !Output
+!      CALL COHORTS(DYNAMIC, 
+!     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
+!     &  WLDOTN, WSDOTN,                       !Input
+!     &  YRPLT)                                !Input
 
       CALL FOR_OPMOB(CONTROL, ISWITCH, 
      &  YRPLT, MDATE, DAS, YRDOY, DTX, DXR57, PGAVL, NAVL, PG, PPMFAC, 
@@ -1484,11 +1483,10 @@ C-GH
       NGRST=WTNST
 !       write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
 
-      CALL COHORTS(EMERG, 
-     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
-     &  WLDOTN, WSDOTN,                       !Input
-     &  YRPLT)                                !Input
-!    &  PCNLeaf)                     !Output
+!      CALL COHORTS(EMERG, 
+!     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
+!     &  WLDOTN, WSDOTN,                       !Input
+!     &  YRPLT)                                !Input
 
       WLDOTN=0
       NGRLF=0
@@ -2111,11 +2109,10 @@ C-----------------------------------------------------------------------
 C----------------------------------
 C     CALL COHORT MODEL
 C----------------------------------
-!      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
-      CALL COHORTS(DYNAMIC, 
-     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
-     &  WLDOTN, WSDOTN,                       !Input
-     &  YRPLT)                                !Input
+!      CALL COHORTS(DYNAMIC, 
+!     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
+!     &  WLDOTN, WSDOTN,                       !Input
+!     &  YRPLT)                                !Input
 
       FHWAH= 0.0
       FHTOTN = 0.0
@@ -2243,11 +2240,10 @@ C-----------------------------------------------------------------------
      &  WCRSH, WRCSHD, SHCMINE, CRUSSH, CHORECOVER, NLKSPENT, NLKNUSED,
      &  NLKCHK, TNLKCHK, CMOBSR, LAIMOBR, VNMOBR)     
 
-      CALL COHORTS(DYNAMIC, 
-     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
-     &  WLDOTN, WSDOTN,                       !Input
-     &  YRPLT)                                !Input
-!    &  PCNLeaf)                     !Output
+!      CALL COHORTS(DYNAMIC, 
+!     &  DTX, F, FILECC, NGRLF, NGRST,         !Input
+!     &  WLDOTN, WSDOTN,                       !Input
+!     &  YRPLT)                                !Input
 
       CALL FOR_OPGROW(CONTROL, ISWITCH, 
      &    CADLF, CADST, CANHT, CANWH, CMINEA, DWNOD,  

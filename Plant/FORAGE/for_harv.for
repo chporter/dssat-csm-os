@@ -310,47 +310,54 @@ C-----------------------------------------------------------------------
             canht  = max(HMCUT/100,0.0)
            !canht=max(rsht(i),0.0)     !enter rsht in cm
 
-            fhtot = fhleaf+fhstem
+!           fhtot = fhleaf+fhstem
 
           ENDIF
         ENDIF
       ENDIF
 
 !     Summarize today's harvest
+      CALL HarvestCohorts(FHLEAF, FHSTEM,       !Input / Output
+     &    fhlfn, fhstn, fhcrlf, fhcrst, fhplig         !Output
+     &  )
+
+      fhtot = fhleaf + fhstem
+
       if (fhtot > 0.0) then
         MOWED = .TRUE.
-        fhlfn = fhleaf*pcnl/100.
-        fhstn = fhstem*pcnst/100.
-        fhtotn = fhlfn+fhstn
-        
-        fhcrlf = fhleaf*rhol
-        fhcrst = fhstem*rhos
 
-        fhpctn = fhtotn/fhtot*100
-        fhplig = (fhleaf*pliglf+fhstem*pligst)/fhtot*100
-        fhpcho = (fhcrlf+fhcrst)/fhtot*100
-        fhpctlf = fhleaf/fhtot*100
+!       harvested amounts of N, CH2O, and lignin now come from cohorts module
+!       fhlfn = fhleaf*pcnl/100.  !harvested leaf N g/m2
+!       fhstn = fhstem*pcnst/100. !harvested stem N g/m2
+!       fhcrlf = fhleaf*rhol      !leaf CH2O harvested g/m2
+!       fhcrst = fhstem*rhos      !stem CH2O harvested g/m2
+!       fhplig = (fhleaf*pliglf+fhstem*pligst)/fhtot*100  !%
 
-        WTLF = WTLF - FHLEAF
+        fhtotn = fhlfn + fhstn            !total N harvested g/m2
+        fhpctn = fhtotn / fhtot * 100.    !%N of harvested material
+        fhpcho = (fhcrlf + fhcrst) / fhtot * 100. !harvested CH2O %
+        fhpctlf = fhleaf / fhtot * 100.   !% leaf in harvested material
 
-        STMWT = STMWT - FHSTEM
+        WTLF  = WTLF  - FHLEAF      !update leaf mass
+        STMWT = STMWT - FHSTEM      !update stem mass
         TOPWT = TOPWT - FHLEAF - FHSTEM
-        TOTWT = TOTWT - FHLEAF - FHSTEM
 
-        WCRLF = WTLF*RHOL
-        WCRST = STMWT*RHOS
+!     Stopped cohort integration here. Need to coordinate the rest with cohorts module
 
-        WTNLF = WTLF*PCNL/100.
-        WTNST = STMWT*PCNST/100.
+        WCRLF = WTLF*RHOL         !update leaf carbohydrate
+        WCRST = STMWT*RHOS        !update stem carbohydrate
+
+        WTNLF = WTLF*PCNL/100.    !update leaf N %
+        WTNST = STMWT*PCNST/100.  !update stem N %
         WTNCAN = WTNCAN - FHLEAF*PCNL/100. - FHSTEM*PCNST/100.
 
-        IF ((WTLF - WCRLF) .GT. 0.0) THEN
+        IF ((WTLF - WCRLF) .GT. 0.0) THEN !mobile N in leaf
           WNRLF = MAX (WTNLF - PROLFF*0.16*(WTLF-WCRLF), 0.0)
         ELSE
           WNRLF = 0.0
         ENDIF
 
-        IF ((STMWT - WCRST) .GT. 0.0) THEN
+        IF ((STMWT - WCRST) .GT. 0.0) THEN  !!mobile N in stem
           WNRST = MAX (WTNST - PROSTF*0.16*(STMWT-WCRST), 0.0)
         ELSE
           WNRST = 0.0
@@ -390,8 +397,6 @@ C-----------------------------------------------------------------------
         DWTLO = WTLO - PWTLO
         DWTSO = WTSO - PWTSO
       ENDIF
-
-      CALL HarvestCohorts(FHLEAF, FHSTEM)
 
 !***********************************************************************
 !***********************************************************************
