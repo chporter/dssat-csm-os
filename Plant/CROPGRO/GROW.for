@@ -476,8 +476,12 @@ C     Initial seedling or transplant weight
       ENDIF
 
 !     Initial mass of plant components
-      WTLF  = FRLF * TOTWT
-      STMWT = FRSTM * TOTWT
+!     WTLF  = FRLF * TOTWT
+      WTLF = LFDM(1)  !First cohort
+
+!     STMWT = FRSTM * TOTWT
+      STMWT = STDM(1)   !First cohort
+
       TOPWT = WTLF + STMWT
       RTWT  = TOTWT - TOPWT
 
@@ -490,8 +494,12 @@ C     Initial seedling or transplant weight
       CSW   = STMWT
 
 !     CH2O reserves
-      WCRLF = ALPHL * WTLF
-      WCRST = ALPHS * STMWT
+!     WCRLF = ALPHL * WTLF
+      WCRLF = LFNSC(1)    !First cohort
+
+!     WCRST = ALPHS * STMWT
+      WCRST = STNSC(1)    !First cohort
+
       WCRRT = ALPHR * RTWT
 
 !!     Initialize cumulative C variables
@@ -512,15 +520,19 @@ C     Initial seedling or transplant weight
       WRCSHD = 0.0
 
 !     Compute N in plant components
-      WTNLF  = WLFI * PROLFI * 0.16
-      WTNST  = WSTI * PROSTI * 0.16
+!     WTNLF  = WLFI * PROLFI * 0.16
+      WTNLF  = LeafNTot(1)
+!     WTNST  = WSTI * PROSTI * 0.16
+      WTNST  = StemNTot(1)
+
       WTNRT  = WRTI * PRORTI * 0.16
       WTNSH  = 0.0
       WTNSD  = 0.0
       WTNTOT = WTNLF + WTNST + WTNRT + WTNSH + WTNSD
 
 !     2026-04-01 chp added initialization for mobile N
-      WNRLF = MAX (WTNLF - PROLFF * 0.16 * (WTLF-WCRLF), 0.0)
+!     WNRLF = MAX (WTNLF - PROLFF * 0.16 * (WTLF-WCRLF), 0.0)
+      WNRLF = LFNSN(1)
 
 !     Seed or transplant N at planting
       SDNPL  = WTPSD * SDPRO * 0.16 * 0.75 * PLTPOP -

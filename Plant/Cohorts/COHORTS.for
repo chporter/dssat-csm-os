@@ -153,7 +153,7 @@ C=======================================================================
       CHARACTER (len=78) MSG(2)
 
       INTEGER YRDOY, YEAR, DOY, DAS, DAP, TIMDIF
-      INTEGER I, FirstCohortDAS
+      INTEGER I
 
       INTEGER, DIMENSION(LCMax) :: CohortAgeDays
 
@@ -276,6 +276,7 @@ C=======================================================================
         ADF_daily = -99.
         NDF_daily = -99.
       ENDIF
+
       CALL PUT("MHARVEST","ADFday",ADF_daily)
       CALL PUT("MHARVEST","NDFday",NDF_daily)
 
@@ -301,7 +302,6 @@ C=======================================================================
 !     Cohorts
       NLC = 1                             !Number of cohorts
       CohortAge(1) = DTX                  !age (ptd)
-      FirstCohortDAS = DAS                !DAS on day of first cohort
       CohortAgeDays(1) = 1                !Cohort age in days
 
 !-------------------------------------
@@ -327,20 +327,21 @@ C=======================================================================
 !     Leaf Cohorts
       LFDM(1)     = WTLF                  !leaf dry matter (g/m2)
       CumLeafDM(1)= WTLF                  !cumulative addition (g/m2)
+      RHOL_c(1)   = ALPHL                 !frac leaf that is mobile CH2O
       LFNSC(1)    = WTLF * ALPHL          !mobile CH2O (g/m2)
-      LeafNTot(1) = WTLF * PROLFI * 0.16  !total leaf N (g/m2)
 
-!     structural N (g/m2) based on structural C
-      LFSN(1)  = PROLFI * 0.16 * (LFDM(1) - LFNSC(1))
-      LFNSN(1) = LeafNTot(1) - LFSN(1)          !mobile N (g/m2)
+      LeafNTot(1) = WTLF * PROLFI * 0.16  !total leaf N (g/m2)
       IF (LFDM(1) > 0.0) THEN
-        PCNLeaf(1) = LeafNTot(1) / LFDM(1) * 100.  ! % N
+        PCNLeaf(1) = LeafNTot(1) / LFDM(1) * 100.  ! % N 
       ELSE
         PCNLeaf(1) = 0.0
       ENDIF
+!     structural N (g/m2) based on structural C
+      LFSN(1)  = PROLFI * 0.16 * (LFDM(1) - LFNSC(1))
+      LFNSN(1) = LeafNTot(1) - LFSN(1)    !mobile N (g/m2)
 
 !     Leaf area
-      LFAREA(1)  = WTLF * F              !leaf area (cm2/m2)
+      LFAREA(1)  = WTLF * F               !leaf area (cm2/m2)
       LFAREAH(1) = LFAREA(1)              !healthy leaf area
       IF (LFDM(1) > 0.0) THEN
         LFSLA(1)   = LFAREA(1) / LFDM(1)
@@ -349,15 +350,16 @@ C=======================================================================
       ENDIF
 
 !     Stem Cohorts
-      STDM(1)     = STMWT                   !dry matter (g/m2)
-      STNSC(1)    = STMWT * ALPHS           !mobile CH2O (g/m2)
-      StemNTot(1) = STMWT * PROSTI * 0.16   !total stem N (g/m2)
+      STDM(1)     = STMWT                 !dry matter (g/m2)
+      RHOS_c(1)   = ALPHS                 !frac stem that is mobile CH2O
+      STNSC(1)    = STMWT * ALPHS         !mobile CH2O (g/m2)
 
+      StemNTot(1) = STMWT * PROSTI * 0.16 !total stem N (g/m2)
 !     structural N (g/m2) based on structural C
       STSN(1)  = PROSTI * 0.16 * (STDM(1) - STNSC(1)) 
-      STNSN(1) = StemNTot(1) - STSN(1)          !mobile N (g/m2) 
+      STNSN(1) = StemNTot(1) - STSN(1)    !mobile N (g/m2) 
       IF (STDM(1) > 0.0) THEN
-        PCNStem(1) = StemNTot(1) / STDM(1) * 100.  ! % N
+        PCNStem(1) = StemNTot(1) / STDM(1) * 100.  ! % N 
       ELSE
         PCNStem(1) = 0.0
       ENDIF
@@ -600,38 +602,13 @@ C=======================================================================
         ENDIF
       ENDIF
 
-!***********************************************************************
-!***********************************************************************
-!     END OF DYNAMIC IF CONSTRUCT
-!***********************************************************************
-      ENDIF
-
-!***********************************************************************
-!***********************************************************************
-!     Sum over all cohorts for SEASINIT and for INTEGR
-!***********************************************************************
-      IF (DYNAMIC .EQ. EMERG .OR.DYNAMIC .EQ. INTEGR) THEN
 !-----------------------------------------------------------------------
+!     Increment age, calculate concentrations
       DO I = 1, NLC
-        CohortAge(I) = CohortAge(I) + DTX  !cohort age in p-t-d
-        CohortAgeDays(I) = CohortAgeDays(I) + 1
-
-        LeafNTot(I) = LFNSN(I) + LFSN(I)
-        IF (LFDM(I) > 0.0) THEN
-          PCNLeaf(I) = LeafNTot(I) / LFDM(I) * 100.  ! % N 
-          RHOL_c(I) = LFNSC(I) / LFDM(I)
-        ELSE
-          PCNLeaf(I) = 0.0
-          RHOL_c(I) = 0.0
-        ENDIF
-
-        StemNTot(I) = STNSN(I) + STSN(I)
-        IF (STDM(I) > 0.0) THEN
-          PCNStem(I) = StemNTot(I) / STDM(I) * 100.  ! % N 
-          RHOS_c(I) = STNSC(I) / STDM(I)
-        ELSE
-          PCNStem(I) = 0.0
-          RHOS_c(I) = 0.0
+        IF (NLC > 1) THEN
+!         Already done for first cohort at emergence
+          CohortAge(I) = CohortAge(I) + DTX  !cohort age in p-t-d
+          CohortAgeDays(I) = CohortAgeDays(I) + 1
         ENDIF
       ENDDO
 

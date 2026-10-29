@@ -120,12 +120,11 @@
             fhcrlf_c(I) = FHLEAF_c(I) * RHOL_c(I)
             LFNSC(I) = LFNSC(I) - fhcrlf_c(I)
 
-!           fhlfn = fhleaf*pcnl/100.  !harvested leaf N %
-            fhlfn_c(I) = FHLEAF_c(I) * PCNLeaf(i)/100.  !harvested leaf N g/m2
+!           fhlfn = fhleaf*pcnl/100.  !harvested leaf N 
+            fhlfn_c(I) = FHLEAF_c(I) * PCNLeaf(i)/100.  !harvest leaf N g/m2
             LeafNTot(I) = LeafNTot(I) - fhlfn_c(I)
             LFSN(I) = MIN(LeafNTot(I),PROLFF*0.16 * (LFDM(I) -LFNSC(I)))
             LFNSN(I) = LeafNTot(I) - LFSN(I)
-
 
           ELSE
             FHLEAF_c(I) = LFDM(I)
@@ -146,7 +145,7 @@
             STNSC(I) = STNSC(I) - fhcrst_c(I)
 
 !           fhstn = fhstem*pcnst/100. !harvested stem N %
-            fhstn_c(I) = FHSTEM_c(I) * PCNStem(I)/100. !harvested stem N %
+            fhstn_c(I) = FHSTEM_c(I) * PCNStem(I)/100. !harvest stem N g/m2
             StemNTot(I) = StemNTot(I) - fhstn_c(I)
             STSN(I) = MIN(StemNTot(I),PROSTF*0.16 * (STDM(I) -STNSC(I)))
             STNSN(I) = StemNTot(I) - STSN(I)

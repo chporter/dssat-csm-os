@@ -816,18 +816,18 @@ C-GH Add leaf Cohorts
       IF (DAS .EQ. NVEG0) THEN
 !----------------------------------------------------------------------
 !     On day of emergence, initialize:
-!-----------------------------------------------------------------------     
-
-!     Call to cohorts for emergence uses different input argurments
-!      NGRLF  = WTNLF
-!      NGRST  = WTNST
-!      WLDOTN = WTLF
-!      WSDOTN = STMWT
+!----------------------------------------------------------------------
+!     Call to cohorts for emergence uses different input argurments   !
+!      NGRLF  = WTNLF                                                 !
+!      NGRST  = WTNST                                                 !
+!      WLDOTN = WTLF                                                  !
+!      WSDOTN = STMWT                                                 !
       CALL COHORTS(EMERG, 
-     &    DTX, F, FILECC, FRLF, FRSTM,                    !Input
-!    &    NGRLF, NGRST, WLDOTN, WSDOTN,                   !Input
-     &    WTNLF, WTNST, WTLF, STMWT,                      !Input
-     &    YRPLT)                                          !Input
+     &    DTX, F, FILECC, FRLF, FRSTM,                    !Input      !
+!    &    NGRLF, NGRST, WLDOTN, WSDOTN,                   !Input      !
+     &    WTNLF, WTNST, WTLF, STMWT,                      !Input      !
+     &    YRPLT)                                          !Input      !
+!----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
 !-----------------------------------------------------------------------
