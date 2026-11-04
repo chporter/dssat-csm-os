@@ -404,8 +404,8 @@ C-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
       CALL GROW(CONTROL, ISWITCH, RUNINIT, SOILPROP, 
-     &  AGEFAC, CADLF, CADST, CRUSLF, CRUSRT, CRUSSH,     !Input
-     &  CRUSST, DISLA, F, FILECC, FILEGC, FRLF, FRSTM,    !Input
+     &  AGEFAC, CRUSLF, CRUSRT, CRUSSH,                   !Input
+     &  CRUSST, DISLA, F, FILECC, FILEGC, !FRLF, FRSTM,    !Input
      &  NADLF, NADRT, NADST, NDTH, NFIXN, NGRLF, NGRRT,   !Input
      &  NGRSD, NGRSH, NGRST, NMINEA, NODGR, NOUTDO,       !Input
      &  NPLTD, NRUSLF, NRUSRT, NRUSSH, NRUSST, ECONO,     !Input
@@ -434,9 +434,12 @@ C-----------------------------------------------------------------------
      &  TOSHMINE,TOCHMINE,HPODWT,HSDWT,HSHELWT)           !Output
       
       CALL COHORTS(DYNAMIC, 
-     &    DTX, F, FILECC, FRLF, FRSTM,                    !Input
-     &    NGRLF, NGRST, WLDOTN, WSDOTN,                   !Input
-     &    YRPLT)                                          !Input
+     &    CADLF, CADST, DTX, F, FILECC, FRLF, FRSTM,      !Input
+     &    NADLF, NADST, NGRLF, NGRST, WLDOTN, WSDOTN,     !Input
+     &    YRPLT,                                          !Input
+     &    LAIMX, SLA, SLAAD, XLAI,                        !Output
+     &    WTLF, WCRLF, WNRLF, WTNLF,                      !Output
+     &    STMWT, WCRST, WNRST, WTNST)                     !Output
 
       CALL OPGROW(CONTROL, ISWITCH, SoilProp, 
      &    CADLF, CADST, CANHT, CANWH, CMINEA, DWNOD, GROWTH,  
@@ -570,8 +573,8 @@ C     Initialize pest coupling point and damage variables
 
 !-----------------------------------------------------------------------
       CALL GROW(CONTROL, ISWITCH, SEASINIT, SOILPROP, 
-     &  AGEFAC, CADLF, CADST, CRUSLF, CRUSRT, CRUSSH,     !Input
-     &  CRUSST, DISLA, F, FILECC, FILEGC, FRLF, FRSTM,    !Input
+     &  AGEFAC, CRUSLF, CRUSRT, CRUSSH,                   !Input
+     &  CRUSST, DISLA, F, FILECC, FILEGC, !FRLF, FRSTM,    !Input
      &  NADLF, NADRT, NADST, NDTH, NFIXN, NGRLF, NGRRT,   !Input
      &  NGRSD, NGRSH, NGRST, NMINEA, NODGR, NOUTDO,       !Input
      &  NPLTD, NRUSLF, NRUSRT, NRUSSH, NRUSST, ECONO,     !Input
@@ -690,9 +693,12 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C-GH Add leaf Cohorts
       CALL COHORTS(DYNAMIC, 
-     &    DTX, F, FILECC, FRLF, FRSTM,                    !Input
-     &    NGRLF, NGRST, WLDOTN, WSDOTN,                   !Input
-     &    YRPLT)                                          !Input
+     &    CADLF, CADST, DTX, F, FILECC, FRLF, FRSTM,      !Input
+     &    NADLF, NADST, NGRLF, NGRST, WLDOTN, WSDOTN,     !Input
+     &    YRPLT,                                          !Input
+     &    LAIMX, SLA, SLAAD, XLAI,                        !Output
+     &    WTLF, WCRLF, WNRLF, WTNLF,                      !Output
+     &    STMWT, WCRST, WNRST, WTNST)                     !Output
 
 !-----------------------------------------------------------------------
 !     Write headings to output file GROWTH.OUT
@@ -823,17 +829,20 @@ C-GH Add leaf Cohorts
 !      WLDOTN = WTLF                                                  !
 !      WSDOTN = STMWT                                                 !
       CALL COHORTS(EMERG, 
-     &    DTX, F, FILECC, FRLF, FRSTM,                    !Input      !
-!    &    NGRLF, NGRST, WLDOTN, WSDOTN,                   !Input      !
-     &    WTNLF, WTNST, WTLF, STMWT,                      !Input      !
-     &    YRPLT)                                          !Input      !
+     &    CADLF, CADST, DTX, F, FILECC, FRLF, FRSTM,      !Input      !
+!    &    NADLF, NADST, NGRLF, NGRST, WLDOTN, WSDOTN,     !Input      !
+     &    NADLF, NADST, WTNLF, WTNST, WTLF, STMWT,        !Input      !
+     &    YRPLT,                                          !Input
+     &    LAIMX, SLA, SLAAD, XLAI,                        !Output
+     &    WTLF, WCRLF, WNRLF, WTNLF,                      !Output
+     &    STMWT, WCRST, WNRST, WTNST)                     !Output
 !----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
 !-----------------------------------------------------------------------
         CALL GROW(CONTROL, ISWITCH, EMERG, SOILPROP, 
-     &  AGEFAC, CADLF, CADST, CRUSLF, CRUSRT, CRUSSH,     !Input
-     &  CRUSST, DISLA, F, FILECC, FILEGC, FRLF, FRSTM,    !Input
+     &  AGEFAC, CRUSLF, CRUSRT, CRUSSH,                   !Input
+     &  CRUSST, DISLA, F, FILECC, FILEGC, !FRLF, FRSTM,   !Input
      &  NADLF, NADRT, NADST, NDTH, NFIXN, NGRLF, NGRRT,   !Input
      &  NGRSD, NGRSH, NGRST, NMINEA, NODGR, NOUTDO,       !Input
      &  NPLTD, NRUSLF, NRUSRT, NRUSSH, NRUSST, ECONO,     !Input
@@ -1315,12 +1324,25 @@ C-----------------------------------------------------------------------
       AGRSH2=  PROSHI*RPROAV + PLIPSH*RLIP + PLIGSH*RLIG + POASH*ROA
      &         + PMINSH*RMIN + PCARSH*RCH2O
       AGRVG2 = AGRVG + (FRLF*PROLFI+FRRT*PRORTI+FRSTM*PROSTI)*RPROAV
+
+C----------------------------------
+C     CALL COHORT MODEL
+C----------------------------------
+!      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
+      CALL COHORTS(DYNAMIC, 
+     &    CADLF, CADST, DTX, F, FILECC, FRLF, FRSTM,      !Input
+     &    NADLF, NADST, NGRLF, NGRST, WLDOTN, WSDOTN,     !Input
+     &    YRPLT,                                          !Input
+     &    LAIMX, SLA, SLAAD, XLAI,                        !Output
+     &    WTLF, WCRLF, WNRLF, WTNLF,                      !Output
+     &    STMWT, WCRST, WNRST, WTNST)                     !Output
+
 C-----------------------------------------------------------------------
 C     Call routine to integrate growth and damage
 C-----------------------------------------------------------------------
       CALL GROW(CONTROL, ISWITCH, INTEGR, SOILPROP, 
-     &  AGEFAC, CADLF, CADST, CRUSLF, CRUSRT, CRUSSH,     !Input
-     &  CRUSST, DISLA, F, FILECC, FILEGC, FRLF, FRSTM,    !Input
+     &  AGEFAC, CRUSLF, CRUSRT, CRUSSH,                   !Input
+     &  CRUSST, DISLA, F, FILECC, FILEGC, !FRLF, FRSTM,    !Input
      &  NADLF, NADRT, NADST, NDTH, NFIXN, NGRLF, NGRRT,   !Input
      &  NGRSD, NGRSH, NGRST, NMINEA, NODGR, NOUTDO,       !Input
      &  NPLTD, NRUSLF, NRUSRT, NRUSSH, NRUSST, ECONO,     !Input
@@ -1348,15 +1370,6 @@ C-----------------------------------------------------------------------
      &  ShutMob, RootMob, ShelMob,                        !Output
      &  TOSHMINE,TOCHMINE,HPODWT,HSDWT,HSHELWT)           !Output
       
-C----------------------------------
-C     CALL COHORT MODEL
-C----------------------------------
-!      write (*,*) yrdoy,WTLF,WTNLF,XLAI,WNRLF,WCRLF,NMINEP
-      CALL COHORTS(DYNAMIC, 
-     &    DTX, F, FILECC, FRLF, FRSTM,                    !Input
-     &    NGRLF, NGRST, WLDOTN, WSDOTN,                   !Input
-     &    YRPLT)                                          !Input
-
       IF ((WTLF+STMWT).GT. 0.0001) THEN
         PCNVEG = (WTNLF+WTNST)/(WTLF+STMWT)*100.
       ELSE
@@ -1409,9 +1422,12 @@ C----------------------------------
      &    TOSHMINE,TOCHMINE,HPODWT,HSDWT,HSHELWT)         !Output
 
       CALL COHORTS(DYNAMIC, 
-     &    DTX, F, FILECC, FRLF, FRSTM,                    !Input
-     &    NGRLF, NGRST, WLDOTN, WSDOTN,                   !Input
-     &    YRPLT)                                          !Input
+     &    CADLF, CADST, DTX, F, FILECC, FRLF, FRSTM,      !Input
+     &    NADLF, NADST, NGRLF, NGRST, WLDOTN, WSDOTN,     !Input
+     &    YRPLT,                                          !Input
+     &    LAIMX, SLA, SLAAD, XLAI,                        !Output
+     &    WTLF, WCRLF, WNRLF, WTNLF,                      !Output
+     &    STMWT, WCRST, WNRST, WTNST)                     !Output
 
         CALL OPGROW(CONTROL, ISWITCH, SoilProp, 
      &    CADLF, CADST, CANHT, CANWH, CMINEA, DWNOD, GROWTH,  
@@ -1475,8 +1491,8 @@ C----------------------------------
 !=========================================================================
 !     TEMP CHP
       CALL GROW(CONTROL, ISWITCH, DYNAMIC, SOILPROP, 
-     &  AGEFAC, CADLF, CADST, CRUSLF, CRUSRT, CRUSSH,     !Input
-     &  CRUSST, DISLA, F, FILECC, FILEGC, FRLF, FRSTM,    !Input
+     &  AGEFAC, CRUSLF, CRUSRT, CRUSSH,                   !Input
+     &  CRUSST, DISLA, F, FILECC, FILEGC, !FRLF, FRSTM,    !Input
      &  NADLF, NADRT, NADST, NDTH, NFIXN, NGRLF, NGRRT,   !Input
      &  NGRSD, NGRSH, NGRST, NMINEA, NODGR, NOUTDO,       !Input
      &  NPLTD, NRUSLF, NRUSRT, NRUSSH, NRUSST, ECONO,     !Input

@@ -302,7 +302,7 @@ C=======================================================================
 320   format (1X,I4,1X,I3,50F6.1)
 
       write (LCLUN2,330) YEAR,DOY,LFDM(1:50)
-330   format (1X,I4,1X,I3,50F7.2)
+330   format (1X,I4,1X,I3,50F9.2)
 
       WRITE (SCLUN,410) YEAR, DOY, DAS, DAP,
 !       State

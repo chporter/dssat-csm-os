@@ -65,6 +65,7 @@
 
      &  STCAD,        !Stem non-struc CH2O stored  (g[CH2O]/m2) = CADST
      &  STNAD,        !Stem non-struc N stored today (g[N]]/m2) = NADST
+        
 
 !       calculated in for_senmob
      &  LFCMINE_c,    !Max potential CH2O mining today
@@ -111,12 +112,12 @@ C  06/07/2026 CHP added stem cohorts
 C=======================================================================
 
       SUBROUTINE COHORTS(DYNAMIC, 
-     &  DTX, F, FILECC, FRLF, FRSTM,          !Input
-     &  NGRLF, NGRST, WLDOTN, WSDOTN,         !Input
-     &  YRPLT)                                !Input
-!    &  SLA, SLAAD, LAIMX, XLAI,              !Output (eventually)
-!    &  WTLF, WCRLF, WNRLF, WTNLF,            !Output (eventually)
-!    &  STMWT, WCRST, WNRST, WTNST)           !Output (eventually)
+     &  CADLF, CADST, DTX, F, FILECC, FRLF, FRSTM,          !Input
+     &  NADLF, NADST, NGRLF, NGRST, WLDOTN, WSDOTN,         !Input
+     &  YRPLT,                                !Input
+     &  LAIMX, SLA, SLAAD, XLAI,              !Output
+     &  WTLF, WCRLF, WNRLF, WTNLF,            !Output
+     &  STMWT, WCRST, WNRST, WTNST)           !Output
 
       USE ModuleData
       USE IPCOHO_MOD
@@ -128,15 +129,14 @@ C=======================================================================
       EXTERNAL WARNING, ERROR
 
       INTEGER, INTENT(IN) :: DYNAMIC
-      REAL, INTENT(IN) :: DTX, F, FRLF, FRSTM, 
-     &    NGRLF, NGRST, WLDOTN, WSDOTN
+      REAL, INTENT(IN) :: CADLF, CADST, DTX, F, FRLF, FRSTM, 
+     &    NADLF, NADST, NGRLF, NGRST, WLDOTN, WSDOTN
       INTEGER, INTENT(IN) :: YRPLT
       CHARACTER*92, INTENT(IN) :: FILECC
 
-!     Eventually, these will be output variables.
-      REAL SLA, SLAAD, LAIMX, XLAI
-      REAL WTLF, WCRLF, WNRLF, WTNLF
-      REAL STMWT, WCRST, WNRST, WTNST
+      REAL, INTENT(OUT) :: SLA, SLAAD, LAIMX, XLAI
+      REAL, INTENT(OUT) :: WTLF, WCRLF, WNRLF, WTNLF
+      REAL, INTENT(OUT) :: STMWT, WCRST, WNRST, WTNST
 
       REAL WLDOT_calc, WSDOT_calc
       REAL ADF_daily, NDF_daily
@@ -307,7 +307,7 @@ C=======================================================================
 !-------------------------------------
 !     From GROW and for_grow.for
 ! ok  WTFSD - species file - read from species file
-!     WTPSD - cultivar file - read from FileIO
+! ok  WTPSD - cultivar file - read from FileIO
 ! OK  PLTPOP - FileX - read from FileIO
 ! ok  SDWTPL - FileX - read from FileIO
 ! OK  PLME - FileX - read from FileIO
@@ -370,9 +370,30 @@ C=======================================================================
 !***********************************************************************
       ELSEIF (DYNAMIC .EQ. INTEGR) THEN
 !-----------------------------------------------------------------------
+!     Handle new reserves for leaf and stem cohorts. 
+!     CHP - could make this non-linear 
+      DO I = 1, NLC
+        IF (LFDM(I) > 0.0) THEN
+          LFCAD(I) = LFDM(I) / WTLF * CADLF
+          LFNAD(I) = LFDM(I) / WTLF * NADLF
+        ELSE
+          LFCAD(I) = 0.0
+          LFNAD(I) = 0.0
+        ENDIF
+
+        IF (STDM(I) > 0.0) THEN
+          STCAD(I) = STDM(I) / STMWT * CADST
+          STNAD(I) = STDM(I) / STMWT * NADST
+        ELSE
+          STCAD(I) = 0.0
+          STNAD(I) = 0.0
+        ENDIF
+      ENDDO
+
 !------------------------------
 !     LEAF and STEM LOSSES
 !     Ensure that losses don't exceed mass, adjust as necessary
+!     Decrease LFCAD, LFNAD, STCAD, STNAD for losses
 !------------------------------
       CALL LossAdjust ("LEAF", MODEL, LeafMassDecrease)
       CALL LossAdjust ("STEM", MODEL, StemMassDecrease)

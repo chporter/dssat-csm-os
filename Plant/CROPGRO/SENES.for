@@ -243,9 +243,9 @@ C-----------------------------------------------------------------------
         WRITE (NOUTDG,200)
   200   FORMAT('@YEAR DOY   DAS   DAP'
      &  ,'      TotSen      NatSen     NMobSen    LoLitSen',
-     &   '    WaterSen       R7Sen')
-!     &   '    TotSen_c    NatSen_c    NMbSen_c    LitSen_c',
-!     &   '    WatSen_c     R7Sen_c       RATTP      PORLFT')
+     &   '    WaterSen       R7Sen',
+     &   '    TotSen_c    NatSen_c    NMbSen_c    LitSen_c',
+     &   '    WatSen_c     R7Sen_c       RATTP      PORLFT')
 
 !     end temp chp
 !=========================================================================
@@ -326,6 +326,8 @@ C-----------------------------------------------------------------------
 !           at the same rate as the whole pool of leaves.
 !           This needs to be changed to allow older leaves to senesce more than 
 !           young leaves.
+
+!       We have RHOL for cohorts, we have CLW for cohorts
 
             NatSen_sum = 0.0
             DO I = 1, NLC

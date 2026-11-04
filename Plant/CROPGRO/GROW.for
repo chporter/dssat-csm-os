@@ -24,14 +24,17 @@ C  04/01/2021 VSH/AH Added MultiHarvest code changes.
 !  11/08/2023  FO Added lint growth for cotton.
 !  04/30/2026 chp Added leaf cohorts
 !  06/12/2026 chp Added stem cohorts
+!  11/03/2026 CHP Integrate cohorts (i.e., export leaf and stem vars from COHORTS)
 C-----------------------------------------------------------------------
 C  Called by:  PLANT
 C  Calls:      IPGROW, STRESS
 C              ERROR
 C=======================================================================
       SUBROUTINE GROW(CONTROL, ISWITCH, DYNAMIC, SOILPROP, 
-     &  AGEFAC, CADLF, CADST, CRUSLF, CRUSRT, CRUSSH,     !Input
-     &  CRUSST, DISLA, F, FILECC, FILEGC, FRLF, FRSTM,    !Input
+!    &  AGEFAC, CADLF, CADST, CRUSLF, CRUSRT, CRUSSH,     !Input
+     &  AGEFAC, CRUSLF, CRUSRT, CRUSSH,                   !Input
+!    &  CRUSST, DISLA, F, FILECC, FILEGC, FRLF, FRSTM,    !Input
+     &  CRUSST, DISLA, F, FILECC, FILEGC,                 !Input
      &  NADLF, NADRT, NADST, NDTH, NFIXN, NGRLF, NGRRT,   !Input
      &  NGRSD, NGRSH, NGRST, NMINEA, NODGR, NOUTDO,       !Input
      &  NPLTD, NRUSLF, NRUSRT, NRUSSH, NRUSST, ECONO,     !Input
@@ -83,7 +86,7 @@ C=======================================================================
       CHARACTER*30 FILEIO
       CHARACTER*92 FILECC, FILEGC
 
-      INTEGER DYNAMIC, NOUTDO, L, NLAYR, I
+      INTEGER DYNAMIC, NOUTDO, L, NLAYR  !, I
       INTEGER YRDOY, YRNR1, MDATE
       INTEGER YRPLT, CropStatus
 
@@ -118,7 +121,7 @@ C=======================================================================
       REAL WCRLF,  WCRST,  WCRRT,  WCRSH
       REAL NADLF,  NADST,  NADRT
       REAL WNRLF,  WNRST,  WNRRT,  WNRSH
-      REAL CADLF,  CADST
+!     REAL CADLF,  CADST
 
       REAL SLDOT,  SSDOT,  SRDOT, SWIDOT
       REAL SLNDOT, SSNDOT, SDIDOT
@@ -137,7 +140,7 @@ C=======================================================================
       REAL TURFAC, TAVG, NSTRES
       REAL GROWTH, NODGR
 
-      REAL FRLF, FRSTM
+!      REAL FRLF, FRSTM
       REAL SDNPL, SEEDNI, SDRATE
       REAL WTNEW
 
@@ -151,7 +154,7 @@ C=======================================================================
       REAL RMIN, SDLIP, WLFI, WSTI, WRTI
       REAL CLW, CSW
       REAL LCADD, LNADD, SCADD, SNADD
-      REAL STCAD_sum, STNAD_sum, STDM_sum ! temp chp
+!      REAL STCAD_sum, STNAD_sum, STDM_sum ! temp chp
 
 !     Surface and soil residue due to daily senescence of plant matter
       REAL SENRT(NL), SENNOD(NL)
@@ -566,7 +569,7 @@ C***********************************************************************
       ELSEIF (DYNAMIC == INTEGR) THEN
 C-----------------------------------------------------------------------
       NLPEST = 0.0    !CHP - N loss due to pest damage
-      LFCAD = 0.0     !Leaf cohort C reserves
+!     LFCAD = 0.0     !Leaf cohort C reserves
 
       GROWTH = WLDOTN + WSDOTN + WRDOTN + WSHDTN + WSDDTN + NODGR
   
@@ -599,76 +602,78 @@ C-----------------------------------------------------------------------
 !     Calculate net addition to leaves today per cohort
       LCADD = 0.0
       LNADD = 0.0
-      LFCAD = 0.0
-      LFNAD = 0.0
+!     LFCAD = 0.0
+!     LFNAD = 0.0
 
-      IF (WTLF > 1.E-4) THEN
-        WLDOT = WLDOT + (CADLF+NADLF/0.16) *
-     &    (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
+      IF (WTLF > 0.0) THEN
+        LCADD = SUM(LFCAD)    !Sum of cohorts
+        LNADD = SUM(LFNAD)    !Sum of cohorts
 
-        LCADD = CADLF * (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
-        LNADD = NADLF/0.16 *
-     &    (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
+        WLDOT = WLDOT + LCADD + LNADD
 
-!       Handle new reserves for leaf cohorts. These will be adjusted for 
-!         leaf losses in the COHORTS subroutine.
-        DO I = 1, NLC
-          IF (LFDM(I) > 0.0) THEN
-            LFCAD(I) = LFDM(I) / WTLF * CADLF
-            LFNAD(I) = LFDM(I) / WTLF * NADLF
-          ENDIF
-        ENDDO
+!        WLDOT = WLDOT + (CADLF+NADLF/0.16) *
+!     &    (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
 
-        ADD = (CADLF + NADLF/0.16) *
-     &    (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
+!        LCADD = CADLF * (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
+!        LNADD = NADLF/0.16 *
+!     &    (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
+
+!!       Handle new reserves for leaf cohorts. These will be adjusted for 
+!!         leaf losses in the COHORTS subroutine.
+!        DO I = 1, NLC
+!          IF (LFDM(I) > 0.0) THEN
+!            LFCAD(I) = LFDM(I) / WTLF * CADLF
+!            LFNAD(I) = LFDM(I) / WTLF * NADLF
+!          ENDIF
+!        ENDDO
+
+!        ADD = (CADLF + NADLF/0.16) *
+!     &    (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
+        ADD = LCADD + LNADD
         ShutMob = ShutMob - ADD * 10.             !kg/ha
-      ELSE
-        ADD = 0.0
+!      ELSE
+!        ADD = 0.0
       ENDIF
 
       IF (WLDOT < 0.0) THEN
         WLDOT = MAX(WLDOT, -WTLF)
       ENDIF
-      
+
 C-----------------------------------------------------------------------
 C       WSDOT = Net stem growth rate
 C-----------------------------------------------------------------------
-      SCADD = 0.0
-      SNADD = 0.0
-      STCAD = 0.0
-      STNAD = 0.0
-
       WSDOT = WSDOTN - SSDOT - WSIDOT - NRUSST / 0.16 - CRUSST
       ShutMob = ShutMob + (NRUSST / 0.16 + CRUSST) * 10.      !kg/ha
 
-      IF (STMWT > 1.E-6) THEN
-         WSDOT = WSDOT + (CADST+NADST/0.16) *
-     &   (1. - MIN(1.0,(SSDOT+WSIDOT)/STMWT))
+      SCADD = 0.0
+      SNADD = 0.0
+!     STCAD = 0.0
+!     STNAD = 0.0
 
-        SCADD = CADST * (1. - MIN(1.0,(SSDOT+WSIDOT)/STMWT))
-        SNADD = NADST/0.16 *
-     &    (1. - MIN(1.0,(SSDOT+WSIDOT)/STMWT))
+      IF (STMWT > 0.0) THEN
+        SCADD = SUM(STCAD)    !Sum of cohorts
+        SNADD = SUM(STNAD)    !Sum of cohorts
+        WSDOT = WSDOT + SCADD + SNADD
 
-!       Handle new reserves for stem cohorts. These will be adjusted for 
-!         stem losses in the COHORTS subroutine.
-        DO I = 1, NLC
-          STCAD(I) = STDM(I) / STMWT * CADST
-          STNAD(I) = STDM(I) / STMWT * NADST
-        ENDDO
+!         WSDOT = WSDOT + (CADST+NADST/0.16) *
+!     &   (1. - MIN(1.0,(SSDOT+WSIDOT)/STMWT))
+!        SCADD = CADST * (1. - MIN(1.0,(SSDOT+WSIDOT)/STMWT))
+!        SNADD = NADST/0.16 *
+!     &    (1. - MIN(1.0,(SSDOT+WSIDOT)/STMWT))
 
-!       TEMP CHP
-        STCAD_sum = SUM(STCAD)
-        STNAD_sum = SUM(STNAD)/0.16
-        STDM_sum  = SUM(STDM)
+!!       Handle new reserves for stem cohorts. These will be adjusted for 
+!!         stem losses in the COHORTS subroutine.
+!        DO I = 1, NLC
+!          STCAD(I) = STDM(I) / STMWT * CADST
+!          STNAD(I) = STDM(I) / STMWT * NADST
+!        ENDDO
 
-        write(5757,'(I7,10F10.4)') 
-     &    YRDOY, STMWT, CADST, SCADD, STDM_SUM, STCAD_SUM
-
-        ADD = (CADST+NADST/0.16) *
-     &    (1. - MIN(1.0,(SSDOT+WSIDOT)/STMWT))
+!        ADD = (CADST+NADST/0.16) *
+!     &    (1. - MIN(1.0,(SSDOT+WSIDOT)/STMWT))
+        ADD = SCADD + SNADD
         ShutMob = ShutMob - ADD * 10.                         !kg/ha
-      ELSE
-         ADD = 0.
+!      ELSE
+!         ADD = 0.
       ENDIF
 
       IF (WSDOT < 0.0) THEN
@@ -686,8 +691,8 @@ C-----------------------------------------------------------------------
         ADD = (NADRT/0.16) *
      &    (1. - MIN(1.0,(SRDOT+WRIDOT)/RTWT))
         RootMob = RootMob - ADD * 10.             !kg/ha
-      ELSE
-        ADD = 0.0
+!      ELSE
+!        ADD = 0.0
       ENDIF
 
       IF (WRDOT < 0.0) THEN
@@ -758,8 +763,8 @@ C    Integration, Add Today's Net Growth to Existing Weights
 C-----------------------------------------------------------------------
       TOTWT  = TOTWT  + WDOT
       TOPWT  = TOPWT  + WSDOT + WLDOT + WPDOT
-      WTLF   = WTLF   + WLDOT
-      STMWT  = STMWT  + WSDOT
+!      WTLF   = WTLF   + WLDOT  !from cohorts
+!      STMWT  = STMWT  + WSDOT  !from cohorts
       SDWT   = SDWT   + WSDDOT
       SHELWT = SHELWT + WSHDOT
       RTWT   = RTWT   + WRDOT
@@ -796,33 +801,37 @@ C     is damaged by insects, freezing, or senesced.  Otherwise, could
 C     get increase in tissue N composition when tissue is aborted.  Need
 C     to account for mass, N and C lost this way in sections below
 C-----------------------------------------------------------------------
-! CHP 2025-12-01 should this be SLDOT instead of SLNDOT?
-!     SLNDOT is water senescence, SLDOT is total senescence
-      WRCLDT = ALPHL * WLDOTN - CRUSLF - RHOL*(SLNDOT+WLIDOT+WLFDOT)
-!     temp chp ??? change or not? It does make some difference.
-
-! chp 2026-06-02 This issue is still unresolved, but I'm going back
-!     to the original equation for testing.
-!     WRCLDT = ALPHL * WLDOTN - CRUSLF - RHOL*(SLDOT+WLIDOT+WLFDOT)
-
-      IF (WTLF > 1.E-4) THEN
-         WRCLDT = WRCLDT + CADLF *
-     &     (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
-      ENDIF
-
-      WRCSDT = ALPHS * WSDOT - CRUSST - RHOS * SSNDOT
-      IF (STMWT > 1.E-4) THEN
-         WRCSDT = WRCSDT + CADST *
-     &     (1. - MIN(1.0,(SSDOT+WSIDOT)/STMWT))
-      ENDIF
+! This is now done in COHORTS for leaf and stem.
+!! CHP 2025-12-01 should this be SLDOT instead of SLNDOT?
+!!     SLNDOT is water senescence, SLDOT is total senescence
+!      WRCLDT = ALPHL * WLDOTN - CRUSLF - RHOL*(SLNDOT+WLIDOT+WLFDOT)
+!!     temp chp ??? change or not? It does make some difference.
+!
+!! chp 2026-06-02 This issue is still unresolved, but I'm going back
+!!     to the original equation for testing.
+!!     WRCLDT = ALPHL * WLDOTN - CRUSLF - RHOL*(SLDOT+WLIDOT+WLFDOT)
+!
+!      IF (WTLF > 1.E-4) THEN
+!         WRCLDT = WRCLDT + CADLF *
+!     &     (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
+!      ENDIF
+!
+!      WRCSDT = ALPHS * WSDOT - CRUSST - RHOS * SSNDOT
+!      IF (STMWT > 1.E-4) THEN
+!         WRCSDT = WRCSDT + CADST *
+!     &     (1. - MIN(1.0,(SSDOT+WSIDOT)/STMWT))
+!      ENDIF
 
       WRCRDT = ALPHR * WRDOT - CRUSRT - RHOR * SRDOT
       WRCSHD = ALPHSH * WSHDOT - CRUSSH - RHOSH*(WTABRT+WTSHMT+WSHIDT)
 C-----------------------------------------------------------------------
 C     Update C Storage, Concentrations in Leaves, Stems, Roots, and Shells
 C-----------------------------------------------------------------------
-      WCRLF = WCRLF + WRCLDT
-      WCRST = WCRST + WRCSDT
+!     WCRLF = WCRLF + WRCLDT
+      WCRLF = SUM(LFNSC)
+!     WCRST = WCRST + WRCSDT
+      WCRST = SUM(STNSC)
+
       WCRRT = WCRRT + WRCRDT
       WCRSH = WCRSH + WRCSHD
 
@@ -845,6 +854,8 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C     Compute CH20 fractions
 C-----------------------------------------------------------------------
+! chp note: rhol and rhos can be eliminated once we start using cohort
+!       values in SENES
       IF (WTLF > 0.0001) THEN
          RHOL =  WCRLF/WTLF
       ELSE
@@ -878,45 +889,46 @@ C     get increase in tissue N composition when tissue is aborted.  Need
 C     to account for mass, N and C lost this way in sections below
 C-----------------------------------------------------------------------
 
-C-----------------------------------------------------------------------
-C     Leaf nitrogen senescence and pest damage loss
-C-----------------------------------------------------------------------
-!              senesc. + pest   + freeze  
-      NLOFF  = (SLNDOT + WLIDOT + WLFDOT) * (PCNL/100.) +
-     &         (SLDOT-SLNDOT) * PROLFF * 0.16
-      NLPEST = NLPEST + WLIDOT * PCNL/100.
-      IF (NLOFF. LT. 0.0) THEN
-        NLOFF = 0.0
-      ENDIF
+!     N in leaf and stem comes from COHORTS module
+!C-----------------------------------------------------------------------
+!C     Leaf nitrogen senescence and pest damage loss
+!C-----------------------------------------------------------------------
+!!              senesc. + pest   + freeze  
+!      NLOFF  = (SLNDOT + WLIDOT + WLFDOT) * (PCNL/100.) +
+!     &         (SLDOT-SLNDOT) * PROLFF * 0.16
+!      NLPEST = NLPEST + WLIDOT * PCNL/100.
+!      IF (NLOFF. LT. 0.0) THEN
+!        NLOFF = 0.0
+!      ENDIF
 
-C-----------------------------------------------------------------------
-C     Net growth rate of nitrogen in the leaves
-C-----------------------------------------------------------------------
-      NLDOT = NGRLF - NLOFF - NRUSLF
-      IF (WTLF > 1.E-4) THEN
-         NLDOT = NLDOT + NADLF *
-     &                  (1. - MIN(1.0,(SLDOT + WLIDOT + WLFDOT) / WTLF))
-      ENDIF
+!C-----------------------------------------------------------------------
+!C     Net growth rate of nitrogen in the leaves
+!C-----------------------------------------------------------------------
+!      NLDOT = NGRLF - NLOFF - NRUSLF
+!      IF (WTLF > 1.E-4) THEN
+!         NLDOT = NLDOT + NADLF *
+!     &                  (1. - MIN(1.0,(SLDOT + WLIDOT + WLFDOT) / WTLF))
+!      ENDIF
 
-C-----------------------------------------------------------------------
-C     Stem nitrogen senescence and pest damage loss
-C-----------------------------------------------------------------------
-!              senesce + pest
-      NSOFF  = (SSNDOT + WSIDOT) * (PCNST/100.) + (SSDOT - SSNDOT)
-     &         * PROSTF * 0.16
-      NLPEST = NLPEST + WSIDOT * PCNST/100.
-      IF (NSOFF < 0.0) THEN
-        NSOFF = 0.0
-      ENDIF
+!C-----------------------------------------------------------------------
+!C     Stem nitrogen senescence and pest damage loss
+!C-----------------------------------------------------------------------
+!!              senesce + pest
+!      NSOFF  = (SSNDOT + WSIDOT) * (PCNST/100.) + (SSDOT - SSNDOT)
+!     &         * PROSTF * 0.16
+!      NLPEST = NLPEST + WSIDOT * PCNST/100.
+!      IF (NSOFF < 0.0) THEN
+!        NSOFF = 0.0
+!      ENDIF
 
-C-----------------------------------------------------------------------
-C     Net growth rate of nitrogen in the stems
-C-----------------------------------------------------------------------
-      NSDOT = NGRST - NSOFF - NRUSST
-      IF (STMWT > 1.E-4) THEN
-         NSDOT = NSDOT + NADST * 
-     &                  (1. - MIN(1.0,(SSDOT + WSIDOT) / STMWT))
-      ENDIF
+!C-----------------------------------------------------------------------
+!C     Net growth rate of nitrogen in the stems
+!C-----------------------------------------------------------------------
+!      NSDOT = NGRST - NSOFF - NRUSST
+!      IF (STMWT > 1.E-4) THEN
+!         NSDOT = NSDOT + NADST * 
+!     &                  (1. - MIN(1.0,(SSDOT + WSIDOT) / STMWT))
+!      ENDIF
 
 C-----------------------------------------------------------------------
 C     Root nitrogen senescence and pest damage loss
@@ -968,21 +980,22 @@ C-----------------------------------------------------------------------
 C   Integration, Update N in Each Component by Adding Today's Growth
 C-----------------------------------------------------------------------
 
-C-----------------------------------------------------------------------
-C     Total nitrogen in the leaves
-C-----------------------------------------------------------------------
-      IF ((NLDOT < 0.0) .AND. (ABS(NLDOT) > WTNLF)) THEN
-         NLDOT = - WTNLF
-      ENDIF
-      WTNLF = WTNLF + NLDOT
+!     N in leaf and stem comes from COHORTS module
+!C-----------------------------------------------------------------------
+!C     Total nitrogen in the leaves
+!C-----------------------------------------------------------------------
+!      IF ((NLDOT < 0.0) .AND. (ABS(NLDOT) > WTNLF)) THEN
+!         NLDOT = - WTNLF
+!      ENDIF
+!      WTNLF = WTNLF + NLDOT
 
-C-----------------------------------------------------------------------
-C     Total nitrogen in the stems
-C-----------------------------------------------------------------------     
-      IF ((NSDOT < 0.0) .AND. (ABS(NSDOT) > WTNST)) THEN
-         NSDOT = - WTNST
-      ENDIF
-      WTNST = WTNST + NSDOT
+!C-----------------------------------------------------------------------
+!C     Total nitrogen in the stems
+!C-----------------------------------------------------------------------     
+!      IF ((NSDOT < 0.0) .AND. (ABS(NSDOT) > WTNST)) THEN
+!         NSDOT = - WTNST
+!      ENDIF
+!      WTNST = WTNST + NSDOT
 
 C-----------------------------------------------------------------------
 C     Total nitrogen in the roots
@@ -1044,6 +1057,8 @@ C-----------------------------------------------------------------------
 !   However . . .  by making this change, cumulative tissue N no longer
 !     matches 'Seed N' plus 'N2 fixed' plus 'N uptake'.  Why???
 
+
+!     chp: does this still work for cohorts?
 !     Leaf
       NLALL = NGRLF - NRUSLF 
       IF (WTLF > 1.E-4) THEN
@@ -1152,19 +1167,20 @@ C-----------------------------------------------------------------------
 C     Calculate Remaining N in Shells, Leaves, Stems, and Roots
 C     That can be Mined (Plant N-Balance).
 C-----------------------------------------------------------------------
-      IF ((WTLF - WCRLF) > 1.E-4) THEN
-!     WNRLF    N available for mobilization from leaves above lower limit of 
-!            mining (g[N] / m2)
-        WNRLF = MAX (WTNLF - PROLFF * 0.16 * (WTLF-WCRLF), 0.0)
-      ELSE
-        WNRLF = 0.0
-      ENDIF
+!     WNRLF and WNRST calculated in COHORTS
+!      IF ((WTLF - WCRLF) > 1.E-4) THEN
+!!     WNRLF    N available for mobilization from leaves above lower limit of 
+!!            mining (g[N] / m2)
+!        WNRLF = MAX (WTNLF - PROLFF * 0.16 * (WTLF-WCRLF), 0.0)
+!      ELSE
+!        WNRLF = 0.0
+!      ENDIF
 
-      IF ((STMWT - WCRST) > 1.E-4) THEN
-        WNRST = MAX (WTNST - PROSTF * 0.16 * (STMWT-WCRST), 0.0)
-      ELSE
-        WNRST = 0.0
-      ENDIF
+!      IF ((STMWT - WCRST) > 1.E-4) THEN
+!        WNRST = MAX (WTNST - PROSTF * 0.16 * (STMWT-WCRST), 0.0)
+!      ELSE
+!        WNRST = 0.0
+!      ENDIF
 
       IF (RTWT > 1.E-4) THEN
         WNRRT = MAX (WTNRT - PRORTF * 0.16 * RTWT, 0.0)
@@ -1225,24 +1241,26 @@ C-----------------------------------------------------------------------
         SenE(L,1) = SENRT(L) * PCNRT / 100. + SENNOD(L) * PRONOD * 0.16 
       ENDDO
 
-C-----------------------------------------------------------------------
-C     Leaf Area, Specific Leaf Area Calculations
-C     Calculate Area Growth rate and Update Leaf Area (AREALF, XLAI)
-C-----------------------------------------------------------------------
-      ALFDOT = WLDOTN*F - (SLDOT+WLIDOT+WLFDOT+NRUSLF/0.16)*SLA
-      IF (WTLF > 1.E-4) THEN
-         ALFDOT = ALFDOT + SLA * (NADLF/0.16) *
-     &   (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
-      ENDIF
-
-      AREALF = AREALF + ALFDOT
-      XLAI   = AREALF / 10000.
-      IF (AREALF > 0.00001 .AND. WTLF > 1.E-4) THEN
-         SLA    = AREALF / WTLF
-         SLAAD  = AREALF / (WTLF - WCRLF)
-         IF (SLA > 999.) SLA = 0.0
-         IF (SLAAD > 999.) SLAAD = -99.
-      ENDIF
+!     Leaf area calculations now done in COHORTS
+!C-----------------------------------------------------------------------
+!C     Leaf Area, Specific Leaf Area Calculations
+!C     Calculate Area Growth rate and Update Leaf Area (AREALF, XLAI)
+!C-----------------------------------------------------------------------
+!      ALFDOT = WLDOTN*F - (SLDOT+WLIDOT+WLFDOT+NRUSLF/0.16)*SLA
+!      IF (WTLF > 1.E-4) THEN
+!         ALFDOT = ALFDOT + SLA * (NADLF/0.16) *
+!     &   (1. - MIN(1.0,(SLDOT+WLIDOT+WLFDOT)/WTLF))
+!      ENDIF
+!
+!      AREALF = AREALF + ALFDOT
+      AREALF = XLAI * 10000.
+!      XLAI   = AREALF / 10000.
+!      IF (AREALF > 0.00001 .AND. WTLF > 1.E-4) THEN
+!         SLA    = AREALF / WTLF
+!         SLAAD  = AREALF / (WTLF - WCRLF)
+!         IF (SLA > 999.) SLA = 0.0
+!         IF (SLAAD > 999.) SLAAD = -99.
+!      ENDIF
 C-----------------------------------------------------------------------
 C     Remember XLAI
 C-----------------------------------------------------------------------
