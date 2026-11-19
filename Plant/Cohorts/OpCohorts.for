@@ -9,6 +9,7 @@ C=======================================================================
 
       SUBROUTINE OpCohorts(DYNAMIC, YRPLT,    !Input
 !     &  LFSN, LFAREA, LeafNTot, PCNLeaf, 
+     &  C_OFF_LF, C_OFF_ST,
      &  WRCLDT_c, WRCSDT_c,   !TEMP CHP
      &  WLDOTN, ALPHL, WSDOTN, ALPHS,  !TEMP CHP
      &  WLDOT_CALC, WSDOT_CALC, !TEMP CHP
@@ -34,7 +35,7 @@ C=======================================================================
       REAL, DIMENSION(1:LCMax), INTENT(IN) :: 
 !     &  LFSN, LFAREA, LeafNTot, PCNLeaf
      & WRCLDT_c, WRCSDT_c   !TEMP CHP
-      REAL WRCLDT_calc, WRCSDT_calc
+      REAL WRCLDT_calc, WRCSDT_calc, C_OFF_LF, C_OFF_ST
 
       REAL WTLF_calc, WNRLF_calc, WCRLF_calc, XLAI_calc, 
      &  WTNLF_calc, PLEAFN_calc,
@@ -133,8 +134,8 @@ C=======================================================================
      &  '     WLIDOTc     WLFDOTc      SLDOTc',
      &  '      WatSen      NMinSn',
      &  '     FHLEAFc       RHOLc      RHOLmn      RHOLmx',
-     &  '     WRCLDTc      WLDOTc',
-     &  '      LFMINc      LFMAXc')
+     &  '     WRCLDTc      WLDOTc      LCOFFc',
+     &  '      LFMINc      LFMAXc      WLDOTN')
 
 !-----------------------------------------------------------------------
 !     Initialize 2nd leaf cohort output file
@@ -187,8 +188,8 @@ C=======================================================================
      &  '     WSIDOTc     WSFDOTc      SSDOTc',
      &  '    WatSenST      NMinSn',
      &  '     FHSTEMc       RHOSc      RHOSmn      RHOSmx',
-     &  '     WRCSDTc      WSDOTc',
-     &  '      STMINc      STMAXc')
+     &  '     WRCSDTc      WSDOTc      SCOFFc',
+     &  '      STMINc      STMAXc      WSDOTN')
 
 !***********************************************************************
 !***********************************************************************
@@ -294,7 +295,7 @@ C=======================================================================
      &  WLIDOT_calc, WLFDOT_calc, SLDOT_calc, 
      &  WatSen_calc, LfMineSen_calc, 
      &  FHLEAF_calc, RHOL_CALC, RHOL_MIN, RHOL_MAX, WRCLDT_calc,
-     &  WLDOT_calc, LFWT_MIN, LFWT_MAX
+     &  WLDOT_calc, C_OFF_LF, LFWT_MIN, LFWT_MAX, WLDOTN
 
 310   FORMAT (1X,I4, 1X,I3, 2I6, 30F12.6)
 
@@ -314,7 +315,7 @@ C=======================================================================
      &  WSIDOT_calc, WSFDOT_calc, SSDOT_calc, 
      &  WatSenStem_calc, StMineSen_calc, 
      &  FHSTEM_calc, RHOS_CALC, RHOS_MIN, RHOS_MAX, WRCSDT_calc,
-     &  WSDOT_calc, STMWT_MIN, STMWT_MAX
+     &  WSDOT_calc, C_OFF_ST, STMWT_MIN, STMWT_MAX, WSDOTN
 
 410   FORMAT (1X,I4, 1X,I3, 2I6, 30F12.6)
 

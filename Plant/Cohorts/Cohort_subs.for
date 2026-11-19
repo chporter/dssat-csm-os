@@ -305,7 +305,7 @@
 
       SUBROUTINE COFF(LeafOrStem, MODEL,
      &  MassDecrease, PCHO_F, RHO, SENC_V,        !Input
-     &  WRC_DT)                                   !Output
+     &  C_OFF_sum, WRC_DT)                        !Output
 
       USE COHORTS_MOD
       IMPLICIT NONE
@@ -317,7 +317,7 @@
       REAL, DIMENSION(1:LCMax), INTENT(OUT) :: WRC_DT
 
       INTEGER I
-      REAL C_OFF
+      REAL C_OFF, C_OFF_sum
       REAL, DIMENSION(1:LCMax) :: CAdd, CMine, Freeze, LitSen, Mass,  
      &  NSC, Pest, S_MDOT, SENWT, WatSen
 
@@ -350,44 +350,51 @@
 
 !     Mobile, non-structural CH2O 
       WRC_DT = 0.0
+      C_OFF = 0.0
+      C_OFF_sum = 0.0
 
       DO I = 1, NLC
 !       ---------------------------
         IF (Mass(I) .GT. 0.0) THEN
           SELECT CASE (MODEL(1:5))
           CASE ('CRGRO')
-            WRC_DT(I) = 
-     &        - CMine(I)      !mined CH2O
-     &        + CAdd(I)       !new reserves
+!           WRC_DT(I) = 
+!    &        - CMine(I)      !mined CH2O
+!    &        + CAdd(I)       !new reserves
+
             SELECT CASE(LeafOrStem)
             CASE ("LEAF")
-              WRC_DT(I) = WRC_DT(I) 
-     &          - (WatSen(I) + Pest(I) + Freeze(I)) * RHO(I)
-             CASE ("STEM")
-              WRC_DT(I) = WRC_DT(I) 
-     &          - WatSen(I) * RHO(I)   !Water senescence
-     &          - NSC(I) / Mass(I) * MassDecrease(I)
+!             WRC_DT(I) = WRC_DT(I) 
+              C_OFF = (WatSen(I) + Pest(I) + Freeze(I)) * RHO(I)
+
+            CASE ("STEM")
+!             WRC_DT(I) = WRC_DT(I) 
+              C_OFF = 
+     &            WatSen(I) * RHO(I)   !Water senescence
+     &          + NSC(I) / Mass(I) * MassDecrease(I)
              END SELECT
 
           CASE ('PRFRM')
               C_OFF = (S_MDOT(I) + LitSen(I) + SENWT(I)) * 
      &                (SENC_V * (RHO(I) - PCHO_F) + PCHO_F) 
      &              + (WatSen(I) + Pest(I) + Freeze(I)) * RHO(I)
-
-              IF (C_OFF. LT. 0.0) THEN
-                C_OFF = 0.0
-              ENDIF
-              WRC_DT(I) = -CMine(I) - C_OFF + CAdd(I)
-
-!             TEMP CHP
-              IF (LeafOrStem == 'STEM') THEN
-                WRITE(3111,'(A,a7,i7,3F15.8)') 
-     &            'COHORTS  ',' ',I, C_OFF, CMine(I), CAdd(I)
-              ENDIF
-
           END SELECT
+
+          IF (C_OFF. LT. 0.0) THEN
+            C_OFF = 0.0
+          ENDIF
+          WRC_DT(I) = -CMine(I) - C_OFF + CAdd(I)
+          C_OFF_sum = C_OFF_sum + C_OFF
+
+!!         TEMP CHP
+!          IF (LeafOrStem == 'STEM') THEN
+!            WRITE(3111,'(2i7,3F15.8)') 
+!     &        NLC, I, C_OFF, CMine(I), CAdd(I)
+!          ENDIF
+
         ENDIF
       ENDDO
+
 !-----------------------------------------------------------------------
       RETURN
       END SUBROUTINE COFF

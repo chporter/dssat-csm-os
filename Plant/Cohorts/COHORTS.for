@@ -140,7 +140,7 @@ C=======================================================================
 
       REAL WLDOT_calc, WSDOT_calc
       REAL ADF_daily, NDF_daily
-      REAL TOTWT
+      REAL TOTWT, C_OFF_LF, C_OFF_ST
 
 !     temp chp
       REAL LFWT_MAX, LFWT_MIN
@@ -213,6 +213,7 @@ C=======================================================================
 
       CALL OpCohorts(DYNAMIC, YRPLT,          !Input
 !     &  LFSN, LFAREA, LeafNTot, PCNLeaf, 
+     &  C_OFF_LF, C_OFF_ST,
      &  WRCLDT_c, WRCSDT_c,   !TEMP CHP
      &  WLDOTN, ALPHL, WSDOTN, ALPHS,  !TEMP CHP
      &  WLDOT_CALC, WSDOT_CALC, !TEMP CHP
@@ -282,6 +283,7 @@ C=======================================================================
 
       CALL OpCohorts(DYNAMIC, YRPLT,          !Input
 !     &  LFSN, LFAREA, LeafNTot, PCNLeaf, 
+     &  C_OFF_LF, C_OFF_ST,
      &  WRCLDT_c, WRCSDT_c,   !TEMP CHP
      &  WLDOTN, ALPHL, WSDOTN, ALPHS,  !TEMP CHP
      &  WLDOT_CALC, WSDOT_CALC, !TEMP CHP
@@ -484,11 +486,11 @@ C=======================================================================
 !     ---------------------------
       CALL COFF("LEAF", MODEL,
      &  LeafMassDecrease, PCHOLFF, RHOL_c, SENCLV,  !Input
-     &  WRCLDT_c)                                   !Output
+     &  C_OFF_LF, WRCLDT_c)                        !Output
 
       CALL COFF("STEM", MODEL,
      &  StemMassDecrease, PCHOSTF, RHOS_c, SENCSV,  !Input
-     &  WRCSDT_c)                                   !Output
+     &  C_OFF_ST, WRCSDT_c)                         !Output
 
       DO I = 1, NLC
         IF (LFDM(I) > 0.0) THEN
@@ -649,6 +651,7 @@ C=======================================================================
 !-----------------------------------------------------------------------
       CALL OpCohorts(DYNAMIC, YRPLT,          !Input
 !     &  LFSN, LFAREA, LeafNTot, PCNLeaf, 
+     &  C_OFF_LF, C_OFF_ST,
      &  WRCLDT_c, WRCSDT_c,   !TEMP CHP
      &  WLDOTN, ALPHL, WSDOTN, ALPHS,  !TEMP CHP
      &  WLDOT_CALC, WSDOT_CALC, !TEMP CHP
