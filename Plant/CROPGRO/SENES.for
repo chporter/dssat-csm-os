@@ -242,10 +242,10 @@ C-----------------------------------------------------------------------
 
         WRITE (NOUTDG,200)
   200   FORMAT('@YEAR DOY   DAS   DAP'
-     &  ,'      TotSen      NatSen     NMobSen    LoLitSen',
-     &   '    WaterSen       R7Sen',
-     &   '    TotSen_c    NatSen_c    NMbSen_c    LitSen_c',
-     &   '    WatSen_c     R7Sen_c       RATTP      PORLFT')
+     &  ,'      TotSen      NatSen     NMobSen    LoLitSen'
+     &  ,'    WaterSen       R7Sen'
+     &  ,'    TotSen_c    NatSen_c    NMbSen_c    LitSen_c'
+     &  ,'    WatSen_c     R7Sen_c       RATTP      PORLFT')
 
 !     end temp chp
 !=========================================================================
@@ -385,8 +385,7 @@ C     canopy.  First compute LAI at which light compensation is reached
 C     then allow LAI above this amount to be senesced over TCMP thermal
 C     days.
 C-----------------------------------------------------------------------
-        LTSEN = 0.0
-        IF (PAR .GT. 0.) THEN
+        IF (PAR .GT. 0. .AND. SLAAD > 0.0) THEN
           LCMP = -(1. / KCAN) * ALOG(ICMP / PAR)
           LTSEN = DTX * (XLAI - LCMP) / TCMP
           LTSEN = MAX(0.0, LTSEN)
@@ -400,12 +399,19 @@ C-----------------------------------------------------------------------
             LoLitSen_c(I) = LoLitSen * LFDM(I) / WTLF
             LoLitSen_sum = LoLitSen_sum + LoLitSen_c(I)
           ENDDO
+        ELSE
+          LTSEN = 0.0
+          LoLitSen = 0.0
+          LoLitSen_c = 0.0
+          LoLitSen_sum = 0.0
         ENDIF
 
 C-----------------------------------------------------------------------
 C     Convert area loss to biomass(m2 *10000cm2/m2)/(cm2/g)=g/m2
 C-----------------------------------------------------------------------
-        SLDOT = SLDOT + LTSEN * 10000. / SLAAD
+        IF (SLAAD > 0.0) THEN
+          SLDOT = SLDOT + LTSEN * 10000. / SLAAD
+        ENDIF
         LeafTotSen = LeafTotSen + LoLitSen_c
 
 C-----------------------------------------------------------------------
@@ -441,13 +447,18 @@ C-----------------------------------------------------------------------
 
 !       Cohort-level ozone stress and combined ozone / water stress
         WatOzSen_sum = 0.0
-        DO I = 1, NLC
-          OzoneSen_c(I) = SLFO3 * LFDM(I) / WTLF
-          OzoneSen_c(I) = MIN(OzoneSen_c(I), LFDM(I))
-
-          WatOzSen_c(I) = MAX(WaterSen_c(I), OzoneSen_c(I), 0.0)
-          WatOzSen_sum = WatOzSen_sum + WatOzSen_c(I)
-        ENDDO
+        IF (WTLF > 0.0) THEN
+          DO I = 1, NLC
+            OzoneSen_c(I) = SLFO3 * LFDM(I) / WTLF
+            OzoneSen_c(I) = MIN(OzoneSen_c(I), LFDM(I))
+          
+            WatOzSen_c(I) = MAX(WaterSen_c(I), OzoneSen_c(I), 0.0)
+            WatOzSen_sum = WatOzSen_sum + WatOzSen_c(I)
+          ENDDO
+        ELSE
+          OzoneSen_c = 0.0
+          WatOzSen_c = 0.0
+        ENDIF
 
         SLDOT = SLDOT + SLNDOT
         LeafTotSen = LeafTotSen + WatOzSen_c
@@ -458,14 +469,19 @@ C-----------------------------------------------------------------------
         SSNDOT = MIN(SSDOT,SSNDOT)
 
 !       Stem cohorts
-        DO I = 1, NLC
-!         StemTotSen(I) = LeafTotSen(I) * PORPT
-          StemTotSen(I) = SSDOT * STDM(I) / STMWT
-          StemTotSen(I) = MIN(StemTotSen(I), 0.1 * STDM(I))
-!         SSNDOT_c(I) = WaterSen_c(I) * PORPT
-          SSNDOT_c(I) = SSNDOT * STDM(I) / STMWT
-          SSNDOT_c(I) = MIN(StemTotSen(I), SSNDOT_c(I))
-        ENDDO
+        IF (STMWT > 0.0) THEN
+          DO I = 1, NLC
+!           StemTotSen(I) = LeafTotSen(I) * PORPT
+            StemTotSen(I) = SSDOT * STDM(I) / STMWT
+            StemTotSen(I) = MIN(StemTotSen(I), 0.1 * STDM(I))
+!           SSNDOT_c(I) = WaterSen_c(I) * PORPT
+            SSNDOT_c(I) = SSNDOT * STDM(I) / STMWT
+            SSNDOT_c(I) = MIN(StemTotSen(I), SSNDOT_c(I))
+          ENDDO
+        ELSE
+          StemTotSen = 0.0
+          SSNDOT_c = 0.0
+        ENDIF
 
 C-----------------------------------------------------------------------
 C     This section calculates senescence of leaves and petioles
@@ -488,11 +504,14 @@ C-----------------------------------------------------------------------
           SSDOT = SLDOT * PORPT
           SSNDOT = SSDOT
 
-
 !         StemTotSen = LeafTotSen * PORPT
-          DO I = 1, NLC
-            StemTotSen(I) = SSDOT * STDM(I) / STMWT
-          ENDDO
+          IF (STMWT > 0.0) THEN
+            DO I = 1, NLC
+              StemTotSen(I) = SSDOT * STDM(I) / STMWT
+            ENDDO
+          ELSE
+            StemTotSen = 0.0
+          ENDIF
           SSNDOT_c = StemTotSen
 
         ELSE
