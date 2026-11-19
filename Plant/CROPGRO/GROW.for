@@ -595,10 +595,10 @@ C-----------------------------------------------------------------------
 !     A positive value represents leaf mass lost. (kg/ha)
       ShutMob = (NRUSLF/0.16 + CRUSLF) * 10.      !kg/ha
 
-!     Calculate pest damage to cohorts
-      CALL PestCohorts(
-     &  WLIDOT, WSIDOT, WTLF, STMWT)   !Input
-
+!!     Calculate pest damage to cohorts
+!      CALL PestCohorts(
+!     &  WLIDOT, WSIDOT, WTLF, STMWT)   !Input
+!
 !     Calculate net addition to leaves today per cohort
       LCADD = 0.0
       LNADD = 0.0
@@ -763,8 +763,10 @@ C    Integration, Add Today's Net Growth to Existing Weights
 C-----------------------------------------------------------------------
       TOTWT  = TOTWT  + WDOT
       TOPWT  = TOPWT  + WSDOT + WLDOT + WPDOT
-!      WTLF   = WTLF   + WLDOT  !from cohorts
-!      STMWT  = STMWT  + WSDOT  !from cohorts
+!     WTLF   = WTLF   + WLDOT
+      WTLF = SUM(LFDM)  !from cohorts
+!     STMWT  = STMWT  + WSDOT
+      STMWT = SUM(STDM)  !from cohorts
       SDWT   = SDWT   + WSDDOT
       SHELWT = SHELWT + WSHDOT
       RTWT   = RTWT   + WRDOT

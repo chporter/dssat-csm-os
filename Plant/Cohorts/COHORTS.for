@@ -392,6 +392,13 @@ C=======================================================================
         ENDIF
       ENDDO
 
+!!**********************************************************************
+!!     chp 2026-11-12 - NEED TO REVISE THIS SUBROUTINE BECAUSE IT'S NOW CALLED FROM COHORTS
+!!     Calculate pest damage to cohorts
+!      CALL PestCohorts(
+!     &  WLIDOT, WSIDOT, WTLF, STMWT)   !Input
+!!**********************************************************************
+
 !------------------------------
 !     LEAF and STEM LOSSES
 !     Ensure that losses don't exceed mass, adjust as necessary
@@ -603,6 +610,7 @@ C=======================================================================
         CumLeafDM(NLC) = WLDOTN          !cum leaf mass added
         LFAREA(NLC) = WLDOTN * F         !leaf area
         LFNSC(NLC)  = WLDOTN * ALPHL     !non-struct CH2O
+        RHOL_c(NLC) = LFNSC(NLC) / LFDM(NLC)
         LeafNTot(NLC) = NGRLF            !total leaf N (g/m2)
         LFSN(NLC)   = PROLFF * 0.16 * (WLDOTN - LFNSC(NLC))  !struc N
         LFNSN(NLC)  = NGRLF - LFSN(NLC)  !non-struct N (mobile)
@@ -615,6 +623,7 @@ C=======================================================================
 !       New growth for today's stem cohort
         STDM(NLC)  = WSDOTN             !stem dry mass
         STNSC(NLC) = WSDOTN * ALPHS     !non-struct CH2O
+        RHOS_c(NLC) = STNSC(NLC) / STDM(NLC)
         StemNTot(NLC) = NGRST           !total stem N (g/m2)
         STSN(NLC)  = PROSTF * 0.16 * (WSDOTN - STNSC(NLC))  !struc N
         STNSN(NLC) = NGRST - STSN(NLC)  !non-struct N (mobile)
