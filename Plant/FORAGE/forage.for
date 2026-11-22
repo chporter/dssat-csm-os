@@ -759,7 +759,7 @@ C-----------------------------------------------------------------------
 
       call forage_harvest(CONTROL,FILECC, ATMOW, ATTP,
      &    RHOL,RHOS,PCNL,PCNST,SLA,RTWT,STRWT,       !Input
-     &    WTLF,STMWT,TOPWT,TOTWT,WCRLF,WCRST,        !Input/Output
+     &    WTLF,STMWT,TOPWT,WCRLF,WCRST,              !Input/Output
      &    WTNLF,WTNST,WNRLF,WNRST,WTNCAN,            !Input/Output
      &    AREALF,XLAI,XHLAI,VSTAGE,vstagp,canht,     !Input/Output
      &    FHWAH,FHTOTN, FHLPH,fhpctn,FREQ,
@@ -828,7 +828,7 @@ C-----------------------------------------------------------------------
 !-----------------------------------------------------------------------
       call forage_harvest(CONTROL,FILECC, ATMOW, ATTP,
      &    RHOL,RHOS,PCNL,PCNST,SLA,RTWT,STRWT,       !Input
-     &    WTLF,STMWT,TOPWT,TOTWT,WCRLF,WCRST,        !Input/Output
+     &    WTLF,STMWT,TOPWT,WCRLF,WCRST,              !Input/Output
      &    WTNLF,WTNST,WNRLF,WNRST,WTNCAN,            !Input/Output
      &    AREALF,XLAI,XHLAI,VSTAGE,vstagp,canht,     !Input/Output
      &    FHWAH,FHTOTN, FHLPH,fhpctn,FREQ,
@@ -1275,7 +1275,7 @@ C-----------------------------------------------------------------------
       ENDIF
       call forage_harvest(CONTROL,FILECC, ATMOW, ATTP,
      &    RHOL,RHOS,PCNL,PCNST,SLA,RTWT,STRWT,       !Input
-     &    WTLF,STMWT,TOPWT,TOTWT,WCRLF,WCRST,        !Input/Output
+     &    WTLF,STMWT,TOPWT,WCRLF,WCRST,              !Input/Output
      &    WTNLF,WTNST,WNRLF,WNRST,WTNCAN,            !Input/Output
      &    AREALF,XLAI,XHLAI,VSTAGE,vstagp,canht,     !Input/Output
      &    FHWAH,FHTOTN, FHLPH,fhpctn,FREQ,
@@ -2122,7 +2122,7 @@ C----------------------------------
       RSPLC =0.0
       call forage_harvest(CONTROL,FILECC, ATMOW, ATTP,
      &    RHOL,RHOS,PCNL,PCNST,SLA,RTWT,STRWT,       !Input
-     &    WTLF,STMWT,TOPWT,TOTWT,WCRLF,WCRST,        !Input/Output
+     &    WTLF,STMWT,TOPWT,WCRLF,WCRST,              !Input/Output
      &    WTNLF,WTNST,WNRLF,WNRST,WTNCAN,            !Input/Output
      &    AREALF,XLAI,XHLAI,VSTAGE,vstagp,canht,     !Input/Output
      &    FHWAH,FHTOTN, FHLPH,fhpctn,FREQ,
@@ -2268,7 +2268,7 @@ C-----------------------------------------------------------------------
 
       call forage_harvest(CONTROL,FILECC, ATMOW, ATTP,
      &    RHOL,RHOS,PCNL,PCNST,SLA,RTWT,STRWT,       !Input
-     &    WTLF,STMWT,TOPWT,TOTWT,WCRLF,WCRST,        !Input/Output
+     &    WTLF,STMWT,TOPWT,WCRLF,WCRST,              !Input/Output
      &    WTNLF,WTNST,WNRLF,WNRST,WTNCAN,            !Input/Output
      &    AREALF,XLAI,XHLAI,VSTAGE,vstagp,canht,     !Input/Output
      &    FHWAH,FHTOTN, FHLPH,fhpctn,FREQ,

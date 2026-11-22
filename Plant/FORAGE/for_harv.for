@@ -25,8 +25,8 @@ C
 C  Calls  :
 C=======================================================================
       SUBROUTINE forage_harvest(CONTROL,FILECC, ATMOW, ATTP,
-     &  RHOL,RHOS,PCNL,PCNST,SLA,RTWT,STRWT,   !Input
-     &  WTLF,STMWT,TOPWT,TOTWT,WCRLF,WCRST,    !Input/Output
+     &  RHOL,RHOS,PCNL,PCNST,SLA,RTWT,STRWT,        !Input
+     &  WTLF,STMWT,TOPWT,WCRLF,WCRST,               !Input/Output
      &  WTNLF,WTNST,WNRLF,WNRST,WTNCAN,        !Input/Output
      &  AREALF,XLAI,XHLAI,VSTAGE,vstagp,canht, !Input/Output
      &  fhtot,FHTOTN, fhpctlf,fhpctn,FREQ,
@@ -55,7 +55,7 @@ C=======================================================================
       REAL MOWa,RSPLFa,MVSa,rshta
       REAL FHLEAF,FHSTEM,FHVSTG
       REAL RHOL,RHOS,PCNL,PCNST,SLA
-      REAL WTLF,STMWT,TOPWT,TOTWT,WCRLF,WCRST
+      REAL WTLF,STMWT,TOPWT,WCRLF,WCRST
       REAL WTNLF,WTNST,WNRLF,WNRST,WTNCAN,RTWT,STRWT
       REAL AREALF,XLAI,XHLAI,VSTAGE  !AREAH,
       REAL PROLFF,PROSTF,pliglf,pligst
