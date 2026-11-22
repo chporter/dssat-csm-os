@@ -339,7 +339,7 @@ C=======================================================================
         PCNLeaf(1) = 0.0
       ENDIF
 !     structural N (g/m2) based on structural C
-      LFSN(1)  = PROLFI * 0.16 * (LFDM(1) - LFNSC(1))
+      LFSN(1)  = PROLFF * 0.16 * (LFDM(1) - LFNSC(1))
       LFNSN(1) = LeafNTot(1) - LFSN(1)    !mobile N (g/m2)
 
 !     Leaf area
@@ -358,7 +358,7 @@ C=======================================================================
 
       StemNTot(1) = STMWT * PROSTI * 0.16 !total stem N (g/m2)
 !     structural N (g/m2) based on structural C
-      STSN(1)  = PROSTI * 0.16 * (STDM(1) - STNSC(1)) 
+      STSN(1)  = PROSTF * 0.16 * (STDM(1) - STNSC(1)) 
       STNSN(1) = StemNTot(1) - STSN(1)    !mobile N (g/m2) 
       IF (STDM(1) > 0.0) THEN
         PCNStem(1) = StemNTot(1) / STDM(1) * 100.  ! % N 
@@ -610,14 +610,15 @@ C=======================================================================
         CumLeafDM(NLC) = WLDOTN          !cum leaf mass added
         LFAREA(NLC) = WLDOTN * F         !leaf area
         LFNSC(NLC)  = WLDOTN * ALPHL     !non-struct CH2O
-        RHOL_c(NLC) = LFNSC(NLC) / LFDM(NLC)
         LeafNTot(NLC) = NGRLF            !total leaf N (g/m2)
         LFSN(NLC)   = PROLFF * 0.16 * (WLDOTN - LFNSC(NLC))  !struc N
         LFNSN(NLC)  = NGRLF - LFSN(NLC)  !non-struct N (mobile)
         IF (LFDM(NLC) > 0.0) THEN
           PCNLeaf(NLC) = LeafNTot(NLC) / LFDM(NLC) * 100.  ! % N
+          RHOL_c(NLC)  = LFNSC(NLC) / LFDM(NLC)
         ELSE
           PCNLeaf(NLC) = 0.0
+          RHOL_c(NLC)  = 0.0
         ENDIF
 
 !       New growth for today's stem cohort
@@ -636,13 +637,13 @@ C=======================================================================
 
 !-----------------------------------------------------------------------
 !     Increment age, calculate concentrations
-      DO I = 1, NLC
-        IF (NLC > 1) THEN
-!         Already done for first cohort at emergence
+      IF (NLC > 1) THEN
+!       Already done for first cohort at emergence
+        DO I = 1, NLC
           CohortAge(I) = CohortAge(I) + DTX  !cohort age in p-t-d
           CohortAgeDays(I) = CohortAgeDays(I) + 1
-        ENDIF
-      ENDDO
+        ENDDO
+      ENDIF
 
 !     Composition of cohorts for perennial forage model
       IF (MODEL(1:5) == 'PRFRM') THEN

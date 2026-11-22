@@ -380,9 +380,9 @@
      &              + (WatSen(I) + Pest(I) + Freeze(I)) * RHO(I)
           END SELECT
 
-          IF (C_OFF. LT. 0.0) THEN
-            C_OFF = 0.0
-          ENDIF
+!          IF (C_OFF. LT. 0.0) THEN
+!            C_OFF = 0.0
+!          ENDIF
           WRC_DT(I) = -CMine(I) - C_OFF + CAdd(I)
           C_OFF_sum = C_OFF_sum + C_OFF
 

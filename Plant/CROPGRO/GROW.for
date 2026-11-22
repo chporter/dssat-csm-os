@@ -762,11 +762,12 @@ C-----------------------------------------------------------------------
 C    Integration, Add Today's Net Growth to Existing Weights
 C-----------------------------------------------------------------------
       TOTWT  = TOTWT  + WDOT
-      TOPWT  = TOPWT  + WSDOT + WLDOT + WPDOT
+!     TOPWT  = TOPWT  + WSDOT + WLDOT + WPDOT
 !     WTLF   = WTLF   + WLDOT
-      WTLF = SUM(LFDM)  !from cohorts
+      WTLF   = SUM(LFDM)  !from cohorts
 !     STMWT  = STMWT  + WSDOT
-      STMWT = SUM(STDM)  !from cohorts
+      STMWT  = SUM(STDM)  !from cohorts
+      TOPWT  = WTLF   + STMWT
       SDWT   = SDWT   + WSDDOT
       SHELWT = SHELWT + WSHDOT
       RTWT   = RTWT   + WRDOT
