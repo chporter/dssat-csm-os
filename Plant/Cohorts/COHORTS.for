@@ -138,7 +138,7 @@ C=======================================================================
       REAL, INTENT(OUT) :: WTLF, WCRLF, WNRLF, WTNLF
       REAL, INTENT(OUT) :: STMWT, WCRST, WNRST, WTNST
 
-      REAL WLDOT_calc, WSDOT_calc
+      REAL AREALF, WLDOT_calc, WSDOT_calc
       REAL ADF_daily, NDF_daily
       REAL TOTWT, C_OFF_LF, C_OFF_ST
 
@@ -212,15 +212,13 @@ C=======================================================================
      &  FILEIO, FILECC, MODEL)                            !Input
 
       CALL OpCohorts(DYNAMIC, YRPLT,          !Input
-!     &  LFSN, LFAREA, LeafNTot, PCNLeaf, 
      &  C_OFF_LF, C_OFF_ST,
-     &  WRCLDT_c, WRCSDT_c,   !TEMP CHP
-     &  WLDOTN, ALPHL, WSDOTN, ALPHS,  !TEMP CHP
-     &  WLDOT_CALC, WSDOT_CALC, !TEMP CHP
+     &  WRCLDT_c, WRCSDT_c,             !TEMP CHP
+     &  WLDOTN, ALPHL, WSDOTN, ALPHS,   !TEMP CHP
+     &  WLDOT_CALC, WSDOT_CALC,         !TEMP CHP
      &  LFWT_MIN, LFWT_MAX, STMWT_MIN, STMWT_MAX, !TEMP CHP
-     &  LAIMX, SLA, SLAAD, XLAI,              !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF,            !Output
-     &  STMWT, WCRST, WNRST, WTNST)           !Output
+     &  STMWT, WCRLF, WCRST, WNRST,       !Input
+     &  WTLF, WTNLF, WTNST, XLAI)         !Input
 
 !***********************************************************************
 !***********************************************************************
@@ -282,15 +280,13 @@ C=======================================================================
       CALL PUT("MHARVEST","NDFday",NDF_daily)
 
       CALL OpCohorts(DYNAMIC, YRPLT,          !Input
-!     &  LFSN, LFAREA, LeafNTot, PCNLeaf, 
      &  C_OFF_LF, C_OFF_ST,
-     &  WRCLDT_c, WRCSDT_c,   !TEMP CHP
-     &  WLDOTN, ALPHL, WSDOTN, ALPHS,  !TEMP CHP
-     &  WLDOT_CALC, WSDOT_CALC, !TEMP CHP
+     &  WRCLDT_c, WRCSDT_c,             !TEMP CHP
+     &  WLDOTN, ALPHL, WSDOTN, ALPHS,   !TEMP CHP
+     &  WLDOT_CALC, WSDOT_CALC,         !TEMP CHP
      &  LFWT_MIN, LFWT_MAX, STMWT_MIN, STMWT_MAX, !TEMP CHP
-     &  LAIMX, SLA, SLAAD, XLAI,              !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF,            !Output
-     &  STMWT, WCRST, WNRST, WTNST)           !Output
+     &  STMWT, WCRLF, WCRST, WNRST,       !Input
+     &  WTLF, WTNLF, WTNST, XLAI)         !Input
 
 !***********************************************************************
 !***********************************************************************
@@ -374,6 +370,8 @@ C=======================================================================
 !-----------------------------------------------------------------------
 !     Handle new reserves for leaf and stem cohorts. 
 !     CHP - could make this non-linear 
+      LFCAD = 0.0; LFNAD = 0.0
+      STCAD = 0.0; STNAD = 0.0
       DO I = 1, NLC
         IF (LFDM(I) > 0.0) THEN
           LFCAD(I) = LFDM(I) / WTLF * CADLF
@@ -653,6 +651,29 @@ C=======================================================================
         CALL PUT("MHARVEST","NDFday",NDF_daily)
       ENDIF
 
+!     These were done in OpCohorts, but we need them for export in the
+!     integration phase. Move them to here.
+      WTLF   = SUM(LFDM)          !Leaf mass g/m2
+      AREALF = SUM(LFAREA)        !Lf area index
+      WCRLF  = SUM(LFNSC)         !CH2O reserves
+      WTNLF  = SUM(LeafNTot)      !Leaf N
+      WNRLF  = SUM(LFNSN)         !Non-structural N
+      STMWT  = SUM(STDM)          !Stem mass g/m2
+      WCRST  = SUM(STNSC)         !CH2O reserves
+      WTNST  = SUM(StemNTot)      !Stem N
+      WNRST  = SUM(STNSN)         !Non-structural N
+
+!     Export a single SLA, XLAI, XHLAI, LAIMX for all leaves
+      XLAI  = AREALF / 10000. !Leaf area index (m2/m2)
+      IF (WTLF > 0.0) THEN
+        SLA    = AREALF / WTLF
+        SLAAD  = AREALF / (WTLF - WCRLF)
+      ELSE
+        SLA    = 0.0
+        SLAAD  = 0.0
+      ENDIF
+      LAIMX = MAX(LAIMX, XLAI)
+
 !***********************************************************************
 !***********************************************************************
 !     OUTPUT section 
@@ -661,15 +682,18 @@ C=======================================================================
       ELSE IF (DYNAMIC .EQ. OUTPUT .OR. DYNAMIC .EQ. SEASEND) THEN
 !-----------------------------------------------------------------------
       CALL OpCohorts(DYNAMIC, YRPLT,          !Input
-!     &  LFSN, LFAREA, LeafNTot, PCNLeaf, 
      &  C_OFF_LF, C_OFF_ST,
-     &  WRCLDT_c, WRCSDT_c,   !TEMP CHP
-     &  WLDOTN, ALPHL, WSDOTN, ALPHS,  !TEMP CHP
-     &  WLDOT_CALC, WSDOT_CALC, !TEMP CHP
+     &  WRCLDT_c, WRCSDT_c,             !TEMP CHP
+     &  WLDOTN, ALPHL, WSDOTN, ALPHS,   !TEMP CHP
+     &  WLDOT_CALC, WSDOT_CALC,         !TEMP CHP
      &  LFWT_MIN, LFWT_MAX, STMWT_MIN, STMWT_MAX, !TEMP CHP
-     &  LAIMX, SLA, SLAAD, XLAI,              !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF,            !Output
-     &  STMWT, WCRST, WNRST, WTNST)           !Output
+     &  STMWT, WCRLF, WCRST, WNRST,       !Input
+     &  WTLF, WTNLF, WTNST, XLAI)         !Input
+
+!      IF (DAP > 0) THEN
+!        write(4389,'(100I5)') DAS, DAP, NLC, (CohortAgeDays(I),I=1,NLC)
+!        PRINT *,DAS, DAP, NLC
+!      ENDIF
 
 !***********************************************************************
 !***********************************************************************

@@ -8,15 +8,13 @@ C  06/07/2026 CHP written
 C=======================================================================
 
       SUBROUTINE OpCohorts(DYNAMIC, YRPLT,    !Input
-!     &  LFSN, LFAREA, LeafNTot, PCNLeaf, 
      &  C_OFF_LF, C_OFF_ST,
-     &  WRCLDT_c, WRCSDT_c,   !TEMP CHP
-     &  WLDOTN, ALPHL, WSDOTN, ALPHS,  !TEMP CHP
-     &  WLDOT_CALC, WSDOT_CALC, !TEMP CHP
+     &  WRCLDT_c, WRCSDT_c,             !TEMP CHP
+     &  WLDOTN, ALPHL, WSDOTN, ALPHS,   !TEMP CHP
+     &  WLDOT_CALC, WSDOT_CALC,         !TEMP CHP
      &  LFWT_MIN, LFWT_MAX, STMWT_MIN, STMWT_MAX, !TEMP CHP
-     &  LAIMX, SLA, SLAAD, XLAI,              !Output
-     &  WTLF, WCRLF, WNRLF, WTNLF,            !Output
-     &  STMWT, WCRST, WNRST, WTNST)           !Output
+     &  STMWT, WCRLF, WCRST, WNRST,       !Input
+     &  WTLF, WTNLF, WTNST, XLAI)         !Input
 
       USE ModuleDefs
       USE ModuleData
@@ -27,9 +25,8 @@ C=======================================================================
 
       INTEGER, INTENT(IN) :: DYNAMIC, YRPLT
 
-      REAL, INTENT(OUT) :: SLA, SLAAD, LAIMX
-      REAL, INTENT(OUT) :: WTLF, WCRLF, WNRLF, WTNLF, XLAI
-      REAL, INTENT(OUT) :: STMWT, WCRST, WNRST, WTNST
+      REAL, INTENT(IN) :: WTLF, WCRLF, WTNLF, XLAI
+      REAL, INTENT(IN) :: STMWT, WCRST, WNRST, WTNST
 
 !     TEMP CHP
       REAL, DIMENSION(1:LCMax), INTENT(IN) :: 
@@ -37,21 +34,19 @@ C=======================================================================
      & WRCLDT_c, WRCSDT_c   !TEMP CHP
       REAL WRCLDT_calc, WRCSDT_calc, C_OFF_LF, C_OFF_ST
 
-      REAL WTLF_calc, WNRLF_calc, WCRLF_calc, XLAI_calc, 
-     &  WTNLF_calc, PLEAFN_calc,
+      REAL 
+     &  PLEAFN_calc,
      &  SLDOT_calc, WLFDOT_calc, NRUSLF_calc, 
      &  CRUSLF_calc, WLIDOT_calc, WatSen_calc, LfMineSen_calc, 
-     &  LCADD_calc, LNADD_calc, SLAAD_calc, LAIMX_calc, SLA_calc,
+     &  LCADD_calc, LNADD_calc, 
      &  LFSN_calc, FHLEAF_calc
 
-      REAL  WTST_calc, WNRST_calc, WCRST_calc, 
-     &  WTNST_calc, PStemN_calc, 
+      REAL   
+     &  PStemN_calc, 
      &  SSDOT_calc, WSFDOT_calc, NRUSST_calc, 
      &  CRUSST_calc, WSIDOT_calc, WatSenStem_calc, STMineSen_calc, 
      &  SCADD_calc, SNADD_calc, 
      &  STSN_calc, FHSTEM_calc
-
-      REAL AREALF_calc
 
 !     TEMP CHP
       REAL RHOL_CALC, RHOL_MIN, RHOL_MAX, RHOS_CALC, RHOS_MIN, RHOS_MAX
@@ -104,12 +99,6 @@ C=======================================================================
 !***********************************************************************
       ELSEIF (DYNAMIC .EQ. SEASINIT) THEN
 !-----------------------------------------------------------------------
-      WTLF_calc = 0.0  ; WTST_calc = 0.0
-      WNRLF_calc = 0.0 ; WNRST_calc = 0.0
-      WCRLF_calc = 0.0 ; WCRST_calc = 0.0
-      XLAI_calc = 0.0
-      WTNLF_calc = 0.0 ; WTNST_calc = 0.0
-
 !     Initialize main leaf cohort output file
 !     Contains daily aggregated leaf variables from cohort model for
 !       comparison to GROW.OUT or grow_for.OUT files.
@@ -211,11 +200,11 @@ C=======================================================================
       WRCLDT_calc = SUM(WRCLDT_c) + WLDOTN * ALPHL
 
 !     Total states over all leaf cohorts
-      WTLF_calc  = SUM(LFDM)          !Leaf mass g/m2
-      AREALF_calc= SUM(LFAREA)        !Lf area index
-      WCRLF_calc = SUM(LFNSC)         !CH2O reserves
-      WTNLF_calc = SUM(LeafNTot)      !Leaf N
-      WNRLF_calc = SUM(LFNSN)         !Non-structural N
+!     WTLF_calc  = SUM(LFDM)          !Leaf mass g/m2
+!     AREALF_calc= SUM(LFAREA)        !Lf area index
+!     WCRLF_calc = SUM(LFNSC)         !CH2O reserves
+!     WTNLF_calc = SUM(LeafNTot)      !Leaf N
+!     WNRLF_calc = SUM(LFNSN)         !Non-structural N
       LFSN_calc  = SUM(LFSN)          !Structural N
 
 !------------------------------------
@@ -232,50 +221,41 @@ C=======================================================================
       WRCSDT_calc = SUM(WRCSDT_c) + WSDOTN * ALPHS
 
 !     Total states over all stem cohorts
-      WTST_calc  = SUM(STDM)          !Stem mass g/m2
-      WCRST_calc = SUM(STNSC)         !CH2O reserves
-      WTNST_calc = SUM(StemNTot)      !Stem N
-      WNRST_calc = SUM(STNSN)         !Non-structural N
+!     WTST_calc  = SUM(STDM)          !Stem mass g/m2
+!     WCRST_calc = SUM(STNSC)         !CH2O reserves
+!     WTNST_calc = SUM(StemNTot)      !Stem N
+!     WNRST_calc = SUM(STNSN)         !Non-structural N
       STSN_calc  = SUM(STSN)          !Structural N
 !------------------------------------
 
-      IF (WTLF_calc > 0.0) THEN
-        PLEAFN_calc = WTNLF_calc / WTLF_calc * 100.
+      IF (WTLF > 0.0) THEN
+        PLEAFN_calc = WTNLF / WTLF * 100.
       ELSE
         PLEAFN_calc = 0.0
       ENDIF
 
-      IF (WTST_calc > 0.0) THEN
-        PStemN_calc = WTNST_calc / WTST_calc * 100.
+      IF (STMWT > 0.0) THEN
+        PStemN_calc = WTNST / STMWT * 100.
       ELSE
         PStemN_calc = 0.0
       ENDIF
 
-!     Export a single SLA, XLAI, XHLAI, LAIMX for all leaves
-      XLAI_calc  = AREALF_calc / 10000. !Leaf area index (m2/m2)
-      IF (WTLF_calc > 0.0) THEN
-        SLA_calc    = AREALF_calc / WTLF_calc
-        SLAAD_calc  = AREALF_calc / (WTLF_calc - WCRLF_calc)
-      ELSE
-        SLA_calc    = 0.0
-        SLAAD_calc  = 0.0
-      ENDIF
-      LAIMX_calc = MAX(LAIMX_calc, XLAI_calc)
-
 !     TEMP CHP
-      if (wtlf_calc > 0.0) then
-        RHOL_CALC = WCRLF_calc / WTLF_calc
+      if (wtlf > 0.0) then
+        RHOL_CALC = WCRLF / WTLF
       else
         RHOL_CALC = 0.0
       endif
       RHOL_MIN = RHOL_c(1)
       RHOL_MAX = RHOL_c(1)
 
-      if (wtst_calc > 0.0) then
-        RHOS_CALC = WCRST_calc / WTST_calc
+      if (STMWT > 0.0) then
+        RHOS_CALC = WCRST / STMWT
       else
         RHOS_CALC = 0.0
       endif
+
+!     Look at max and min values of RHO
       RHOS_MIN = RHOS_c(1)
       RHOS_MAX = RHOS_c(1)
       DO I = 2, NLC
@@ -287,8 +267,8 @@ C=======================================================================
 
       WRITE (LCLUN,310) YEAR, DOY, DAS, DAP,
 !       State
-     &  WTLF_calc, XLAI_calc, WCRLF_calc, PLEAFN_calc, 
-     &  WTNLF_calc, WNRLF_calc, LFSN_calc, 
+     &  WTLF, XLAI, WCRLF, PLEAFN_calc, 
+     &  WTNLF, LFSN_calc, 
 !       Rate
      &  LCADD_calc, LNADD_calc / 0.16, 
      &  CRUSLF_calc, NRUSLF_calc, 
@@ -307,8 +287,8 @@ C=======================================================================
 
       WRITE (SCLUN,410) YEAR, DOY, DAS, DAP,
 !       State
-     &  WTST_calc, WCRST_calc, PStemN_calc, 
-     &  WTNST_calc, WNRST_calc, STSN_calc, 
+     &  STMWT, WCRST, PStemN_calc, 
+     &  WTNST, WNRST, STSN_calc, 
 !       Rate
      &  SCADD_calc, SNADD_calc / 0.16, 
      &  CRUSST_calc, NRUSST_calc, 
@@ -319,19 +299,19 @@ C=======================================================================
 
 410   FORMAT (1X,I4, 1X,I3, 2I6, 30F12.6)
 
-!     Transfer cohort totals for output
-      WTLF  = WTLF_calc
-      WCRLF = WCRLF_calc
-      WNRLF = WNRLF_calc
-      WTNLF = WTNLF_calc
-      XLAI  = XLAI_calc
-      STMWT = WTST_calc
-      WCRST = WCRST_calc
-      WNRST = WNRST_calc
-      WTNST = WTNST_calc
-      LAIMX = LAIMX_calc
-      SLAAD = SLAAD_calc
-      SLA   = SLA_calc
+!     Transfer cohort totals for output (now calculated in COHORTS)
+!     WTLF  = WTLF_calc
+!     WCRLF = WCRLF_calc
+!     WNRLF = WNRLF_calc
+!     WTNLF = WTNLF_calc
+!     XLAI  = XLAI_calc
+!     STMWT = WTST_calc
+!     WCRST = WCRST_calc
+!     WNRST = WNRST_calc
+!     WTNST = WTNST_calc
+!     LAIMX = LAIMX_calc
+!     SLAAD = SLAAD_calc
+!     SLA   = SLA_calc
 
 !***********************************************************************
 !***********************************************************************
