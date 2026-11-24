@@ -372,6 +372,8 @@
               C_OFF = 
      &            WatSen(I) * RHO(I)   !Water senescence
      &          + NSC(I) / Mass(I) * MassDecrease(I)
+!       chp: tried removing the "+ NSC ..." line at Claude's request
+!       but made little or no difference for the bean experiment test
              END SELECT
 
           CASE ('PRFRM')
@@ -380,9 +382,9 @@
      &              + (WatSen(I) + Pest(I) + Freeze(I)) * RHO(I)
           END SELECT
 
-!          IF (C_OFF. LT. 0.0) THEN
-!            C_OFF = 0.0
-!          ENDIF
+          IF (C_OFF. LT. 0.0) THEN
+            C_OFF = 0.0
+          ENDIF
           WRC_DT(I) = -CMine(I) - C_OFF + CAdd(I)
           C_OFF_sum = C_OFF_sum + C_OFF
 

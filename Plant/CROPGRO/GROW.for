@@ -767,7 +767,6 @@ C-----------------------------------------------------------------------
       WTLF   = SUM(LFDM)  !from cohorts
 !     STMWT  = STMWT  + WSDOT
       STMWT  = SUM(STDM)  !from cohorts
-      TOPWT  = WTLF   + STMWT
       SDWT   = SDWT   + WSDDOT
       SHELWT = SHELWT + WSHDOT
       RTWT   = RTWT   + WRDOT
@@ -775,6 +774,7 @@ C-----------------------------------------------------------------------
       DWNOD  = DWNOD  + WNDOT
       TGROW  = TGROW  + GROWTH
       LINTW  = LINTW  + LTDOT
+      TOPWT  = WTLF + STMWT + PODWT
 
 C-----------------------------------------------------------------------
 C     Cumulative leaf and stem growth

@@ -624,14 +624,15 @@ C=======================================================================
 !       New growth for today's stem cohort
         STDM(NLC)  = WSDOTN             !stem dry mass
         STNSC(NLC) = WSDOTN * ALPHS     !non-struct CH2O
-        RHOS_c(NLC) = STNSC(NLC) / STDM(NLC)
         StemNTot(NLC) = NGRST           !total stem N (g/m2)
         STSN(NLC)  = PROSTF * 0.16 * (WSDOTN - STNSC(NLC))  !struc N
         STNSN(NLC) = NGRST - STSN(NLC)  !non-struct N (mobile)
         IF (STDM(NLC) > 0.0) THEN
           PCNStem(NLC) = StemNTot(NLC) / STDM(NLC) * 100.  ! % N
+          RHOS_c(NLC) = STNSC(NLC) / STDM(NLC)
         ELSE
           PCNStem(NLC) = 0.0
+          RHOS_c(NLC) = 0.0
         ENDIF
       ENDIF
 
