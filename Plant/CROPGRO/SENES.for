@@ -71,10 +71,10 @@ C-----------------------------------------------------------------------
       REAL SLFO3
 
       REAL, DIMENSION(LCMax) :: NatSen_c, NMobSen_c, LoLitSen_c, 
-     &    WaterSen_c,  R7Sen_c, SSNDOT_c, OzoneSen_c, WatOzSen_c
+     &    WaterSen_c,  R7Sen_c, SSNDOT_c, OzoneSen_c, WatOzSen_c, Cap
       REAL LeafTotSen_sum, NatSen_sum, NMobSen_sum, LoLitSen_sum, 
      &    R7Sen_sum, WatOzSen_sum
-      REAL StemTotSen_sum
+      REAL StemTotSen_sum, CapSum
 
       TYPE (ControlType) CONTROL
 
@@ -424,11 +424,24 @@ C-----------------------------------------------------------------------
           WSLOSS = MAX(WSLOSS, 0.0)
           SLNDOT = WSLOSS
 
+!         Allocate canopy water senescence to cohorts in proportion to
+!         each cohort's capacity (mass above its protected fraction)
+          CapSum = 0.0
           DO I = 1, NLC
-            WaterSen_c(I) = SENDAY * (1. - RATTP) * LFDM(I)
-            WaterSen_c(I) = MIN(WaterSen_c(I), LFDM(I) 
-     &            - CumLeafDM(I) * PORLFT)
+            Cap(I) = MAX(LFDM(I) - CumLeafDM(I)*PORLFT, 0.0)
+            CapSum = CapSum + Cap(I)
           ENDDO
+          IF (CapSum > 0.0) THEN
+            DO I = 1, NLC
+              WaterSen_c(I) = WSLOSS * Cap(I) / CapSum
+            ENDDO
+          ENDIF
+
+!          DO I = 1, NLC
+!            WaterSen_c(I) = SENDAY * (1. - RATTP) * LFDM(I)
+!            WaterSen_c(I) = MIN(WaterSen_c(I), LFDM(I) 
+!     &            - CumLeafDM(I) * PORLFT)
+!          ENDDO
         ENDIF
 
 C-----------------------------------------------------------------------
