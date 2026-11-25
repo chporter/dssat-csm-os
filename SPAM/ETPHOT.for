@@ -247,7 +247,7 @@ C     MEEVP reset on exit from ETPHOT to maintain input settings.
      &      SCVP, SLWREF, SLWSLO, TYPPGL, TYPPGN,         !Output
      &      XLMAXT, YLMAXT, PHTHRS10,                     !Output
      &      CCNEFF, CICAD, cmxsf,cqesf,pgpath,            !Output
-     &      CCEFF, CCMAX, CCMP, FOZ1, OBASE)              !Output added by JG for ozone
+     &      CCEFF, CCMAX, CCMP, FOZ1, OBASE)              !Output
 
           CALL OpETPhot(CONTROL, ISWITCH,
      &   PCINPD, PG, PGNOON, PCINPN, SLWSLN, SLWSHN,
@@ -1077,7 +1077,7 @@ C=======================================================================
      &  SCVP, SLWREF, SLWSLO, TYPPGL, TYPPGN,             !Output
      &  XLMAXT, YLMAXT, PHTHRS10,                         !Output
      &  ccneff, cicad, cmxsf, cqesf, pgpath,              !Output
-     &  CCEFF, CCMAX, CCMP, FOZ1, OBASE)                  !Output added by JG for ozone
+     &  CCEFF, CCMAX, CCMP, FOZ1, OBASE)                  !Output
 
       IMPLICIT NONE
       EXTERNAL FIND, GETLUN, IGNORE, ERROR
@@ -1107,7 +1107,7 @@ C=======================================================================
       CHARACTER*92  FILEGC
       CHARACTER*255 C255
       INTEGER LUNECO
-      REAL CCEFF, CCMAX, CCMP  !Added to read in CO2 parameters from species file
+      REAL CCEFF, CCMAX, CCMP  !read in CO2 parameters from species file
       REAL FOZ1, OBASE
 
 C     Read IBSNAT35.INP file.

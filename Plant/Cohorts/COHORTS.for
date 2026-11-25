@@ -145,6 +145,7 @@ C=======================================================================
 !     temp chp
       REAL LFWT_MAX, LFWT_MIN
       REAL STMWT_MAX, STMWT_MIN
+      REAL ALFDOT, ALFDOT_tot
 
       CHARACTER (len=6), PARAMETER :: ERRKEY = 'COHORT'
       CHARACTER (len=6)  LCMax_txt
@@ -362,6 +363,29 @@ C=======================================================================
         PCNStem(1) = 0.0
       ENDIF
 
+!     Cohort totals for export
+      AREALF = LFAREA(1)        !Lf area index
+      WCRLF  = LFNSC(1)         !CH2O reserves
+      WTNLF  = LeafNTot(1)      !Leaf N
+      WNRLF  = LFNSN(1)         !Non-structural N
+      WCRST  = STNSC(1)         !CH2O reserves
+      WTNST  = StemNTot(1)      !Stem N
+      WNRST  = STNSN(1)         !Non-structural N
+
+!     Export a single SLA, XLAI, XHLAI, LAIMX for all leaves
+      XLAI  = AREALF / 10000. !Leaf area index (m2/m2)
+      LAIMX = XLAI
+      IF (WTLF > 0.0) THEN
+        SLA    = AREALF / WTLF
+      ELSE
+        SLA    = 0.0
+      ENDIF
+      IF (WTLF - WCRLF > 0.0) THEN
+        SLAAD  = AREALF / (WTLF - WCRLF)
+      ELSE
+        SLAAD  = 0.0
+      ENDIF
+
 !***********************************************************************
 !***********************************************************************
 !     DAILY RATE/INTEGRATION
@@ -412,6 +436,8 @@ C=======================================================================
       WLDOT_calc = WLDOTN
       WSDOT_calc = WSDOTN
 !     WLDOTN, WSDOTN = total new growth today (added to new cohort below)
+      ALFDOT_tot = 0.0
+      ALFDOT = 0.0
 
       DO I = 1, NLC
 !     ---------------------------------------------------------
@@ -443,7 +469,7 @@ C=======================================================================
         IF (STDM(I) + WSDOT_cohort >= 1.E-10) THEN
           STDM(I) = STDM(I) + WSDOT_cohort
         ELSE
-          WSDOT_cohort = STDM(I)
+          WSDOT_cohort = -STDM(I)
           STDM(I) = 0.0
         ENDIF
 
@@ -457,13 +483,19 @@ C=======================================================================
         IF (LFDM(I) .GT. 0.0) THEN
 !     ---------------------------------------------------------
 !         Leaf area
-!         For now, use whole leaf SLA for each cohort. But this
-!           should be replaced by a cohort SLA when everything is working
-!           as it is in GROW.
-          LFAREA(I) = LFAREA(I) 
+          ALFDOT =  
      &      - LeafMassDecrease(I) * LFSLA(I)
      &      - LFNMN(I) / 0.16 * LFSLA(I)
      &      + LFNAD(I) / 0.16 * LFSLA(I)
+
+!!         TEMP CHP use whole leaf SLA for each cohort. 
+!          ALFDOT =  
+!     &      - LeafMassDecrease(I) * SLA
+!     &      - LFNMN(I) / 0.16 * SLA
+!     &      + LFNAD(I) / 0.16 * SLA
+
+          LFAREA(I) = LFAREA(I) + ALFDOT
+          ALFDOT_tot = ALFDOT_tot + ALFDOT
           LFSLA(I) = LFAREA(I) / LFDM(I)
         ELSE
           LFAREA(I)   = 0.0
@@ -483,6 +515,12 @@ C=======================================================================
         IF (STDM(I) > STMWT_MAX) STMWT_MAX = STDM(I)
         IF (STDM(I) < STMWT_MIN) STMWT_MIN = STDM(I)
       ENDDO
+
+!!     TEMP CHP
+!      AREALF = SUM(LFAREA)        !Lf area index
+!      XLAI  = AREALF / 10000. !Leaf area index (m2/m2)
+!      WRITE(4560,'(2I5,F10.6,2F15.6)') DAS,DAP,
+!     &   XLAI, ALFDOT_tot, WLDOTN*F
 
 !---------------------------------------------
 !     Integration of leaf and stem CH2O
@@ -606,7 +644,6 @@ C=======================================================================
 !       New growth for today's leaf cohort
         LFDM(NLC)   = WLDOTN             !leaf dry mass
         CumLeafDM(NLC) = WLDOTN          !cum leaf mass added
-        LFAREA(NLC) = WLDOTN * F         !leaf area
         LFNSC(NLC)  = WLDOTN * ALPHL     !non-struct CH2O
         LeafNTot(NLC) = NGRLF            !total leaf N (g/m2)
         LFSN(NLC)   = PROLFF * 0.16 * (WLDOTN - LFNSC(NLC))  !struc N
@@ -617,6 +654,15 @@ C=======================================================================
         ELSE
           PCNLeaf(NLC) = 0.0
           RHOL_c(NLC)  = 0.0
+        ENDIF
+
+!       Leaf area
+        LFAREA(NLC) = WLDOTN * F         !leaf area
+        LFAREAH(NLC) = LFAREA(NLC)       !healthy leaf area
+        IF (LFDM(NLC) > 0.0) THEN
+          LFSLA(NLC)   = LFAREA(NLC) / LFDM(NLC)
+        ELSE
+          LFSLA(NLC)   = 0.0
         ENDIF
 
 !       New growth for today's stem cohort
@@ -665,14 +711,17 @@ C=======================================================================
 
 !     Export a single SLA, XLAI, XHLAI, LAIMX for all leaves
       XLAI  = AREALF / 10000. !Leaf area index (m2/m2)
+      LAIMX = MAX(LAIMX, XLAI)
       IF (WTLF > 0.0) THEN
         SLA    = AREALF / WTLF
-        SLAAD  = AREALF / (WTLF - WCRLF)
       ELSE
         SLA    = 0.0
+      ENDIF
+      IF (WTLF - WCRLF > 0.0) THEN
+        SLAAD  = AREALF / (WTLF - WCRLF)
+      ELSE
         SLAAD  = 0.0
       ENDIF
-      LAIMX = MAX(LAIMX, XLAI)
 
 !***********************************************************************
 !***********************************************************************
